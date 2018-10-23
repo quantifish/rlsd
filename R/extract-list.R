@@ -1,14 +1,17 @@
-#' Extract MCMC samples from a list produced by \code{read_stan_mcmc}
+#' Extract MCMC samples
 #' 
+#' Extract MCMC samples from a list produced by \code{read_stan_mcmc}
 #' 
 #' @param object list object produced by \code{read_stan_mcmc}
 #' @param pars character vector of parameters to be extracted (or not)
 #' @param permute should the MCMC sample chains be permuted and combined?
 #' @param include should pars be extracted (TRUE) or everything except the pars (FALSE) 
 #' @importMethodsFrom rstan extract
-setGeneric("extract", getGeneric("extract", package = "rstan"))
+methods::setGeneric("extract", methods::getGeneric("extract", package = "rstan"))
+
 #' @export
-setMethod("extract", signature = "list", definition = function(object, pars, permuted = TRUE, include = TRUE) {
+#' 
+methods::setMethod("extract", signature = "list", definition = function(object, pars, permuted = TRUE, include = TRUE) {
     
               # Extract the samples in different forms for different parameters. 
               #

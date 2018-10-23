@@ -1,9 +1,11 @@
+#' lsdOutput object class
+#' 
 #' lsdOutput object class for storing outputs from a particular lsd model run
 #' 
 #' @export
 #' @importClassesFrom rstan stanfit
 #'
-setClass("lsdOutput", slots = list(
+methods::setClass("lsdOutput", slots = list(
                           data = "list",            # data object or list
                           map = "list",
                           mcmc_pars = "data.frame",
@@ -17,26 +19,30 @@ setClass("lsdOutput", slots = list(
                           inits = "list",           # initial values populated by initialisation function
                           model = "character"         # optional label for this particular run
                       )
-         )
+)
 
+
+#' Set up the object class
+#' 
 #' @export
 #' 
-setMethod("initialize", signature = "lsdOutput", definition = function(.Object, model.name) {
+methods::setMethod("initialize", signature = "lsdOutput", definition = function(.Object, model.name) {
+  
+  if (!missing(model.name)) {
+    .Object@model <- as.character(model.name)
+  }
+  .Object@sex     <- c("Male","Female","Mature female")
+  .Object@seasons <- c("AW","SS")
     
-    if (!missing(model.name)) {
-        .Object@model <- as.character(model.name)
-    }
-    
-    .Object@sex     <- c("Male","Female","Mature female")
-    .Object@seasons <- c("AW","SS")
-    
-    return(.Object)
-    
+  return(.Object)    
 })
 
+
+#' Dunno what this does
+#' 
 #' @export
 #' 
-setMethod("show", "lsdOutput",
+methods::setMethod("show", "lsdOutput",
           function(object) {
             cat("lsdOutput S4 object class for model '", object@model, "':\n" ,sep = '') 
             cat("@data:")
@@ -57,4 +63,4 @@ setMethod("show", "lsdOutput",
             print(object@inits)
             cat("@model:")
             print(object@model)
-          })
+})

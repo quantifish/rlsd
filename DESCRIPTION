@@ -1,0 +1,65 @@
+Package: lsd
+Title: LSD package
+Version: 5.08
+Date: 2018-10-23
+Authors@R: c(
+    person("Darcy", "Webber", email = "darcy@quantifish.co.nz", role = "cre"),
+    person("Merrill", "Rudd", email = "merrill@quantifish.co.nz", role = "aut"))
+Description: The LSD package for manipulating and plotting LSD inputs and outputs.
+Encoding: UTF-8
+Depends:
+    roxygen2,
+    reshape2,
+    ggplot2,
+    tidyr,
+    dplyr,
+    rstan,
+    methods,
+    RColorBrewer,
+    ggrepel
+Suggests: testthat
+License: MIT + file LICENSE
+RoxygenNote: 6.1.0
+Collate:
+    'TACC.R'
+    'calc-Tmin.R'
+    'create-rules.R'
+    'lsdOutput-class.R'
+    'do-extract.R'
+    'do-extract_old.R'
+    'do-plot-compare.R'
+    'theme-lsd.R'
+    'do-plot.R'
+    'extract-list.R'
+    'lsd.version.R'
+    'lsdSave.R'
+    'parse-model-code.R'
+    'plot-F.R'
+    'plot-biomass.R'
+    'plot-catch.R'
+    'plot-compare-multi.R'
+    'plot-compare.R'
+    'plot-cpue.R'
+    'plot-data-extent.R'
+    'plot-growth.R'
+    'plot-handling-mortality.R'
+    'plot-length-frequency.R'
+    'plot-maturation.R'
+    'plot-mls.R'
+    'plot-mp-rules.R'
+    'plot-numbers.R'
+    'plot-pars.R'
+    'plot-puerulus.R'
+    'plot-q.R'
+    'plot-recruitment.R'
+    'plot-retro.R'
+    'plot-selectivity.R'
+    'plot-sex-ratio.R'
+    'plot-snail.R'
+    'plot-surplus-production.R'
+    'read-fit.R'
+    'read-stan-map.R'
+    'read-stan-mcmc.R'
+    'read-stan-var.R'
+    'summarise-results.R'
+    'utils.R'

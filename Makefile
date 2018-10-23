@@ -21,7 +21,7 @@ all: update tarball install clean
 
 tarball: ../$(PKG_NAME)_$(PKG_VERSION).tar.gz
 ../$(PKG_NAME)_$(PKG_VERSION).tar.gz: $(PKG_FILES)
-	$(CD) ../ && R CMD build pkg
+	$(CD) ../ && R CMD build rlsd
 
 install: ../$(PKG_NAME)_$(PKG_VERSION).tar.gz
 	R CMD INSTALL ../$(PKG_NAME)_$(PKG_VERSION).tar.gz

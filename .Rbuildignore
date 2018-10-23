@@ -1,4 +1,5 @@
 ^\.travis\.yml$
 Makefile
 update.R
+build_install.R
 README.md

@@ -1,5 +1,5 @@
-# lsdr
+# rlsd
 
-[![Build Status](https://travis-ci.org/stan-dev/rstan.svg?branch=develop)](https://travis-ci.org/stan-dev/rstan)
+[![Build Status](https://travis-ci.org/NZRLIC/rlsd.svg?branch=master)](https://travis-ci.org/NZRLIC/rlsd)
 
-R package for LSD
+The LSD R package.

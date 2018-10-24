@@ -1,5 +1,8 @@
 #' Plot stock recruit relationship
 #' 
+#' @import dplyr
+#' @import ggplot2
+#' @importFrom reshape2 melt
 #' @export
 #' 
 plot_ssb_recruitment <- function(object,
@@ -55,6 +58,9 @@ plot_ssb_recruitment <- function(object,
 
 #' Plot SSB
 #' 
+#' @import dplyr
+#' @import ggplot2
+#' @importFrom reshape2 melt
 #' @export
 #' 
 plot_ssb <- function(object,
@@ -159,6 +165,9 @@ plot_ssb <- function(object,
 
 #' Plot vulnerable reference biomass
 #'
+#' @import dplyr
+#' @import ggplot2
+#' @importFrom reshape2 melt
 #' @export
 #' 
 plot_vulnerable_reference_biomass <- function(object,
@@ -313,6 +322,9 @@ plot_vulnerable_reference_biomass <- function(object,
 
 #' Plot vulnerable reference biomass
 #'
+#' @import dplyr
+#' @import ggplot2
+#' @importFrom reshape2 melt
 #' @export
 #' 
 plot_vulnerable_biomass <- function(object,
@@ -470,7 +482,9 @@ plot_vulnerable_biomass <- function(object,
 #' \item Vulnerable reference biomass (using final year vulnerability and selectivity): numbers * weight * vulnerability * selectivity * size_limit
 #' }
 #' @param ref specify Bmsy, Bref, or both
-#'
+#' @import dplyr
+#' @import ggplot2
+#' @importFrom reshape2 melt
 #' @export
 #' 
 plot_biomass <- function(object,

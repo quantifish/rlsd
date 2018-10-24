@@ -1,7 +1,15 @@
 #' Extract model fits and load into lsdOutput object class for plotting
 #' 
+#' @param dir the directory to extract from
+#' @param data
+#' @param map
+#' @param mcmc
+#' @param variational
 #' @param model a name or label for the model being extracted
 #' @include lsdOutput-class.R
+#' @import rstan
+#' @import methods
+#' @importFrom plyr adply
 #' @export
 #'
 do_extract <- function(dir = ".", data = TRUE,

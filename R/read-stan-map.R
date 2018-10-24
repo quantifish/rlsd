@@ -1,31 +1,23 @@
-# This file is part of RStan
-# Copyright (C) 2012, 2013, 2014, 2015 Jiqiang Guo and Benjamin Goodrich
-#
-# RStan is free software; you can redistribute it and/or
-# modify it under the terms of the GNU General Public License
-# as published by the Free Software Foundation; either version 3
-# of the License, or (at your option) any later version.
-#
-# RStan is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-
 #' Read CSV files created by CmdStan or RStan
 #' 
-#' @param csvfiles A character vector of paths to CSV files of MCMC output
-#' @return An object of \code{\link{StanFitMCMC-class}}
-#' @seealso \code{\link{StanFitMCMC-class}}
-#' @examples
-#' csvfiles <- dir(system.file('misc', package = 'rstan'),
-#'                 pattern = 'rstan_doc_ex_[0-9].csv', full.names = TRUE)
-#' fit <- read_stan_csv(csvfiles)
-#' fit
+#' This file is part of RStan
+#' Copyright (C) 2012, 2013, 2014, 2015 Jiqiang Guo and Benjamin Goodrich
 #'
+#' RStan is free software; you can redistribute it and/or
+#' modify it under the terms of the GNU General Public License
+#' as published by the Free Software Foundation; either version 3
+#' of the License, or (at your option) any later version.
+#'
+#' RStan is distributed in the hope that it will be useful,
+#' but WITHOUT ANY WARRANTY; without even the implied warranty of
+#' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#' GNU General Public License for more details.
+#'
+#' You should have received a copy of the GNU General Public License
+#' along with this program; if not, write to the Free Software
+#' Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+#' 
+#' @param csvfiles A character vector of paths to CSV files of MCMC output
 #' @export
 #'
 read_stan_map <- function(csvfiles) {

@@ -1,5 +1,7 @@
 #' Calculate the TACC given a vector of CPUE
 #'
+#' @param par the parameters of the rule
+#' @param cpue the CPUE
 #' @export
 #' 
 TACC <- function(par, cpue)

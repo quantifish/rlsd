@@ -1,8 +1,10 @@
+#' Read Stan MCMC
+#' 
 #' Read MCMC comma delimited files produced by \code{cmdStan}
-#'#' 
-#' @param mcmcfiles character vector of the complete path to csv output files produced by \code{cmdStan}
 #'
+#' @param mcmcfiles character vector of the complete path to csv output files produced by \code{cmdStan}
 #' @export
+#' 
 read_stan_mcmc <- function(mcmcfiles) {
     # Read the csv files saved from Stan (or RStan) to a stanfit object
     # Args:

@@ -1,22 +1,23 @@
 Package: lsd
 Title: LSD Package
-Version: 5.33
+Version: 5.40
 Date: 2018-10-24
 Authors@R: c(
     person("Darcy", "Webber", email = "darcy@quantifish.co.nz", role = "cre"),
     person("Merrill", "Rudd", email = "merrillrudd@gmail.com", role = "aut"))
 Description: The LSD package for manipulating and plotting LSD inputs and outputs.
 Encoding: UTF-8
-Depends:
+Imports:
     dplyr,
     ggplot2,
     ggrepel,
     methods,
+    plyr,
     RColorBrewer,
     reshape2,
     rstan,
     tidyr
-Suggests: 
+Suggests:
     roxygen2,
     testthat
 License: MIT + file LICENSE

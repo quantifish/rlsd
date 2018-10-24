@@ -7,11 +7,16 @@
 #' @param permute should the MCMC sample chains be permuted and combined?
 #' @param include should pars be extracted (TRUE) or everything except the pars (FALSE) 
 #' @importMethodsFrom rstan extract
-methods::setGeneric("extract", methods::getGeneric("extract", package = "rstan"))
+#' @import methods
+#' 
+setGeneric("extract", getGeneric("extract", package = "rstan"))
 
+#' Extract thingy
+#' 
+#' @import methods
 #' @export
 #' 
-methods::setMethod("extract", signature = "list", definition = function(object, pars, permuted = TRUE, include = TRUE) {
+setMethod("extract", signature = "list", definition = function(object, pars, permuted = TRUE, include = TRUE) {
     
               # Extract the samples in different forms for different parameters. 
               #
@@ -104,7 +109,7 @@ methods::setMethod("extract", signature = "list", definition = function(object, 
                   return(sss2)
               
               }
-          })  
+})  
 
 .num_pars <- function(d) prod(d)
 

@@ -152,6 +152,13 @@ plot_recruitment <- function(object,
 }
 
 
+#' Plot recruitment size
+#' 
+#' @param object
+#' @param xlab x axis label
+#' @param ylab y axis label
+#' @param figure_dir the directory to save the figure to
+#' @import ggplot2
 #' @export
 #' 
 plot_recruitment_size <- function(object, xlab = "Size at recruitment (mm)", ylab = "Proportion", figure_dir = "figure/")

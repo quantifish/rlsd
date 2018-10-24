@@ -2,6 +2,7 @@
 #'
 #' @param base_size base font size
 #' @param base_family base font family
+#' @import ggplot2
 #' @export
 #' 
 theme_lsd <- function (base_size = 14, base_family = "") 

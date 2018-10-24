@@ -3,9 +3,10 @@
 #' lsdOutput object class for storing outputs from a particular lsd model run
 #' 
 #' @export
+#' @import methods
 #' @importClassesFrom rstan stanfit
 #'
-methods::setClass("lsdOutput", slots = list(
+setClass("lsdOutput", slots = list(
                           data = "list",            # data object or list
                           map = "list",
                           mcmc_pars = "data.frame",
@@ -24,9 +25,10 @@ methods::setClass("lsdOutput", slots = list(
 
 #' Set up the object class
 #' 
+#' @import methods
 #' @export
 #' 
-methods::setMethod("initialize", signature = "lsdOutput", definition = function(.Object, model.name) {
+setMethod("initialize", signature = "lsdOutput", definition = function(.Object, model.name) {
   
   if (!missing(model.name)) {
     .Object@model <- as.character(model.name)
@@ -40,9 +42,11 @@ methods::setMethod("initialize", signature = "lsdOutput", definition = function(
 
 #' Dunno what this does
 #' 
+#' @param object an LSD object
+#' @import methods
 #' @export
 #' 
-methods::setMethod("show", "lsdOutput",
+setMethod("show", "lsdOutput",
           function(object) {
             cat("lsdOutput S4 object class for model '", object@model, "':\n" ,sep = '') 
             cat("@data:")

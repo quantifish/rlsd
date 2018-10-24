@@ -7,7 +7,7 @@ Authors@R: c(
     person("Merrill", "Rudd", email = "merrillrudd@gmail.com", role = "aut"))
 Description: The LSD package for manipulating and plotting LSD inputs and outputs.
 Encoding: UTF-8
-Imports:
+Depends:
     dplyr,
     ggplot2,
     ggrepel,

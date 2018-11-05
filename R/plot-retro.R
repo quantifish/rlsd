@@ -2,9 +2,19 @@
 #' 
 #' Plots retrospective analysis for vulnerable biomass and recruitment
 #'
+#' @param object an LSD object
+#' @param scales the scales
+#' @param show_map show the MAP or not
+#' @param figure_dir the directory to save the figure to
+#' @import dplyr
+#' @import ggplot2
+#' @importFrom reshape2 melt
 #' @export
 #' 
-plot_retro <- function(object, scales = "free_x", show_map = TRUE, figure_dir = "figure/")
+plot_retro <- function(object, 
+	                   scales = "free_x", 
+	                   show_map = TRUE, 
+	                   figure_dir = "figure/")
 {
 	if(any(grepl("retro", list.files()))){
 
@@ -219,11 +229,11 @@ plot_retro <- function(object, scales = "free_x", show_map = TRUE, figure_dir = 
 		    R0 <- dplyr::filter(R0, Year <= (max(years)+1))
 
 		# ## order the years to peel off from base model
-		vuln$LastFitYr <- factor(vuln$LastFitYr_num, level=unique(vuln$LastFitYr_num[rev(order(as.numeric(vuln$LastFitYr_num)))]))
-		pcatch$LastFitYr <- factor(pcatch$LastFitYr_num, level=unique(pcatch$LastFitYr_num[rev(order(as.numeric(pcatch$LastFitYr_num)))]))
-		dcatch$LastFitYr <- factor(dcatch$LastFitYr_num, level=unique(dcatch$LastFitYr_num[rev(order(as.numeric(dcatch$LastFitYr_num)))]))
-		recruits$LastFitYr <- factor(recruits$LastFitYr_num, level=unique(recruits$LastFitYr_num[rev(order(as.numeric(recruits$LastFitYr_num)))]))
-		R0$LastFitYr <- factor(R0$LastFitYr_num, level=unique(R0$LastFitYr_num[rev(order(as.numeric(R0$LastFitYr_num)))]))
+		vuln$LastFitYr <- factor(vuln$LastFitYr_num, levels = unique(vuln$LastFitYr_num[rev(order(as.numeric(vuln$LastFitYr_num)))]))
+		pcatch$LastFitYr <- factor(pcatch$LastFitYr_num, levels = unique(pcatch$LastFitYr_num[rev(order(as.numeric(pcatch$LastFitYr_num)))]))
+		dcatch$LastFitYr <- factor(dcatch$LastFitYr_num, levels = unique(dcatch$LastFitYr_num[rev(order(as.numeric(dcatch$LastFitYr_num)))]))
+		recruits$LastFitYr <- factor(recruits$LastFitYr_num, levels = unique(recruits$LastFitYr_num[rev(order(as.numeric(recruits$LastFitYr_num)))]))
+		R0$LastFitYr <- factor(R0$LastFitYr_num, levels = unique(R0$LastFitYr_num[rev(order(as.numeric(R0$LastFitYr_num)))]))
 
 
         colfun <- colorRampPalette(c("goldenrod","darkorange","darkred"))

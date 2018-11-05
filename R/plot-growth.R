@@ -1,5 +1,12 @@
 #' Plot tag residuals
 #' 
+#' @param object and LSD object
+#' @param ylab the y axis label
+#' @param figure_dir the directory to save to
+#' @param ylim the y axis limits
+#' @import dplyr
+#' @import ggplot2
+#' @importFrom reshape2 melt
 #' @export
 #' 
 plot_tag_residuals <- function(object,
@@ -125,15 +132,23 @@ plot_tag_residuals <- function(object,
 }
 
 
-
 #' Plot growth increment
 #' 
+#' @param object and LSD object
+#' @param xlab the x axis label
+#' @param ylab the y axis label
+#' @param figure_dir the directory to save to
+#' @param empirical do this or not
+#' @import dplyr
+#' @import ggplot2
+#' @importFrom reshape2 melt
 #' @export
 #' 
 plot_growth_increment <- function(object, 
                                   xlab = "Size (mm)", 
                                   ylab = "Increment (mm)", 
-                                  figure_dir = "figure/", empirical = FALSE)
+                                  figure_dir = "figure/", 
+                                  empirical = FALSE)
 {
     data <- object@data
     map <- object@map
@@ -192,12 +207,20 @@ plot_growth_increment <- function(object,
 #'
 #' This function produces two different plots of the growth matrix. The first version is on a single panel. The second version plots a panel for each size category.
 #'
+#' @param object and LSD object
+#' @param xlab the x axis label
+#' @param ylab the y axis label
 #' @param scales should facet_wrap scales be fixed (the default), free, or free in one dimension (free_x, free_y).
+#' @param figure_dir the directory to save to
+#' @import dplyr
+#' @import ggplot2
+#' @importFrom reshape2 melt
 #' @export
 #' 
 plot_growth_matrix <- function(object, 
                                xlab = "Size after growth (mm)", 
-                               ylab = "Probability", scales = "fixed", 
+                               ylab = "Probability", 
+                               scales = "fixed", 
                                figure_dir = "figure/")
 {
     data <- object@data

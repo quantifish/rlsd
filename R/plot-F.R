@@ -1,9 +1,17 @@
 #' Plot fishing mortality
 #'
+#' @param object and LSD object
+#' @param scales free or fixed
+#' @param xlab the x axis label
+#' @param ylab the y axis label
+#' @param figure_dir the directory to save to
+#' @param ref which ref to plot
+#' @param show_proj show projection or not
 #' @export
 #' 
 plot_F <- function(object, scales = "free_y",
-                   xlab = "Fishing year", ylab = "Fishing mortality (F)", figure_dir = "figure/", ref, show_proj = FALSE)
+                   xlab = "Fishing year", ylab = "Fishing mortality (F)", 
+                   figure_dir = "figure/", ref, show_proj = FALSE)
 {
     data <- object@data
     map <- object@map

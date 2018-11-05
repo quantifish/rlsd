@@ -3,9 +3,14 @@
 #' @param object an S4 object
 #' @param xlab the x axis label
 #' @param figure_dir the directory to save the figure to
+#' @import dplyr
+#' @import ggplot2
+#' @importFrom reshape2 melt
 #' @export
 #' 
-plot_selectivity <- function(object, xlab = "Size (mm)", figure_dir = "figure/")
+plot_selectivity <- function(object, 
+                             xlab = "Size (mm)", 
+                             figure_dir = "figure/")
 {
     data <- object@data
     mcmc <- object@mcmc

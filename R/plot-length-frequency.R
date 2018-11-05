@@ -1,6 +1,13 @@
 #' Length-frequency plots
 #'
+#' @param object and LSD object
 #' @param n_panel The number of rows of panels to include per plot.
+#' @param xlab the x axis label
+#' @param ylab the y axis label
+#' @param figure_dir the directory to save to
+#' @import dplyr
+#' @import ggplot2
+#' @importFrom reshape2 melt
 #' @export
 #' 
 plot_lfs <- function(object,
@@ -145,6 +152,9 @@ plot_lfs <- function(object,
 
 #' Plot length frequency residuals
 #'
+#' @param object and LSD object
+#' @param figure_dir the directory to save to
+#' @param ylim the y axis limit
 #' @export
 #' 
 plot_lfs_resid <- function(object, figure_dir = "figure/", ylim)
@@ -310,6 +320,6 @@ plot_lfs_resid <- function(object, figure_dir = "figure/", ylim)
             scale_alpha(guide = "none") +
             coord_cartesian(ylim = ylim)
 
-        ggsave(paste0(figure_dir, "lf_residuals_sex_size.png"), p, width=16)
+        ggsave(paste0(figure_dir, "lf_residuals_sex_size.png"), p, width = 16)
 
 }

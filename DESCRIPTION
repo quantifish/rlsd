@@ -1,15 +1,16 @@
 Package: lsd
 Title: LSD Package
-Version: 5.42
-Date: 2018-11-05
+Version: 5.46
+Date: 2018-11-06
 Authors@R: c(
     person("Darcy", "Webber", email = "darcy@quantifish.co.nz", role = "cre"),
     person("Merrill", "Rudd", email = "merrillrudd@gmail.com", role = "aut"))
 Description: The LSD package for manipulating and plotting LSD inputs and outputs.
 Encoding: UTF-8
-Imports:
+Depends:
     dplyr,
-    ggplot2,
+    ggplot2
+Imports:
     ggrepel,
     methods,
     plyr,
@@ -24,13 +25,11 @@ License: MIT + file LICENSE
 RoxygenNote: 6.1.0
 Collate:
     'TACC.R'
-    'calc-Tmin.R'
     'create-rules.R'
-    'lsdOutput-class.R'
     'do-extract.R'
+    'lsdOutput-class.R'
     'do-extract_old.R'
     'do-plot-compare.R'
-    'theme-lsd.R'
     'do-plot.R'
     'extract-list.R'
     'lsd.version.R'
@@ -59,9 +58,8 @@ Collate:
     'plot-sex-ratio.R'
     'plot-snail.R'
     'plot-surplus-production.R'
-    'read-fit.R'
     'read-stan-map.R'
     'read-stan-mcmc.R'
     'read-stan-var.R'
-    'summarise-results.R'
+    'theme-lsd.R'
     'utils.R'

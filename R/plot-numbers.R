@@ -1,8 +1,15 @@
 #' Plot initial nubers
 #' 
+#' @param object and LSD object
+#' @param xlab the x axis label
+#' @param ylab the y axis label
+#' @param figure_dir the directory to save to
 #' @export
 #' 
-plot_initial_numbers <- function(object, xlab = "Size (mm)", ylab = "Number of individuals (thousands)", figure_dir = "figure/")
+plot_initial_numbers <- function(object, 
+                                 xlab = "Size (mm)", 
+                                 ylab = "Number of individuals (thousands)", 
+                                 figure_dir = "figure/")
 {
     data <- object@data
     mcmc <- object@mcmc
@@ -42,12 +49,18 @@ plot_initial_numbers <- function(object, xlab = "Size (mm)", ylab = "Number of i
 }
 
 
-
-#' Plot initial nubers
+#' Plot nubers
 #' 
+#' @param object and LSD object
+#' @param xlab the x axis label
+#' @param ylab the y axis label
+#' @param figure_dir the directory to save to
 #' @export
 #' 
-plot_numbers <- function(object, xlab = "Size (mm)", ylab = "Number of individuals (thousands)", figure_dir = "figure/")
+plot_numbers <- function(object, 
+                         xlab = "Size (mm)", 
+                         ylab = "Number of individuals (thousands)", 
+                         figure_dir = "figure/")
 {
     data <- object@data
     mcmc <- object@mcmc

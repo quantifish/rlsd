@@ -1,4 +1,4 @@
-#' LSD theme
+#' LSD theme based on ggplot2 theme
 #'
 #' @param base_size base font size
 #' @param base_family base font family

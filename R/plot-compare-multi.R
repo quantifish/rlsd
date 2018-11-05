@@ -66,10 +66,13 @@ compare_multi_risk <- function(object_list, object_names, figure_dir = "compare_
 #' @param object_list list of 'lsd.rds' files from multiple models
 #' @param object_names vector of model names associated with each of the output files in object_list
 #' @param figure_dir the directory to save the figure to
+#' @import dplyr
+#' @import ggplot2
+#' @importFrom reshape2 melt
 #' @export
 #' 
-plot_compare_catch_bio <- function(object_list, object_names, figure_dir = "compare_figure/"){
-
+plot_compare_catch_bio <- function(object_list, object_names, figure_dir = "compare_figure/")
+{
     data_list <- lapply(1:length(object_list), function(x) object_list[[x]]@data)
     mcmc_list <- lapply(1:length(object_list), function(x) object_list[[x]]@mcmc)
     data <- data_list[[1]]
@@ -339,6 +342,9 @@ plot_compare_catch_bio <- function(object_list, object_names, figure_dir = "comp
 #' @param object_list list of 'lsd.rds' files from multiple models
 #' @param object_names vector of model names associated with each of the output files in object_list
 #' @param figure_dir the directory to save the figure to
+#' @param save_plot to save the plot to file or not
+#' @import dplyr
+#' @import ggplot2
 #' @export
 #' 
 plot_compare_multi_ssb <- function(object_list, object_names, figure_dir = "compare_figure/", save_plot = TRUE)
@@ -450,6 +456,9 @@ plot_compare_multi_ssb <- function(object_list, object_names, figure_dir = "comp
 #' @param object_list list of 'lsd.rds' files from multiple models
 #' @param object_names vector of model names associated with each of the output files in object_list
 #' @param figure_dir the directory to save the figure to
+#' @param save_plot to save the plot to file or not
+#' @import dplyr
+#' @import ggplot2
 #' @export
 #' 
 plot_compare_multi_relssb <- function(object_list, object_names, figure_dir = "compare_figure/", save_plot = TRUE)
@@ -582,10 +591,14 @@ plot_compare_multi_relssb <- function(object_list, object_names, figure_dir = "c
 #' @param object_list list of 'lsd.rds' files from multiple models
 #' @param object_names vector of model names associated with each of the output files in object_list
 #' @param figure_dir the directory to save the figure to
+#' @import dplyr
+#' @import ggplot2
+#' @importFrom reshape2 melt
 #' @export
 #' 
-compare_multi_risk_wBias <- function(object_list, object_names, figure_dir = "compare_figure/"){
-
+compare_multi_risk_wBias <- function(object_list, object_names, 
+                                     figure_dir = "compare_figure/")
+{
     data_list <- lapply(1:length(object_list), function(x) object_list[[x]]@data)
     mcmc_list <- lapply(1:length(object_list), function(x) object_list[[x]]@mcmc)
     data <- data_list[[1]]
@@ -661,9 +674,14 @@ compare_multi_risk_wBias <- function(object_list, object_names, figure_dir = "co
 #' @param object_list list of 'lsd.rds' files from multiple models
 #' @param object_names vector of model names associated with each of the output files in object_list
 #' @param figure_dir the directory to save the figure to
+#' @param save_plot to save the plot to file or not
+#' @import dplyr
+#' @import ggplot2
 #' @export
 #' 
-plot_compare_multi_vb <- function(object_list, object_names, figure_dir = "compare_figure/", save_plot = TRUE)
+plot_compare_multi_vb <- function(object_list, object_names, 
+                                  figure_dir = "compare_figure/", 
+                                  save_plot = TRUE)
 {
     data_list <- lapply(1:length(object_list), function(x) object_list[[x]]@data)
     mcmc_list <- lapply(1:length(object_list), function(x) object_list[[x]]@mcmc)
@@ -672,7 +690,7 @@ plot_compare_multi_vb <- function(object_list, object_names, figure_dir = "compa
     pyears_list <- lapply(1:length(object_list), function(x) data_list[[x]]$first_yr:data_list[[x]]$last_proj_yr)
     regions_list <- lapply(1:length(object_list), function(x) 1:data_list[[x]]$n_area)
     sex <- c("Male","Immature female","Mature female")
-    seasons <- c("AW","SS")
+    seasons <- c("AW", "SS")
     YR <- "YR" # label for the season before the season change year
     cutyears_list <- lapply(1:length(object_list), function(x) (max(pyears_list[[x]])-99):max(pyears_list[[x]]))
     cutyears <- unique(unlist(cutyears_list))
@@ -747,9 +765,11 @@ plot_compare_multi_vb <- function(object_list, object_names, figure_dir = "compa
 #' @param object_list list of 'lsd.rds' files from multiple models
 #' @param object_names vector of model names associated with each of the output files in object_list
 #' @param figure_dir the directory to save the figure to
+#' @param save_plot to save the plot to file or not
 #' @export
 #' 
-plot_compare_multi_recruitment <- function(object_list, object_names, figure_dir = "compare_figure/", save_plot = TRUE)
+plot_compare_multi_recruitment <- function(object_list, object_names, 
+                                           figure_dir = "compare_figure/", save_plot = TRUE)
 {
     data_list <- lapply(1:length(object_list), function(x) object_list[[x]]@data)
     mcmc_list <- lapply(1:length(object_list), function(x) object_list[[x]]@mcmc)

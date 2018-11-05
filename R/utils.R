@@ -2,6 +2,8 @@
 #'
 #' quantile helper function
 #' 
+#' @param x the values
+#' @param dp the number of decimal places
 #' @export
 #' 
 .quantile <- function(x, dp = 2) {

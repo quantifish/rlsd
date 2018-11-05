@@ -1,5 +1,13 @@
 #' Plot handling mortality by year
 #' 
+#' Plot the fixed handling mortality rates each year.
+#' 
+#' @param object and LSD object
+#' @param xlab the x axis label
+#' @param ylab the y axis label
+#' @param figure_dir the directory to save to
+#' @import dplyr
+#' @import ggplot2
 #' @export
 #' 
 plot_handling_mortality <- function(object, 

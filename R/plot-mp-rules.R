@@ -1,19 +1,16 @@
 #' @title Plot control rules
 #'
-#' @author D'Arcy N. Webber, Charles Edwards
-#' @param control.pars a matrix of control parameters with columns as parameters
-#' and rows as different rules
-#' @param obs.cpue the current CPUE
-#' @param cpue a vector of the catch per unit effort (CPUE) to be plotted as the x
-#' axis
-#' @param target.dir a character string of the target directory to save the plot to
-#' @param file.suffix a suffix to append to the end of the saved plot name
-#' @return a plot
-#'
-#' @include TACC.R
+#' @param mp.pars a matrix of control parameters with columns as parameters and rows as different rules
+#' @param cpue.values the current CPUE
+#' @param tacc.values the current TACC
+#' @param cpue a vector of the catch per unit effort (CPUE) to be plotted as the x axis
+#' @import ggplot2
 #' @export
 #' 
-plot_mp_rules <- function(mp.pars, cpue.values = numeric(), tacc.values = numeric(), cpue = seq(0, 2, 0.01))
+plot_mp_rules <- function(mp.pars, 
+                          cpue.values = numeric(), 
+                          tacc.values = numeric(), 
+                          cpue = seq(0, 2, 0.01))
 {
     # par1  rule type
     # par2  CPUE at TACC = 0

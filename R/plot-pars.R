@@ -113,6 +113,7 @@
        warmup = warmup)
 }
 
+
 check_pars <- function(allpars, pars) {
   pars_wo_ws <- gsub('\\s+', '', pars) 
   m <- which(match(pars_wo_ws, allpars, nomatch = 0) == 0)
@@ -122,6 +123,7 @@ check_pars <- function(allpars, pars) {
     stop("no parameter specified (pars is empty)")
   unique(pars_wo_ws) 
 } 
+
 
 check_pars_first <- function(object, pars) {
   # Check if all parameters in pars are valid parameters of the model 
@@ -134,6 +136,7 @@ check_pars_first <- function(object, pars) {
   allpars <- cbind(object@model_pars, flatnames(object@model_pars))
   check_pars(allpars, pars) 
 } 
+
 
 check_pars_second <- function(sim, pars) {
   #
@@ -151,6 +154,7 @@ check_pars_second <- function(sim, pars) {
   allpars <- c(sim$pars_oi, sim$fnames_oi) 
   check_pars(allpars, pars)
 }
+
 
 remove_empty_pars <- function(pars, model_dims) {
   # 
@@ -179,6 +183,7 @@ remove_empty_pars <- function(pars, model_dims) {
   } 
   pars[ind]
 }
+
 
 pars_total_indexes <- function(names, dims, fnames, pars) {
   # Obtain the total indexes for parameters (pars) in the 
@@ -225,6 +230,7 @@ pars_total_indexes <- function(names, dims, fnames, pars) {
   idx
 }
 
+
 calc_starts <- function(dims) {
   len <- length(dims) 
   s <- sapply(unname(dims), function(d)  num_pars(d), USE.NAMES = FALSE) 
@@ -264,9 +270,16 @@ is.stanfit <- function(x) inherits(x, "stanfit")
 
 #' Plot dens
 #' 
+#' @param object and LSD object
+#' @param xlab the x axis label
+#' @param ylab the y axis label
+#' @param figure_dir the directory to save to
 #' @export
 #' 
-plot_dens <- function(object, xlab = "Size (mm)", ylab = "Maturation", figure_dir = "figure/")
+plot_dens <- function(object, 
+                      xlab = "Size (mm)", 
+                      ylab = "Maturation", 
+                      figure_dir = "figure/")
 {
     data <- object@data
     mcmc <- object@mcmc
@@ -298,6 +311,5 @@ plot_dens <- function(object, xlab = "Size (mm)", ylab = "Maturation", figure_di
         geom_density(aes(x = value)) +
         facet_wrap(~parameter, scales = "free_x") +
         theme_lsd()
-    p    
     ggsave(paste0(figure_dir, "par_dens2.png"), p)
 }

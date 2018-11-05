@@ -5,7 +5,8 @@
 #' @param mcmc plot MCMC if a .mcmc output is available
 #' @param variational plot variational if a .var output is available
 #' @param figure_dir the directory to save figures to
-#' @include lsdOutput-class.R do-extract.R theme-lsd.R
+#' @import dplyr
+#' @import ggplot2
 #' @export
 #'
 do_plot <- function(object,

@@ -4,7 +4,7 @@
 #'
 #' @param base the core model code
 #' @param funcs the functions that are called by the core model code
-#' @param dat the .dat file that will be input to the model. This is needed for switching parameters on/off.
+#' @param ctl the .ctl file that will be input to the model. This is needed for switching parameters on/off.
 #' @param save should the full model be written to file or not
 #' @import rstan
 #' @export

@@ -1,5 +1,8 @@
 #' Plot surplus production
 #' 
+#' @param object an LSD object
+#' @param xlab the a axis label
+#' @param figure_dir the directory to save the figure to
 #' @export
 #' 
 plot_surplus_production <- function(object, xlab = "Fishing year", figure_dir = "figure/")

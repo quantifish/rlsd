@@ -1,8 +1,17 @@
 #' Plot maturation
 #' 
+#' @param object and LSD object
+#' @param xlab the x axis label
+#' @param ylab the y axis label
+#' @param figure_dir the directory to save to
+#' @param empirical plot empirical maturation or not
 #' @export
 #' 
-plot_maturation <- function(object, xlab = "Size (mm)", ylab = "Maturation", figure_dir = "figure/", empirical = FALSE)
+plot_maturation <- function(object, 
+                            xlab = "Size (mm)", 
+                            ylab = "Maturation", 
+                            figure_dir = "figure/", 
+                            empirical = FALSE)
 {
     data <- object@data
     mcmc <- object@mcmc
@@ -62,7 +71,7 @@ plot_maturation <- function(object, xlab = "Size (mm)", ylab = "Maturation", fig
         xlab(xlab) + ylab(ylab) +
         theme_lsd()
 
-if (empirical == T) {
+    if (empirical == T) {
     p = p +
         stat_summary(data = dmat5, aes(x = Size, y = value), fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.05, fill = "red", colour = NA) +
         stat_summary(data = dmat5, aes(x = Size, y = value), fun.ymin = function(x) quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.1, fill = "red", colour = NA) +

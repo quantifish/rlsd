@@ -1,6 +1,10 @@
 #' Compare catchability coefficient q from multiple models
 #' 
 #' @param object as LSD output object
+#' @param figure_dir the directory to save the figure to
+#' @import dplyr
+#' @import reshape2
+#' @import ggplot2
 #' @export
 #' 
 plot_q <- function(object, figure_dir = "figure/")

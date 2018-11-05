@@ -1,5 +1,7 @@
-#' Plot stock recruit relationship
+#' Plot snail trial
 #' 
+#' @param object an LSD object
+#' @param figure_dir the directory to save the figure to
 #' @export
 #' 
 plot_snail <- function(object,

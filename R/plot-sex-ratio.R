@@ -2,6 +2,11 @@
 #'
 #' Plot the sex-ratio data and fit to the data.
 #'
+#' @param object an LSD object
+#' @param scales the scales
+#' @param xlab the x axis label
+#' @param ylab the y axis label
+#' @param figure_dir the directory to save the figure to
 #' @export
 #' 
 plot_sex_ratio <- function(object, scales = "free", xlab = "Fishing year", ylab = "Proportion", figure_dir = "figure/")

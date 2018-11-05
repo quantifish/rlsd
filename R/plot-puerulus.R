@@ -1,8 +1,19 @@
 #' Plot puerulus
 #'
+#' @param d and LSD object
+#' @param scales free or fixed
+#' @param xlab the x axis label
+#' @param ylab the y axis label
+#' @param figure_dir the directory to save to
+#' @import dplyr
+#' @import ggplot2
 #' @export
 #' 
-plot_puerulus <- function(d, scales = "free_y", xlab = "Fishing year", ylab = "Puerulus index", figure_dir = "figure/")
+plot_puerulus <- function(d, 
+                          scales = "free_y", 
+                          xlab = "Fishing year", 
+                          ylab = "Puerulus index", 
+                          figure_dir = "figure/")
 {
     if (d@data$puerulus_on == 1) {
         n_iter <- nrow(d@mcmc[[1]])

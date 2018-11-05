@@ -1,5 +1,12 @@
 #' Plot recruitment deviations
 #' 
+#' @param object an lsd object
+#' @param xlab x axis label
+#' @param ylab y axis label
+#' @param figure_dir the directory to save the figure to
+#' @import dplyr
+#' @import reshape2
+#' @import ggplot2
 #' @export
 #' 
 plot_recruitment_deviations <- function(object,
@@ -49,8 +56,7 @@ plot_recruitment_deviations <- function(object,
     
     if (data$n_area > 1) p <- p + facet_wrap(~Region)
     
-    p <- p + #geom_vline(aes(xintercept = data$last_yr), linetype = "dashed") + 
-        expand_limits(y = 0) +
+    p <- p + expand_limits(y = 0) +
         xlab(xlab) + ylab(ylab) +
         scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
         theme_lsd()
@@ -65,6 +71,13 @@ plot_recruitment_deviations <- function(object,
 #' of R0, and a vertical dashed line indicates the final model year
 #' (after the line is projected recruitment).
 #' 
+#' @param object an lsd object
+#' @param xlab x axis label
+#' @param ylab y axis label
+#' @param figure_dir the directory to save the figure to
+#' @import dplyr
+#' @import reshape2
+#' @import ggplot2
 #' @export
 #' 
 plot_recruitment <- function(object,

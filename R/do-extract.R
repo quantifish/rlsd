@@ -6,7 +6,6 @@
 #' @param mcmc extract one or more MCMC files
 #' @param variational extract a var file
 #' @param model a name or label for the model being extracted
-#' @include lsdOutput-class.R
 #' @import rstan
 #' @import methods
 #' @importFrom plyr adply

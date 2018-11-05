@@ -2,22 +2,25 @@
 #' 
 #' Extract MCMC samples from a list produced by \code{read_stan_mcmc}
 #' 
-#' @param object list object produced by \code{read_stan_mcmc}
-#' @param pars character vector of parameters to be extracted (or not)
-#' @param permute should the MCMC sample chains be permuted and combined?
-#' @param include should pars be extracted (TRUE) or everything except the pars (FALSE) 
+#' @param object list object passed to rstan extract
+#' @param ... other things passed to rstan extract
 #' @importMethodsFrom rstan extract
 #' @import methods
 #' 
 setGeneric("extract", getGeneric("extract", package = "rstan"))
 
+
 #' Extract thingy
 #' 
+#' @param object list object produced by read_stan_mcmc
+#' @param pars character vector of parameters to be extracted (or not)
+#' @param permuted should the MCMC sample chains be permuted and combined?
+#' @param include should pars be extracted (TRUE) or everything except the pars (FALSE) 
 #' @import methods
 #' @export
 #' 
-setMethod("extract", signature = "list", definition = function(object, pars, permuted = TRUE, include = TRUE) {
-    
+setMethod("extract", signature = "list", definition = function(object, pars, permuted = TRUE, include = TRUE)
+{
               # Extract the samples in different forms for different parameters. 
               #
               # Args:

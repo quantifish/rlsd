@@ -25,11 +25,13 @@ setClass("lsdOutput", slots = list(
 
 #' Set up the object class
 #' 
+#' @param .Object no idea
+#' @param model.name a model name
 #' @import methods
 #' @export
 #' 
-setMethod("initialize", signature = "lsdOutput", definition = function(.Object, model.name) {
-  
+setMethod("initialize", signature = "lsdOutput", definition = function(.Object, model.name)
+{
   if (!missing(model.name)) {
     .Object@model <- as.character(model.name)
   }

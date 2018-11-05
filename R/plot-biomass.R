@@ -1,5 +1,10 @@
 #' Plot stock recruit relationship
 #' 
+#' @param object and LSD object
+#' @param scales free or fixed
+#' @param show_map show MAP or not
+#' @param xlab the x axis label
+#' @param figure_dir the directory to save to
 #' @import dplyr
 #' @import ggplot2
 #' @importFrom reshape2 melt
@@ -58,6 +63,13 @@ plot_ssb_recruitment <- function(object,
 
 #' Plot SSB
 #' 
+#' @param object and LSD object
+#' @param scales free or fixed
+#' @param show_map show MAP or not
+#' @param show_mcmc show MCMC or not
+#' @param show_proj show projection or not
+#' @param show_target show target or not
+#' @param xlab the x axis label
 #' @import dplyr
 #' @import ggplot2
 #' @importFrom reshape2 melt
@@ -165,8 +177,17 @@ plot_ssb <- function(object,
 
 #' Plot vulnerable reference biomass
 #'
+#' @param object and LSD object
+#' @param scales free or fixed
+#' @param show_map show MAP or not
+#' @param show_mcmc show MCMC or not
+#' @param show_proj show projection or not
+#' @param show_quants the quantiles to plot
+#' @param xlab the x axis label
+#' @param ref which reference biomass to plot
 #' @import dplyr
 #' @import ggplot2
+#' @import ggrepel
 #' @importFrom reshape2 melt
 #' @export
 #' 
@@ -322,19 +343,28 @@ plot_vulnerable_reference_biomass <- function(object,
 
 #' Plot vulnerable reference biomass
 #'
+#' @param object and LSD object
+#' @param scales free or fixed
+#' @param show_map show MAP or not
+#' @param show_mcmc show MCMC or not
+#' @param show_proj show projection or not
+#' @param show_quants the quantiles to plot
+#' @param xlab the x axis label
+#' @param ref which reference biomass to plot
 #' @import dplyr
 #' @import ggplot2
+#' @import ggrepel
 #' @importFrom reshape2 melt
 #' @export
 #' 
 plot_vulnerable_biomass <- function(object,
-                                              scales = "free_x",
-                                              show_map = TRUE,
-                                              show_mcmc = TRUE,
-                                              show_proj = FALSE,
-                                              xlab = "Fishing year (1 April - 31 March)",
-                                             show_quants = c(0.05, 0.25),
-                                              ref = c("Bmsy", "Bref"))
+                                    scales = "free_x",
+                                    show_map = TRUE,
+                                    show_mcmc = TRUE,
+                                    show_proj = FALSE,
+                                    xlab = "Fishing year (1 April - 31 March)",
+                                    show_quants = c(0.05, 0.25),
+                                    ref = c("Bmsy", "Bref"))
 {
   data <- object@data
   map <- object@map
@@ -475,12 +505,14 @@ plot_vulnerable_biomass <- function(object,
 
 #' Plot biomass measures
 #' 
-#' Plots three types of biomass:
-#' \itemize{
-#' \item Recruited biomass: numbers * weight * size_limit
-#' \item Total biomass: numbers * weight
-#' \item Vulnerable reference biomass (using final year vulnerability and selectivity): numbers * weight * vulnerability * selectivity * size_limit
-#' }
+#' Plots three types of biomass.
+#' 
+#' @param object and LSD object
+#' @param scales free or fixed
+#' @param show_map show MAP or not
+#' @param show_mcmc show MCMC or not
+#' @param xlab the x axis label
+#' @param figure_dir the directory to save to
 #' @param ref specify Bmsy, Bref, or both
 #' @import dplyr
 #' @import ggplot2

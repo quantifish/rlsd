@@ -2,7 +2,11 @@
 #' 
 #' @param object_list list of 'lsd.rds' files from multiple models
 #' @param object_names vector of model names associated with each of the output files in object_list
-#
+#' @param figure_dir the directory to save to
+#' @param save_plot to save the plot to file or not
+#' @import dplyr
+#' @import ggplot2
+#' @importFrom reshape2 melt
 #' @export
 #' 
 plot_compare_ssb <- function(object_list, object_names, figure_dir = "compare_figure/", save_plot = TRUE)
@@ -270,7 +274,11 @@ plot_compare_ssb <- function(object_list, object_names, figure_dir = "compare_fi
 #' 
 #' @param object_list list of 'lsd.rds' files from multiple models
 #' @param object_names vector of model names associated with each of the output files in object_list
-#
+#' @param figure_dir the directory to save to
+#' @param save_plot to save the plot to file or not
+#' @import dplyr
+#' @import ggplot2
+#' @importFrom reshape2 melt
 #' @export
 #' 
 plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_figure/", save_plot = TRUE)
@@ -387,6 +395,11 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
 #' 
 #' @param object_list list of 'lsd.rds' files from multiple models
 #' @param object_names vector of model names associated with each of the output files in object_list
+#' @param figure_dir the directory to save to
+#' @param save_plot to save the plot to file or not
+#' @import dplyr
+#' @import ggplot2
+#' @importFrom reshape2 melt
 #' @export
 #' 
 plot_compare_recruitment <- function(object_list, object_names, figure_dir = "compare_figure/", save_plot = TRUE)
@@ -506,10 +519,16 @@ plot_compare_recruitment <- function(object_list, object_names, figure_dir = "co
    }
 }
 
+
 #' Compare selectivity
 #' 
 #' @param object_list list of 'lsd.rds' files from multiple stocks
 #' @param object_names vector of model names associated with each of the output files in object_list
+#' @param figure_dir the directory to save to
+#' @param save_plot to save the plot to file or not
+#' @import dplyr
+#' @import ggplot2
+#' @importFrom reshape2 melt
 #' @export
 #' 
 plot_compare_selectivity <- function(object_list, object_names, figure_dir = "compare_figure/", save_plot=TRUE){
@@ -580,10 +599,16 @@ plot_compare_selectivity <- function(object_list, object_names, figure_dir = "co
    }
 }
 
+
 #' Compare catchability coefficient q from multiple models
 #' 
 #' @param object_list list of 'lsd.rds' files from multiple models
 #' @param object_names vector of model names associated with each of the output files in object_list
+#' @param figure_dir the directory to save to
+#' @param save_plot to save the plot to file or not
+#' @import dplyr
+#' @import ggplot2
+#' @importFrom reshape2 melt
 #' @export
 #' 
 plot_compare_q <- function(object_list, object_names, figure_dir = "compare_figure/", save_plot = TRUE)
@@ -702,4 +727,3 @@ plot_compare_q <- function(object_list, object_names, figure_dir = "compare_figu
       return(p)
     }
 }
-

@@ -2,6 +2,13 @@
 #'
 #' Plot the offset CPUE data and fit to the data.
 #'
+#' @param object and LSD object
+#' @param scales free or fixed
+#' @param xlab the x axis label
+#' @param ylab the y axis label
+#' @param figure_dir the directory to save to
+#' @import dplyr
+#' @import ggplot2
 #' @export
 #' 
 plot_offset_cpue <- function(object,
@@ -70,6 +77,13 @@ plot_offset_cpue <- function(object,
 #'
 #' Plot the CPUE data and fit to the data.
 #'
+#' @param object and LSD object
+#' @param scales free or fixed
+#' @param xlab the x axis label
+#' @param ylab the y axis label
+#' @param figure_dir the directory to save to
+#' @import dplyr
+#' @import ggplot2
 #' @export
 #' 
 plot_cpue <- function(object,
@@ -253,6 +267,9 @@ plot_cpue <- function(object,
 #'
 #' Plot the offset year CPUE vs the mean of the AW CPUE during year y and SS CPUE during year y-1.
 #'
+#' @param object and LSD object
+#' @param figure_dir the directory to save to
+#' @import ggplot2
 #' @export
 #' 
 plot_offset_cpue_lm <- function(object, figure_dir = "figure/") {
@@ -290,9 +307,14 @@ plot_offset_cpue_lm <- function(object, figure_dir = "figure/") {
 #'
 #' Plot the offset year CPUE vs the mean of the AW CPUE during year y and SS CPUE during year y-1.
 #'
+#' @param object and LSD object
+#' @param figure_dir the directory to save to
+#' @import dplyr
+#' @import ggplot2
 #' @export
 #' 
-plot_aw_cpue_lm <- function(object, figure_dir = "figure/") {
+plot_aw_cpue_lm <- function(object, figure_dir = "figure/")
+{
     logit <- function() { log(x / (1 - x)) }
     inv_logit <- function(x) { 1 / (1 + exp(-x)) }
     

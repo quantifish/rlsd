@@ -4,6 +4,12 @@
 #' by year as points where the point size represents the relative
 #' amount of data.
 #'
+#' @param object and LSD object
+#' @param xlab the x axis label
+#' @param figure_dir the directory to save to
+#' @param save_plot to save the plot to file or not
+#' @import dplyr
+#' @import ggplot2
 #' @export
 #' 
 plot_data_extent <- function(object,

@@ -1,5 +1,10 @@
 #' Extract model fits and load into lsdOutput object class for plotting
 #' 
+#' @param dir the directory to extract from
+#' @param data extract a dat file
+#' @param map extract an MAP file
+#' @param mcmc extract one or more MCMC files
+#' @param variational extract a var file
 #' @param model a name or label for the model being extracted
 #' @include lsdOutput-class.R
 #' @export

@@ -2,6 +2,15 @@
 #'
 #' Plot the catch data and fit to the data.
 #'
+#' @param object and LSD object
+#' @param show_proj show projection or not
+#' @param scales free or fixed
+#' @param xlab the x axis label
+#' @param ylab the y axis label
+#' @param figure_dir the directory to save to
+#' @import dplyr
+#' @import ggplot2
+#' @importFrom reshape2 melt
 #' @export
 #' 
 plot_catch <- function(object,
@@ -180,7 +189,6 @@ plot_catch <- function(object,
             dplyr::group_by(Iteration, value) %>%
             dplyr::rename("MSY" = value)
 
-
     dcatch2 <- dcatch %>% 
             dplyr::group_by(Year, Sector, Iteration) %>%
             dplyr::summarise(Catch = sum(Catch))
@@ -188,7 +196,6 @@ plot_catch <- function(object,
     dcatch2 <- left_join(dcatch2, msy) %>% 
         dplyr::mutate(Label = "") %>%
         dplyr::mutate(Label = ifelse(Iteration == 1 & Year == max(years) & Sector == "Commercial", "MSY", ""))
-
 
     p <- ggplot(dcatch2) + 
             geom_area(aes(x = Year, y = Catch, colour = Sector, fill = Sector), position = "stack") +
@@ -202,6 +209,4 @@ plot_catch <- function(object,
             ggrepel::geom_label_repel(data = dcatch2, aes(x = Year, y = MSY, label = Label), fill = "black", size = 5, color = 'white', force = 10, segment.color = '#bbbbbb', min.segment.length = unit(0, "lines"))
 
     ggsave(paste0(figure_dir, "catch_type.png"), p, width = 10)
-
-
 }

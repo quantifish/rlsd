@@ -154,10 +154,11 @@ plot_recruitment <- function(object,
 
 #' Plot recruitment size
 #' 
-#' @param object
+#' @param object an lsd object
 #' @param xlab x axis label
 #' @param ylab y axis label
 #' @param figure_dir the directory to save the figure to
+#' @import dplyr
 #' @import ggplot2
 #' @export
 #' 
@@ -174,7 +175,8 @@ plot_recruitment_size <- function(object, xlab = "Size at recruitment (mm)", yla
         geom_line() +
         geom_point() +
         expand_limits(y = 0) +
-        xlab(xlab) + ylab(ylab) +
+        xlab(xlab) + 
+        ylab(ylab) +
         theme_lsd()
     
     ggsave(paste0(figure_dir, "recruitment_size.png"), p)

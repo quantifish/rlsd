@@ -2,7 +2,7 @@
 #'
 .onAttach <- function(libname, pkgname)
 {
-    packageStartupMessage("lsd version: 5.4
-Compile date: 2018-10-24
+    packageStartupMessage("lsd version: 5.42
+Compile date: 2018-11-05
 ")
 }

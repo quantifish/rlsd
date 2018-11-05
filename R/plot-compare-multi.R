@@ -1,9 +1,14 @@
 #' Compare probability of being under risk constraints
+#' 
 #' @param object_list list of mcmc results
 #' @param object_names list of model names
+#' @param figure_dir the directory to save the figure to
+#' @import dplyr
+#' @importFrom reshape2 melt
 #' @export
 #' 
-compare_multi_risk <- function(object_list, object_names, figure_dir = "compare_figure/"){
+compare_multi_risk <- function(object_list, object_names, figure_dir = "compare_figure/") 
+{
 
     data_list <- lapply(1:length(object_list), function(x) object_list[[x]]@data)
     mcmc_list <- lapply(1:length(object_list), function(x) object_list[[x]]@mcmc)
@@ -60,7 +65,7 @@ compare_multi_risk <- function(object_list, object_names, figure_dir = "compare_
 #' 
 #' @param object_list list of 'lsd.rds' files from multiple models
 #' @param object_names vector of model names associated with each of the output files in object_list
-#
+#' @param figure_dir the directory to save the figure to
 #' @export
 #' 
 plot_compare_catch_bio <- function(object_list, object_names, figure_dir = "compare_figure/"){
@@ -68,7 +73,6 @@ plot_compare_catch_bio <- function(object_list, object_names, figure_dir = "comp
     data_list <- lapply(1:length(object_list), function(x) object_list[[x]]@data)
     mcmc_list <- lapply(1:length(object_list), function(x) object_list[[x]]@mcmc)
     data <- data_list[[1]]
-
 
     years_list <- lapply(1:length(object_list), function(x) data_list[[x]]$first_yr:data_list[[x]]$last_yr)
     pyears_list <- lapply(1:length(object_list), function(x) data_list[[x]]$first_yr:data_list[[x]]$last_proj_yr)
@@ -78,7 +82,6 @@ plot_compare_catch_bio <- function(object_list, object_names, figure_dir = "comp
     seasons <- c("AW","SS")
     regions <- 1:data$n_area
     n_iter <- nrow(mcmc_list[[1]][[1]])
-
 
     ssb_list <- lapply(1:length(object_list), function(x){
         n_iter <- nrow(mcmc_list[[x]][[1]])
@@ -328,11 +331,6 @@ plot_compare_catch_bio <- function(object_list, object_names, figure_dir = "comp
     #     scale_color_brewer(palette="Set1") +
     #     scale_fill_brewer(palette="Set1") +
     #     theme_lsd(base_size = 14)
-
-
-
-
-
 }
 
 
@@ -340,7 +338,7 @@ plot_compare_catch_bio <- function(object_list, object_names, figure_dir = "comp
 #' 
 #' @param object_list list of 'lsd.rds' files from multiple models
 #' @param object_names vector of model names associated with each of the output files in object_list
-#
+#' @param figure_dir the directory to save the figure to
 #' @export
 #' 
 plot_compare_multi_ssb <- function(object_list, object_names, figure_dir = "compare_figure/", save_plot = TRUE)
@@ -446,11 +444,12 @@ plot_compare_multi_ssb <- function(object_list, object_names, figure_dir = "comp
     }
 }
 
+
 #' Compare vulnerable biomass from multiple models
 #' 
 #' @param object_list list of 'lsd.rds' files from multiple models
 #' @param object_names vector of model names associated with each of the output files in object_list
-#
+#' @param figure_dir the directory to save the figure to
 #' @export
 #' 
 plot_compare_multi_relssb <- function(object_list, object_names, figure_dir = "compare_figure/", save_plot = TRUE)
@@ -577,11 +576,12 @@ plot_compare_multi_relssb <- function(object_list, object_names, figure_dir = "c
     }
 }
 
+
 #' Add bias to recalculate risk probabilities
 #' 
 #' @param object_list list of 'lsd.rds' files from multiple models
 #' @param object_names vector of model names associated with each of the output files in object_list
-#
+#' @param figure_dir the directory to save the figure to
 #' @export
 #' 
 compare_multi_risk_wBias <- function(object_list, object_names, figure_dir = "compare_figure/"){
@@ -660,7 +660,7 @@ compare_multi_risk_wBias <- function(object_list, object_names, figure_dir = "co
 #' 
 #' @param object_list list of 'lsd.rds' files from multiple models
 #' @param object_names vector of model names associated with each of the output files in object_list
-#
+#' @param figure_dir the directory to save the figure to
 #' @export
 #' 
 plot_compare_multi_vb <- function(object_list, object_names, figure_dir = "compare_figure/", save_plot = TRUE)
@@ -746,6 +746,7 @@ plot_compare_multi_vb <- function(object_list, object_names, figure_dir = "compa
 #' 
 #' @param object_list list of 'lsd.rds' files from multiple models
 #' @param object_names vector of model names associated with each of the output files in object_list
+#' @param figure_dir the directory to save the figure to
 #' @export
 #' 
 plot_compare_multi_recruitment <- function(object_list, object_names, figure_dir = "compare_figure/", save_plot = TRUE)

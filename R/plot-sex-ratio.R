@@ -7,6 +7,10 @@
 #' @param xlab the x axis label
 #' @param ylab the y axis label
 #' @param figure_dir the directory to save the figure to
+#' @import dplyr
+#' @import ggplot2
+#' @importFrom reshape2 melt
+#' @importFrom stats quantile
 #' @export
 #' 
 plot_sex_ratio <- function(object, scales = "free", xlab = "Fishing year", ylab = "Proportion", figure_dir = "figure/")

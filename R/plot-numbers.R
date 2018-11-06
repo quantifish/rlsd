@@ -4,6 +4,10 @@
 #' @param xlab the x axis label
 #' @param ylab the y axis label
 #' @param figure_dir the directory to save to
+#' @import dplyr
+#' @import ggplot2
+#' @importFrom reshape2 melt
+#' @importFrom stats quantile
 #' @export
 #' 
 plot_initial_numbers <- function(object, 
@@ -55,6 +59,10 @@ plot_initial_numbers <- function(object,
 #' @param xlab the x axis label
 #' @param ylab the y axis label
 #' @param figure_dir the directory to save to
+#' @import dplyr
+#' @import ggplot2
+#' @importFrom reshape2 melt
+#' @importFrom stats quantile
 #' @export
 #' 
 plot_numbers <- function(object, 
@@ -69,7 +77,7 @@ plot_numbers <- function(object,
     years <- object@data$first_yr:object@data$last_yr
     pyears <- object@data$first_yr:object@data$proj_yr
     sex <- c("Male","Immature female","Mature female")
-    seasons <- c("AW","SS")
+    seasons <- c("AW", "SS")
     bins <- object@data$size_midpoint_l
     regions <- 1:object@data$n_area
     

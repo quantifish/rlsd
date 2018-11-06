@@ -6,6 +6,7 @@
 #' @param figure_dir the directory to save to
 #' @import dplyr
 #' @import ggplot2
+#' @importFrom reshape2 melt
 #' @export
 #' 
 plot_mls <- function(object, 

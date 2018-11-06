@@ -5,6 +5,9 @@
 #' @param ylab the y axis label
 #' @param figure_dir the directory to save to
 #' @param empirical plot empirical maturation or not
+#' @import dplyr
+#' @import ggplot2
+#' @importFrom reshape2 melt
 #' @importFrom stats quantile
 #' @export
 #' 
@@ -68,8 +71,9 @@ plot_maturation <- function(object,
         stat_summary(data = pmat, aes(x = Size, y = value), fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
         stat_summary(data = pmat, aes(x = Size, y = value), fun.ymin = function(x) quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
         stat_summary(data = pmat, aes(x = Size, y = value), fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1) +
-        expand_limits(y = c(0,1)) +
-        xlab(xlab) + ylab(ylab) +
+        expand_limits(y = c(0, 1)) +
+        xlab(xlab) + 
+        ylab(ylab) +
         theme_lsd()
 
     if (empirical == T) {

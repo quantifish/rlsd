@@ -5,8 +5,9 @@
 #' @param ylab y axis label
 #' @param figure_dir the directory to save the figure to
 #' @import dplyr
-#' @import reshape2
 #' @import ggplot2
+#' @importFrom reshape2 melt
+#' @importFrom stats quantile
 #' @export
 #' 
 plot_recruitment_deviations <- function(object,
@@ -76,8 +77,9 @@ plot_recruitment_deviations <- function(object,
 #' @param ylab y axis label
 #' @param figure_dir the directory to save the figure to
 #' @import dplyr
-#' @import reshape2
 #' @import ggplot2
+#' @importFrom reshape2 melt
+#' @importFrom stats quantile
 #' @export
 #' 
 plot_recruitment <- function(object,
@@ -173,6 +175,7 @@ plot_recruitment <- function(object,
 #' @param figure_dir the directory to save the figure to
 #' @import dplyr
 #' @import ggplot2
+#' @importFrom reshape2 melt
 #' @export
 #' 
 plot_recruitment_size <- function(object, xlab = "Size at recruitment (mm)", ylab = "Proportion", figure_dir = "figure/")

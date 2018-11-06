@@ -10,7 +10,9 @@
 #' @param figure_dir the directory to save to
 #' @import dplyr
 #' @import ggplot2
+#' @import ggrepel
 #' @importFrom reshape2 melt
+#' @importFrom stats quantile
 #' @export
 #' 
 plot_catch <- function(object,

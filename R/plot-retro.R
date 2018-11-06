@@ -9,6 +9,7 @@
 #' @import dplyr
 #' @import ggplot2
 #' @importFrom reshape2 melt
+#' @importFrom stats quantile
 #' @export
 #' 
 plot_retro <- function(object, 
@@ -235,8 +236,7 @@ plot_retro <- function(object,
 		recruits$LastFitYr <- factor(recruits$LastFitYr_num, levels = unique(recruits$LastFitYr_num[rev(order(as.numeric(recruits$LastFitYr_num)))]))
 		R0$LastFitYr <- factor(R0$LastFitYr_num, levels = unique(R0$LastFitYr_num[rev(order(as.numeric(R0$LastFitYr_num)))]))
 
-
-        colfun <- colorRampPalette(c("goldenrod","darkorange","darkred"))
+        colfun <- colorRampPalette(c("goldenrod", "darkorange", "darkred"))
         cols <- colfun(length(retro_names))
 
 		##### plot vulnerable biomass

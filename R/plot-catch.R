@@ -113,9 +113,9 @@ plot_catch <- function(object,
     
     p <- ggplot(data = pcatch, aes(x = Year, y = Catch))
     if (show_proj) p <- p + geom_vline(aes(xintercept = data$last_yr), linetype = "dashed")
-    p <- p + stat_summary(fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
-        stat_summary(fun.ymin = function(x) quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
-        stat_summary(fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1) +
+    p <- p + stat_summary(fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
+        stat_summary(fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
+        stat_summary(fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1) +
         geom_point(data = dcatch1, color = "red") +
         #expand_limits(y = 0) +
         xlab(xlab) + ylab(ylab) +
@@ -140,9 +140,9 @@ plot_catch <- function(object,
 
     p <- ggplot(data = pcatch_sum, aes(x = Year, y = Catch))
     if (show_proj) geom_vline(aes(xintercept = data$last_yr), linetype = "dashed")
-    p <- p + stat_summary(fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
-        stat_summary(fun.ymin = function(x) quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
-        stat_summary(fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1) +
+    p <- p + stat_summary(fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
+        stat_summary(fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
+        stat_summary(fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1) +
         geom_point(data = dcatch_sum, aes(x = Year, y = Catch), color = "red") +
         expand_limits(y = 0) +
         xlab(xlab) + ylab(ylab) +
@@ -172,9 +172,9 @@ plot_catch <- function(object,
     rcatch$Type <- factor(rcatch$Type, levels = c("SL","NSL"))
     
     p <- ggplot(data = dplyr::filter(rcatch), aes(x = Year, y = Catch)) +
-        stat_summary(fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
-        stat_summary(fun.ymin = function(x) quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
-        stat_summary(fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1) +
+        stat_summary(fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
+        stat_summary(fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
+        stat_summary(fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1) +
         #geom_violin() +
         facet_grid(Region + Type ~ Season, scales = "free") +
         expand_limits(y = 0) +
@@ -195,7 +195,7 @@ plot_catch <- function(object,
             dplyr::group_by(Year, Sector, Iteration) %>%
             dplyr::summarise(Catch = sum(Catch))
     dcatch2$Iteration <- 1
-    dcatch2 <- left_join(dcatch2, msy) %>% 
+    dcatch2 <- dplyr::left_join(dcatch2, msy) %>% 
         dplyr::mutate(Label = "") %>%
         dplyr::mutate(Label = ifelse(Iteration == 1 & Year == max(years) & Sector == "Commercial", "MSY", ""))
 
@@ -205,9 +205,9 @@ plot_catch <- function(object,
             theme_lsd() 
 
     ## add msy
-    p <- p + stat_summary(aes(x = Year, y = MSY), fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.125, colour = "black", fill="black" ) +
-            stat_summary(aes(x = Year, y = MSY), fun.ymin = function(x) quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.25, colour = NA) +
-            stat_summary(aes(x = Year, y = MSY), fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1) + 
+    p <- p + stat_summary(aes(x = Year, y = MSY), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.125, colour = "black", fill="black" ) +
+            stat_summary(aes(x = Year, y = MSY), fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.25, colour = NA) +
+            stat_summary(aes(x = Year, y = MSY), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1) + 
             ggrepel::geom_label_repel(data = dcatch2, aes(x = Year, y = MSY, label = Label), fill = "black", size = 5, color = 'white', force = 10, segment.color = '#bbbbbb', min.segment.length = unit(0, "lines"))
 
     ggsave(paste0(figure_dir, "catch_type.png"), p, width = 10)

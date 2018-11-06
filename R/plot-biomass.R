@@ -518,6 +518,7 @@ plot_vulnerable_biomass <- function(object,
 #' @import dplyr
 #' @import ggplot2
 #' @importFrom reshape2 melt
+#' @importFrom stats quantile
 #' @export
 #' 
 plot_biomass <- function(object,

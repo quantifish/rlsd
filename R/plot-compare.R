@@ -8,6 +8,7 @@
 #' @import ggplot2
 #' @importFrom reshape2 melt
 #' @importFrom grDevices colorRampPalette gray
+#' @importFrom stats quantile
 #' @export
 #' 
 plot_compare_ssb <- function(object_list, object_names, figure_dir = "compare_figure/", save_plot = TRUE)
@@ -74,16 +75,16 @@ plot_compare_ssb <- function(object_list, object_names, figure_dir = "compare_fi
     pyears <- unique(unlist(pyears_list))
 
     p1 <- ggplot(ssb %>% dplyr::filter(Year %in% years), aes(x = Year, y = value)) +
-        stat_summary(data = ssb0 %>% dplyr::filter(Year %in% years) %>% dplyr::filter(type == "Soft limit"), fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
-        stat_summary(data = ssb0 %>% dplyr::filter(Year %in% years) %>% dplyr::filter(type == "Soft limit"), fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model)) +
-        stat_summary(data = ssb0 %>% dplyr::filter(Year %in% years) %>% dplyr::filter(type == "Hard limit"), fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
-        stat_summary(data = ssb0 %>% dplyr::filter(Year %in% years) %>% dplyr::filter(type == "Hard limit"), fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model)) +
-        stat_summary(data = ssb0 %>% dplyr::filter(Year %in% years) %>% dplyr::filter(type == "SSB0"), fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
-        stat_summary(data = ssb0 %>% dplyr::filter(Year %in% years) %>% dplyr::filter(type == "SSB0"), fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model)) +
-        # stat_summary(data = dplyr::filter(ssb0, type == "Target"), fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
-        # stat_summary(data = dplyr::filter(ssb0, type == "Target"), fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model)) +
-        stat_summary(data = ssb %>% dplyr::filter(Year %in% years), fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
-        stat_summary(data = ssb %>% dplyr::filter(Year %in% years), fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model)) +
+        stat_summary(data = ssb0 %>% dplyr::filter(Year %in% years) %>% dplyr::filter(type == "Soft limit"), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
+        stat_summary(data = ssb0 %>% dplyr::filter(Year %in% years) %>% dplyr::filter(type == "Soft limit"), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model)) +
+        stat_summary(data = ssb0 %>% dplyr::filter(Year %in% years) %>% dplyr::filter(type == "Hard limit"), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
+        stat_summary(data = ssb0 %>% dplyr::filter(Year %in% years) %>% dplyr::filter(type == "Hard limit"), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model)) +
+        stat_summary(data = ssb0 %>% dplyr::filter(Year %in% years) %>% dplyr::filter(type == "SSB0"), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
+        stat_summary(data = ssb0 %>% dplyr::filter(Year %in% years) %>% dplyr::filter(type == "SSB0"), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model)) +
+        # stat_summary(data = dplyr::filter(ssb0, type == "Target"), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
+        # stat_summary(data = dplyr::filter(ssb0, type == "Target"), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model)) +
+        stat_summary(data = ssb %>% dplyr::filter(Year %in% years), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
+        stat_summary(data = ssb %>% dplyr::filter(Year %in% years), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model)) +
         geom_text(data = labs, aes(x = Year, y = value, label = type), nudge_x = -5) +
         expand_limits(y = 0) +
         labs(x = "Fishing year", y = "Spawning stock biomass (tonnes)") +
@@ -106,16 +107,16 @@ plot_compare_ssb <- function(object_list, object_names, figure_dir = "compare_fi
 
     p1 <- ggplot(ssb, aes(x = Year, y = value)) +
         geom_vline(aes(xintercept = max(years)+0.5), linetype=2) +
-        stat_summary(data = ssb0 %>% dplyr::filter(type == "Soft limit"), fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
-        stat_summary(data = ssb0 %>% dplyr::filter(type == "Soft limit"), fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model)) +
-        stat_summary(data = ssb0 %>% dplyr::filter(type == "Hard limit"), fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
-        stat_summary(data = ssb0 %>% dplyr::filter(type == "Hard limit"), fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model)) +
-        stat_summary(data = ssb0 %>% dplyr::filter(type == "SSB0"), fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
-        stat_summary(data = ssb0 %>% dplyr::filter(type == "SSB0"), fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model)) +
-        # stat_summary(data = dplyr::filter(ssb0, type == "Target"), fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
-        # stat_summary(data = dplyr::filter(ssb0, type == "Target"), fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model)) +
-        stat_summary(data = ssb, fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
-        stat_summary(data = ssb, fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model)) +
+        stat_summary(data = ssb0 %>% dplyr::filter(type == "Soft limit"), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
+        stat_summary(data = ssb0 %>% dplyr::filter(type == "Soft limit"), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model)) +
+        stat_summary(data = ssb0 %>% dplyr::filter(type == "Hard limit"), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
+        stat_summary(data = ssb0 %>% dplyr::filter(type == "Hard limit"), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model)) +
+        stat_summary(data = ssb0 %>% dplyr::filter(type == "SSB0"), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
+        stat_summary(data = ssb0 %>% dplyr::filter(type == "SSB0"), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model)) +
+        # stat_summary(data = dplyr::filter(ssb0, type == "Target"), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
+        # stat_summary(data = dplyr::filter(ssb0, type == "Target"), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model)) +
+        stat_summary(data = ssb, fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
+        stat_summary(data = ssb, fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model)) +
         geom_text(data = labs, aes(x = Year, y = value, label = type), nudge_x = -5) +
         expand_limits(y = 0) +
         labs(x = "Fishing year", y = "Spawning stock biomass (tonnes)") +
@@ -222,8 +223,8 @@ plot_compare_ssb <- function(object_list, object_names, figure_dir = "compare_fi
          geom_hline(aes(yintercept = 0.2), col="gray") +
          geom_hline(aes(yintercept = 0.1), col="gray") +
          geom_text(data = labs_rel, aes(x = min(Year), y = value, label = type), nudge_x=-5) +
-         stat_summary(fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(x = Year, y = RelSSB, fill = Model)) +
-         stat_summary(fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(x = Year, y = RelSSB, color = Model)) +
+         stat_summary(fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(x = Year, y = RelSSB, fill = Model)) +
+         stat_summary(fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(x = Year, y = RelSSB, color = Model)) +
          xlab("Year") + 
          ylab("Relative spawning biomass") +
          scale_y_continuous(expand = c(0,0), limits = c(0,1.05))
@@ -247,8 +248,8 @@ plot_compare_ssb <- function(object_list, object_names, figure_dir = "compare_fi
          geom_hline(aes(yintercept = 0.2), col="gray") +
          geom_hline(aes(yintercept = 0.1), col="gray") +
          geom_text(data = labs_rel, aes(x = min(Year), y = value, label = type), nudge_x=-5) +
-         stat_summary(fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(x = Year, y = RelSSB, fill = Model)) +
-         stat_summary(fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(x = Year, y = RelSSB, color = Model)) +
+         stat_summary(fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(x = Year, y = RelSSB, fill = Model)) +
+         stat_summary(fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(x = Year, y = RelSSB, color = Model)) +
          xlab("Year") + 
          ylab("Relative spawning biomass") +
          scale_y_continuous(expand = c(0,0), limits = c(0,1.05))
@@ -280,6 +281,7 @@ plot_compare_ssb <- function(object_list, object_names, figure_dir = "compare_fi
 #' @import dplyr
 #' @import ggplot2
 #' @importFrom reshape2 melt
+#' @importFrom stats quantile
 #' @export
 #' 
 plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_figure/", save_plot = TRUE)
@@ -335,9 +337,9 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
 
     # Vulnerable biomass
     p <- ggplot(data = vb %>% dplyr::filter(Year %in% years), aes(x = Year, y = value, color = Model, fill = Model)) +
-        stat_summary(data=vb, fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
-        #stat_summary(data=vb, fun.ymin = function(x) quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75), geom = "ribbon", alpha=0.45, colour = NA) +
-        stat_summary(data=vb, fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha=0.75) +
+        stat_summary(data=vb, fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
+        #stat_summary(data=vb, fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha=0.45, colour = NA) +
+        stat_summary(data=vb, fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1, alpha=0.75) +
         # scale_fill_manual(values = cols_all, labels = object_names) +
         # scale_colour_manual(values = cols_all, labels = object_names) +
         # guides(colour = guide_legend(override.aes = list(colour = cols_all, linetype = lty_all))) + 
@@ -363,9 +365,9 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
     # Vulnerable biomass
     p <- ggplot(data = vb, aes(x = Year, y = value, color = Model, fill = Model)) +
         geom_vline(aes(xintercept = max(years) + 0.5), linetype=2) +
-        stat_summary(data=vb, fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
-        #stat_summary(data=vb, fun.ymin = function(x) quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75), geom = "ribbon", alpha=0.45, colour = NA) +
-        stat_summary(data=vb, fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha=0.75) +
+        stat_summary(data=vb, fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
+        #stat_summary(data=vb, fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha=0.45, colour = NA) +
+        stat_summary(data=vb, fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1, alpha=0.75) +
         # scale_fill_manual(values = cols_all, labels = object_names) +
         # scale_colour_manual(values = cols_all, labels = object_names) +
         # guides(colour = guide_legend(override.aes = list(colour = cols_all, linetype = lty_all))) + 
@@ -401,6 +403,7 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
 #' @import dplyr
 #' @import ggplot2
 #' @importFrom reshape2 melt
+#' @importFrom stats quantile
 #' @export
 #' 
 plot_compare_recruitment <- function(object_list, object_names, figure_dir = "compare_figure/", save_plot = TRUE)
@@ -457,9 +460,9 @@ plot_compare_recruitment <- function(object_list, object_names, figure_dir = "co
     pyears <- unique(unlist(pyears_list))
 
    p <- ggplot(data = recruits %>% dplyr::filter(Year %in% years), aes(x = Year, y = value, color = Model, fill = Model)) +
-        stat_summary(fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
-        #stat_summary(fun.ymin = function(x) quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75), geom = "ribbon", alpha=0.45, colour = NA) +
-        stat_summary(fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha=0.75) +
+        stat_summary(fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
+        #stat_summary(fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha=0.45, colour = NA) +
+        stat_summary(fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1, alpha=0.75) +
         # scale_fill_manual(values = cols_all, labels = object_names) +
         # scale_colour_manual(values = cols_all, labels = object_names) +
         # guides(colour = guide_legend(override.aes = list(colour = cols_all, linetype = lty_all))) + 
@@ -488,9 +491,9 @@ plot_compare_recruitment <- function(object_list, object_names, figure_dir = "co
 
    p <- ggplot(data = recruits, aes(x = Year, y = value, color = Model, fill = Model)) +
         geom_vline(aes(xintercept = max(years) + 0.5), linetype=2) +
-        stat_summary(fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
-        #stat_summary(fun.ymin = function(x) quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75), geom = "ribbon", alpha=0.45, colour = NA) +
-        stat_summary(fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha=0.75) +
+        stat_summary(fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
+        #stat_summary(fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha=0.45, colour = NA) +
+        stat_summary(fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1, alpha=0.75) +
         # scale_fill_manual(values = cols_all, labels = object_names) +
         # scale_colour_manual(values = cols_all, labels = object_names) +
         # guides(colour = guide_legend(override.aes = list(colour = cols_all, linetype = lty_all))) + 
@@ -530,6 +533,7 @@ plot_compare_recruitment <- function(object_list, object_names, figure_dir = "co
 #' @import dplyr
 #' @import ggplot2
 #' @importFrom reshape2 melt
+#' @importFrom stats quantile
 #' @export
 #' 
 plot_compare_selectivity <- function(object_list, object_names, figure_dir = "compare_figure/", save_plot=TRUE){
@@ -565,9 +569,9 @@ plot_compare_selectivity <- function(object_list, object_names, figure_dir = "co
     nmod <- length(unique(sel$Model))
 
     p <- ggplot(data = sel, aes(x = Size, y = Selectivity, col = Model, fill = Model, linetype = Year)) +
-        stat_summary(data = sel, aes(x = Size, y = Selectivity, col = Model, linetype = Year), fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
-        stat_summary(data = sel, aes(x = Size, y = Selectivity, col = Model, linetype = Year), fun.ymin = function(x) quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
-        stat_summary(data = sel, aes(x = Size, y = Selectivity, col = Model, linetype = Year), fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha=0.8) +
+        stat_summary(data = sel, aes(x = Size, y = Selectivity, col = Model, linetype = Year), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
+        stat_summary(data = sel, aes(x = Size, y = Selectivity, col = Model, linetype = Year), fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
+        stat_summary(data = sel, aes(x = Size, y = Selectivity, col = Model, linetype = Year), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1, alpha=0.8) +
         scale_y_continuous(expand = c(0,0), limits = c(0, 1.05))
     if(nmod > 5){
         p <- p +
@@ -610,6 +614,7 @@ plot_compare_selectivity <- function(object_list, object_names, figure_dir = "co
 #' @import dplyr
 #' @import ggplot2
 #' @importFrom reshape2 melt
+#' @importFrom stats quantile
 #' @export
 #' 
 plot_compare_q <- function(object_list, object_names, figure_dir = "compare_figure/", save_plot = TRUE)
@@ -698,9 +703,9 @@ plot_compare_q <- function(object_list, object_names, figure_dir = "compare_figu
     pyears <- unique(unlist(pyears_list))
 
     p <- ggplot(data = q %>% dplyr::filter(Year %in% years), aes(x = Year, y = value, colour=Model, fill=Model)) +
-        stat_summary(fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
-        # stat_summary(fun.ymin = function(x) quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75), geom = "ribbon", alpha=0.45, colour = NA) +
-        stat_summary(fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha=0.75) +
+        stat_summary(fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
+        # stat_summary(fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha=0.45, colour = NA) +
+        stat_summary(fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1, alpha=0.75) +
         # scale_fill_manual(values=cols_all, labels=object_names) +
         # scale_colour_manual(values=cols_all, labels=object_names) +
         # guides(colour = guide_legend(override.aes = list(colour = cols_all, linetype = lty_all))) + 

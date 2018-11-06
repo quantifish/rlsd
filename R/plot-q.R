@@ -32,9 +32,9 @@ plot_q <- function(object, figure_dir = "figure/")
         dplyr::filter(QY %in% q_info$QY)
 
        p <- ggplot(data = q, aes(x = Year, y = value)) +
-            stat_summary(fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
-            stat_summary(fun.ymin = function(x) quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75), geom = "ribbon", alpha=0.45, colour = NA) +
-            stat_summary(fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha=0.75) + 
+            stat_summary(fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
+            stat_summary(fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha=0.45, colour = NA) +
+            stat_summary(fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1, alpha=0.75) + 
             expand_limits(y = 0) +
             xlab("Fishing year") + ylab("Catchability coefficient (q)") +
             # scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +

@@ -9,6 +9,7 @@
 #' @param figure_dir the directory to save to
 #' @import dplyr
 #' @import ggplot2
+#' @importFrom stats rnorm
 #' @export
 #' 
 plot_offset_cpue <- function(object,

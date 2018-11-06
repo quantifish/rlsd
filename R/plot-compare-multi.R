@@ -5,6 +5,8 @@
 #' @param figure_dir the directory to save the figure to
 #' @import dplyr
 #' @importFrom reshape2 melt
+#' @importFrom grDevices colorRampPalette gray
+#' @importFrom stats runif
 #' @export
 #' 
 compare_multi_risk <- function(object_list, object_names, figure_dir = "compare_figure/") 

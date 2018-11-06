@@ -8,6 +8,7 @@
 #' @import dplyr
 #' @import ggplot2
 #' @importFrom reshape2 melt
+#' @importFrom stats median
 #' @export
 #' 
 plot_ssb_recruitment <- function(object,

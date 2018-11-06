@@ -9,6 +9,7 @@
 #' @import rstan
 #' @import methods
 #' @importFrom plyr adply
+#' @importFrom utils write.csv write.table
 #' @export
 #'
 do_extract <- function(dir = ".", data = TRUE,

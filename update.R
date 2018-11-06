@@ -9,7 +9,7 @@ DESCRIPTION[4] <- paste("Date:", DATE)
 writeLines(DESCRIPTION, "DESCRIPTION")
 
 # Write lsd.version()
-filename <- "R/lsd.version.R"
+filename <- "R/zzz.R"
 cat("#' Function to return version number\n", file = filename)
 cat("#'\n", file = filename, append = TRUE)
 cat("#' @param libname library name\n", file = filename, append = TRUE)

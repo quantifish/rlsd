@@ -2,6 +2,7 @@
 #' 
 #' @param object an LSD object
 #' @param figure_dir the directory to save the figure to
+#' @importFrom utils head tail
 #' @export
 #' 
 plot_snail <- function(object,

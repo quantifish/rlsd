@@ -293,9 +293,6 @@ plot_dens <- function(object,
     i <- apply(as.matrix(pars), 1, FUN = function(x) {any(grepl(x, names(object@mcmc)))})
     pars <- pars[i]
 
-    #pin <- mcmc[which(names(mcmc) %in% pars)]
-    #lapply(pin, function(x) { melt(x) })
-
     plot_data <- .make_plot_data(object@mcmc_raw, pars = pars, include = TRUE, inc_warmup = FALSE, unconstrain = FALSE)
     # This only seems to return 2 of the 3 samples
 

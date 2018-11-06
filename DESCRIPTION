@@ -3,24 +3,25 @@ Title: LSD Package
 Version: 5.46
 Date: 2018-11-06
 Authors@R: c(
-    person("Darcy", "Webber", email = "darcy@quantifish.co.nz", role = "cre"),
+    person("Darcy", "Webber", email = "darcy@quantifish.co.nz", role = c("cre", "aut")),
     person("Merrill", "Rudd", email = "merrillrudd@gmail.com", role = "aut"))
 Description: The LSD package for manipulating and plotting LSD inputs and outputs.
 Encoding: UTF-8
-Depends:
-    dplyr,
-    ggplot2
 Imports:
-    ggrepel,
     methods,
+    ggrepel,
     plyr,
     RColorBrewer,
     reshape2,
     rstan,
     tidyr
+Depends:
+    dplyr,
+    ggplot2
 Suggests:
     roxygen2,
-    testthat
+    testthat,
+    bayesplot
 License: MIT + file LICENSE
 RoxygenNote: 6.1.0
 Collate:
@@ -32,7 +33,6 @@ Collate:
     'do-plot-compare.R'
     'do-plot.R'
     'extract-list.R'
-    'lsd.version.R'
     'lsdSave.R'
     'parse-model-code.R'
     'plot-F.R'
@@ -62,4 +62,4 @@ Collate:
     'read-stan-mcmc.R'
     'read-stan-var.R'
     'theme-lsd.R'
-    'utils.R'
+    'zzz.R'

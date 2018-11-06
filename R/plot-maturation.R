@@ -5,6 +5,7 @@
 #' @param ylab the y axis label
 #' @param figure_dir the directory to save to
 #' @param empirical plot empirical maturation or not
+#' @importFrom stats quantile
 #' @export
 #' 
 plot_maturation <- function(object, 

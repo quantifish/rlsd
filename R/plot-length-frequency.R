@@ -8,6 +8,7 @@
 #' @import dplyr
 #' @import ggplot2
 #' @importFrom reshape2 melt
+#' @importFrom grDevices hcl
 #' @export
 #' 
 plot_lfs <- function(object,
@@ -30,7 +31,6 @@ plot_lfs <- function(object,
     w <- data.frame(LF = 1:data$n_lf,
                     Year = data$data_lf_year_i, Season = data$data_lf_season_i,
                     Source = data$data_lf_source_i, Region = data$data_lf_area_i)
-    head(w)
 
     # 1. Minimum legal size by region, year and sex. These get plotted as vertical lines on each panel.
     # 2. Bin limits
@@ -39,7 +39,6 @@ plot_lfs <- function(object,
     dimnames(mls) <- list("Year" = data$first_yr:data$last_proj_yr,
                           "Season" = seasons, "Region" = regions, "Sex" = sex)
     mls <- reshape2::melt(mls, id.var = "Year", variable.name = "Sex", value.name = "MLS")
-    head(mls)
     
     lim <- array(NA, dim = c(length(regions), length(sex), 2))
     lim[,,] <- data$data_lf_bin_limits_rsi

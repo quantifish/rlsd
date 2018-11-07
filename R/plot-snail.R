@@ -2,7 +2,11 @@
 #' 
 #' @param object an LSD object
 #' @param figure_dir the directory to save the figure to
+#' @import dplyr
+#' @import ggplot2
 #' @importFrom utils head tail
+#' @importFrom reshape2 melt
+#' @importFrom stats quantile
 #' @export
 #' 
 plot_snail <- function(object,
@@ -51,7 +55,7 @@ plot_snail <- function(object,
     df_thin <- dplyr::select(dmed, Year, SSB_SSB0, F_Fmsy) %>%
         dplyr::mutate(Year = ifelse(Year %in% c(min(Year), max(Year), seq(0, 1e6, 5)), Year, ""))
     lyr <- dplyr::filter(d, Year %in% 2016) %>%
-        dplyr::filter(F_Fmsy > quantile(F_Fmsy, 0.05)) %>%
+        dplyr::filter(F_Fmsy > stats::quantile(F_Fmsy, 0.05)) %>%
         dplyr::select(Year, SSB_SSB0, F_Fmsy) %>%
         dplyr::mutate(Year = "")
     head(df_thin)
@@ -70,8 +74,8 @@ plot_snail <- function(object,
                                   F_Fmsy <= 1)
     
     p <- ggplot(data = d) +
-        annotate("rect", xmin = quantile(ssbmsy$SSBmsy_SSB0, 0.05), xmax = quantile(ssbmsy$SSBmsy_SSB0, 0.95), ymin = -Inf, ymax = Inf, alpha = 0.125) +
-        annotate("rect", xmin = quantile(ssbmsy$SSBmsy_SSB0, 0.25), xmax = quantile(ssbmsy$SSBmsy_SSB0, 0.75), ymin = -Inf, ymax = Inf, alpha = 0.25) +
+        annotate("rect", xmin = stats::quantile(ssbmsy$SSBmsy_SSB0, 0.05), xmax = stats::quantile(ssbmsy$SSBmsy_SSB0, 0.95), ymin = -Inf, ymax = Inf, alpha = 0.125) +
+        annotate("rect", xmin = stats::quantile(ssbmsy$SSBmsy_SSB0, 0.25), xmax = stats::quantile(ssbmsy$SSBmsy_SSB0, 0.75), ymin = -Inf, ymax = Inf, alpha = 0.25) +
         geom_hline(yintercept = 1) +
         geom_vline(data = ssbmsy, aes(xintercept = median(SSBmsy_SSB0))) +
         geom_density_2d(data = dplyr::filter(d, Year %in% 2016), aes(x = SSB_SSB0, y = F_Fmsy, colour = ..level..)) +

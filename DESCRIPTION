@@ -1,7 +1,7 @@
 Package: lsd
 Title: LSD Package
-Version: 5.46
-Date: 2018-11-06
+Version: 5.48
+Date: 2018-11-07
 Authors@R: c(
     person("Darcy", "Webber", email = "darcy@quantifish.co.nz", role = c("cre", "aut")),
     person("Merrill", "Rudd", email = "merrillrudd@gmail.com", role = "aut"))
@@ -21,7 +21,8 @@ Depends:
 Suggests:
     roxygen2,
     testthat,
-    bayesplot
+    bayesplot,
+    loo
 License: MIT + file LICENSE
 RoxygenNote: 6.1.0
 Collate:

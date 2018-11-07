@@ -3,6 +3,10 @@
 #' @param object an LSD object
 #' @param xlab the a axis label
 #' @param figure_dir the directory to save the figure to
+#' @import dplyr
+#' @import ggplot2
+#' @importFrom reshape2 melt
+#' @importFrom stats quantile
 #' @export
 #' 
 plot_surplus_production <- function(object, xlab = "Fishing year", figure_dir = "figure/")
@@ -66,9 +70,9 @@ plot_surplus_production <- function(object, xlab = "Fishing year", figure_dir = 
 	# surplus production
     p <- ggplot(data = df, aes(x = Year, y = SP)) +
     	geom_hline(aes(yintercept = 0), linetype = "dashed") + 
-        stat_summary(fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
-        stat_summary(fun.ymin = function(x) quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
-        stat_summary(fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1) +
+        stat_summary(fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
+        stat_summary(fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
+        stat_summary(fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1) +
         expand_limits(y = 0) +
         xlab("Fishing year") + ylab("Surplus production (tonnes)") +
         scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +

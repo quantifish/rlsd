@@ -7,6 +7,8 @@
 #' @param figure_dir the directory to save to
 #' @import dplyr
 #' @import ggplot2
+#' @importFrom reshape2 melt
+#' @importFrom stats quantile
 #' @export
 #' 
 plot_puerulus <- function(d, 
@@ -49,9 +51,9 @@ plot_puerulus <- function(d,
             theme_lsd()
 
         if (!is.null(ppoo)) {
-            p <- p + stat_summary(data = ppoo, fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
-                stat_summary(data = ppoo, fun.ymin = function(x) quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
-                stat_summary(data = ppoo, fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1)
+            p <- p + stat_summary(data = ppoo, fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
+                stat_summary(data = ppoo, fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
+                stat_summary(data = ppoo, fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1)
         }
 
         if (!is.null(ppoo1)) p <- p + geom_line(data = ppoo1, aes(x = Year, y = CPUE), linetype = 2)

@@ -9,6 +9,7 @@
 #' @import ggplot2
 #' @importFrom reshape2 melt
 #' @importFrom stats median
+#' @importFrom stats quantile
 #' @export
 #' 
 plot_ssb_recruitment <- function(object,
@@ -74,6 +75,7 @@ plot_ssb_recruitment <- function(object,
 #' @import dplyr
 #' @import ggplot2
 #' @importFrom reshape2 melt
+#' @importFrom stats quantile
 #' @export
 #' 
 plot_ssb <- function(object,
@@ -156,9 +158,9 @@ plot_ssb <- function(object,
   }
   if (show_proj) p <- p + geom_vline(aes(xintercept = data$last_yr), linetype = "dashed")
   p <- p +
-    stat_summary(aes(fill = type), fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.125) +
-    stat_summary(aes(fill = type), fun.ymin = function(x) quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.25) +
-    stat_summary(aes(colour = type), fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1) +
+    stat_summary(aes(fill = type), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.125) +
+    stat_summary(aes(fill = type), fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.25) +
+    stat_summary(aes(colour = type), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1) +
     expand_limits(y = 0) +
     labs(x = xlab, y = "Spawning stock biomass (tonnes)", colour = NULL, fill = NULL) +
     scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1), expand = c(0, 1)) +
@@ -190,6 +192,7 @@ plot_ssb <- function(object,
 #' @import ggplot2
 #' @import ggrepel
 #' @importFrom reshape2 melt
+#' @importFrom stats quantile
 #' @export
 #' 
 plot_vulnerable_reference_biomass <- function(object,
@@ -296,9 +299,9 @@ plot_vulnerable_reference_biomass <- function(object,
     p <- p +
       geom_vline(aes(xintercept = data$first_ref_yr), linetype = "dashed", colour = cpal[2]) + 
       geom_vline(aes(xintercept = data$last_ref_yr), linetype = "dashed", colour = cpal[2]) +
-      stat_summary(data = Bref, aes(x = Year, y = value), fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, fill = cpal[2]) +
-      stat_summary(data = Bref, aes(x = Year, y = value), fun.ymin = function(x) quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.25, colour = NA, fill = cpal[2]) +
-      stat_summary(data = Bref, aes(x = Year, y = value), fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1, colour = cpal[2]) +
+      stat_summary(data = Bref, aes(x = Year, y = value), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, fill = cpal[2]) +
+      stat_summary(data = Bref, aes(x = Year, y = value), fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.25, colour = NA, fill = cpal[2]) +
+      stat_summary(data = Bref, aes(x = Year, y = value), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1, colour = cpal[2]) +
       ggrepel::geom_label_repel(data = dl, aes(label = Label), fill = cpal[2], size = 5, color = 'white', force = 10, segment.color = '#bbbbbb', min.segment.length = unit(0, "lines"))
     # if(length(map) > 0 & show_map) p <- p + geom_line(data = Bref1, aes(x = Year, y = value), linetype = 2, colour = cpal[2])
   }
@@ -309,9 +312,9 @@ plot_vulnerable_reference_biomass <- function(object,
     dl <- rbind(din, Bmsy, Bref) %>% dplyr::filter(Iteration %in% seq(1, n_iter, length.out = 500))
     
     p <- p +
-      stat_summary(data = Bmsy, aes(x = Year, y = value), fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.125, colour = NA, fill = "#BCBDDC") +
-      stat_summary(data = Bmsy, aes(x = Year, y = value), fun.ymin = function(x) quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.25, colour = NA, fill = "#BCBDDC") +
-      stat_summary(data = Bmsy, aes(x = Year, y = value), fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1, colour = "#BCBDDC") +
+      stat_summary(data = Bmsy, aes(x = Year, y = value), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.125, colour = NA, fill = "#BCBDDC") +
+      stat_summary(data = Bmsy, aes(x = Year, y = value), fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.25, colour = NA, fill = "#BCBDDC") +
+      stat_summary(data = Bmsy, aes(x = Year, y = value), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1, colour = "#BCBDDC") +
       ggrepel::geom_label_repel(data = dl, aes(label = Label), fill = "#BCBDDC", size = 5, color = 'white', force = 10, segment.color = '#bbbbbb', min.segment.length = unit(0, "lines"))
     # if(length(map) > 0 & show_map) p <- p + geom_line(data=Bmsy1, aes(x = Year, y = value), linetype = 2, colour = "#BCBDDC")
   }
@@ -319,14 +322,14 @@ plot_vulnerable_reference_biomass <- function(object,
   if (0.05 %in% show_quants) {
     p <- p + 
       stat_summary(data = din, geom = "ribbon", alpha = 0.125, colour = NA, aes(x = Year, y = value, fill = Season), 
-                   fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95))
+                   fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95))
   }
   if (0.25 %in% show_quants) {
     p <- p + 
       stat_summary(data = din, geom = "ribbon", alpha = 0.25, colour = NA, aes(x = Year, y = value, fill = Season), 
-                   fun.ymin = function(x) quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75))
+                   fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75))
   }
-  p <- p + stat_summary(data = din, aes(x = Year, y = value, color = Season), fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1) +
+  p <- p + stat_summary(data = din, aes(x = Year, y = value, color = Season), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1) +
     expand_limits(y = 0) +
     labs(x = xlab, y = "Vulnerable reference biomass (tonnes)") +
     scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1), expand = c(0, 1)) +
@@ -356,6 +359,7 @@ plot_vulnerable_reference_biomass <- function(object,
 #' @import ggplot2
 #' @import ggrepel
 #' @importFrom reshape2 melt
+#' @importFrom stats quantile
 #' @export
 #' 
 plot_vulnerable_biomass <- function(object,
@@ -458,9 +462,9 @@ plot_vulnerable_biomass <- function(object,
     p <- p +
       geom_vline(aes(xintercept = data$first_ref_yr), linetype = "dashed", colour = cpal[2]) + 
       geom_vline(aes(xintercept = data$last_ref_yr), linetype = "dashed", colour = cpal[2]) +
-      stat_summary(data = Bref, aes(x = Year, y = value), fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, fill = cpal[2]) +
-      stat_summary(data = Bref, aes(x = Year, y = value), fun.ymin = function(x) quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.25, colour = NA, fill = cpal[2]) +
-      stat_summary(data = Bref, aes(x = Year, y = value), fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1, colour = cpal[2]) +
+      stat_summary(data = Bref, aes(x = Year, y = value), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, fill = cpal[2]) +
+      stat_summary(data = Bref, aes(x = Year, y = value), fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.25, colour = NA, fill = cpal[2]) +
+      stat_summary(data = Bref, aes(x = Year, y = value), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1, colour = cpal[2]) +
       ggrepel::geom_label_repel(data = dl, aes(label = Label), fill = cpal[2], size = 5, color = 'white', force = 10, segment.color = '#bbbbbb', min.segment.length = unit(0, "lines"))
     # if(length(map) > 0 & show_map) p <- p + geom_line(data = Bref1, aes(x = Year, y = value), linetype = 2, colour = cpal[2])
   }
@@ -471,9 +475,9 @@ plot_vulnerable_biomass <- function(object,
     dl <- rbind(vb_in, Bmsy, Bref) %>% dplyr::filter(Iteration %in% seq(1, n_iter, length.out = 500))
     
     p <- p +
-      stat_summary(data = Bmsy, aes(x = Year, y = value), fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.125, colour = NA, fill = "#BCBDDC") +
-      stat_summary(data = Bmsy, aes(x = Year, y = value), fun.ymin = function(x) quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.25, colour = NA, fill = "#BCBDDC") +
-      stat_summary(data = Bmsy, aes(x = Year, y = value), fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1, colour = "#BCBDDC") +
+      stat_summary(data = Bmsy, aes(x = Year, y = value), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.125, colour = NA, fill = "#BCBDDC") +
+      stat_summary(data = Bmsy, aes(x = Year, y = value), fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.25, colour = NA, fill = "#BCBDDC") +
+      stat_summary(data = Bmsy, aes(x = Year, y = value), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1, colour = "#BCBDDC") +
       ggrepel::geom_label_repel(data = dl, aes(label = Label), fill = "#BCBDDC", size = 5, color = 'white', force = 10, segment.color = '#bbbbbb', min.segment.length = unit(0, "lines"))
     # if(length(map) > 0 & show_map) p <- p + geom_line(data=Bmsy1, aes(x = Year, y = value), linetype = 2, colour = "#BCBDDC")
   }
@@ -481,14 +485,14 @@ plot_vulnerable_biomass <- function(object,
   if (0.05 %in% show_quants) {
     p <- p + 
       stat_summary(data = vb_in, geom = "ribbon", alpha = 0.125, colour = NA, aes(x = Year, y = value, fill = Season), 
-                   fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95))
+                   fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95))
   }
   if (0.25 %in% show_quants) {
     p <- p + 
       stat_summary(data = vb_in, geom = "ribbon", alpha = 0.25, colour = NA, aes(x = Year, y = value, fill = Season), 
-                   fun.ymin = function(x) quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75))
+                   fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75))
   }
-  p <- p + stat_summary(data = vb_in, aes(x = Year, y = value, color = Season), fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1) +
+  p <- p + stat_summary(data = vb_in, aes(x = Year, y = value, color = Season), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1) +
     expand_limits(y = 0) +
     labs(x = xlab, y = "Vulnerable biomass (tonnes)") +
     scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1), expand = c(0, 1)) +
@@ -662,9 +666,9 @@ plot_biomass <- function(object,
     if (length(map) > 0 & show_map) biomass_recruited_ytrs1_in <- dplyr::filter(biomass_recruited_ytrs1, Year <= data$last_yr)
 
     p <- ggplot(data = biomass_recruited_ytrs2_in, aes(x = Year, y = value, color = Sex, fill = Sex))
-    p <- p + stat_summary(fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
-        stat_summary(fun.ymin = function(x) quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
-        stat_summary(fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1) +
+    p <- p + stat_summary(fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
+        stat_summary(fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
+        stat_summary(fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1) +
         expand_limits(y = 0) +
         xlab(xlab) + ylab("Recruited biomass (tonnes)") +
         scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
@@ -684,9 +688,9 @@ plot_biomass <- function(object,
     
     p <- ggplot(data = biomass_recruited_ytrs2_in, aes(x = Year, y = value, color = Sex, fill = Sex))
     p <- p + geom_vline(aes(xintercept = data$last_yr), linetype = "dashed")
-    p <- p + stat_summary(fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
-        stat_summary(fun.ymin = function(x) quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
-        stat_summary(fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1) +
+    p <- p + stat_summary(fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
+        stat_summary(fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
+        stat_summary(fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1) +
         expand_limits(y = 0) +
         xlab(xlab) + ylab("Recruited biomass (tonnes)") +
         scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
@@ -706,9 +710,9 @@ plot_biomass <- function(object,
     if (length(map) > 0 & show_map) biomass_total_ytrs1_in <- dplyr::filter(biomass_total_ytrs1, Year <= data$last_yr)
     biomass_total_ytrs2_in <- dplyr::filter(biomass_total_ytrs2, Year <= data$last_yr)
     p <- ggplot(data = biomass_total_ytrs2_in, aes(x = Year, y = value, color = Sex, fill = Sex))
-    p <- p + stat_summary(fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
-        stat_summary(fun.ymin = function(x) quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
-        stat_summary(fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1) +
+    p <- p + stat_summary(fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
+        stat_summary(fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
+        stat_summary(fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1) +
         expand_limits(y = 0) +
         xlab(xlab) + ylab("Total biomass (tonnes)") +
         scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
@@ -725,9 +729,9 @@ plot_biomass <- function(object,
 
     p <- ggplot(data = biomass_total_yts2, aes(x = Year, y = value, color = Sex, fill = Sex)) +
         geom_vline(aes(xintercept = data$last_yr), linetype = "dashed") + 
-        stat_summary(fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
-        stat_summary(fun.ymin = function(x) quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
-        stat_summary(fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1) +
+        stat_summary(fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
+        stat_summary(fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
+        stat_summary(fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1) +
         expand_limits(y = 0) +
         xlab(xlab) + ylab("Total biomass (tonnes)") +
         facet_wrap( ~ Season) +
@@ -760,8 +764,8 @@ plot_biomass <- function(object,
     #     geom_vline(aes(xintercept = data$first_ref_yr), linetype = "dashed") + 
     #     geom_vline(aes(xintercept = data$last_ref_yr), linetype = "dashed") + 
     #     stat_summary(fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
-    #     stat_summary(fun.ymin = function(x) quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
-    #     stat_summary(fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1) +
+    #     stat_summary(fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
+    #     stat_summary(fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1) +
     #     expand_limits(y = 0) +
     #     xlab(xlab) + ylab("Reference biomass (tonnes)") +
     #     scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
@@ -771,8 +775,6 @@ plot_biomass <- function(object,
     # }
     p <- plot_vulnerable_reference_biomass(object, show_proj = TRUE, ref = ref)
     ggsave(paste0(figure_dir, "biomass_vulnref_v2.png"), p, width = 12)
-
-
 
 
     # Reference biomass - version 3 - no projection
@@ -839,9 +841,9 @@ plot_biomass <- function(object,
         geom_hline(aes(yintercept = 0.5), linetype = "dashed", colour = "purple") + 
         geom_hline(aes(yintercept = 0.3), linetype = "dashed", colour = "purple") + 
         geom_hline(aes(yintercept = 0.1), linetype = "dashed", colour = "purple")
-    p <- p + stat_summary(data = din2, aes(x = Year, y = BB1, color = Season, fill = Season), fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
-        stat_summary(data = din2, aes(x = Year, y = BB1, color = Season, fill = Season), fun.ymin = function(x) quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
-        stat_summary(data = din2, aes(x = Year, y = BB1, color = Season), fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1) +
+    p <- p + stat_summary(data = din2, aes(x = Year, y = BB1, color = Season, fill = Season), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
+        stat_summary(data = din2, aes(x = Year, y = BB1, color = Season, fill = Season), fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
+        stat_summary(data = din2, aes(x = Year, y = BB1, color = Season), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1) +
         expand_limits(y = 0) +
         xlab(xlab) + ylab("Reference biomass (tonnes)") +
         scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
@@ -910,9 +912,9 @@ plot_biomass <- function(object,
         geom_hline(aes(yintercept = 0.3), linetype = "dashed", colour = "purple") + 
         geom_hline(aes(yintercept = 0.1), linetype = "dashed", colour = "purple")
     p <- p + geom_vline(aes(xintercept = data$last_yr), linetype = "dashed")
-    p <- p + stat_summary(data = din2, aes(x = Year, y = BB1, color = Season, fill = Season), fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
-        stat_summary(data = din2, aes(x = Year, y = BB1, color = Season, fill = Season), fun.ymin = function(x) quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
-        stat_summary(data = din2, aes(x = Year, y = BB1, color = Season), fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1) +
+    p <- p + stat_summary(data = din2, aes(x = Year, y = BB1, color = Season, fill = Season), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
+        stat_summary(data = din2, aes(x = Year, y = BB1, color = Season, fill = Season), fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
+        stat_summary(data = din2, aes(x = Year, y = BB1, color = Season), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1) +
         expand_limits(y = 0) +
         xlab(xlab) + ylab("Reference biomass (tonnes)") +
         scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
@@ -924,5 +926,4 @@ plot_biomass <- function(object,
         p <- p + facet_wrap(~Region)
     } 
     ggsave(paste0(figure_dir, "biomass_vulnref_relyr1_v2.png"), p, width = 10)
-
 }

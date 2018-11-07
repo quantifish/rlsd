@@ -57,20 +57,20 @@ plot_maturation <- function(object,
         dplyr::mutate(value = value/sum, Size = as.numeric(as.character(variable)))
     
 #    p <- ggplot() +
-#        stat_summary(data = dmat5, aes(x = Size, y = value), fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.05, fill = "red", colour = NA) +
-#        stat_summary(data = dmat5, aes(x = Size, y = value), fun.ymin = function(x) quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.1, fill = "red", colour = NA) +
-#        stat_summary(data = dmat5, aes(x = Size, y = value), fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.2, colour = "red") +
-#        stat_summary(data = pmat, aes(x = Size, y = value), fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
-#        stat_summary(data = pmat, aes(x = Size, y = value), fun.ymin = function(x) quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
-#        stat_summary(data = pmat, aes(x = Size, y = value), fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1) +
+#        stat_summary(data = dmat5, aes(x = Size, y = value), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.05, fill = "red", colour = NA) +
+#        stat_summary(data = dmat5, aes(x = Size, y = value), fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.1, fill = "red", colour = NA) +
+#        stat_summary(data = dmat5, aes(x = Size, y = value), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.2, colour = "red") +
+#        stat_summary(data = pmat, aes(x = Size, y = value), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
+#        stat_summary(data = pmat, aes(x = Size, y = value), fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
+#        stat_summary(data = pmat, aes(x = Size, y = value), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1) +
 #        expand_limits(y = c(0,1)) +
 #        xlab(xlab) + ylab(ylab) +
 #        theme_lsd()
 
    p <- ggplot() +
-        stat_summary(data = pmat, aes(x = Size, y = value), fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
-        stat_summary(data = pmat, aes(x = Size, y = value), fun.ymin = function(x) quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
-        stat_summary(data = pmat, aes(x = Size, y = value), fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1) +
+        stat_summary(data = pmat, aes(x = Size, y = value), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
+        stat_summary(data = pmat, aes(x = Size, y = value), fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
+        stat_summary(data = pmat, aes(x = Size, y = value), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1) +
         expand_limits(y = c(0, 1)) +
         xlab(xlab) + 
         ylab(ylab) +
@@ -78,9 +78,9 @@ plot_maturation <- function(object,
 
     if (empirical == T) {
     p = p +
-        stat_summary(data = dmat5, aes(x = Size, y = value), fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.05, fill = "red", colour = NA) +
-        stat_summary(data = dmat5, aes(x = Size, y = value), fun.ymin = function(x) quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.1, fill = "red", colour = NA) +
-        stat_summary(data = dmat5, aes(x = Size, y = value), fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.2, colour = "red") 
+        stat_summary(data = dmat5, aes(x = Size, y = value), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.05, fill = "red", colour = NA) +
+        stat_summary(data = dmat5, aes(x = Size, y = value), fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.1, fill = "red", colour = NA) +
+        stat_summary(data = dmat5, aes(x = Size, y = value), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.2, colour = "red") 
     }
     
     ggsave(paste0(figure_dir, "maturation.png"), p)

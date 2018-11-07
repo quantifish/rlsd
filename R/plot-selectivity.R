@@ -52,9 +52,9 @@ plot_selectivity <- function(object,
     }
     
     if (!is.null(sel2)) {
-        p <- p + stat_summary(data = sel2, aes(x = Size, y = Selectivity, col = Year), fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
-            stat_summary(data = sel2, aes(x = Size, y = Selectivity, col = Year), fun.ymin = function(x) quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
-            stat_summary(data = sel2, aes(x = Size, y = Selectivity, col = Year), fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1)
+        p <- p + stat_summary(data = sel2, aes(x = Size, y = Selectivity, col = Year), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
+            stat_summary(data = sel2, aes(x = Size, y = Selectivity, col = Year), fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
+            stat_summary(data = sel2, aes(x = Size, y = Selectivity, col = Year), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1)
     }
     if(length(unique(sel2$Year))==1) p <- p + guides(colour = FALSE, fill = FALSE)
     

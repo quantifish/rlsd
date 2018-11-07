@@ -9,7 +9,7 @@
 #' @param figure_dir the directory to save to
 #' @import dplyr
 #' @import ggplot2
-#' @importFrom stats rnorm quantile
+#' @importFrom stats quantile
 #' @importFrom reshape2 melt
 #' @export
 #' 
@@ -59,9 +59,9 @@ plot_offset_cpue <- function(object,
         scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
         theme_lsd()
     if (!is.null(mcmc_offset)) {
-        p <- p + stat_summary(data = mcmc_offset, aes(x = Year, y = value), fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
-            stat_summary(data = mcmc_offset, aes(x = Year, y = value), fun.ymin = function(x) quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
-            stat_summary(data = mcmc_offset, aes(x = Year, y = value), fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1)
+        p <- p + stat_summary(data = mcmc_offset, aes(x = Year, y = value), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
+            stat_summary(data = mcmc_offset, aes(x = Year, y = value), fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
+            stat_summary(data = mcmc_offset, aes(x = Year, y = value), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1)
     }
     if (!is.null(map_offset)) {
         p <- p + geom_line(data = map_offset, aes(x = Year, y = value), linetype = 2)
@@ -86,6 +86,8 @@ plot_offset_cpue <- function(object,
 #' @param figure_dir the directory to save to
 #' @import dplyr
 #' @import ggplot2
+#' @importFrom reshape2 melt
+#' @importFrom stats quantile
 #' @export
 #' 
 plot_cpue <- function(object,
@@ -226,9 +228,9 @@ plot_cpue <- function(object,
         xlab(xlab) + ylab(ylab) +
         theme_lsd()
     if (!is.null(pcpue)) {
-        p <- p + stat_summary(data = dplyr::filter(pcpue, pcpue$QY %in% ocpue$QY), aes(x = Year, y = CPUE), fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
-            stat_summary(data = dplyr::filter(pcpue, pcpue$QY %in% ocpue$QY), aes(x = Year, y = CPUE), fun.ymin = function(x) quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
-            stat_summary(data = dplyr::filter(pcpue, pcpue$QY %in% ocpue$QY), aes(x = Year, y = CPUE), fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1)
+        p <- p + stat_summary(data = dplyr::filter(pcpue, pcpue$QY %in% ocpue$QY), aes(x = Year, y = CPUE), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
+            stat_summary(data = dplyr::filter(pcpue, pcpue$QY %in% ocpue$QY), aes(x = Year, y = CPUE), fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
+            stat_summary(data = dplyr::filter(pcpue, pcpue$QY %in% ocpue$QY), aes(x = Year, y = CPUE), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1)
     }
     if (!is.null(pcpue1)) {
         p <- p + geom_line(data = pcpue1, aes(x = Year, y = CPUE), linetype = 2)
@@ -272,6 +274,7 @@ plot_cpue <- function(object,
 #' @param object and LSD object
 #' @param figure_dir the directory to save to
 #' @import ggplot2
+#' @importFrom stats rnorm
 #' @export
 #' 
 plot_offset_cpue_lm <- function(object, figure_dir = "figure/") {
@@ -287,7 +290,7 @@ plot_offset_cpue_lm <- function(object, figure_dir = "figure/") {
     params <- mcmc$mp_offset_cpue_pars_ri[1,1,]
     dd2 <- data.frame(x = exp(xx2),
                       y = exp(params[1] + xx2 * params[2]),
-                      yerr = exp(params[1] + xx2 * params[2] + rnorm(length(xx2), 0, params[3])))
+                      yerr = exp(params[1] + xx2 * params[2] + stats::rnorm(length(xx2), 0, params[3])))
     
     p <- ggplot(dd1, aes(x, y)) +
         geom_point(data = dd2, aes(x, yerr), colour = "grey", alpha = 0.25) +
@@ -313,6 +316,7 @@ plot_offset_cpue_lm <- function(object, figure_dir = "figure/") {
 #' @param figure_dir the directory to save to
 #' @import dplyr
 #' @import ggplot2
+#' @importFrom stats rnorm
 #' @export
 #' 
 plot_aw_cpue_lm <- function(object, figure_dir = "figure/")
@@ -332,7 +336,7 @@ plot_aw_cpue_lm <- function(object, figure_dir = "figure/")
     params <- mcmc$mp_split_catch_pars_ri[1,1,]
     dd2 <- data.frame(x = xx2,
                       y = inv_logit(params[1] + xx2 * params[2]),
-                      yerr = inv_logit(params[1] + xx2 * params[2] + rnorm(length(xx2), 0, params[3])))
+                      yerr = inv_logit(params[1] + xx2 * params[2] + stats::rnorm(length(xx2), 0, params[3])))
     
     p <- ggplot(data = dd1, aes(x = px, y = py)) +
         geom_point(data = dd2, aes(x, yerr), colour = "grey", alpha = 0.25) +

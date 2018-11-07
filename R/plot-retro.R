@@ -243,11 +243,11 @@ plot_retro <- function(object,
    		p <- ggplot(data = vuln, aes(x = Year, y = value, colour = LastFitYr)) +
    		 		scale_colour_manual(values=c(gray(0.3),cols), name="Model fit to data\nthrough year") +
 		        #geom_vline(aes(xintercept = data$last_yr), linetype = "dashed") +
-		        #stat_summary(fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
-		        #stat_summary(fun.ymin = function(x) quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
-		        stat_summary(data=vuln %>% dplyr::filter(Year <= LastFitYr_num), fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1) +
-		        stat_summary(data=vuln %>% dplyr::filter(Year==LastFitYr_num), fun.y=function(x) quantile(x, 0.5), geom="point", pch=19, cex=3) +
-		        stat_summary(data=vuln %>% dplyr::filter(Year >= LastFitYr_num), fun.y= function(x) quantile(x, 0.5), geom="line", lwd=1, alpha=0.5) +
+		        #stat_summary(fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
+		        #stat_summary(fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
+		        stat_summary(data=vuln %>% dplyr::filter(Year <= LastFitYr_num), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1) +
+		        stat_summary(data=vuln %>% dplyr::filter(Year==LastFitYr_num), fun.y=function(x) stats::quantile(x, 0.5), geom="point", pch=19, cex=3) +
+		        stat_summary(data=vuln %>% dplyr::filter(Year >= LastFitYr_num), fun.y= function(x) stats::quantile(x, 0.5), geom="line", lwd=1, alpha=0.5) +
 		        expand_limits(y = 0) +
 		        xlab("Fishing year") + ylab("Vulnerable biomass (tonnes)") +
 		        scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
@@ -263,10 +263,10 @@ plot_retro <- function(object,
 
 	    p <- ggplot(data = pcatch, aes(x = Year, y = Catch, colour = LastFitYr)) +
 	    	scale_colour_manual(values=c(gray(0.3),cols), name="Model fit to data\nthrough year") + 
-	        stat_summary(data=pcatch %>% dplyr::filter(Year <= LastFitYr_num), fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1) +
-	        stat_summary(data=pcatch %>% dplyr::filter(Year == LastFitYr_num), fun.y=function(x) quantile(x, 0.5), geom="point", pch=19, cex=3) +
-	        stat_summary(data=pcatch %>% dplyr::filter(Year >= LastFitYr_num), fun.y=function(x) quantile(x, 0.5), geom="line", lwd=1, alpha=0.5) +
-	        stat_summary(data=dcatch %>% dplyr::filter(Year >= LastFitYr_num), aes(y=Catch), fun.y=function(x) quantile(x, 0.5), geom="line", linetype="dotted") +
+	        stat_summary(data=pcatch %>% dplyr::filter(Year <= LastFitYr_num), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1) +
+	        stat_summary(data=pcatch %>% dplyr::filter(Year == LastFitYr_num), fun.y=function(x) stats::quantile(x, 0.5), geom="point", pch=19, cex=3) +
+	        stat_summary(data=pcatch %>% dplyr::filter(Year >= LastFitYr_num), fun.y=function(x) stats::quantile(x, 0.5), geom="line", lwd=1, alpha=0.5) +
+	        stat_summary(data=dcatch %>% dplyr::filter(Year >= LastFitYr_num), aes(y=Catch), fun.y=function(x) stats::quantile(x, 0.5), geom="line", linetype="dotted") +
 	        expand_limits(y = 0) +
 	        xlab("Fishing year") + ylab("Catch (tonnes)") +
 	        scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
@@ -277,10 +277,10 @@ plot_retro <- function(object,
 
 	    p2 <- ggplot(data = pcatch, aes(x = Year, y = Catch, colour = LastFitYr)) +
 	    	scale_colour_manual(values=c(gray(0.3),cols), name="Model fit to data\nthrough year") + 
-	        stat_summary(data=pcatch %>% dplyr::filter(Year <= LastFitYr_num), fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1) +
-	        stat_summary(data=pcatch %>% dplyr::filter(Year == LastFitYr_num), fun.y=function(x) quantile(x, 0.5), geom="point", pch=19, cex=3) +
-	        stat_summary(data=pcatch %>% dplyr::filter(Year >= LastFitYr_num), fun.y=function(x) quantile(x, 0.5), geom="line", lwd=1, alpha=0.5) +
-	        stat_summary(data=dcatch %>% dplyr::filter(Year >= LastFitYr_num), aes(y=Catch), fun.y=function(x) quantile(x, 0.5), geom="line", linetype="dotted") +
+	        stat_summary(data=pcatch %>% dplyr::filter(Year <= LastFitYr_num), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1) +
+	        stat_summary(data=pcatch %>% dplyr::filter(Year == LastFitYr_num), fun.y=function(x) stats::quantile(x, 0.5), geom="point", pch=19, cex=3) +
+	        stat_summary(data=pcatch %>% dplyr::filter(Year >= LastFitYr_num), fun.y=function(x) stats::quantile(x, 0.5), geom="line", lwd=1, alpha=0.5) +
+	        stat_summary(data=dcatch %>% dplyr::filter(Year >= LastFitYr_num), aes(y=Catch), fun.y=function(x) stats::quantile(x, 0.5), geom="line", linetype="dotted") +
 	        expand_limits(y = 0) +
 	        xlab("Fishing year") + ylab("Catch (tonnes)") +
 	        scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +  
@@ -296,10 +296,10 @@ plot_retro <- function(object,
 	    
 	    p <- ggplot(data = recruits, aes(x = Year, y = value, colour = LastFitYr)) +
 	    	    scale_colour_manual(values=c(gray(0.3),cols), name="Model fit to data\nthrough year") + 
-	            stat_summary(data = R0, aes(x = Year, y = value/1e+6), fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1, linetype=2) +
-	            stat_summary(data = recruits %>% dplyr::filter(Year <= LastFitYr_num), aes(x = Year, y = value/1e+6), fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1) +
-	            stat_summary(data=recruits %>% dplyr::filter(Year == LastFitYr_num), fun.y=function(x) quantile(x, 0.5)/1e+6, geom="point", pch=19, cex=3) +
-	            stat_summary(data=recruits %>% dplyr::filter(Year >= LastFitYr_num), fun.y= function(x) quantile(x, 0.5)/1e+6, geom="line", lwd=1, alpha=0.5) +
+	            stat_summary(data = R0, aes(x = Year, y = value/1e+6), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1, linetype=2) +
+	            stat_summary(data = recruits %>% dplyr::filter(Year <= LastFitYr_num), aes(x = Year, y = value/1e+6), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1) +
+	            stat_summary(data=recruits %>% dplyr::filter(Year == LastFitYr_num), fun.y=function(x) stats::quantile(x, 0.5)/1e+6, geom="point", pch=19, cex=3) +
+	            stat_summary(data=recruits %>% dplyr::filter(Year >= LastFitYr_num), fun.y= function(x) stats::quantile(x, 0.5)/1e+6, geom="line", lwd=1, alpha=0.5) +
 	    		expand_limits(y = 0) +
 	        	xlab("Year") + ylab("Recruitment (millions of individuals)") +
 	        	scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
@@ -309,10 +309,10 @@ plot_retro <- function(object,
 
 	    p2 <- ggplot(data = recruits, aes(x = Year, y = value, colour = LastFitYr)) +
 	    	    scale_colour_manual(values=c(gray(0.3),cols), name="Model fit to data\nthrough year") + 
-	            stat_summary(data = R0, aes(x = Year, y = value/1e+6), fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1, linetype=2) +
-	            stat_summary(data = recruits %>% dplyr::filter(Year <= LastFitYr_num), aes(x = Year, y = value/1e+6), fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1) +
-	            stat_summary(data=recruits %>% dplyr::filter(Year == LastFitYr_num), fun.y=function(x) quantile(x, 0.5)/1e+6, geom="point", pch=19, cex=3) +
-	            stat_summary(data=recruits %>% dplyr::filter(Year >= LastFitYr_num), fun.y= function(x) quantile(x, 0.5)/1e+6, geom="line", lwd=1, alpha=0.5) +
+	            stat_summary(data = R0, aes(x = Year, y = value/1e+6), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1, linetype=2) +
+	            stat_summary(data = recruits %>% dplyr::filter(Year <= LastFitYr_num), aes(x = Year, y = value/1e+6), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1) +
+	            stat_summary(data=recruits %>% dplyr::filter(Year == LastFitYr_num), fun.y=function(x) stats::quantile(x, 0.5)/1e+6, geom="point", pch=19, cex=3) +
+	            stat_summary(data=recruits %>% dplyr::filter(Year >= LastFitYr_num), fun.y= function(x) stats::quantile(x, 0.5)/1e+6, geom="line", lwd=1, alpha=0.5) +
 	    		expand_limits(y = 0) +
 	        	xlab("Year") + ylab("Recruitment (millions of individuals)") +
 	        	scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +

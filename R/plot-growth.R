@@ -142,6 +142,7 @@ plot_tag_residuals <- function(object,
 #' @import dplyr
 #' @import ggplot2
 #' @importFrom reshape2 melt
+#' @importFrom stats quantile
 #' @export
 #' 
 plot_growth_increment <- function(object, 
@@ -174,23 +175,23 @@ plot_growth_increment <- function(object,
         dplyr::distinct(Iteration, Increment, Region, .keep_all = TRUE)
     
     p <- ggplot(data = gi, aes(x = Size, y = Increment, color = Sex, fill = Sex)) +
-        stat_summary(fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
-        stat_summary(fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1) +
-        stat_summary(aes(x = Size, y = Lo, color = Sex), fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
-        stat_summary(aes(x = Size, y = Lo, color = Sex), fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1, lty=2) +
-        stat_summary(aes(x = Size, y = Hi, color = Sex), fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
-        stat_summary(aes(x = Size, y = Hi, color = Sex), fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1, lty=2) +
+        stat_summary(fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
+        stat_summary(fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1) +
+        stat_summary(aes(x = Size, y = Lo, color = Sex), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
+        stat_summary(aes(x = Size, y = Lo, color = Sex), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1, lty=2) +
+        stat_summary(aes(x = Size, y = Hi, color = Sex), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
+        stat_summary(aes(x = Size, y = Hi, color = Sex), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1, lty=2) +
         expand_limits(y = 0) +
         xlab(xlab) + ylab(ylab) +
         guides(colour = FALSE, fill = FALSE) +
         theme_lsd()
 
-    # plot .75 quantile ribbon, default is FALSE   
+    # plot .75 stats::quantile ribbon, default is FALSE   
     if (empirical == T) {
     p = p +   
-        stat_summary(fun.ymin = function(x) quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
-        stat_summary(aes(x = Size, y = Lo, color = Sex), fun.ymin = function(x) quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
-        stat_summary(aes(x = Size, y = Hi, color = Sex), fun.ymin = function(x) quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) 
+        stat_summary(fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
+        stat_summary(aes(x = Size, y = Lo, color = Sex), fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
+        stat_summary(aes(x = Size, y = Hi, color = Sex), fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) 
      }
 
     #if (data$n_growth_morph > 1) {
@@ -215,6 +216,7 @@ plot_growth_increment <- function(object,
 #' @import dplyr
 #' @import ggplot2
 #' @importFrom reshape2 melt
+#' @importFrom stats quantile
 #' @export
 #' 
 plot_growth_matrix <- function(object, 
@@ -247,8 +249,8 @@ plot_growth_matrix <- function(object,
         #dplyr::filter(Season == "AW", File == 1, Size1 %in% c(31,51,91))
     
     p <- ggplot(data = dplyr::filter(G, Season == "AW", value > 0), aes(x = Size2, y = value, colour = Size1, fill = Size1, group = Size1)) +
-        stat_summary(fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.15, colour = NA) +
-        stat_summary(fun.y = function(x) quantile(x, 0.5), geom = "path", lwd = 0.5) +
+        stat_summary(fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.15, colour = NA) +
+        stat_summary(fun.y = function(x) stats::quantile(x, 0.5), geom = "path", lwd = 0.5) +
         expand_limits(y = 0) +
         xlab(xlab) + ylab(ylab) +
         guides(colour = FALSE, fill = FALSE) +
@@ -259,8 +261,8 @@ plot_growth_matrix <- function(object,
 
     p <- ggplot(data = dplyr::filter(G, Season == "AW", value > 0), aes(x = Size2, y = value, colour = File, fill = File)) +
         geom_vline(aes(xintercept = as.numeric(as.character(Size1)))) +
-        stat_summary(fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.15, colour = NA) +
-        stat_summary(fun.y = function(x) quantile(x, 0.5), geom = "path", lwd = 0.5) +
+        stat_summary(fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.15, colour = NA) +
+        stat_summary(fun.y = function(x) stats::quantile(x, 0.5), geom = "path", lwd = 0.5) +
         expand_limits(y = 0) +
         xlab(xlab) + ylab(ylab) +
         facet_wrap(Size1~.) +
@@ -271,8 +273,8 @@ plot_growth_matrix <- function(object,
     GG <- dplyr::filter(G, File == 1, Size1 %in% ii[(length(ii)-5):length(ii)], Season == "AW", value > 0)
     p <- ggplot(data = GG, aes(x = Size2, y = value, colour = File, fill = File)) +
         geom_vline(aes(xintercept = as.numeric(as.character(Size1)))) +
-        stat_summary(fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.15, colour = NA) +
-        stat_summary(fun.y = function(x) quantile(x, 0.5), geom = "path", lwd = 0.5) +
+        stat_summary(fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.15, colour = NA) +
+        stat_summary(fun.y = function(x) stats::quantile(x, 0.5), geom = "path", lwd = 0.5) +
         expand_limits(y = 0) +
         xlab(xlab) + ylab(ylab) +
         facet_wrap(Size1~.) +
@@ -283,8 +285,8 @@ plot_growth_matrix <- function(object,
     GG$Size1 <- factor(GG$Size1, levels = sort(as.numeric(as.character(unique(GG$Size1)))))
     p <- ggplot(data = GG, aes(x = Size2, y = value)) +
         geom_vline(aes(xintercept = as.numeric(as.character(Size1)))) +
-        #stat_summary(fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.35, colour = NA) +
-        stat_summary(fun.y = function(x) quantile(x, 0.5), geom = "path", lwd = 1, colour = "grey") +
+        #stat_summary(fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.35, colour = NA) +
+        stat_summary(fun.y = function(x) stats::quantile(x, 0.5), geom = "path", lwd = 1, colour = "grey") +
         geom_line(data = tm, colour = "red") +
         facet_wrap(Size1~.) +
         expand_limits(y = 0) +

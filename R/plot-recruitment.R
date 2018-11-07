@@ -46,9 +46,9 @@ plot_recruitment_deviations <- function(object,
     }
     
     if (!is.null(rdevs2)) {
-        p <- p + stat_summary(data = rdevs2, aes(x = Year, y = value), fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
-            stat_summary(data = rdevs2, aes(x = Year, y = value), fun.ymin = function(x) quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
-            stat_summary(data = rdevs2, aes(x = Year, y = value), fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1)
+        p <- p + stat_summary(data = rdevs2, aes(x = Year, y = value), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
+            stat_summary(data = rdevs2, aes(x = Year, y = value), fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
+            stat_summary(data = rdevs2, aes(x = Year, y = value), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1)
     }
     
     if (!is.null(rdevs1)) {
@@ -135,12 +135,12 @@ plot_recruitment <- function(object,
     p <- p + geom_vline(aes(xintercept = data$last_yr), linetype = "dashed")
     if (!is.null(recruits2)) {
         p <- p +
-            stat_summary(data = R02, aes(x = Year, y = value/1e+6), fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, fill = "green") +
-            stat_summary(data = R02, aes(x = Year, y = value/1e+6), fun.ymin = function(x) quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA, fill = "green") +
-            stat_summary(data = R02, aes(x = Year, y = value/1e+6), fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1, colour = "green") +
-            stat_summary(data = recruits2, aes(x = Year, y = value/1e+6), fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
-            stat_summary(data = recruits2, aes(x = Year, y = value/1e+6), fun.ymin = function(x) quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
-            stat_summary(data = recruits2, aes(x = Year, y = value/1e+6), fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1)
+            stat_summary(data = R02, aes(x = Year, y = value/1e+6), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, fill = "green") +
+            stat_summary(data = R02, aes(x = Year, y = value/1e+6), fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA, fill = "green") +
+            stat_summary(data = R02, aes(x = Year, y = value/1e+6), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1, colour = "green") +
+            stat_summary(data = recruits2, aes(x = Year, y = value/1e+6), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
+            stat_summary(data = recruits2, aes(x = Year, y = value/1e+6), fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
+            stat_summary(data = recruits2, aes(x = Year, y = value/1e+6), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1)
     }
     if (!is.null(recruits1)) {
         p <- p + geom_line(data = R01, aes(x = Year, y = value/1e+6), linetype = 2, colour = "green") +

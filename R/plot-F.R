@@ -7,11 +7,18 @@
 #' @param figure_dir the directory to save to
 #' @param ref which ref to plot
 #' @param show_proj show projection or not
+#' @import dplyr
+#' @import ggplot2
+#' @importFrom reshape2 melt
+#' @importFrom stats quantile
 #' @export
 #' 
 plot_F <- function(object, scales = "free_y",
-                   xlab = "Fishing year", ylab = "Fishing mortality (F)", 
-                   figure_dir = "figure/", ref, show_proj = FALSE)
+                   xlab = "Fishing year", 
+                   ylab = "Fishing mortality (F)", 
+                   figure_dir = "figure/", 
+                   ref = "Fmsy", 
+                   show_proj = FALSE)
 {
     data <- object@data
     map <- object@map
@@ -19,7 +26,7 @@ plot_F <- function(object, scales = "free_y",
     
     years <- data$first_yr:data$last_yr
     pyears <- data$first_yr:data$last_proj_yr
-    seasons <- c("AW","SS")
+    seasons <- c("AW", "SS")
     regions <- 1:data$n_area
 
     if (length(map) > 0) {
@@ -74,17 +81,17 @@ plot_F <- function(object, scales = "free_y",
     if (length(mcmc) > 0) {
         # F_ytrf2 <- dplyr::mutate(F_ytrf2, Label = ifelse(Year == max(F_ytrf2$Year) & Iteration == 1, "F", ""))
 
-        p <- p + stat_summary(aes(y = value), fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
-            stat_summary(aes(y = value),fun.ymin = function(x) quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
-            stat_summary(aes(y = value),fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1)# + 
+        p <- p + stat_summary(aes(y = value), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
+            stat_summary(aes(y = value),fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
+            stat_summary(aes(y = value),fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1)# + 
             # ggrepel::geom_label_repel(data = F_ytrf2, aes(label = Label, y = value), fill = "black", size = 5, color = 'white', force = 10, segment.color = '#bbbbbb', min.segment.length = unit(0, "lines"))
 
         if("Fmsy" %in% ref){
             F_ytrf2 <- dplyr::mutate(F_ytrf2, Label = ifelse(Year == max(F_ytrf2$Year) & Iteration == 1, "Fmsy", ""))
 
-            p <- p + stat_summary(aes(y = Fmsy), fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, fill = "tomato") +
-                stat_summary(aes(y = Fmsy), fun.ymin = function(x) quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA, fill = "tomato") +
-                stat_summary(aes(y = Fmsy), fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1, colour = "tomato") #+ 
+            p <- p + stat_summary(aes(y = Fmsy), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, fill = "tomato") +
+                stat_summary(aes(y = Fmsy), fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA, fill = "tomato") +
+                stat_summary(aes(y = Fmsy), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1, colour = "tomato") #+ 
                 # ggrepel::geom_label_repel(data = F_ytrf2, aes(label = Label, y = Fmsy), fill = "tomato", size = 5, color = 'white', force = 10, segment.color = '#bbbbbb', min.segment.length = unit(0, "lines"))
         }
     }
@@ -107,5 +114,4 @@ plot_F <- function(object, scales = "free_y",
     }
     
     ggsave(paste0(figure_dir, "fishing_mortality.png"), p)
-
 }

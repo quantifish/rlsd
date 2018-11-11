@@ -31,4 +31,3 @@ update DESCRIPTION NAMESPACE: $(R_FILES)
 
 clean:
 	$(RM) ../$(PKG_NAME)_*.tar.gz
-	$(RM) man/

@@ -6,8 +6,8 @@
 .onAttach <- function(...)
 {
 	#gitrev <- substring(git_head(), 0, 12)
-	gitrev <- 1
 	#git2r::head()
+	gitrev <- 1
 	pkgdesc <- utils::packageDescription("lsd")
     packageStartupMessage(paste("lsd (Version ", 
     	pkgdesc$Version, 

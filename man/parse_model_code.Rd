@@ -4,16 +4,10 @@
 \alias{parse_model_code}
 \title{Parse model code}
 \usage{
-parse_model_code(base = "base_lsd", funcs = c("fun_curves",
-  "fun_growth_increment", "fun_growth_matrix", "fun_length_weight",
-  "fun_tail_compression", "fun_equilibrium_numbers",
-  "fun_recruitment_size", "fun_fishing_mortality", "fun_MAR", "fun_MSY"),
-  ctl = "lsd.ctl", save = FALSE)
+parse_model_code(base = "base_lsd", ctl = "lsd.ctl", save = FALSE)
 }
 \arguments{
 \item{base}{the core model code}
-
-\item{funcs}{the functions that are called by the core model code}
 
 \item{ctl}{the .ctl file that will be input to the model. This is needed for switching parameters on/off.}
 

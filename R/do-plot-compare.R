@@ -8,6 +8,7 @@
 #'
 do_plot_compare <- function(object_list, object_names, single_stock, figure_dir = "compare_figure/")
 {
+	dir.create(figure_dir, showWarnings=FALSE)
 	if(single_stock==TRUE){
 	    plot_compare_vb(object_list = object_list, object_names = object_names, figure_dir = figure_dir)
 	    plot_compare_recruitment(object_list = object_list, object_names = object_names, figure_dir = figure_dir)
@@ -16,13 +17,14 @@ do_plot_compare <- function(object_list, object_names, single_stock, figure_dir 
 		plot_compare_selectivity(object_list = object_list, object_names = object_names, figure_dir = figure_dir)
 	}
 	if(single_stock==FALSE){
+		all_risk_constraints(object_list = object_list, object_names = object_names, figure_dir = figure_dir)
 
-		plot_compare_catch_bio(object_list = object_list, object_names = object_names, figure_dir = figure_dir)
-		compare_multi_risk(object_list = object_list, object_names = object_names, figure_dir = figure_dir)
-	    # plot_compare_multi_vb(object_list = object_list, object_names = object_names, figure_dir = figure_dir)
-	    plot_compare_multi_recruitment(object_list = object_list, object_names = object_names, figure_dir = figure_dir)
-	    # plot_compare_multi_q(object_list = object_list, object_names = object_names, figure_dir = figure_dir)
-	    # plot_compare_multi_ssb(object_list = object_list, object_names = object_names, figure_dir = figure_dir)
-	    plot_compare_multi_relssb(object_list = object_list, object_names = object_names, figure_dir = figure_dir)
+		# plot_compare_catch_bio(object_list = object_list, object_names = object_names, figure_dir = figure_dir)
+		# compare_multi_risk(object_list = object_list, object_names = object_names, figure_dir = figure_dir)
+	 #    # plot_compare_multi_vb(object_list = object_list, object_names = object_names, figure_dir = figure_dir)
+	 #    plot_compare_multi_recruitment(object_list = object_list, object_names = object_names, figure_dir = figure_dir)
+	 #    # plot_compare_multi_q(object_list = object_list, object_names = object_names, figure_dir = figure_dir)
+	 #    # plot_compare_multi_ssb(object_list = object_list, object_names = object_names, figure_dir = figure_dir)
+	 #    plot_compare_multi_relssb(object_list = object_list, object_names = object_names, figure_dir = figure_dir)
 	}
 }

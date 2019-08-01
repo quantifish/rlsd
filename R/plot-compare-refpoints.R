@@ -193,52 +193,64 @@ all_risk_constraints <- function(object_list, object_names, figure_dir = "compar
         dplyr::summarise(C5 = stats::quantile(AvgCatch, prob=0.05), C50 = stats::quantile(AvgCatch, prob=0.5), C95 = stats::quantile(AvgCatch, prob=0.95), B5 = stats::quantile(AvgRelSSB, prob=0.05), B50 = stats::quantile(AvgRelSSB, prob=0.5), B95 = stats::quantile(AvgRelSSB, prob=0.95), CatchConstraint = sum(CheckCatch))
 
 
-    # fc <- summary %>% dplyr::filter(RuleType == "FixedCatch")
-    # p <- ggplot(fc) +
-    #     geom_vline(xintercept = 0.1, color=gray(0.3), alpha=0.75) +
-    #     geom_vline(xintercept = 0.2, color=gray(0.5), alpha=0.75) +
-    #     # geom_segment(data = summary %>% dplyr::filter(RuleType=="FixedF"), aes(x=B5, xend=B95, y=C50, yend=C50), alpha=0.25, lwd=1.3) +
-    #     # geom_segment(data = summary %>% dplyr::filter(RuleType=="FixedF"), aes(x=B50, xend=B50, y=C5, yend=C95), alpha=0.25, lwd=1.3) +
-    #     geom_segment(aes(x=B5, xend=B95, y=C50, yend=C50, color = Strategy), alpha=0.75, lwd=1.3) +
-    #     geom_segment(aes(x=B50, xend=B50, y=C5, yend=C95, color = Strategy), alpha=0.75, lwd=1.3) +
-    #     # geom_point(data = summary %>% dplyr::filter(RuleType=="FixedF"), aes(x=B50, y=C50, color=Strategy), pch=19, alpha=0.75, cex=4) +
-    #     geom_point(aes(x=B50, y=C50, fill=Strategy), pch=21, alpha=0.75, cex=4) +
-    #     expand_limits(x = 0) +
-    #     scale_x_continuous(limits = c(0, 0.7)) +
-    #     facet_grid(Stock~., scales="free_y", shrink=FALSE) +
-    #     xlab("Relative spawning stock biomass") +
-    #     ylab("Catch") +
-    #     scale_colour_viridis_d() +
-    #     scale_fill_viridis_d() +
-    #     theme_lsd(base_size=14)
-    # ggsave(file.path(figure_dir, "Catch_versus_RelSSB_FixedCatch.png"), p, width=10)
-
-    # fc <- summary %>% dplyr::filter(RuleType == "FixedF")
-    # p <- ggplot(fc) +
-    #     geom_vline(xintercept = 0.1, color=gray(0.3), alpha=0.75) +
-    #     geom_vline(xintercept = 0.2, color=gray(0.5), alpha=0.75) +
-    #     # geom_segment(data = summary %>% dplyr::filter(RuleType=="FixedF"), aes(x=B5, xend=B95, y=C50, yend=C50), alpha=0.25, lwd=1.3) +
-    #     # geom_segment(data = summary %>% dplyr::filter(RuleType=="FixedF"), aes(x=B50, xend=B50, y=C5, yend=C95), alpha=0.25, lwd=1.3) +
-    #     geom_segment(aes(x=B5, xend=B95, y=C50, yend=C50, color = Strategy), alpha=0.75, lwd=1.3) +
-    #     geom_segment(aes(x=B50, xend=B50, y=C5, yend=C95, color = Strategy), alpha=0.75, lwd=1.3) +
-    #     # geom_point(data = summary %>% dplyr::filter(RuleType=="FixedF"), aes(x=B50, y=C50, color=Strategy), pch=19, alpha=0.75, cex=4) +
-    #     geom_point(aes(x=B50, y=C50, fill=Strategy), pch=21, alpha=0.75, cex=4) +
-    #     expand_limits(x = 0) +
-    #     scale_x_continuous(limits = c(0, 0.7)) +
-    #     facet_grid(Stock~., scales="free_y", shrink=FALSE) +
-    #     xlab("Relative spawning stock biomass") +
-    #     ylab("Catch") +
-    #     scale_colour_viridis_d() +
-    #     scale_fill_viridis_d() +
-    #     theme_lsd(base_size=14)
-    # ggsave(file.path(figure_dir, "Catch_versus_RelSSB_FixedF.png"), p, width=10)
-
     ## include risk
     prisk <- ssb_risk_constraints(object_list = object_list, object_names = object_names, figure_dir = figure_dir)
     summary_wRisk <- full_join(summary, prisk)
+    summary_wRisk$Strategy <- factor(summary_wRisk$Strategy)
     write.table(summary_wRisk, file=paste0(figure_dir, "Catch_RelSSB_Risk_Table.txt"), sep="\t", row.names=FALSE, col.names=TRUE)
 
-    p <- ggplot(summary_wRisk) +
+    return(summary_wRisk)
+}
+
+#' Find MSY
+#' 
+#' @param risk_summary data frame output by all_risk_constraints
+#' @param figure_dir the directory to save the figure to
+#' @import dplyr
+#' @import ggplot2
+#' @importFrom reshape2 melt
+#' @importFrom stats quantile
+#' @export
+#' 
+find_msy <- function(risk_summary, figure_dir = "compare_figure/")
+{
+    msy <- risk_summary %>%
+        dplyr::group_by(Stock, RuleType) %>%
+        dplyr::summarise(MSY = max(C50), 
+                        eMSY = max(C50[which(SoftLimit < 0.1 & CatchConstraint==0)]),
+                        Bmsy = B50[which(C50==MSY)],
+                        eBmsy = B50[which(C50==eMSY)])
+    write.table(msy, file=paste0(figure_dir, "MSY.txt"), sep="\t", row.names=FALSE, col.names=FALSE)
+
+    p <- ggplot(msy) +
+        geom_vline(aes(xintercept = 1)) + 
+        geom_hline(aes(yintercept = 1)) +
+        geom_point(aes(x = (eBmsy/Bmsy), y = (eMSY / MSY), color=RuleType, shape = Stock), cex=4) +
+        xlab("Empirical / traditional Bmsy") + ylab("Empirical / traditional MSY") + 
+        scale_color_brewer(palette = "Set1") +
+        expand_limits(x = 0, y = 0) + 
+        scale_x_continuous(expand = c(0,0), limits = c(0, max(c(1.05, msy$eBmsy/msy$Bmsy)*1.05))) +
+        scale_y_continuous(expand = c(0,0), limits = c(0, max(c(1.05, msy$eMSY/msy$MSY)*1.05))) + 
+        theme_lsd(base_size = 14) 
+    ggsave(file.path(figure_dir, "eMSY_MSY.png"), p, width=10)  
+
+    return(msy) 
+}
+
+#' Plot SSB vs Catch
+#' 
+#' @param risk_summary data frame output by all_risk_constraints
+#' @param msy msy information output by find_msy
+#' @param figure_dir the directory to save the figure to
+#' @import dplyr
+#' @import ggplot2
+#' @importFrom reshape2 melt
+#' @importFrom stats quantile
+#' @export
+#'
+plot_curves <- function(risk_summary, msy=NULL, figure_dir = "compare_figure/"){
+
+    p <- ggplot(risk_summary) +
         # geom_vline(xintercept = 0.1, color=gray(0.3), alpha=0.75) +
         geom_vline(xintercept = 0.2, color=gray(0.5), alpha=0.75) +
         # geom_segment(data = summary %>% dplyr::filter(RuleType=="FixedF"), aes(x=B5, xend=B95, y=C50, yend=C50), alpha=0.25, lwd=1.3) +
@@ -258,7 +270,42 @@ all_risk_constraints <- function(object_list, object_names, figure_dir = "compar
         theme_lsd(base_size=14)
     ggsave(file.path(figure_dir, "Catch_versus_RelSSB_byProb.png"), p, width=12, height=10) 
 
-}     
+    p <- ggplot(risk_summary) +
+        # geom_vline(xintercept = 0.1, color=gray(0.3), alpha=0.75) +
+        geom_vline(xintercept = 0.2, color=gray(0.5), alpha=0.75) +
+        # geom_segment(data = summary %>% dplyr::filter(RuleType=="FixedF"), aes(x=B5, xend=B95, y=C50, yend=C50), alpha=0.25, lwd=1.3) +
+        # geom_segment(data = summary %>% dplyr::filter(RuleType=="FixedF"), aes(x=B50, xend=B50, y=C5, yend=C95), alpha=0.25, lwd=1.3) +
+        geom_segment(aes(x=B5, xend=B95, y=C50, yend=C50, color = SoftLimit), alpha=0.75, lwd=1.3) +
+        geom_segment(aes(x=B50, xend=B50, y=C5, yend=C95, color = SoftLimit), alpha=0.75, lwd=1.3) +
+        # geom_point(data = summary %>% dplyr::filter(RuleType=="FixedF"), aes(x=B50, y=C50, color=Strategy), pch=19, alpha=0.75, cex=4) +
+        geom_point(aes(x=B50, y=C50, fill=SoftLimit), pch=21, alpha=0.75, cex=4) +
+        geom_hline(data=msy, aes(yintercept = eMSY)) +
+        geom_hline(data=msy, aes(yintercept = MSY), lty=2) + 
+        expand_limits(x = 0) +
+        scale_x_continuous(limits = c(0, 0.7)) +
+        facet_grid(Stock~RuleType, scales="free_y", shrink=FALSE) +
+        xlab("Relative spawning stock biomass") +
+        ylab("Catch") +
+        scale_colour_viridis_c() +
+        scale_fill_viridis_c() +
+        guides(fill = guide_legend(title = "Probability below\nsoft limit"), color = guide_legend(title = "Probability below\nsoft limit")) +
+        theme_lsd(base_size=14)
+    ggsave(file.path(figure_dir, "Catch_versus_RelSSB_byProb_MSYlines.png"), p, width=12, height=10) 
+}
+
+
+    # p <- ggplot(compare_msy) + 
+    #     geom_vline(aes(xintercept = 1)) + 
+    #     geom_hline(aes(yintercept = 1)) +
+    #     geom_point(aes(x = B50/(dBmsy/SSB0), y = MSY/dMSY, color = RuleType, shape = Stock), cex=4) +
+    #     xlab("Bmsy/dBmsy") +
+    #     ylab("MSY/dMSY") +
+    #     scale_color_brewer(palette = "Set1") +
+    #     expand_limits(x = 0, y = 0) +
+    #     scale_x_continuous(expand = c(0,0), limits = c(0, max(c(1.05, compare_msy$B50/(compare_msy$dBmsy/compare_msy$SSB0))*1.05))) +
+    #     scale_y_continuous(expand = c(0,0), limits = c(0, max(c(1.05, compare_msy$MSY/compare_msy$dMSY)*1.05))) + 
+    #     theme_lsd(base_size = 14) 
+    # ggsave(file.path(figure_dir, "MSY_dMSY.png"), p, width=10)   
 
     # find_msy <- summary_wRisk %>%   
     #             dplyr::group_by(Stock, RuleType) %>%
@@ -355,7 +402,7 @@ all_risk_constraints <- function(object_list, object_names, figure_dir = "compar
     #     scale_color_brewer(palette="Set1") +
     #     scale_fill_brewer(palette="Set1") +
     #     theme_lsd(base_size = 14)
-}
+# }
 
 
 # #' Compare vulnerable biomass from multiple models

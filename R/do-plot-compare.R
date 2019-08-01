@@ -17,8 +17,9 @@ do_plot_compare <- function(object_list, object_names, single_stock, figure_dir 
 		plot_compare_selectivity(object_list = object_list, object_names = object_names, figure_dir = figure_dir)
 	}
 	if(single_stock==FALSE){
-		all_risk_constraints(object_list = object_list, object_names = object_names, figure_dir = figure_dir)
-
+		risk_summary <- all_risk_constraints(object_list = object_list, object_names = object_names, figure_dir = figure_dir)
+		msy <- find_msy(risk_summary = risk_summary, figure_dir = figure_dir)
+		plot_curves(risk_summary=risk_summary, msy=msy, figure_dir = figure_dir)
 		# plot_compare_catch_bio(object_list = object_list, object_names = object_names, figure_dir = figure_dir)
 		# compare_multi_risk(object_list = object_list, object_names = object_names, figure_dir = figure_dir)
 	 #    # plot_compare_multi_vb(object_list = object_list, object_names = object_names, figure_dir = figure_dir)

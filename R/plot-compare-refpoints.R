@@ -35,21 +35,21 @@ plot_rules <- function(object_list, object_names, figure_dir = "compare_figure/"
         ggsave(file.path(figure_dir, "Rules_CPUE at TACC=0.png"), rp)
 
         rp <- ggplot(rules) +
-        geom_segment(aes(x=0,y=0,xend=par2,yend=0,color=factor(par5))) +
-        geom_segment(aes(x=par2,y=0,xend=par3,yend=par5,color=factor(par5))) +
-        geom_segment(aes(x=par3,y=par5,xend=par4,yend=par5,color=factor(par5))) +
-        geom_segment(aes(x=par4,y=par5,xend=par4,yend=par5*(1+par7),color=factor(par5))) +
-        geom_segment(aes(x=par4,y=par5*(1+par7),xend=par4+par6,yend=par5*(1+par7),color=factor(par5)))+
-        geom_segment(aes(x=par4+par6,y=par5*(1+par7),xend=par4+par6,yend=(par5*(1+par7))*(1+par7),color=factor(par5))) +
-        geom_segment(aes(x=par4+par6,y=(par5*(1+par7))*(1+par7),xend=par4+par6*2,yend=(par5*(1+par7))*(1+par7),color=factor(par5)))+
-        geom_segment(aes(x=par4+par6*2,y=(par5*(1+par7))*(1+par7),xend=par4+par6*2,yend=((par5*(1+par7))*(1+par7))*(1+par7),color=factor(par5))) +
-        geom_segment(aes(x=par4+par6*2,y=((par5*(1+par7))*(1+par7))*(1+par7),xend=par4+par6*3,yend=((par5*(1+par7))*(1+par7))*(1+par7),color=factor(par5)))+
-        guides(color=guide_legend(title="TACC Plateau")) +
+        geom_segment(aes(x=0,y=0,xend=par2,yend=0,color=factor(par5),linetype=factor(par2))) +
+        geom_segment(aes(x=par2,y=0,xend=par3,yend=par5,color=factor(par5),linetype=factor(par2))) +
+        geom_segment(aes(x=par3,y=par5,xend=par4,yend=par5,color=factor(par5),linetype=factor(par2))) +
+        geom_segment(aes(x=par4,y=par5,xend=par4,yend=par5*(1+par7),color=factor(par5),linetype=factor(par2))) +
+        geom_segment(aes(x=par4,y=par5*(1+par7),xend=par4+par6,yend=par5*(1+par7),color=factor(par5),linetype=factor(par2)))+
+        geom_segment(aes(x=par4+par6,y=par5*(1+par7),xend=par4+par6,yend=(par5*(1+par7))*(1+par7),color=factor(par5),linetype=factor(par2))) +
+        geom_segment(aes(x=par4+par6,y=(par5*(1+par7))*(1+par7),xend=par4+par6*2,yend=(par5*(1+par7))*(1+par7),color=factor(par5),linetype=factor(par2)))+
+        geom_segment(aes(x=par4+par6*2,y=(par5*(1+par7))*(1+par7),xend=par4+par6*2,yend=((par5*(1+par7))*(1+par7))*(1+par7),color=factor(par5),linetype=factor(par2))) +
+        geom_segment(aes(x=par4+par6*2,y=((par5*(1+par7))*(1+par7))*(1+par7),xend=par4+par6*3,yend=((par5*(1+par7))*(1+par7))*(1+par7),color=factor(par5),linetype=factor(par2)))+
+        guides(color=guide_legend(title="TACC Plateau"), linetype=guide_legend(title="CPUE at TACC=0")) +
         xlab("Offset year CPUE") + ylab("TACC") +
         facet_grid(par3~par4) +
         xlim(c(0,3)) +
         theme_lsd(base_size=14)
-        ggsave(file.path(figure_dir, "Rules_TACC Plateau.png"), rp)
+        ggsave(file.path(figure_dir, "Rules_TACC Plateau_CPUE at TACC=0.png"), rp)
 
 }
 

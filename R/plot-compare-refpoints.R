@@ -1,3 +1,230 @@
+#' Plot rules
+#' 
+#' @param object_list list of mcmc results
+#' @param object_names list of model names
+#' @param figure_dir the directory to save the figure to
+#' @import dplyr
+#' @importFrom reshape2 melt
+#' @importFrom grDevices colorRampPalette gray
+#' @importFrom stats runif quantile
+#' @export
+#' 
+plot_rules <- function(object_list, object_names, figure_dir = "compare_figure/"){
+
+    data_list <- lapply(1:length(object_list), function(x) object_list[[x]]@data)
+        rules <- data_list[[grep("rules",object_names)[1]]]$mp_rule_parameters
+        colnames(rules) <- paste0("par",1:ncol(rules))
+        rules <- data.frame(rules) %>% mutate(Rule = 1:nrow(rules))
+
+
+        rp <- ggplot(rules) +
+        geom_segment(aes(x=0,y=0,xend=par2,yend=0,color=factor(par2))) +
+        geom_segment(aes(x=par2,y=0,xend=par3,yend=par5,color=factor(par2))) +
+        geom_segment(aes(x=par3,y=par5,xend=par4,yend=par5,color=factor(par2))) +
+        geom_segment(aes(x=par4,y=par5,xend=par4,yend=par5*(1+par7),color=factor(par2))) +
+        geom_segment(aes(x=par4,y=par5*(1+par7),xend=par4+par6,yend=par5*(1+par7),color=factor(par2)))+
+        geom_segment(aes(x=par4+par6,y=par5*(1+par7),xend=par4+par6,yend=(par5*(1+par7))*(1+par7),color=factor(par2))) +
+        geom_segment(aes(x=par4+par6,y=(par5*(1+par7))*(1+par7),xend=par4+par6*2,yend=(par5*(1+par7))*(1+par7),color=factor(par2)))+
+        geom_segment(aes(x=par4+par6*2,y=(par5*(1+par7))*(1+par7),xend=par4+par6*2,yend=((par5*(1+par7))*(1+par7))*(1+par7),color=factor(par2))) +
+        geom_segment(aes(x=par4+par6*2,y=((par5*(1+par7))*(1+par7))*(1+par7),xend=par4+par6*3,yend=((par5*(1+par7))*(1+par7))*(1+par7),color=factor(par2)))+
+        guides(color=guide_legend(title="CPUE at TACC=0")) +
+        xlab("Offset year CPUE") + ylab("TACC") +
+        xlim(c(0,3)) +
+        facet_grid(par3~par4) +
+        theme_lsd(base_size=14)
+        ggsave(file.path(figure_dir, "Rules_CPUE at TACC=0.png"), rp)
+
+        rp <- ggplot(rules) +
+        geom_segment(aes(x=0,y=0,xend=par2,yend=0,color=factor(par5))) +
+        geom_segment(aes(x=par2,y=0,xend=par3,yend=par5,color=factor(par5))) +
+        geom_segment(aes(x=par3,y=par5,xend=par4,yend=par5,color=factor(par5))) +
+        geom_segment(aes(x=par4,y=par5,xend=par4,yend=par5*(1+par7),color=factor(par5))) +
+        geom_segment(aes(x=par4,y=par5*(1+par7),xend=par4+par6,yend=par5*(1+par7),color=factor(par5)))+
+        geom_segment(aes(x=par4+par6,y=par5*(1+par7),xend=par4+par6,yend=(par5*(1+par7))*(1+par7),color=factor(par5))) +
+        geom_segment(aes(x=par4+par6,y=(par5*(1+par7))*(1+par7),xend=par4+par6*2,yend=(par5*(1+par7))*(1+par7),color=factor(par5)))+
+        geom_segment(aes(x=par4+par6*2,y=(par5*(1+par7))*(1+par7),xend=par4+par6*2,yend=((par5*(1+par7))*(1+par7))*(1+par7),color=factor(par5))) +
+        geom_segment(aes(x=par4+par6*2,y=((par5*(1+par7))*(1+par7))*(1+par7),xend=par4+par6*3,yend=((par5*(1+par7))*(1+par7))*(1+par7),color=factor(par5)))+
+        guides(color=guide_legend(title="TACC Plateau")) +
+        xlab("Offset year CPUE") + ylab("TACC") +
+        facet_grid(par3~par4) +
+        xlim(c(0,3)) +
+        theme_lsd(base_size=14)
+        ggsave(file.path(figure_dir, "Rules_TACC Plateau.png"), rp)
+
+}
+
+#' Read SSB info
+#' 
+#' @param object_list list of mcmc results
+#' @param object_names list of model names
+#' @param figure_dir the directory to save the figure to
+#' @import dplyr
+#' @importFrom reshape2 melt
+#' @importFrom grDevices colorRampPalette gray
+#' @importFrom stats runif quantile
+#' @export
+#' 
+read_SSB <- function(object_list, object_names, figure_dir = "compare_figure/"){
+
+    data_list <- lapply(1:length(object_list), function(x) object_list[[x]]@data)
+    mcmc_list <- lapply(1:length(object_list), function(x) object_list[[x]]@mcmc)
+
+        rules <- data_list[[grep("rules",object_names)[1]]]$mp_rule_parameters
+        if(all(is.null(rules))==FALSE){
+            colnames(rules) <- paste0("par",1:ncol(rules))
+            rules <- data.frame(rules) %>% mutate(Rule = 1:nrow(rules))
+        }
+
+    ssb_list <- lapply(1:length(object_list), function(x){
+        n_iter <- nrow(mcmc_list[[x]][[1]])
+        ssb <- mcmc_list[[x]]$biomass_ssb_jyr
+        dimnames(ssb) <- list("Iteration" = 1:n_iter, "Rule" = 1:dim(ssb)[2], "Year" = pyears_list[[x]], "Region" = regions_list[[x]])
+        ssb2 <- reshape2::melt(ssb) %>% dplyr::rename("SSB"=value) %>% 
+            dplyr::filter(Year %in% cutyears)
+            # dplyr::filter(Year > years_list[[x]][length(years_list[[x]])])
+
+        scenario <- strsplit(object_names[x],"_")[[1]][1]
+        rule <- strsplit(object_names[x],"_")[[1]][2]
+        ssb2$Scenario <- scenario
+        ssb2$RuleType <- rule
+
+        ssb0 <- mcmc_list[[x]]$SSB0_r
+        dimnames(ssb0) <- list("Iteration" = 1:n_iter, "Region" = regions_list[[x]])
+        ssb0 <- reshape2::melt(ssb0) %>%
+            dplyr::left_join(expand.grid(Iteration = 1:n_iter, Year = pyears_list[[x]]), by = "Iteration") %>%
+            dplyr::rename(SSB0=value) %>%
+            dplyr::filter(Year %in% cutyears) %>%
+            # dplyr::filter(Year > years_list[[x]][length(years_list[[x]])]) %>%
+            dplyr::select(-Region)
+        ssb0$Scenario <- scenario
+        ssb0$RuleType <- rule
+
+        ssb_out <- ssb2 %>% select(Iteration, Year, SSB, Scenario, RuleType, Rule)
+        relssb <- full_join(ssb_out, ssb0) %>%
+                dplyr::mutate(RelSSB = SSB/SSB0) #%>%
+                # dplyr::select(Iteration, Year, Stock, Strategy, RelSSB)
+
+        return(relssb)
+    })
+    relssb <- do.call(rbind, ssb_list)
+
+    if(all(is.null(rules))==FALSE){
+        relssb_full <- full_join(relssb, rules)     
+        relssb1 <- relssb_full %>% filter(RuleType!="rules")
+        relssb1 <- mutate(relssb1, 'par1'=NA, 'par2'=NA, 'par3'=NA, 'par4'=NA, 'par5'=NA, 'par6'=NA, 'par7'=NA, 'par8'=NA,'par9'=NA, 'par10'=NA)
+        relssb2 <- relssb_full %>% filter(RuleType=="rules") 
+        relssb <- rbind.data.frame(relssb1, relssb2)
+    }
+    return(relssb)
+}
+
+#' Read Catch and CPUE info
+#' 
+#' @param object_list list of mcmc results
+#' @param object_names list of model names
+#' @param figure_dir the directory to save the figure to
+#' @import dplyr
+#' @importFrom reshape2 melt
+#' @importFrom grDevices colorRampPalette gray
+#' @importFrom stats runif quantile
+#' @export
+#' 
+read_catch <- function(object_list, object_names, figure_dir = "compare_figure/"){
+
+    data_list <- lapply(1:length(object_list), function(x) object_list[[x]]@data)
+    mcmc_list <- lapply(1:length(object_list), function(x) object_list[[x]]@mcmc)
+
+    years_list <- lapply(1:length(object_list), function(x) data_list[[x]]$first_yr:data_list[[x]]$last_yr)
+    pyears_list <- lapply(1:length(object_list), function(x) data_list[[x]]$first_yr:data_list[[x]]$last_proj_yr)
+    regions_list <- lapply(1:length(object_list), function(x) 1:data_list[[x]]$n_area)
+    cutyears_list <- lapply(1:length(object_list), function(x) (max(pyears_list[[x]])-99):max(pyears_list[[x]]))
+    cutyears <- unique(unlist(cutyears_list))
+    seasons <- c("AW","SS")
+    regions <- 1:data$n_area
+    sex <- c("Male","Immature female","Mature female")
+    n_iter <- nrow(mcmc_list[[1]][[1]])
+
+        rules <- data_list[[grep("rules",object_names)[1]]]$mp_rule_parameters
+        if(all(is.null(rules))==FALSE){
+            colnames(rules) <- paste0("par",1:ncol(rules))
+            rules <- data.frame(rules) %>% mutate(Rule = 1:nrow(rules))
+        }
+
+
+    catch_list <- lapply(1:length(object_list), function(x){
+        n_iter <- nrow(mcmc_list[[x]][[1]])
+
+        # catch <- data_list[[x]]$proj_catch_commercial_r
+        dcatch <- mcmc_list[[x]]$proj_catch_commercial_jryt
+        dimnames(dcatch) <- list("Iteration"=1:n_iter, "Rule"=1:dim(dcatch)[2], "Region"=regions, "Year"=pyears_list[[x]], "Season"=seasons)
+        dcatch2 <- reshape2::melt(dcatch, value.name = "Input_catch") %>% 
+            dplyr::group_by(Iteration, Year, Rule) %>%
+            dplyr::summarise(sum(Input_catch)) %>%
+            dplyr::rename("Input_catch"="sum(Input_catch)")
+
+            pcatch <- mcmc_list[[x]]$pred_catch_sl_jryt
+            dimnames(pcatch) <- list("Iteration"=1:n_iter, "Rule"=1:dim(pcatch)[2], "Region"=regions, "Year"=pyears_list[[x]], "Season"=seasons)
+            pcatch2 <- reshape2::melt(pcatch, value.name = "Catch")
+            pcatch2 <- reshape2::melt(pcatch, value.name = "Catch") %>% 
+                dplyr::group_by(Iteration, Year, Rule) %>%
+                dplyr::summarise(sum(Catch)) %>%
+                dplyr::rename("Catch"="sum(Catch)")
+
+
+        catch <- full_join(dcatch2, pcatch2)
+
+        cpue <- mcmc_list[[x]]$mp_offset_cpue_jry
+        dimnames(cpue) <- list("Iteration"=1:n_iter, "Rule"=1:dim(cpue)[2], "Region"=regions, "Year"=pyears_list[[x]])
+        cpue2 <- reshape2::melt(cpue, value.name="CPUE") 
+
+        catch_cpue <- full_join(catch, cpue2)
+
+        # cresid <- mcmc_list[[x]]$resid_catch_sl_jryt
+        # dimnames(cresid) <- list("Iteration" = 1:n_iter, "Region" = regions, "Year" = pyears_list[[x]], "Season" = seasons)
+        # cresid2 <- reshape2::melt(cresid, value.name="Catch_residual") %>%
+        #     dplyr::group_by(Iteration, Year) %>%
+        #     dplyr::summarise(sum(Catch_residual)) %>%
+        #     dplyr::rename("Catch_residual"="sum(Catch_residual)")
+
+        cinfo <- catch_cpue %>% 
+             filter(Year %in% cutyears) %>%
+             mutate("Catch_residual" = Input_catch - Catch)
+        if(grepl("F=", object_names[x])) cinfo$Catch_residual = 0
+
+
+        ## compare with vulnerable bio
+            vuln <- mcmc_list[[x]]$biomass_vuln_jytrs
+            dimnames(vuln) <- list("Iteration" = 1:n_iter, "Rule"=1:dim(vuln)[2], "Year" = pyears_list[[x]], "Season" = seasons, "Region" = regions, "Sex"=sex)
+            vuln2 <- reshape2::melt(vuln) %>% dplyr::rename("VB"=value) %>% 
+                dplyr::group_by(Iteration, Year, Rule) %>%
+                dplyr::summarise(sum(VB)) %>%
+                dplyr::rename("VB" = "sum(VB)") %>%
+                dplyr::filter(Year %in% cutyears)
+
+        cinfo_out <- full_join(cinfo, vuln2)
+
+        scenario <- strsplit(object_names[x],"_")[[1]][1]
+        rule <- strsplit(object_names[x],"_")[[1]][2]
+        cinfo_out$Scenario <- scenario
+        cinfo_out$RuleType <- rule
+
+        return(cinfo_out)
+    })
+    catch <- do.call(rbind, catch_list)
+    # catch$Strategy <- factor(catch$Strategy)
+
+    if(all(is.na(rules))==FALSE){
+        catch_full <- full_join(catch, rules)     
+        catch1 <- catch_full %>% filter(Strategy!="rules")
+        catch1 <- mutate(catch1, 'par1'=NA, 'par2'=NA, 'par3'=NA, 'par4'=NA, 'par5'=NA, 'par6'=NA, 'par7'=NA, 'par8'=NA,'par9'=NA, 'par10'=NA)
+        catch2 <- catch_full %>% filter(Strategy=="rules") #%>% filter(Rule %in% rules_use$Rule)
+        catch <- rbind.data.frame(catch1, catch2)
+    }
+
+    return(catch)
+}
+
+
 #' Compare probability of being under risk constraints
 #' 
 #' @param object_list list of mcmc results
@@ -22,11 +249,16 @@ ssb_risk_constraints <- function(object_list, object_names, figure_dir = "compar
     cutyears <- unique(unlist(cutyears_list))
     n_iter <- nrow(mcmc_list[[1]][[1]])
 
+    rules <- data_list[[grep("rules",object_names)[1]]]$mp_rule_parameters
+    colnames(rules) <- paste0("par",1:ncol(rules))
+
+
     ## spawning stock biomass over time by scenario compared with SSB0
     ssb_list <- lapply(1:length(object_list), function(x) {
         n_iter <- nrow(mcmc_list[[x]][[1]])
         ssb <- mcmc_list[[x]]$biomass_ssb_jyr
-        dimnames(ssb) <- list("Iteration" = 1:n_iter, "Rule" = 1, "Year" = pyears_list[[x]], "Region" = regions_list[[x]])
+        n_rules <- data_list[[x]]$n_rules
+        dimnames(ssb) <- list("Iteration" = 1:n_iter, "Rule" = 1:n_rules, "Year" = pyears_list[[x]], "Region" = regions_list[[x]])
         ssb2 <- reshape2::melt(ssb) %>% dplyr::rename("SSB"=value) %>% select(-Rule)
         stock <- strsplit(object_names[x],"_")[[1]][1]
         strat <- strsplit(object_names[x],"_")[[1]][2]
@@ -37,7 +269,7 @@ ssb_risk_constraints <- function(object_list, object_names, figure_dir = "compar
 
         ssb0 <- reshape2::melt(ssb0) %>%
             dplyr::left_join(expand.grid(Iteration = 1:n_iter, Year = pyears_list[[x]]), by = "Iteration") %>%
-            dplyr::group_by(Iteration, Region, value, Year) %>%
+            dplyr::group_by(Iteration, Region, Rule, value, Year) %>%
             dplyr::ungroup() %>%
             dplyr::rename("SSB0" = value) %>%
             dplyr::mutate(Stock = stock) %>% 
@@ -48,6 +280,7 @@ ssb_risk_constraints <- function(object_list, object_names, figure_dir = "compar
         return(out)
     })
     ssb_df <- do.call(rbind, ssb_list)
+    relssb_full <- full_join(ssb_df, rules)     
 
     ## filter projected years
     ssb_proj <- ssb_df %>% dplyr::filter(Year %in% cutyears) %>% select(-c(Region))
@@ -91,11 +324,15 @@ all_risk_constraints <- function(object_list, object_names, figure_dir = "compar
     regions <- 1:data$n_area
     n_iter <- nrow(mcmc_list[[1]][[1]])
 
+    rules <- data_list[[grep("rules",object_names)[1]]]$mp_rule_parameters
+    colnames(rules) <- paste0("par",1:ncol(rules))
+
     ## spawning stock biomass over time across scenarios compared with unfished SSB0
     ssb_list <- lapply(1:length(object_list), function(x){
         n_iter <- nrow(mcmc_list[[x]][[1]])
+        n_rules <- data_list[[x]]$n_rules
         ssb <- mcmc_list[[x]]$biomass_ssb_jyr
-        dimnames(ssb) <- list("Iteration" = 1:n_iter, "Rule" = 1, "Year" = pyears_list[[x]], "Region" = regions_list[[x]])
+        dimnames(ssb) <- list("Iteration" = 1:n_iter, "Rule" = 1:n_rules, "Year" = pyears_list[[x]], "Region" = regions_list[[x]])
         ssb2 <- reshape2::melt(ssb) %>% dplyr::rename("SSB"=value) %>% 
             dplyr::filter(Year %in% cutyears)
             # dplyr::filter(Year > years_list[[x]][length(years_list[[x]])])
@@ -127,29 +364,82 @@ all_risk_constraints <- function(object_list, object_names, figure_dir = "compar
     })
     relssb <- do.call(rbind, ssb_list)
 
+    relssb_full <- full_join(relssb, rules)     
+
     ## catch over time across scenarios
     catch_list <- lapply(1:length(object_list), function(x){
-        n_iter <- nrow(mcmc_list[[x]][[1]])
 
-        catch <- data_list[[x]]$proj_catch_commercial_r
 
-        psl <- mcmc_list[[x]]$pred_catch_sl_ryt
-        dimnames(psl) <- list("Iteration" = 1:n_iter, "Region" = regions, "Year" = pyears_list[[x]], "Season" = seasons)
-        psl2 <- reshape2::melt(psl, value.name = "Catch") %>% 
-            dplyr::filter(Year %in% cutyears) %>%
-            # dplyr::filter(Year > years_list[[x]][length(years_list[[x]])]) %>%
-            dplyr::group_by(Iteration, Year) %>%
-            dplyr::summarise(sum(Catch)) %>%
-            dplyr::rename(Catch="sum(Catch)")
-        stock <- strsplit(object_names[x],"_")[[1]][1]
-        strat <- strsplit(object_names[x],"_")[[1]][2]
-        psl2$Stock <- stock
-        psl2$Strategy <- strat
-        psl2$InputCatch <- catch
+        # catch <- data_list[[x]]$proj_catch_commercial_r
+        dcatch <- mcmc_list[[x]]$proj_catch_commercial_jryt
+        dimnames(dcatch) <- list("Iteration"=1:n_iter, "Rule"=1:dim(dcatch)[2], "Region"=regions, "Year"=pyears_list[[x]], "Season"=seasons)
+        dcatch2 <- reshape2::melt(dcatch, value.name = "Input_catch") %>% 
+            dplyr::group_by(Iteration, Year, Rule) %>%
+            dplyr::summarise(sum(Input_catch)) %>%
+            dplyr::rename("Input_catch"="sum(Input_catch)")
 
-        return(psl2)
+        if(grepl('rule', object_names[x]) | all(is.null(mcmc_list[[x]]$pred_catch_sl_jryt)==FALSE)){
+            pcatch <- mcmc_list[[x]]$pred_catch_sl_jryt
+            dimnames(pcatch) <- list("Iteration"=1:n_iter, "Rule"=1:dim(pcatch)[2], "Region"=regions, "Year"=pyears_list[[x]], "Season"=seasons)
+            pcatch2 <- reshape2::melt(pcatch, value.name = "Catch")
+            pcatch2 <- reshape2::melt(pcatch, value.name = "Catch") %>% 
+                dplyr::group_by(Iteration, Year, Rule) %>%
+                dplyr::summarise(sum(Catch)) %>%
+                dplyr::rename("Catch"="sum(Catch)")
+        }
+        if(all(is.null(mcmc_list[[x]]$pred_catch_sl_jryt))){
+            pcatch <- mcmc_list[[x]]$pred_catch_sl_ryt
+            dimnames(pcatch) <- list("Iteration"=1:n_iter, "Region"=regions, "Year"=pyears_list[[x]], "Season"=seasons)
+            pcatch2 <- reshape2::melt(pcatch, value.name = "Catch")
+            pcatch2 <- reshape2::melt(pcatch, value.name = "Catch") %>% 
+                dplyr::group_by(Iteration, Year) %>%
+                dplyr::summarise(sum(Catch)) %>%
+                dplyr::rename("Catch"="sum(Catch)") %>%
+                dplyr::mutate("Rule" = 1) 
+        }
+
+        catch <- full_join(dcatch2, pcatch2)
+
+        cpue <- mcmc_list[[x]]$mp_offset_cpue_jry
+        dimnames(cpue) <- list("Iteration"=1:n_iter, "Rule"=1:dim(cpue)[2], "Region"=regions, "Year"=pyears_list[[x]])
+        cpue2 <- reshape2::melt(cpue, value.name="CPUE") 
+
+        catch_cpue <- full_join(catch, cpue2)
+
+
     })
-    catch <- do.call(rbind, catch_list)
+
+    # catch_list <- lapply(1:length(object_list), function(x){
+    #     n_iter <- nrow(mcmc_list[[x]][[1]])
+
+    #     catch <- data_list[[x]]$proj_catch_commercial_r
+    #     n_rules <- data_list[[x]]$n_rules
+
+    #     catch2 <- mcmc_list[[x]]$proj_catch_commercial_jryt
+    #     dimnames(catch2) <- list("Iteration" = 1:n_iter, "Rule" = 1:n_rules, "Region"=regions, "Year"=pyears_list[[x]], "Season"=seasons )
+    #     catch2 <- reshape2::melt(catch2, value.name="Catch") %>%
+    #         dplyr::filter(Year %in% cutyears) %>%
+    #         dplyr::group_by(Iteration, Year, Rule) %>%
+    #         dplyr::summarise(sum(Catch)) %>%
+    #         dplyr::rename(Catch = "sum(Catch)")
+
+    #     psl <- mcmc_list[[x]]$pred_catch_sl_ryt
+    #     dimnames(psl) <- list("Iteration" = 1:n_iter, "Region" = regions, "Year" = pyears_list[[x]], "Season" = seasons)
+    #     psl2 <- reshape2::melt(psl, value.name = "Catch") %>% 
+    #         dplyr::filter(Year %in% cutyears) %>%
+    #         # dplyr::filter(Year > years_list[[x]][length(years_list[[x]])]) %>%
+    #         dplyr::group_by(Iteration, Year) %>%
+    #         dplyr::summarise(sum(Catch)) %>%
+    #         dplyr::rename(Catch="sum(Catch)")
+    #     stock <- strsplit(object_names[x],"_")[[1]][1]
+    #     strat <- strsplit(object_names[x],"_")[[1]][2]
+    #     psl2$Stock <- stock
+    #     psl2$Strategy <- strat
+    #     psl2$InputCatch <- catch
+
+    #     return(psl2)
+    # })
+    # catch <- do.call(rbind, catch_list)
 
     # fcatch <- catch %>% filter(grepl("F=", Strategy))
     # ccatch <- catch %>% filter(grepl("C=", Strategy))

@@ -14,7 +14,7 @@ plot_rules <- function(object_list, object_names, figure_dir = "compare_figure/"
     data_list <- lapply(1:length(object_list), function(x) object_list[[x]]@data)
         rules <- data_list[[grep("rules",object_names)[1]]]$mp_rule_parameters
         colnames(rules) <- paste0("par",1:ncol(rules))
-        rules <- data.frame(rules) %>% mutate(Rule = 1:nrow(rules))
+        rules <- data.frame(rules) %>% mutate(RuleNum = 1:nrow(rules))
 
 
         rp <- ggplot(rules) +
@@ -71,13 +71,13 @@ read_SSB <- function(object_list, object_names){
         rules <- data_list[[grep("rules",object_names)[1]]]$mp_rule_parameters
         if(all(is.null(rules))==FALSE){
             colnames(rules) <- paste0("par",1:ncol(rules))
-            rules <- data.frame(rules) %>% mutate(Rule = 1:nrow(rules))
+            rules <- data.frame(rules) %>% mutate(RuleNum = 1:nrow(rules))
         }
 
     ssb_list <- lapply(1:length(object_list), function(x){
         n_iter <- nrow(mcmc_list[[x]][[1]])
         ssb <- mcmc_list[[x]]$biomass_ssb_jyr
-        dimnames(ssb) <- list("Iteration" = 1:n_iter, "Rule" = 1:dim(ssb)[2], "Year" = pyears_list[[x]], "Region" = regions_list[[x]])
+        dimnames(ssb) <- list("Iteration" = 1:n_iter, "RuleNum" = 1:dim(ssb)[2], "Year" = pyears_list[[x]], "Region" = regions_list[[x]])
         ssb2 <- reshape2::melt(ssb) %>% dplyr::rename("SSB"=value) %>% 
             dplyr::filter(Year %in% cutyears)
             # dplyr::filter(Year > years_list[[x]][length(years_list[[x]])])
@@ -85,7 +85,7 @@ read_SSB <- function(object_list, object_names){
         scenario <- strsplit(object_names[x],"_")[[1]][1]
         rule <- strsplit(object_names[x],"_")[[1]][2]
         ssb2$Scenario <- scenario
-        ssb2$RuleType <- rule
+        ssb2$RuleName <- rule
 
         ssb0 <- mcmc_list[[x]]$SSB0_r
         dimnames(ssb0) <- list("Iteration" = 1:n_iter, "Region" = regions_list[[x]])
@@ -96,12 +96,12 @@ read_SSB <- function(object_list, object_names){
             # dplyr::filter(Year > years_list[[x]][length(years_list[[x]])]) %>%
             dplyr::select(-Region)
         ssb0$Scenario <- scenario
-        ssb0$RuleType <- rule
+        ssb0$RuleName <- rule
 
-        ssb_out <- ssb2 %>% select(Iteration, Year, SSB, Scenario, RuleType, Rule)
+        ssb_out <- ssb2 %>% select(Iteration, Year, SSB, Scenario, RuleName, RuleNum)
         relssb <- full_join(ssb_out, ssb0) %>%
                 dplyr::mutate(RelSSB = SSB/SSB0) #%>%
-                # dplyr::select(Iteration, Year, Stock, Strategy, RelSSB)
+                # dplyr::select(Iteration, Year, Scenario, RuleType, RelSSB)
 
         return(relssb)
     })
@@ -109,9 +109,9 @@ read_SSB <- function(object_list, object_names){
 
     if(all(is.null(rules))==FALSE){
         relssb_full <- full_join(relssb, rules)     
-        relssb1 <- relssb_full %>% filter(RuleType!="rules")
+        relssb1 <- relssb_full %>% filter(RuleName!="rules")
         relssb1 <- mutate(relssb1, 'par1'=NA, 'par2'=NA, 'par3'=NA, 'par4'=NA, 'par5'=NA, 'par6'=NA, 'par7'=NA, 'par8'=NA,'par9'=NA, 'par10'=NA)
-        relssb2 <- relssb_full %>% filter(RuleType=="rules") 
+        relssb2 <- relssb_full %>% filter(RuleName=="rules") 
         relssb <- rbind.data.frame(relssb1, relssb2)
     }
     return(relssb)
@@ -131,6 +131,7 @@ read_catch <- function(object_list, object_names){
 
     data_list <- lapply(1:length(object_list), function(x) object_list[[x]]@data)
     mcmc_list <- lapply(1:length(object_list), function(x) object_list[[x]]@mcmc)
+    data <- data_list[[1]]
 
     years_list <- lapply(1:length(object_list), function(x) data_list[[x]]$first_yr:data_list[[x]]$last_yr)
     pyears_list <- lapply(1:length(object_list), function(x) data_list[[x]]$first_yr:data_list[[x]]$last_proj_yr)
@@ -145,7 +146,7 @@ read_catch <- function(object_list, object_names){
         rules <- data_list[[grep("rules",object_names)[1]]]$mp_rule_parameters
         if(all(is.null(rules))==FALSE){
             colnames(rules) <- paste0("par",1:ncol(rules))
-            rules <- data.frame(rules) %>% mutate(Rule = 1:nrow(rules))
+            rules <- data.frame(rules) %>% mutate(RuleNum = 1:nrow(rules))
         }
 
 
@@ -154,17 +155,17 @@ read_catch <- function(object_list, object_names){
 
         # catch <- data_list[[x]]$proj_catch_commercial_r
         dcatch <- mcmc_list[[x]]$proj_catch_commercial_jryt
-        dimnames(dcatch) <- list("Iteration"=1:n_iter, "Rule"=1:dim(dcatch)[2], "Region"=regions, "Year"=pyears_list[[x]], "Season"=seasons)
+        dimnames(dcatch) <- list("Iteration"=1:n_iter, "RuleNum"=1:dim(dcatch)[2], "Region"=regions, "Year"=pyears_list[[x]], "Season"=seasons)
         dcatch2 <- reshape2::melt(dcatch, value.name = "Input_catch") %>% 
-            dplyr::group_by(Iteration, Year, Rule) %>%
+            dplyr::group_by(Iteration, Year, RuleNum) %>%
             dplyr::summarise(sum(Input_catch)) %>%
             dplyr::rename("Input_catch"="sum(Input_catch)")
 
             pcatch <- mcmc_list[[x]]$pred_catch_sl_jryt
-            dimnames(pcatch) <- list("Iteration"=1:n_iter, "Rule"=1:dim(pcatch)[2], "Region"=regions, "Year"=pyears_list[[x]], "Season"=seasons)
+            dimnames(pcatch) <- list("Iteration"=1:n_iter, "RuleNum"=1:dim(pcatch)[2], "Region"=regions, "Year"=pyears_list[[x]], "Season"=seasons)
             pcatch2 <- reshape2::melt(pcatch, value.name = "Catch")
             pcatch2 <- reshape2::melt(pcatch, value.name = "Catch") %>% 
-                dplyr::group_by(Iteration, Year, Rule) %>%
+                dplyr::group_by(Iteration, Year, RuleNum) %>%
                 dplyr::summarise(sum(Catch)) %>%
                 dplyr::rename("Catch"="sum(Catch)")
 
@@ -172,7 +173,7 @@ read_catch <- function(object_list, object_names){
         catch <- full_join(dcatch2, pcatch2)
 
         cpue <- mcmc_list[[x]]$mp_offset_cpue_jry
-        dimnames(cpue) <- list("Iteration"=1:n_iter, "Rule"=1:dim(cpue)[2], "Region"=regions, "Year"=pyears_list[[x]])
+        dimnames(cpue) <- list("Iteration"=1:n_iter, "RuleNum"=1:dim(cpue)[2], "Region"=regions, "Year"=pyears_list[[x]])
         cpue2 <- reshape2::melt(cpue, value.name="CPUE") 
 
         catch_cpue <- full_join(catch, cpue2)
@@ -192,9 +193,9 @@ read_catch <- function(object_list, object_names){
 
         ## compare with vulnerable bio
             vuln <- mcmc_list[[x]]$biomass_vuln_jytrs
-            dimnames(vuln) <- list("Iteration" = 1:n_iter, "Rule"=1:dim(vuln)[2], "Year" = pyears_list[[x]], "Season" = seasons, "Region" = regions, "Sex"=sex)
+            dimnames(vuln) <- list("Iteration" = 1:n_iter, "RuleNum"=1:dim(vuln)[2], "Year" = pyears_list[[x]], "Season" = seasons, "Region" = regions, "Sex"=sex)
             vuln2 <- reshape2::melt(vuln) %>% dplyr::rename("VB"=value) %>% 
-                dplyr::group_by(Iteration, Year, Rule) %>%
+                dplyr::group_by(Iteration, Year, RuleNum) %>%
                 dplyr::summarise(sum(VB)) %>%
                 dplyr::rename("VB" = "sum(VB)") %>%
                 dplyr::filter(Year %in% cutyears)
@@ -204,18 +205,18 @@ read_catch <- function(object_list, object_names){
         scenario <- strsplit(object_names[x],"_")[[1]][1]
         rule <- strsplit(object_names[x],"_")[[1]][2]
         cinfo_out$Scenario <- scenario
-        cinfo_out$RuleType <- rule
+        cinfo_out$RuleName <- rule
 
         return(cinfo_out)
     })
     catch <- do.call(rbind, catch_list)
-    # catch$Strategy <- factor(catch$Strategy)
+    # catch$RuleType <- factor(catch$RuleType)
 
     if(all(is.na(rules))==FALSE){
         catch_full <- full_join(catch, rules)     
-        catch1 <- catch_full %>% filter(Strategy!="rules")
+        catch1 <- catch_full %>% filter(RuleName!="rules")
         catch1 <- mutate(catch1, 'par1'=NA, 'par2'=NA, 'par3'=NA, 'par4'=NA, 'par5'=NA, 'par6'=NA, 'par7'=NA, 'par8'=NA,'par9'=NA, 'par10'=NA)
-        catch2 <- catch_full %>% filter(Strategy=="rules") #%>% filter(Rule %in% rules_use$Rule)
+        catch2 <- catch_full %>% filter(RuleName=="rules") #%>% filter(Rule %in% rules_use$Rule)
         catch <- rbind.data.frame(catch1, catch2)
     }
 
@@ -240,12 +241,12 @@ ssb_risk_constraints <- function(object_list, object_names, figure_dir = "compar
 
     ## calculate SSB-based risk constraints
     ssb_calc <- ssb_df %>%
-            dplyr::group_by(Scenario, RuleType, Rule, "RelSSB", "SSB0") %>%
+            dplyr::group_by(Scenario, RuleName, RuleNum, "RelSSB", "SSB0") %>%
             dplyr::summarise(Extinction = length(which(RelSSB <= 0.01)==TRUE)/length(SSB),
                             HardLimit = length(which(RelSSB <= 0.1)==TRUE)/length(SSB),
                             SoftLimit = length(which(RelSSB <= 0.2)==TRUE)/length(SSB))
 
-    ssb_out <- data.frame(ssb_calc) %>% select(Scenario, RuleType, Rule, Extinction, HardLimit, SoftLimit)
+    ssb_out <- data.frame(ssb_calc) %>% select(Scenario, RuleName, RuleNum, Extinction, HardLimit, SoftLimit)
     # write.table(ssb_out, file=paste0(figure_dir, "SSB_Risk_Table.txt"), sep="\t", row.names=FALSE, col.names=TRUE)
     return(ssb_out)
 }
@@ -264,159 +265,19 @@ ssb_risk_constraints <- function(object_list, object_names, figure_dir = "compar
 #' 
 all_risk_constraints <- function(object_list, object_names, figure_dir = "compare_figure/")
 {
-    data_list <- lapply(1:length(object_list), function(x) object_list[[x]]@data)
-    mcmc_list <- lapply(1:length(object_list), function(x) object_list[[x]]@mcmc)
-    data <- data_list[[1]]
+    
+    ## relative spawning biomass dataframe
+    relssb_df <- read_SSB(object_list = object_list, object_names = object_names)
 
-    years_list <- lapply(1:length(object_list), function(x) data_list[[x]]$first_yr:data_list[[x]]$last_yr)
-    pyears_list <- lapply(1:length(object_list), function(x) data_list[[x]]$first_yr:data_list[[x]]$last_proj_yr)
-    regions_list <- lapply(1:length(object_list), function(x) 1:data_list[[x]]$n_area)
-    cutyears_list <- lapply(1:length(object_list), function(x) (max(pyears_list[[x]])-99):max(pyears_list[[x]]))
-    cutyears <- unique(unlist(cutyears_list))
-    seasons <- c("AW","SS")
-    regions <- 1:data$n_area
-    n_iter <- nrow(mcmc_list[[1]][[1]])
+    ## obtain catch data frame
+    catch_df <- read_catch(object_list = object_list, object_names = object_names)
 
-    rules <- data_list[[grep("rules",object_names)[1]]]$mp_rule_parameters
-    colnames(rules) <- paste0("par",1:ncol(rules))
-
-    ## spawning stock biomass over time across scenarios compared with unfished SSB0
-    ssb_list <- lapply(1:length(object_list), function(x){
-        n_iter <- nrow(mcmc_list[[x]][[1]])
-        n_rules <- data_list[[x]]$n_rules
-        ssb <- mcmc_list[[x]]$biomass_ssb_jyr
-        dimnames(ssb) <- list("Iteration" = 1:n_iter, "Rule" = 1:n_rules, "Year" = pyears_list[[x]], "Region" = regions_list[[x]])
-        ssb2 <- reshape2::melt(ssb) %>% dplyr::rename("SSB"=value) %>% 
-            dplyr::filter(Year %in% cutyears)
-            # dplyr::filter(Year > years_list[[x]][length(years_list[[x]])])
-
-        stock <- strsplit(object_names[x],"_")[[1]][1]
-        strat <- strsplit(object_names[x],"_")[[1]][2]
-        ssb2$Stock <- stock
-        ssb2$Strategy <- strat
-
-        ssb0 <- mcmc_list[[x]]$SSB0_r
-        dimnames(ssb0) <- list("Iteration" = 1:n_iter, "Region" = regions_list[[x]])
-        ssb0 <- reshape2::melt(ssb0) %>%
-            dplyr::left_join(expand.grid(Iteration = 1:n_iter, Year = pyears_list[[x]]), by = "Iteration") %>%
-            dplyr::rename(SSB0=value) %>%
-            dplyr::filter(Year %in% cutyears) %>%
-            # dplyr::filter(Year > years_list[[x]][length(years_list[[x]])]) %>%
-            dplyr::select(-Region)
-        stock <- strsplit(object_names[x],"_")[[1]][1]
-        strat <- strsplit(object_names[x],"_")[[1]][2]
-        ssb0$Stock <- stock
-        ssb0$Strategy <- strat
-
-        ssb_out <- ssb2 %>% select(Iteration, Year, SSB, Stock, Strategy)
-        relssb <- full_join(ssb_out, ssb0) %>%
-                dplyr::mutate(RelSSB = SSB/SSB0) #%>%
-                # dplyr::select(Iteration, Year, Stock, Strategy, RelSSB)
-
-        return(relssb)
-    })
-    relssb <- do.call(rbind, ssb_list)
-
-    relssb_full <- full_join(relssb, rules)     
-
-    ## catch over time across scenarios
-    catch_list <- lapply(1:length(object_list), function(x){
-
-
-        # catch <- data_list[[x]]$proj_catch_commercial_r
-        dcatch <- mcmc_list[[x]]$proj_catch_commercial_jryt
-        dimnames(dcatch) <- list("Iteration"=1:n_iter, "Rule"=1:dim(dcatch)[2], "Region"=regions, "Year"=pyears_list[[x]], "Season"=seasons)
-        dcatch2 <- reshape2::melt(dcatch, value.name = "Input_catch") %>% 
-            dplyr::group_by(Iteration, Year, Rule) %>%
-            dplyr::summarise(sum(Input_catch)) %>%
-            dplyr::rename("Input_catch"="sum(Input_catch)")
-
-        if(grepl('rule', object_names[x]) | all(is.null(mcmc_list[[x]]$pred_catch_sl_jryt)==FALSE)){
-            pcatch <- mcmc_list[[x]]$pred_catch_sl_jryt
-            dimnames(pcatch) <- list("Iteration"=1:n_iter, "Rule"=1:dim(pcatch)[2], "Region"=regions, "Year"=pyears_list[[x]], "Season"=seasons)
-            pcatch2 <- reshape2::melt(pcatch, value.name = "Catch")
-            pcatch2 <- reshape2::melt(pcatch, value.name = "Catch") %>% 
-                dplyr::group_by(Iteration, Year, Rule) %>%
-                dplyr::summarise(sum(Catch)) %>%
-                dplyr::rename("Catch"="sum(Catch)")
-        }
-        if(all(is.null(mcmc_list[[x]]$pred_catch_sl_jryt))){
-            pcatch <- mcmc_list[[x]]$pred_catch_sl_ryt
-            dimnames(pcatch) <- list("Iteration"=1:n_iter, "Region"=regions, "Year"=pyears_list[[x]], "Season"=seasons)
-            pcatch2 <- reshape2::melt(pcatch, value.name = "Catch")
-            pcatch2 <- reshape2::melt(pcatch, value.name = "Catch") %>% 
-                dplyr::group_by(Iteration, Year) %>%
-                dplyr::summarise(sum(Catch)) %>%
-                dplyr::rename("Catch"="sum(Catch)") %>%
-                dplyr::mutate("Rule" = 1) 
-        }
-
-        catch <- full_join(dcatch2, pcatch2)
-
-        cpue <- mcmc_list[[x]]$mp_offset_cpue_jry
-        dimnames(cpue) <- list("Iteration"=1:n_iter, "Rule"=1:dim(cpue)[2], "Region"=regions, "Year"=pyears_list[[x]])
-        cpue2 <- reshape2::melt(cpue, value.name="CPUE") 
-
-        catch_cpue <- full_join(catch, cpue2)
-
-
-    })
-
-    # catch_list <- lapply(1:length(object_list), function(x){
-    #     n_iter <- nrow(mcmc_list[[x]][[1]])
-
-    #     catch <- data_list[[x]]$proj_catch_commercial_r
-    #     n_rules <- data_list[[x]]$n_rules
-
-    #     catch2 <- mcmc_list[[x]]$proj_catch_commercial_jryt
-    #     dimnames(catch2) <- list("Iteration" = 1:n_iter, "Rule" = 1:n_rules, "Region"=regions, "Year"=pyears_list[[x]], "Season"=seasons )
-    #     catch2 <- reshape2::melt(catch2, value.name="Catch") %>%
-    #         dplyr::filter(Year %in% cutyears) %>%
-    #         dplyr::group_by(Iteration, Year, Rule) %>%
-    #         dplyr::summarise(sum(Catch)) %>%
-    #         dplyr::rename(Catch = "sum(Catch)")
-
-    #     psl <- mcmc_list[[x]]$pred_catch_sl_ryt
-    #     dimnames(psl) <- list("Iteration" = 1:n_iter, "Region" = regions, "Year" = pyears_list[[x]], "Season" = seasons)
-    #     psl2 <- reshape2::melt(psl, value.name = "Catch") %>% 
-    #         dplyr::filter(Year %in% cutyears) %>%
-    #         # dplyr::filter(Year > years_list[[x]][length(years_list[[x]])]) %>%
-    #         dplyr::group_by(Iteration, Year) %>%
-    #         dplyr::summarise(sum(Catch)) %>%
-    #         dplyr::rename(Catch="sum(Catch)")
-    #     stock <- strsplit(object_names[x],"_")[[1]][1]
-    #     strat <- strsplit(object_names[x],"_")[[1]][2]
-    #     psl2$Stock <- stock
-    #     psl2$Strategy <- strat
-    #     psl2$InputCatch <- catch
-
-    #     return(psl2)
-    # })
-    # catch <- do.call(rbind, catch_list)
-
-    # fcatch <- catch %>% filter(grepl("F=", Strategy))
-    # ccatch <- catch %>% filter(grepl("C=", Strategy))
-
-    # p <- ggplot(fcatch) +
-    #     stat_summary(aes(x=Year, y=Catch, fill=Strategy), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
-    #     stat_summary(aes(x=Year, y=Catch, color=Strategy), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75) +
-    #     facet_grid(Stock~Strategy) +
-    #     guides(color=FALSE, fill=FALSE) +
-    #     theme_lsd(base_size = 14)
-    # ggsave(file.path(figure_dir, "Catch_FixedF.png"), p, height=10, width=15)  
-
-    # p <- ggplot(ccatch) +
-    #     stat_summary(aes(x=Year, y=Catch, fill=Strategy), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
-    #     stat_summary(aes(x=Year, y=Catch, color=Strategy), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75) +
-    #     facet_grid(Stock~Strategy) +
-    #     guides(color=FALSE, fill=FALSE) +
-    #     theme_lsd(base_size = 14)
-    # ggsave(file.path(figure_dir, "Catch_FixedC.png"), p, height=10, width=15)    
 
     cb <- full_join(catch, relssb) %>%
-            dplyr::mutate(RuleType = ifelse(grepl("F=", Strategy), "FixedF", ifelse(grepl("C=", Strategy), "FixedCatch", "X")))
+            dplyr::mutate(RuleType = ifelse(grepl("F=", RuleName), "FixedF", ifelse(grepl("C=", RuleName), "FixedCatch", ifelse(grepl('rules', RuleName), "CPUE_rule", "X"))))
+    
     cb$CheckCatch <- sapply(1:nrow(cb), function(cc){
-        if(grepl("C=",cb$Strategy[cc])){
+        if(grepl("FixedCatch",cb$RuleType[cc])){
             check <- cb$InputCatch[cc] - round(cb$Catch[cc],0)
             if(check > 0){
                 out <- 1
@@ -428,18 +289,18 @@ all_risk_constraints <- function(object_list, object_names, figure_dir = "compar
     })
 
     summary_byIter <- cb %>%
-        dplyr::group_by(Iteration, Stock, Strategy, RuleType, CheckCatch) %>%
+        dplyr::group_by(Iteration, Scenario, RuleType, RuleType, CheckCatch) %>%
         dplyr::summarise(AvgCatch = mean(Catch), AvgRelSSB = mean(RelSSB)) 
 
     summary <- summary_byIter %>%
-        dplyr::group_by(Stock, Strategy, RuleType) %>%
+        dplyr::group_by(Scenario, RuleType, RuleType) %>%
         dplyr::summarise(C5 = stats::quantile(AvgCatch, prob=0.05), C50 = stats::quantile(AvgCatch, prob=0.5), C95 = stats::quantile(AvgCatch, prob=0.95), B5 = stats::quantile(AvgRelSSB, prob=0.05), B50 = stats::quantile(AvgRelSSB, prob=0.5), B95 = stats::quantile(AvgRelSSB, prob=0.95), CatchConstraint = sum(CheckCatch))
 
 
     ## include risk
     prisk <- ssb_risk_constraints(object_list = object_list, object_names = object_names, figure_dir = figure_dir)
     summary_wRisk <- full_join(summary, prisk)
-    summary_wRisk$Strategy <- factor(summary_wRisk$Strategy)
+    summary_wRisk$RuleType <- factor(summary_wRisk$RuleType)
     write.table(summary_wRisk, file=paste0(figure_dir, "Catch_RelSSB_Risk_Table.txt"), sep="\t", row.names=FALSE, col.names=TRUE)
 
     return(summary_wRisk)
@@ -458,7 +319,7 @@ all_risk_constraints <- function(object_list, object_names, figure_dir = "compar
 find_msy <- function(risk_summary, figure_dir = "compare_figure/")
 {
     msy <- risk_summary %>%
-        dplyr::group_by(Stock, RuleType) %>%
+        dplyr::group_by(Scenario, RuleType) %>%
         dplyr::summarise(MSY = max(C50), 
                         eMSY = max(C50[which(SoftLimit < 0.1 & CatchConstraint==0)]),
                         Bmsy = B50[which(C50==MSY)],
@@ -468,7 +329,7 @@ find_msy <- function(risk_summary, figure_dir = "compare_figure/")
     p <- ggplot(msy) +
         geom_vline(aes(xintercept = 1)) + 
         geom_hline(aes(yintercept = 1)) +
-        geom_point(aes(x = (eBmsy/Bmsy), y = (eMSY / MSY), color=RuleType, shape = Stock), cex=4) +
+        geom_point(aes(x = (eBmsy/Bmsy), y = (eMSY / MSY), color=RuleType, shape = Scenario), cex=4) +
         xlab("Empirical / traditional Bmsy") + ylab("Empirical / traditional MSY") + 
         scale_color_brewer(palette = "Set1") +
         expand_limits(x = 0, y = 0) + 
@@ -500,11 +361,11 @@ plot_curves <- function(risk_summary, msy=NULL, figure_dir = "compare_figure/"){
         # geom_segment(data = summary %>% dplyr::filter(RuleType=="FixedF"), aes(x=B50, xend=B50, y=C5, yend=C95), alpha=0.25, lwd=1.3) +
         geom_segment(aes(x=B5, xend=B95, y=C50, yend=C50, color = SoftLimit), alpha=0.75, lwd=1.3) +
         geom_segment(aes(x=B50, xend=B50, y=C5, yend=C95, color = SoftLimit), alpha=0.75, lwd=1.3) +
-        # geom_point(data = summary %>% dplyr::filter(RuleType=="FixedF"), aes(x=B50, y=C50, color=Strategy), pch=19, alpha=0.75, cex=4) +
+        # geom_point(data = summary %>% dplyr::filter(RuleType=="FixedF"), aes(x=B50, y=C50, color=RuleType), pch=19, alpha=0.75, cex=4) +
         geom_point(aes(x=B50, y=C50, fill=SoftLimit), pch=21, alpha=0.75, cex=4) +
         expand_limits(x = 0) +
         scale_x_continuous(limits = c(0, 0.7)) +
-        facet_grid(Stock~RuleType, scales="free_y", shrink=FALSE) +
+        facet_grid(Scenario~RuleType, scales="free_y", shrink=FALSE) +
         xlab("Relative spawning stock biomass") +
         ylab("Catch") +
         scale_colour_viridis_c() +
@@ -520,13 +381,13 @@ plot_curves <- function(risk_summary, msy=NULL, figure_dir = "compare_figure/"){
         # geom_segment(data = summary %>% dplyr::filter(RuleType=="FixedF"), aes(x=B50, xend=B50, y=C5, yend=C95), alpha=0.25, lwd=1.3) +
         geom_segment(aes(x=B5, xend=B95, y=C50, yend=C50, color = SoftLimit), alpha=0.75, lwd=1.3) +
         geom_segment(aes(x=B50, xend=B50, y=C5, yend=C95, color = SoftLimit), alpha=0.75, lwd=1.3) +
-        # geom_point(data = summary %>% dplyr::filter(RuleType=="FixedF"), aes(x=B50, y=C50, color=Strategy), pch=19, alpha=0.75, cex=4) +
+        # geom_point(data = summary %>% dplyr::filter(RuleType=="FixedF"), aes(x=B50, y=C50, color=RuleType), pch=19, alpha=0.75, cex=4) +
         geom_point(aes(x=B50, y=C50, fill=SoftLimit), pch=21, alpha=0.75, cex=4) +
         geom_hline(data=msy, aes(yintercept = eMSY)) +
         geom_hline(data=msy, aes(yintercept = MSY), lty=2) + 
         expand_limits(x = 0) +
         scale_x_continuous(limits = c(0, 0.7)) +
-        facet_grid(Stock~RuleType, scales="free_y", shrink=FALSE) +
+        facet_grid(Scenario~RuleType, scales="free_y", shrink=FALSE) +
         xlab("Relative spawning stock biomass") +
         ylab("Catch") +
         scale_colour_viridis_c() +
@@ -540,7 +401,7 @@ plot_curves <- function(risk_summary, msy=NULL, figure_dir = "compare_figure/"){
     # p <- ggplot(compare_msy) + 
     #     geom_vline(aes(xintercept = 1)) + 
     #     geom_hline(aes(yintercept = 1)) +
-    #     geom_point(aes(x = B50/(dBmsy/SSB0), y = MSY/dMSY, color = RuleType, shape = Stock), cex=4) +
+    #     geom_point(aes(x = B50/(dBmsy/SSB0), y = MSY/dMSY, color = RuleType, shape = Scenario), cex=4) +
     #     xlab("Bmsy/dBmsy") +
     #     ylab("MSY/dMSY") +
     #     scale_color_brewer(palette = "Set1") +
@@ -551,7 +412,7 @@ plot_curves <- function(risk_summary, msy=NULL, figure_dir = "compare_figure/"){
     # ggsave(file.path(figure_dir, "MSY_dMSY.png"), p, width=10)   
 
     # find_msy <- summary_wRisk %>%   
-    #             dplyr::group_by(Stock, RuleType) %>%
+    #             dplyr::group_by(Scenario, RuleType) %>%
     #             dplyr::summarise(MSY = max(C50[which(P20 < 0.10)]))
 
     # msy_info <- inner_join(summary_wRisk, find_msy) %>%
@@ -577,8 +438,8 @@ plot_curves <- function(risk_summary, msy=NULL, figure_dir = "compare_figure/"){
 
     #     stock <- strsplit(object_names[x],"_")[[1]][1]
     #     strat <- strsplit(object_names[x],"_")[[1]][2]
-    #     det$Stock <- stock
-    #     det$Strategy <- strat
+    #     det$Scenario <- stock
+    #     det$RuleType <- strat
 
     #     return(det)
     # })
@@ -589,7 +450,7 @@ plot_curves <- function(risk_summary, msy=NULL, figure_dir = "compare_figure/"){
     # p <- ggplot(compare_msy) + 
     #     geom_vline(aes(xintercept = 1)) + 
     #     geom_hline(aes(yintercept = 1)) +
-    #     geom_point(aes(x = B50/(dBmsy/SSB0), y = MSY/dMSY, color = RuleType, shape = Stock), cex=4) +
+    #     geom_point(aes(x = B50/(dBmsy/SSB0), y = MSY/dMSY, color = RuleType, shape = Scenario), cex=4) +
     #     xlab("Bmsy/dBmsy") +
     #     ylab("MSY/dMSY") +
     #     scale_color_brewer(palette = "Set1") +
@@ -622,23 +483,23 @@ plot_curves <- function(risk_summary, msy=NULL, figure_dir = "compare_figure/"){
     #         dplyr::mutate(RelSSBadj = SSBadj / SSB0)
 
     # ssb_calc_adj <- ssb_bias %>%
-    #         dplyr::group_by(Stock, Strategy, "SSBadj", "SSB0") %>%
+    #         dplyr::group_by(Scenario, RuleType, "SSBadj", "SSB0") %>%
     #         dplyr::summarise(Pext_bias = length(which(SSBadj <= 0.01*SSB0)==TRUE)/length(SSBadj),
     #                         P10_bias = length(which(SSBadj <= 0.1*SSB0)==TRUE)/length(SSBadj),
     #                         P20_bias = length(which(SSBadj <= 0.2*SSB0)==TRUE)/length(SSBadj))
 
     # ssb_comp <- ssb_bias %>%
-    #         dplyr::select(Iteration, Year, Stock, Strategy, RelSSB, RelSSBadj) %>%
-    #         tidyr::gather(SSBtype, value, -c(Iteration, Year, Stock, Strategy) )
+    #         dplyr::select(Iteration, Year, Scenario, RuleType, RelSSB, RelSSBadj) %>%
+    #         tidyr::gather(SSBtype, value, -c(Iteration, Year, Scenario, RuleType) )
 
     # ssb_comp_msy <- semi_join(ssb_comp, msy_info) %>%
-    #         dplyr::mutate(RuleType= ifelse(grepl("F=",Strategy), "FixedF", ifelse(grepl("C=",Strategy), "FixedCatch", NA)))
+    #         dplyr::mutate(RuleType= ifelse(grepl("F=",RuleType), "FixedF", ifelse(grepl("C=",RuleType), "FixedCatch", NA)))
 
     # p <- ggplot(data = ssb_comp_msy, aes(x = Year, y = value)) +
     #     stat_summary(data = ssb_comp_msy, fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = SSBtype)) +
     #     stat_summary(data = ssb_comp_msy, fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = SSBtype)) +
     #     expand_limits(y = 0) +
-    #     facet_grid(Stock~RuleType) + 
+    #     facet_grid(Scenario~RuleType) + 
     #     labs(x = "Projected fishing year", y = "Spawning stock biomass (tonnes)") +
     #     # scale_x_continuous(breaks = seq(0, 1e6, 5), minor_breaks = seq(0, 1e6, 1)) +
     #     scale_y_continuous(limits = c(0, max(ssb_comp_msy$value)*1.02)) +
@@ -679,13 +540,13 @@ plot_curves <- function(risk_summary, msy=NULL, figure_dir = "compare_figure/"){
 #         bio2 <- reshape2::melt(bio) #%>% dplyr::filter(Year <= max(years_list[[x]]))
 #         stock <- strsplit(object_names[x],"_")[[1]][1]
 #         strat <- strsplit(object_names[x],"_")[[1]][2]
-#         bio2$Stock <- stock
-#         bio2$Strategy <- strat
+#         bio2$Scenario <- stock
+#         bio2$RuleType <- strat
 #         return(bio2)
 #     })
 #     ssb <- data.frame(do.call(rbind, ssb_list))
-#     ssb$Stock <- factor(ssb$Stock)
-#     ssb$Strategy <- factor(ssb$Strategy)
+#     ssb$Scenario <- factor(ssb$Scenario)
+#     ssb$RuleType <- factor(ssb$RuleType)
     
 #     ssb0_list <- lapply(1:length(object_list), function(x) {
 #         n_iter <- nrow(mcmc_list[[x]][[1]])
@@ -699,22 +560,22 @@ plot_curves <- function(risk_summary, msy=NULL, figure_dir = "compare_figure/"){
 #             dplyr::group_by(Iteration, Region, value, Year) %>%
 #             dplyr::ungroup() %>%
 #             dplyr::mutate(Rule = 1, type = "Hard limit", value = value * 0.1) %>%
-#             dplyr::mutate(Stock = stock) %>% 
-#             dplyr::mutate(Strategy = strat)
+#             dplyr::mutate(Scenario = stock) %>% 
+#             dplyr::mutate(RuleType = strat)
 #         sl <- reshape2::melt(bio) %>%
 #             dplyr::left_join(expand.grid(Iteration = 1:n_iter, Year = pyears_list[[x]]), by = "Iteration") %>%
 #             dplyr::group_by(Iteration, Region, value, Year) %>%
 #             dplyr::ungroup() %>%
 #             dplyr::mutate(Rule = 1, type = "Soft limit", value = value * 0.2) %>%
-#             dplyr::mutate(Stock = stock) %>% 
-#             dplyr::mutate(Strategy = strat)
+#             dplyr::mutate(Scenario = stock) %>% 
+#             dplyr::mutate(RuleType = strat)
 #         ssb0 <- reshape2::melt(bio) %>%
 #             dplyr::left_join(expand.grid(Iteration = 1:n_iter, Year = pyears_list[[x]]), by = "Iteration") %>%
 #             dplyr::group_by(Iteration, Region, value, Year) %>%
 #             dplyr::ungroup() %>%
 #             dplyr::mutate(Rule = 1, type = "SSB0") %>%
-#             dplyr::mutate(Stock = stock) %>% 
-#             dplyr::mutate(Strategy = strat)
+#             dplyr::mutate(Scenario = stock) %>% 
+#             dplyr::mutate(RuleType = strat)
 
 #         # bio <- mcmc_list[[x]]$SSBref_jr
 #         # dimnames(bio) <- list("Iteration" = 1:n_iter, "Rule" = 1, "Region" = regions_list[[x]])
@@ -725,14 +586,14 @@ plot_curves <- function(risk_summary, msy=NULL, figure_dir = "compare_figure/"){
 #             # dplyr::mutate(type = "Target")
 #         bio2 <- rbind(ssb0, sl, hl) #%>% ##, ref)
 #            # dplyr::filter(Year <= max(years_list[[x]]))
-#         bio2$Stock <- stock
-#         bio2$Strategy <- strat
+#         bio2$Scenario <- stock
+#         bio2$RuleType <- strat
 #         return(bio2)
 #     })
 #     ssb0 <- data.frame(do.call(rbind, ssb0_list))
 
 #     labs <- dplyr::filter(ssb0, Year == max(Year)) %>%
-#         dplyr::group_by(Year, type, Stock, Strategy) %>%
+#         dplyr::group_by(Year, type, Scenario, RuleType) %>%
 #         dplyr::summarise(value = mean(value))
 
 #     ssb_cut <- ssb %>% dplyr::filter(Year %in% cutyears)
@@ -745,13 +606,13 @@ plot_curves <- function(risk_summary, msy=NULL, figure_dir = "compare_figure/"){
 #         stat_summary(data = dplyr::filter(ssb0_cut, type == "Hard limit"), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, colour="gray") +
 #         stat_summary(data = dplyr::filter(ssb0_cut, type == "SSB0"), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, fill="gray") +
 #         stat_summary(data = dplyr::filter(ssb0_cut, type == "SSB0"), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, colour="gray") +
-#         # stat_summary(data = dplyr::filter(ssb0_cut, type == "Target"), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Strategy)) +
-#         # stat_summary(data = dplyr::filter(ssb0_cut, type == "Target"), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Strategy)) +
-#         stat_summary(data = ssb_cut, fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Strategy)) +
-#         stat_summary(data = ssb_cut, fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Strategy)) +
+#         # stat_summary(data = dplyr::filter(ssb0_cut, type == "Target"), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = RuleType)) +
+#         # stat_summary(data = dplyr::filter(ssb0_cut, type == "Target"), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = RuleType)) +
+#         stat_summary(data = ssb_cut, fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = RuleType)) +
+#         stat_summary(data = ssb_cut, fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = RuleType)) +
 #         geom_text(data = labs, aes(x = Year, y = value, label = type), nudge_x=-10) +
 #         expand_limits(y = 0) +
-#         facet_wrap(.~Stock) + 
+#         facet_wrap(.~Scenario) + 
 #         labs(x = "Projected fishing year", y = "Spawning stock biomass (tonnes)") +
 #         # scale_x_continuous(breaks = seq(0, 1e6, 5), minor_breaks = seq(0, 1e6, 1)) +
 #         scale_y_continuous(limits = c(0, max(ssb0_cut$value)*1.02)) +
@@ -795,13 +656,13 @@ plot_curves <- function(risk_summary, msy=NULL, figure_dir = "compare_figure/"){
 #         bio2 <- reshape2::melt(bio) #%>% dplyr::filter(Year <= max(years_list[[x]]))
 #         stock <- strsplit(object_names[x],"_")[[1]][1]
 #         strat <- strsplit(object_names[x],"_")[[1]][2]
-#         bio2$Stock <- stock
-#         bio2$Strategy <- strat
+#         bio2$Scenario <- stock
+#         bio2$RuleType <- strat
 #         return(bio2)
 #     })
 #     ssb <- data.frame(do.call(rbind, ssb_list))
-#     ssb$Stock <- factor(ssb$Stock)
-#     ssb$Strategy <- factor(ssb$Strategy)
+#     ssb$Scenario <- factor(ssb$Scenario)
+#     ssb$RuleType <- factor(ssb$RuleType)
     
 #     ssb0_list <- lapply(1:length(object_list), function(x) {
 #         n_iter <- nrow(mcmc_list[[x]][[1]])
@@ -815,22 +676,22 @@ plot_curves <- function(risk_summary, msy=NULL, figure_dir = "compare_figure/"){
 #             dplyr::group_by(Iteration, Region, value, Year) %>%
 #             dplyr::ungroup() %>%
 #             dplyr::mutate(Rule = 1, type = "Hard limit", value = value * 0.1) %>%
-#             dplyr::mutate(Stock = stock) %>% 
-#             dplyr::mutate(Strategy = strat)
+#             dplyr::mutate(Scenario = stock) %>% 
+#             dplyr::mutate(RuleType = strat)
 #         sl <- reshape2::melt(bio) %>%
 #             dplyr::left_join(expand.grid(Iteration = 1:n_iter, Year = pyears_list[[x]]), by = "Iteration") %>%
 #             dplyr::group_by(Iteration, Region, value, Year) %>%
 #             dplyr::ungroup() %>%
 #             dplyr::mutate(Rule = 1, type = "Soft limit", value = value * 0.2) %>%
-#             dplyr::mutate(Stock = stock) %>% 
-#             dplyr::mutate(Strategy = strat)
+#             dplyr::mutate(Scenario = stock) %>% 
+#             dplyr::mutate(RuleType = strat)
 #         ssb0 <- reshape2::melt(bio) %>%
 #             dplyr::left_join(expand.grid(Iteration = 1:n_iter, Year = pyears_list[[x]]), by = "Iteration") %>%
 #             dplyr::group_by(Iteration, Region, value, Year) %>%
 #             dplyr::ungroup() %>%
 #             dplyr::mutate(Rule = 1, type = "SSB0") %>%
-#             dplyr::mutate(Stock = stock) %>% 
-#             dplyr::mutate(Strategy = strat)
+#             dplyr::mutate(Scenario = stock) %>% 
+#             dplyr::mutate(RuleType = strat)
 
 #         # bio <- mcmc_list[[x]]$SSBref_jr
 #         # dimnames(bio) <- list("Iteration" = 1:n_iter, "Rule" = 1, "Region" = regions_list[[x]])
@@ -841,8 +702,8 @@ plot_curves <- function(risk_summary, msy=NULL, figure_dir = "compare_figure/"){
 #             # dplyr::mutate(type = "Target")
 #         bio2 <- rbind(ssb0, sl, hl) #%>% ##, ref)
 #            # dplyr::filter(Year <= max(years_list[[x]]))
-#         bio2$Stock <- stock
-#         bio2$Strategy <- strat
+#         bio2$Scenario <- stock
+#         bio2$RuleType <- strat
 #         return(bio2)
 #     })
 #     ssb0 <- data.frame(do.call(rbind, ssb0_list))
@@ -860,9 +721,9 @@ plot_curves <- function(risk_summary, msy=NULL, figure_dir = "compare_figure/"){
 #             mutate(Soft_limit_rel = Soft_limit/SSB0) %>%
 #             mutate(SSB0_rel = SSB0/SSB0) %>%
 #             mutate(SSB_rel = SSB/SSB0) %>%
-#             mutate(Rule_type = ifelse(grepl("FixedCatch", as.character(Strategy)), "FixedCatch", 
-#                                 ifelse(grepl("FixedF", as.character(Strategy)), "FixedF", NA))) %>%
-#             mutate(Catch_prop = ifelse(grepl("Catch", as.character(Strategy)), as.numeric(strsplit(as.character(Strategy),"Catch")[[1]][2])/SSB0, NA))
+#             mutate(Rule_type = ifelse(grepl("FixedCatch", as.character(RuleType)), "FixedCatch", 
+#                                 ifelse(grepl("FixedF", as.character(RuleType)), "FixedF", NA))) %>%
+#             mutate(Catch_prop = ifelse(grepl("Catch", as.character(RuleType)), as.numeric(strsplit(as.character(RuleType),"Catch")[[1]][2])/SSB0, NA))
 
 #     df3 <- df2 %>% gather(type, value, Hard_limit:SSB_rel) %>%
 #                     filter(grepl("rel", type))
@@ -883,13 +744,13 @@ plot_curves <- function(risk_summary, msy=NULL, figure_dir = "compare_figure/"){
 #         stat_summary(data = df3 %>% filter(type=="Hard_limit_rel"), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, colour="gray") +
 #         stat_summary(data = df3 %>% filter(type=="SSB0_rel"), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, fill="gray") +
 #         stat_summary(data = df3 %>% filter(type=="SSB0_rel"), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, colour="gray") +
-#         # stat_summary(data = dplyr::filter(ssb0_cut, type == "Target"), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Strategy)) +
-#         # stat_summary(data = dplyr::filter(ssb0_cut, type == "Target"), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Strategy)) +
-#         stat_summary(data = df3 %>% filter(type=="SSB_rel"), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Stock)) +
-#         stat_summary(data = df3 %>% filter(type=="SSB_rel"), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Stock)) +
+#         # stat_summary(data = dplyr::filter(ssb0_cut, type == "Target"), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = RuleType)) +
+#         # stat_summary(data = dplyr::filter(ssb0_cut, type == "Target"), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = RuleType)) +
+#         stat_summary(data = df3 %>% filter(type=="SSB_rel"), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Scenario)) +
+#         stat_summary(data = df3 %>% filter(type=="SSB_rel"), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Scenario)) +
 #         geom_text(data = labs, aes(x = mean(df3$Year), y = value, label = type), nudge_x=-3) +
 #         expand_limits(y = 0) +
-#         facet_wrap(Strategy~.) + 
+#         facet_wrap(RuleType~.) + 
 #         labs(x = "Projected fishing year", y = "Relative spawning stock biomass (tonnes)") +
 #         # scale_x_continuous(breaks = seq(0, 1e6, 5), minor_breaks = seq(0, 1e6, 1)) +
 #         theme_lsd(base_size = 14)
@@ -933,8 +794,8 @@ plot_curves <- function(risk_summary, msy=NULL, figure_dir = "compare_figure/"){
 #         ssb2 <- reshape2::melt(ssb) %>% dplyr::rename("SSB"=value) %>% select(-Rule)
 #         stock <- strsplit(object_names[x],"_")[[1]][1]
 #         strat <- strsplit(object_names[x],"_")[[1]][2]
-#         ssb2$Stock <- stock
-#         ssb2$Strategy <- strat
+#         ssb2$Scenario <- stock
+#         ssb2$RuleType <- strat
 
 #         ssb0 <- mcmc_list[[x]]$SSB0_r
 #         dimnames(ssb0) <- list("Iteration" = 1:n_iter, "Region" = regions_list[[x]])
@@ -944,8 +805,8 @@ plot_curves <- function(risk_summary, msy=NULL, figure_dir = "compare_figure/"){
 #             dplyr::group_by(Iteration, Region, value, Year) %>%
 #             dplyr::ungroup() %>%
 #             dplyr::rename("SSB0" = value) %>%
-#             dplyr::mutate(Stock = stock) %>% 
-#             dplyr::mutate(Strategy = strat)
+#             dplyr::mutate(Scenario = stock) %>% 
+#             dplyr::mutate(RuleType = strat)
 
 #         out <- full_join(ssb0, ssb2)
 
@@ -974,12 +835,12 @@ plot_curves <- function(risk_summary, msy=NULL, figure_dir = "compare_figure/"){
 
 
 #     ssb_calc <- ssb_bias %>%
-#             dplyr::group_by(Stock, Strategy, "SSB", "SSB0") %>%
+#             dplyr::group_by(Scenario, RuleType, "SSB", "SSB0") %>%
 #             dplyr::summarise(Pext = length(which(SSBadj <= 0.01*SSB0)==TRUE)/length(SSBadj),
 #                             P10 = length(which(SSBadj <= 0.1*SSB0)==TRUE)/length(SSBadj),
 #                             P20 = length(which(SSBadj <= 0.2*SSB0)==TRUE)/length(SSBadj))
 
-#     ssb_out <- data.frame(ssb_calc) %>% select(Stock, Strategy, Pext, P10, P20)
+#     ssb_out <- data.frame(ssb_calc) %>% select(Scenario, RuleType, Pext, P10, P20)
 #     write.table(ssb_out, file=paste0(figure_dir, "Prisk_table.txt"), sep="\t", row.names=FALSE, col.names=TRUE)
 #     return(ssb_out)
 # }
@@ -1026,13 +887,13 @@ plot_curves <- function(risk_summary, msy=NULL, figure_dir = "compare_figure/"){
 #             dplyr::summarise(value = sum(value))
 #         stock <- strsplit(object_names[x],"_")[[1]][1]
 #         strat <- strsplit(object_names[x],"_")[[1]][2]
-#         biomass_vuln_ytr2$Stock <- stock
-#         biomass_vuln_ytr2$Strategy <- strat
+#         biomass_vuln_ytr2$Scenario <- stock
+#         biomass_vuln_ytr2$RuleType <- strat
 #         return(biomass_vuln_ytr2)
 #     })
 #     vb <- data.frame(do.call(rbind, vb_list))
-#     vb$Stock <- factor(vb$Stock)
-#     vb$Strategy <- factor(vb$Strategy)
+#     vb$Scenario <- factor(vb$Scenario)
+#     vb$RuleType <- factor(vb$RuleType)
 
 #     # n1 <- sapply(1:length(object_names), function(x) strsplit(object_names[x], "_")[[1]][1])
 #     # # n2 <- sapply(1:length(object_names), function(x) strsplit(object_names[x], paste0(n1[x],"_"))[[1]][2])
@@ -1052,14 +913,14 @@ plot_curves <- function(risk_summary, msy=NULL, figure_dir = "compare_figure/"){
 #     vb_cut <- vb %>% dplyr::filter(Year %in% cutyears)
 
 #     # Vulnerable biomass
-#     p <- ggplot(data = vb_cut, aes(x = Year, y = value, color = Strategy, fill = Strategy)) +
+#     p <- ggplot(data = vb_cut, aes(x = Year, y = value, color = RuleType, fill = RuleType)) +
 #         stat_summary(data=vb_cut, fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
 #         #stat_summary(data=vb_cut, fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha=0.45, colour = NA) +
 #         stat_summary(data=vb_cut, fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1, alpha=0.75) +
 #         # scale_fill_manual(values = cols_all, labels = object_names) +
 #         # scale_colour_manual(values = cols_all, labels = object_names) +
 #         # guides(colour = guide_legend(override.aes = list(colour = cols_all, linetype = lty_all))) + 
-#         facet_grid(.~Stock) +
+#         facet_grid(.~Scenario) +
 #         # scale_linetype(guide=FALSE) +
 #         expand_limits(y = 0) +
 #         xlab("Projected fishing year") + ylab("Vulnerable biomass (tonnes)") +
@@ -1114,16 +975,16 @@ plot_curves <- function(risk_summary, msy=NULL, figure_dir = "compare_figure/"){
 
 #         stock <- strsplit(object_names[x],"_")[[1]][1]
 #         strat <- strsplit(object_names[x],"_")[[1]][2]
-#         recruits2$Stock <- stock
-#         recruits2$Strategy <- strat
+#         recruits2$Scenario <- stock
+#         recruits2$RuleType <- strat
 #         recruits2$qconstant <- as.character(ifelse(grepl("qconstant",object_names[[x]]),1,0))
 #         recruits2
 #     })
 #     recruits <- data.frame(do.call(rbind, rec_list)) %>%
-#         group_by(Iteration, Year, qconstant, Stock, Strategy) %>%
+#         group_by(Iteration, Year, qconstant, Scenario, RuleType) %>%
 #         summarise(value = sum(value))
-#     recruits$Stock <- factor(recruits$Stock)
-#     recruits$Strategy <- factor(recruits$Strategy)
+#     recruits$Scenario <- factor(recruits$Scenario)
+#     recruits$RuleType <- factor(recruits$RuleType)
 #     recruits$qconstant <- factor(recruits$qconstant)
 #     recruits$value <- recruits$value/1e6
 
@@ -1148,7 +1009,7 @@ plot_curves <- function(risk_summary, msy=NULL, figure_dir = "compare_figure/"){
 
 #     rec_cut <- recruits %>% dplyr::filter(Year %in% cutyears)
 
-#    p <- ggplot(data = rec_cut, aes(x = Year, y = value, color = Strategy, fill = Strategy)) +
+#    p <- ggplot(data = rec_cut, aes(x = Year, y = value, color = RuleType, fill = RuleType)) +
 #         stat_summary(data=rec_cut, fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
 #         #stat_summary(data=rec_cut, fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha=0.45, colour = NA) +
 #         stat_summary(data=rec_cut, fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1, alpha=0.75) +
@@ -1156,7 +1017,7 @@ plot_curves <- function(risk_summary, msy=NULL, figure_dir = "compare_figure/"){
 #         # scale_colour_manual(values = cols_all, labels = object_names) +
 #         # guides(colour = guide_legend(override.aes = list(colour = cols_all, linetype = lty_all))) + 
 #         # scale_linetype(guide=FALSE) +
-#         facet_grid(.~Stock) +
+#         facet_grid(.~Scenario) +
 #         expand_limits(y = 0) +
 #         xlab("Projected fishing year") + ylab("Recruitment (millions of individuals)") +
 #         scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +

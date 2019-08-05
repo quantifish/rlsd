@@ -273,13 +273,12 @@ all_risk_constraints <- function(object_list, object_names, figure_dir = "compar
     catch_df <- read_catch(object_list = object_list, object_names = object_names)
 
 
-    cb <- full_join(catch, relssb) %>%
+    cb <- full_join(catch_df, relssb_df) %>%
             dplyr::mutate(RuleType = ifelse(grepl("F=", RuleName), "FixedF", ifelse(grepl("C=", RuleName), "FixedCatch", ifelse(grepl('rules', RuleName), "CPUE_rule", "X"))))
-    
+
     cb$CheckCatch <- sapply(1:nrow(cb), function(cc){
         if(grepl("FixedCatch",cb$RuleType[cc])){
-            check <- cb$InputCatch[cc] - round(cb$Catch[cc],0)
-            if(check > 0){
+            if(cb$Catch_residual[x] > 0){
                 out <- 1
             } else { out <- 0}
         } else {
@@ -289,18 +288,20 @@ all_risk_constraints <- function(object_list, object_names, figure_dir = "compar
     })
 
     summary_byIter <- cb %>%
-        dplyr::group_by(Iteration, Scenario, RuleType, RuleType, CheckCatch) %>%
+        dplyr::group_by(Iteration, Scenario, RuleType, RuleName, RuleNum, CheckCatch) %>%
         dplyr::summarise(AvgCatch = mean(Catch), AvgRelSSB = mean(RelSSB)) 
 
     summary <- summary_byIter %>%
-        dplyr::group_by(Scenario, RuleType, RuleType) %>%
+        dplyr::group_by(Scenario, RuleType, RuleName, RuleNum) %>%
         dplyr::summarise(C5 = stats::quantile(AvgCatch, prob=0.05), C50 = stats::quantile(AvgCatch, prob=0.5), C95 = stats::quantile(AvgCatch, prob=0.95), B5 = stats::quantile(AvgRelSSB, prob=0.05), B50 = stats::quantile(AvgRelSSB, prob=0.5), B95 = stats::quantile(AvgRelSSB, prob=0.95), CatchConstraint = sum(CheckCatch))
 
 
     ## include risk
     prisk <- ssb_risk_constraints(object_list = object_list, object_names = object_names, figure_dir = figure_dir)
     summary_wRisk <- full_join(summary, prisk)
+    summary_wRisk$RuleName <- factor(summary_wRisk$RuleName)
     summary_wRisk$RuleType <- factor(summary_wRisk$RuleType)
+
     write.table(summary_wRisk, file=paste0(figure_dir, "Catch_RelSSB_Risk_Table.txt"), sep="\t", row.names=FALSE, col.names=TRUE)
 
     return(summary_wRisk)

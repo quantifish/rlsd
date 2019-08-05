@@ -57,14 +57,13 @@ plot_rules <- function(object_list, object_names, figure_dir = "compare_figure/"
 #' 
 #' @param object_list list of mcmc results
 #' @param object_names list of model names
-#' @param figure_dir the directory to save the figure to
 #' @import dplyr
 #' @importFrom reshape2 melt
 #' @importFrom grDevices colorRampPalette gray
 #' @importFrom stats runif quantile
 #' @export
 #' 
-read_SSB <- function(object_list, object_names, figure_dir = "compare_figure/"){
+read_SSB <- function(object_list, object_names){
 
     data_list <- lapply(1:length(object_list), function(x) object_list[[x]]@data)
     mcmc_list <- lapply(1:length(object_list), function(x) object_list[[x]]@mcmc)
@@ -122,14 +121,13 @@ read_SSB <- function(object_list, object_names, figure_dir = "compare_figure/"){
 #' 
 #' @param object_list list of mcmc results
 #' @param object_names list of model names
-#' @param figure_dir the directory to save the figure to
 #' @import dplyr
 #' @importFrom reshape2 melt
 #' @importFrom grDevices colorRampPalette gray
 #' @importFrom stats runif quantile
 #' @export
 #' 
-read_catch <- function(object_list, object_names, figure_dir = "compare_figure/"){
+read_catch <- function(object_list, object_names){
 
     data_list <- lapply(1:length(object_list), function(x) object_list[[x]]@data)
     mcmc_list <- lapply(1:length(object_list), function(x) object_list[[x]]@mcmc)
@@ -237,62 +235,17 @@ read_catch <- function(object_list, object_names, figure_dir = "compare_figure/"
 #' @export
 #' 
 ssb_risk_constraints <- function(object_list, object_names, figure_dir = "compare_figure/"){
-
-    data_list <- lapply(1:length(object_list), function(x) object_list[[x]]@data)
-    mcmc_list <- lapply(1:length(object_list), function(x) object_list[[x]]@mcmc)
-    data <- data_list[[1]]
-
-    years_list <- lapply(1:length(object_list), function(x) data_list[[x]]$first_yr:data_list[[x]]$last_yr)
-    pyears_list <- lapply(1:length(object_list), function(x) data_list[[x]]$first_yr:data_list[[x]]$last_proj_yr)
-    regions_list <- lapply(1:length(object_list), function(x) 1:data_list[[x]]$n_area)
-    cutyears_list <- lapply(1:length(object_list), function(x) (max(pyears_list[[x]])-99):max(pyears_list[[x]]))
-    cutyears <- unique(unlist(cutyears_list))
-    n_iter <- nrow(mcmc_list[[1]][[1]])
-
-    rules <- data_list[[grep("rules",object_names)[1]]]$mp_rule_parameters
-    colnames(rules) <- paste0("par",1:ncol(rules))
-
-
-    ## spawning stock biomass over time by scenario compared with SSB0
-    ssb_list <- lapply(1:length(object_list), function(x) {
-        n_iter <- nrow(mcmc_list[[x]][[1]])
-        ssb <- mcmc_list[[x]]$biomass_ssb_jyr
-        n_rules <- data_list[[x]]$n_rules
-        dimnames(ssb) <- list("Iteration" = 1:n_iter, "Rule" = 1:n_rules, "Year" = pyears_list[[x]], "Region" = regions_list[[x]])
-        ssb2 <- reshape2::melt(ssb) %>% dplyr::rename("SSB"=value) %>% select(-Rule)
-        stock <- strsplit(object_names[x],"_")[[1]][1]
-        strat <- strsplit(object_names[x],"_")[[1]][2]
-        ssb2$Stock <- stock
-        ssb2$Strategy <- strat
-        ssb0 <- mcmc_list[[x]]$SSB0_r
-        dimnames(ssb0) <- list("Iteration" = 1:n_iter, "Region" = regions_list[[x]])
-
-        ssb0 <- reshape2::melt(ssb0) %>%
-            dplyr::left_join(expand.grid(Iteration = 1:n_iter, Year = pyears_list[[x]]), by = "Iteration") %>%
-            dplyr::group_by(Iteration, Region, Rule, value, Year) %>%
-            dplyr::ungroup() %>%
-            dplyr::rename("SSB0" = value) %>%
-            dplyr::mutate(Stock = stock) %>% 
-            dplyr::mutate(Strategy = strat)
-
-        out <- full_join(ssb0, ssb2)
-
-        return(out)
-    })
-    ssb_df <- do.call(rbind, ssb_list)
-    relssb_full <- full_join(ssb_df, rules)     
-
-    ## filter projected years
-    ssb_proj <- ssb_df %>% dplyr::filter(Year %in% cutyears) %>% select(-c(Region))
+ 
+    ssb_df <- read_SSB(object_list = object_list, object_names = object_names)
 
     ## calculate SSB-based risk constraints
-    ssb_calc <- ssb_proj %>%
-            dplyr::group_by(Stock, Strategy, "SSB", "SSB0") %>%
-            dplyr::summarise(Extinction = length(which(SSB <= 0.01*SSB0)==TRUE)/length(SSB),
-                            HardLimit = length(which(SSB <= 0.1*SSB0)==TRUE)/length(SSB),
-                            SoftLimit = length(which(SSB <= 0.2*SSB0)==TRUE)/length(SSB))
+    ssb_calc <- ssb_df %>%
+            dplyr::group_by(Scenario, RuleType, Rule, "RelSSB", "SSB0") %>%
+            dplyr::summarise(Extinction = length(which(RelSSB <= 0.01)==TRUE)/length(SSB),
+                            HardLimit = length(which(RelSSB <= 0.1)==TRUE)/length(SSB),
+                            SoftLimit = length(which(RelSSB <= 0.2)==TRUE)/length(SSB))
 
-    ssb_out <- data.frame(ssb_calc) %>% select(Stock, Strategy, Extinction, HardLimit, SoftLimit)
+    ssb_out <- data.frame(ssb_calc) %>% select(Scenario, RuleType, Rule, Extinction, HardLimit, SoftLimit)
     # write.table(ssb_out, file=paste0(figure_dir, "SSB_Risk_Table.txt"), sep="\t", row.names=FALSE, col.names=TRUE)
     return(ssb_out)
 }

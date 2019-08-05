@@ -67,6 +67,17 @@ read_SSB <- function(object_list, object_names){
 
     data_list <- lapply(1:length(object_list), function(x) object_list[[x]]@data)
     mcmc_list <- lapply(1:length(object_list), function(x) object_list[[x]]@mcmc)
+    data <- data_list[[1]]
+
+    years_list <- lapply(1:length(object_list), function(x) data_list[[x]]$first_yr:data_list[[x]]$last_yr)
+    pyears_list <- lapply(1:length(object_list), function(x) data_list[[x]]$first_yr:data_list[[x]]$last_proj_yr)
+    regions_list <- lapply(1:length(object_list), function(x) 1:data_list[[x]]$n_area)
+    cutyears_list <- lapply(1:length(object_list), function(x) (max(pyears_list[[x]])-99):max(pyears_list[[x]]))
+    cutyears <- unique(unlist(cutyears_list))
+    seasons <- c("AW","SS")
+    regions <- 1:data$n_area
+    sex <- c("Male","Immature female","Mature female")
+    n_iter <- nrow(mcmc_list[[1]][[1]])
 
         rules <- data_list[[grep("rules",object_names)[1]]]$mp_rule_parameters
         if(all(is.null(rules))==FALSE){
@@ -226,25 +237,25 @@ read_catch <- function(object_list, object_names){
 
 #' Compare probability of being under risk constraints
 #' 
+#' @param ssb data frame of ssb output by read_SSB
 #' @param object_list list of mcmc results
 #' @param object_names list of model names
-#' @param figure_dir the directory to save the figure to
 #' @import dplyr
 #' @importFrom reshape2 melt
 #' @importFrom grDevices colorRampPalette gray
 #' @importFrom stats runif quantile
 #' @export
 #' 
-ssb_risk_constraints <- function(object_list, object_names, figure_dir = "compare_figure/"){
+ssb_risk_constraints <- function(ssb, object_list, object_names){
  
-    ssb_df <- read_SSB(object_list = object_list, object_names = object_names)
+    # ssb_df <- read_SSB(object_list = object_list, object_names = object_names)
 
     ## calculate SSB-based risk constraints
-    ssb_calc <- ssb_df %>%
-            dplyr::group_by(Scenario, RuleName, RuleNum, "RelSSB", "SSB0") %>%
-            dplyr::summarise(Extinction = length(which(RelSSB <= 0.01)==TRUE)/length(SSB),
-                            HardLimit = length(which(RelSSB <= 0.1)==TRUE)/length(SSB),
-                            SoftLimit = length(which(RelSSB <= 0.2)==TRUE)/length(SSB))
+    ssb_calc <- ssb %>%
+            dplyr::group_by(Scenario, RuleName, RuleNum) %>%
+            dplyr::summarise(Extinction = length(which(RelSSB <= 0.01)==TRUE)/length(RelSSB),
+                            HardLimit = length(which(RelSSB <= 0.1)==TRUE)/length(RelSSB),
+                            SoftLimit = length(which(RelSSB <= 0.2)==TRUE)/length(RelSSB))
 
     ssb_out <- data.frame(ssb_calc) %>% select(Scenario, RuleName, RuleNum, Extinction, HardLimit, SoftLimit)
     # write.table(ssb_out, file=paste0(figure_dir, "SSB_Risk_Table.txt"), sep="\t", row.names=FALSE, col.names=TRUE)
@@ -252,7 +263,34 @@ ssb_risk_constraints <- function(object_list, object_names, figure_dir = "compar
 }
 
 
-#' Compare catch vs. biomass
+#' Catch constraints
+#' 
+#' @param catch data frame of catch output by read_catch
+#' @param object_list list of 'lsd.rds' files from multiple models
+#' @param object_names vector of model names associated with each of the output files in object_list
+#' @import dplyr
+#' @import ggplot2
+#' @importFrom reshape2 melt
+#' @importFrom stats quantile
+#' @export
+#' 
+catch_constraint <- function(catch, object_list, object_names)
+{
+    ## obtain catch data frame
+    # catch_df <- read_catch(object_list = object_list, object_names = object_names)
+
+    catch <- catch %>% ungroup() %>%
+        dplyr::mutate(RuleType = ifelse(grepl("F=", RuleName), "FixedF", ifelse(grepl("C=", RuleName), "FixedCatch", ifelse(grepl('rules', RuleName), "CPUE_rule", "X"))))
+
+    catch$CheckCatch <- 0
+    catch[which(catch$Catch_residual > 0),"CheckCatch"] <- 1
+    catch[which(catch$RuleType!="FixedCatch"),"CheckCatch"] <- 0
+    
+    return(catch)
+}
+
+
+#' All constraints
 #' 
 #' @param object_list list of 'lsd.rds' files from multiple models
 #' @param object_names vector of model names associated with each of the output files in object_list
@@ -263,46 +301,42 @@ ssb_risk_constraints <- function(object_list, object_names, figure_dir = "compar
 #' @importFrom stats quantile
 #' @export
 #' 
-all_risk_constraints <- function(object_list, object_names, figure_dir = "compare_figure/")
+summary_fun <- function(object_list, object_names, figure_dir = "compare_figure/")
 {
-    
-    ## relative spawning biomass dataframe
-    relssb_df <- read_SSB(object_list = object_list, object_names = object_names)
 
-    ## obtain catch data frame
-    catch_df <- read_catch(object_list = object_list, object_names = object_names)
+    ssb <- read_SSB(object_list = object_list, object_names = object_names)
+    catch <- read_catch(object_list = object_list, object_names = object_names)
 
+    ssb_risk <- ssb_risk_constraints(ssb =ssb, object_list=object_list, object_names=object_names)
+    catch_risk <- catch_constraint(catch = catch, object_list=object_list, object_names=object_names)
 
-    cb <- full_join(catch_df, relssb_df) %>%
-            dplyr::mutate(RuleType = ifelse(grepl("F=", RuleName), "FixedF", ifelse(grepl("C=", RuleName), "FixedCatch", ifelse(grepl('rules', RuleName), "CPUE_rule", "X"))))
+    vals_all <- full_join(ssb, catch_risk)
 
-    cb$CheckCatch <- sapply(1:nrow(cb), function(cc){
-        if(grepl("FixedCatch",cb$RuleType[cc])){
-            if(cb$Catch_residual[x] > 0){
-                out <- 1
-            } else { out <- 0}
-        } else {
-            out <- 0
-        }
-        return(out)
-    })
-
-    summary_byIter <- cb %>%
-        dplyr::group_by(Iteration, Scenario, RuleType, RuleName, RuleNum, CheckCatch) %>%
-        dplyr::summarise(AvgCatch = mean(Catch), AvgRelSSB = mean(RelSSB)) 
-
-    summary <- summary_byIter %>%
+    summary1 <- vals_all %>%
         dplyr::group_by(Scenario, RuleType, RuleName, RuleNum) %>%
-        dplyr::summarise(C5 = stats::quantile(AvgCatch, prob=0.05), C50 = stats::quantile(AvgCatch, prob=0.5), C95 = stats::quantile(AvgCatch, prob=0.95), B5 = stats::quantile(AvgRelSSB, prob=0.05), B50 = stats::quantile(AvgRelSSB, prob=0.5), B95 = stats::quantile(AvgRelSSB, prob=0.95), CatchConstraint = sum(CheckCatch))
+        dplyr::summarise(C5 = quantile(Catch, prob=0.05),
+                         C50 = quantile(Catch, prob=0.5),
+                         C95 = quantile(Catch, prob=0.95),
+                         B5 = quantile(RelSSB, prob=0.05),
+                         B50 = quantile(RelSSB, prob=0.5),
+                         B95 = quantile(RelSSB, prob=0.95),
+                         Catch_residual = max(Catch_residual),
+                         CV = sd(Catch)/mean(Catch))
 
+    summary2 <- vals_all %>%
+        dplyr::group_by(Scenario, RuleType, RuleName, RuleNum, Iteration) %>%
+        dplyr::summarise(TotalCatch = sum(Catch)) %>%
+        dplyr::group_by(Scenario, RuleType, RuleName, RuleNum) %>%
+        dplyr::summarise(MedTotalCatch = median(TotalCatch))
+
+    summary <- full_join(summary1, summary2)
 
     ## include risk
-    prisk <- ssb_risk_constraints(object_list = object_list, object_names = object_names, figure_dir = figure_dir)
-    summary_wRisk <- full_join(summary, prisk)
+    summary_wRisk <- full_join(summary, ssb_risk)
     summary_wRisk$RuleName <- factor(summary_wRisk$RuleName)
     summary_wRisk$RuleType <- factor(summary_wRisk$RuleType)
 
-    write.table(summary_wRisk, file=paste0(figure_dir, "Catch_RelSSB_Risk_Table.txt"), sep="\t", row.names=FALSE, col.names=TRUE)
+    write.table(summary_wRisk, file=paste0(figure_dir, "Summary_Table_wConstraints.txt"), sep="\t", row.names=FALSE, col.names=TRUE)
 
     return(summary_wRisk)
 }

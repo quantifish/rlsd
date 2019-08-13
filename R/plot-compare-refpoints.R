@@ -463,7 +463,7 @@ find_msy <- function(risk_summary, soft_limit_req=0.1, catch_resid_req=0, figure
 #' Plot SSB vs Catch
 #' 
 #' @param risk_summary data frame output by all_risk_constraints
-#' @param msy msy information output by find_msy
+#' @param msy_info msy information output by find_msy
 #' @param figure_dir the directory to save the figure to
 #' @import dplyr
 #' @import ggplot2
@@ -471,7 +471,7 @@ find_msy <- function(risk_summary, soft_limit_req=0.1, catch_resid_req=0, figure
 #' @importFrom stats quantile
 #' @export
 #'
-plot_curves <- function(risk_summary, msy_info=NULL, figure_dir = "compare_figure/"){
+plot_curves <- function(risk_summary, msy_info, figure_dir = "compare_figure/"){
 
     p <- ggplot(risk_summary) +
         # geom_vline(xintercept = 0.1, color=gray(0.3), alpha=0.75) +
@@ -519,7 +519,19 @@ plot_curves <- function(risk_summary, msy_info=NULL, figure_dir = "compare_figur
     ggsave(file.path(figure_dir, "Catch_versus_RelSSB_byProb_MSYlines.png"), p, width=15, height=10) 
 }
 
-plot_timeseries <- function(msy_list, object_list, object_names, figure_dir = "compare_figure/"){
+#' Various plots to explore rule options
+#' 
+#' @param msy_list msy information output by find_msy
+#' @param object_list
+#' @param object_names
+#' @param figure_dir the directory to save the figure to
+#' @import dplyr
+#' @import ggplot2
+#' @importFrom reshape2 melt
+#' @importFrom stats quantile
+#' @export
+#'
+explore_rules <- function(msy_list, object_list, object_names, figure_dir = "compare_figure/"){
 
     msy_info <- msy_list$msy %>% ungroup()
     model_names <- unique(sapply(1:nrow(msy_info), function(x) paste0(msy_info$Scenario[x], "_", msy_info$RuleName[x])))

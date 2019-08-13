@@ -21,7 +21,7 @@ do_plot_compare <- function(object_list, object_names, single_stock, figure_dir 
 		risk_summary <- summary_fun(object_list = object_list, object_names = object_names, figure_dir = figure_dir)
 		msy <- find_msy(risk_summary = risk_summary, figure_dir = figure_dir)
 		plot_curves(risk_summary=risk_summary, msy_info=msy$msy, figure_dir = figure_dir)
-		plot_timeseries(msy_list=msy, object_list=object_list, object_names=object_names, figure_dir = figure_dir)
+		explore_rules(msy_list=msy, object_list=object_list, object_names=object_names, figure_dir = figure_dir)
 		# plot_compare_catch_bio(object_list = object_list, object_names = object_names, figure_dir = figure_dir)
 		# compare_multi_risk(object_list = object_list, object_names = object_names, figure_dir = figure_dir)
 	 #    # plot_compare_multi_vb(object_list = object_list, object_names = object_names, figure_dir = figure_dir)

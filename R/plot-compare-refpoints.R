@@ -224,7 +224,7 @@ read_catch <- function(object_list, object_names){
     catch <- do.call(rbind, catch_list)
     # catch$RuleType <- factor(catch$RuleType)
 
-    if(all(is.na(rules))==FALSE){
+    if(all(is.null(rules))==FALSE){
         catch_full <- full_join(catch, rules)     
         catch1 <- catch_full %>% filter(RuleName!="rules")
         catch1 <- mutate(catch1, 'par1'=NA, 'par2'=NA, 'par3'=NA, 'par4'=NA, 'par5'=NA, 'par6'=NA, 'par7'=NA, 'par8'=NA,'par9'=NA, 'par10'=NA)

@@ -9,7 +9,7 @@
 #' @importFrom stats runif quantile
 #' @export
 #' 
-plot_rules <- function(rules=NULL, object_list=NULL, object_names=NULL, figure_dir = "compare_figure/"){
+plot_rules <- function(rules=NULL, figure_dir = "compare_figure/"){
 
         if(all(is.null(rules))){
             data_list <- lapply(1:length(object_list), function(x) object_list[[x]]@data)
@@ -493,7 +493,7 @@ plot_curves <- function(risk_summary, msy_info=NULL, figure_dir = "compare_figur
         theme_lsd(base_size=14)
     ggsave(file.path(figure_dir, "Catch_versus_RelSSB_byProb.png"), p, width=15, height=10) 
 
-    msy <- msy %>% ungroup()
+    msy <- msy_info %>% ungroup()
     p <- ggplot(risk_summary) +
         # geom_vline(xintercept = 0.1, color=gray(0.3), alpha=0.75) +
         # geom_vline(xintercept = 0.2, color=gray(0.5), alpha=0.75) +
@@ -521,7 +521,7 @@ plot_curves <- function(risk_summary, msy_info=NULL, figure_dir = "compare_figur
 
 plot_timeseries <- function(msy_list, object_list, object_names, figure_dir = "compare_figure/"){
 
-    msy_info <- msy$msy %>% ungroup()
+    msy_info <- msy_list$msy %>% ungroup()
     model_names <- unique(sapply(1:nrow(msy_info), function(x) paste0(msy_info$Scenario[x], "_", msy_info$RuleName[x])))
     sub_list <- lapply(1:length(model_names), function(x){
         index <- which(object_names == model_names[x])
@@ -566,7 +566,7 @@ plot_timeseries <- function(msy_list, object_list, object_names, figure_dir = "c
         Group <- sapply(1:nrow(catch_rules), function(x){
             out <- "All rules"
             if(catch_rules$RuleNum[x] == maxnum) out <- "Deterministic MSY"
-            if(catch_rules$RuleNum[x] %in% msy$intermediate_rules$RuleNum) out <- "Empirical MSY alternatives"
+            if(catch_rules$RuleNum[x] %in% msy_list$intermediate_rules$RuleNum) out <- "Empirical MSY alternatives"
             if(catch_rules$RuleNum[x] == empnum_mincv) out <- "Empirical MSY, MinCV"
             if(catch_rules$RuleNum[x] == empnum_maxc) out <- "Empirical MSY, MaxCatch"
             return(out)

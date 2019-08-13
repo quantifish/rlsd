@@ -363,13 +363,14 @@ summary_fun <- function(object_list, object_names, figure_dir = "compare_figure/
 find_msy <- function(risk_summary, soft_limit_req=0.1, catch_resid_req=0, figure_dir = "compare_figure/")
 {
 
-    ## msy subject to ssb risk constraints and catch residuals
+    ## maximum catch
     msy1 <- risk_summary %>% #filter(RuleType!="CPUErule") %>%
         dplyr::group_by(Scenario, RuleType) %>%
         dplyr::summarise(MSY = max(C50),
                         Bmsy = B50[which(C50==MSY)]) %>%
         mutate("MSY_type" = "Deterministic")
 
+    ## maximum catch subject to constraints
     msy2 <- risk_summary %>% #filter(RuleType!="CPUErule") %>%
         dplyr::group_by(Scenario, RuleType) %>%
         dplyr::summarise(MSY = max(C50[which(SoftLimit < soft_limit_req & CatchConstraint <= catch_resid_req)]),
@@ -389,52 +390,69 @@ find_msy <- function(risk_summary, soft_limit_req=0.1, catch_resid_req=0, figure
     })
     msy_info <- do.call(rbind, msy_info)
 
-    rule_summary <- risk_summary %>% filter(RuleType=="CPUErule") %>% filter(SoftLimit < soft_limit_req) %>% filter(CatchConstraint <= catch_resid_req)
+    msy_info$MSY_desc <- sapply(1:nrow(msy_info), function(x) ifelse(msy_info$RuleType[x]=="FixedCatch", "MinCV", ifelse(msy_info$RuleType[x]=="FixedF", "MaxCatch", "CPUErule")))
+
+    ## filter rules with info
+    rule_summary <- risk_summary %>% filter(RuleType=="CPUErule") #%>% filter(SoftLimit < soft_limit_req) %>% filter(CatchConstraint <= catch_resid_req)
+
+    # rule_msydet_maxc <- rule_summary %>% filter(C50 == max(C50)) %>% mutate(MSY_type = "Deterministic") %>% mutate(MSY_desc = "MaxCatch")
+    # rule_msydet_mincv <- rule_summary %>% filter(CV==min(CV)) %>% mutate(MSY_type = "Deterministic") %>% mutate(MSY_desc = "MinCV")
 
     ## MSY for fixed catch
     msy_catch <- msy_info %>% filter(RuleType=="FixedCatch") %>% filter(MSY_type=="Empirical")
     msy_F <- msy_info %>% filter(RuleType=="FixedF") %>% filter(MSY_type=="Empirical")
 
     ## find rules that have higher average yield than fixed catch
-    choose_rules <- rule_summary %>% filter(CV < msy_F$CV) %>% filter(C50 > msy_catch$C50)
+    choose_rules <- rule_summary %>% 
+                    filter(SoftLimit < soft_limit_req) %>% 
+                    filter(CatchConstraint <= catch_resid_req) %>%
+                    filter(CV < msy_F$CV) %>% 
+                    filter(C50 > msy_catch$C50)
+
 
     ## find rule that has higher average yield than fixed catch with the lowest CV
-    better_rule <- choose_rules %>% filter(C50==max(C50)) %>% mutate(MSY_type = "Empirical")
+    rule_maxcatch <- choose_rules %>% filter(C50==max(C50)) %>% mutate(MSY_type = "Empirical") %>% mutate(MSY_desc = "MaxCatch")
+    rule_mincv <- choose_rules %>% filter(CV==min(CV)) %>% mutate(MSY_type = "Empirical") %>% mutate(MSY_desc = "MinCV")
 
-    msy_info[which(msy_info$RuleType=="CPUErule" & msy_info$MSY_type == "Empirical"),] <- better_rule
-    msy_info <- msy_info %>% mutate(MSY_label = paste0(RuleType, "_", MSY_type))
+    msy_info <- msy_info[-c(which(msy_info$RuleType=="CPUErule"&msy_info$MSY_type=="Empirical")),]
+    msy_info <- rbind.data.frame(msy_info, rbind.data.frame(rule_maxcatch, rule_mincv))
 
     write.table(msy_info, file=paste0(figure_dir, "MSY.txt"), sep="\t", row.names=FALSE, col.names=FALSE)
     write.table(choose_rules, file=paste0(figure_dir, "Intermediate_CPUE_rules.txt"), sep="\t", row.names=FALSE, col.names=FALSE)
 
-
     msy_det <- msy_info %>% ungroup() %>%
-    select(Scenario, RuleType, MSY_type, C50, B50) %>% 
+    select(Scenario, RuleType, MSY_type, MSY_desc, C50, B50) %>% 
     filter(MSY_type=="Deterministic") %>%
     rename(MSY = C50) %>%
-    rename(Bmsy = B50) %>%
-    select(-c(MSY_type))
+    rename(Bmsy = B50) #%>%
+    # select(-c(MSY_type))
 
     msy_emp <- msy_info %>% ungroup() %>%
-    select(Scenario, RuleType, MSY_type, C50, B50) %>%
-    filter(MSY_type=="Empirical") %>%
+    select(Scenario, RuleType, MSY_type, MSY_desc, C50, B50) %>%
+    filter(grepl("Empirical",MSY_type)) %>%
     rename(eMSY = C50) %>%
-    rename(eBmsy = B50) %>%
-    select(-c(MSY_type))
+    rename(eBmsy = B50) #%>%
+    # select(-c(MSY_type))
 
-    msy_ratios <- full_join(msy_det, msy_emp)
+    msy_ratios <- msy_emp
+    msy_ratios$MSY <- sapply(1:nrow(msy_ratios), function(x) msy_det$MSY[match(msy_ratios$RuleType[x], msy_det$RuleType)])
+    msy_ratios$Bmsy <- sapply(1:nrow(msy_ratios), function(x) msy_det$Bmsy[match(msy_ratios$RuleType[x], msy_det$RuleType)])
+    msy_ratios$MSY_desc <- sapply(1:nrow(msy_ratios), function(x) ifelse(msy_ratios$RuleType[x]=="CPUErule", paste0("CPUErule, ", msy_ratios$MSY_desc[x]), as.character(msy_ratios$RuleType[x])))
 
     p <- ggplot(msy_ratios) +
         geom_vline(aes(xintercept = 1)) + 
         geom_hline(aes(yintercept = 1)) +
-        geom_point(aes(x = (eBmsy/Bmsy), y = (eMSY / MSY), color=RuleType, shape = Scenario), cex=4) +
-        xlab("Empirical / traditional Bmsy") + ylab("Empirical / traditional MSY") + 
-        scale_color_brewer(palette = "Dark2") +
+        geom_point(aes(x = (eBmsy/Bmsy), y = (eMSY / MSY), fill=MSY_desc), cex=4, pch=21) +
+        xlab("Empirical / deterministic Bmsy") + ylab("Empirical / deterministic MSY") + 
+        scale_fill_viridis_d() +
+        # scale_fill_brewer(palette = "Paired") +
+        # scale_shape_manual(values = seq(21,by=1,length.out=length(unique(msy_ratios$Scenario)))) +
         expand_limits(x = 0, y = 0) + 
+        guides(fill = guide_legend(title = "Rule type")) +
         scale_x_continuous(expand = c(0,0), limits = c(0, max(c(1.05, msy_ratios$eBmsy/msy_ratios$Bmsy)*1.05))) +
         scale_y_continuous(expand = c(0,0), limits = c(0, max(c(1.05, msy_ratios$eMSY/msy_ratios$MSY)*1.05))) + 
         theme_lsd(base_size = 14) 
-    ggsave(file.path(figure_dir, "eMSY_MSY.png"), p, width=10)  
+    ggsave(file.path(figure_dir, "eMSY_MSY.png"), p, width=9)  
     out <- list()
     out$msy <- msy_info
     out$intermediate_rules <- choose_rules
@@ -453,11 +471,11 @@ find_msy <- function(risk_summary, soft_limit_req=0.1, catch_resid_req=0, figure
 #' @importFrom stats quantile
 #' @export
 #'
-plot_curves <- function(risk_summary, msy=NULL, figure_dir = "compare_figure/"){
+plot_curves <- function(risk_summary, msy_info=NULL, figure_dir = "compare_figure/"){
 
     p <- ggplot(risk_summary) +
         # geom_vline(xintercept = 0.1, color=gray(0.3), alpha=0.75) +
-        geom_vline(xintercept = 0.2, color=gray(0.5), alpha=0.75) +
+        # geom_vline(xintercept = 0.2, color=gray(0.5), alpha=0.75) +
         # geom_segment(data = summary %>% dplyr::filter(RuleType=="FixedF"), aes(x=B5, xend=B95, y=C50, yend=C50), alpha=0.25, lwd=1.3) +
         # geom_segment(data = summary %>% dplyr::filter(RuleType=="FixedF"), aes(x=B50, xend=B50, y=C5, yend=C95), alpha=0.25, lwd=1.3) +
         geom_segment(aes(x=B5, xend=B95, y=C50, yend=C50, color = SoftLimit), alpha=0.75, lwd=1.3) +
@@ -473,19 +491,21 @@ plot_curves <- function(risk_summary, msy=NULL, figure_dir = "compare_figure/"){
         scale_fill_viridis_c() +
         guides(fill = guide_legend(title = "Probability below\nsoft limit"), color = guide_legend(title = "Probability below\nsoft limit")) +
         theme_lsd(base_size=14)
-    ggsave(file.path(figure_dir, "Catch_versus_RelSSB_byProb.png"), p, width=12, height=10) 
+    ggsave(file.path(figure_dir, "Catch_versus_RelSSB_byProb.png"), p, width=15, height=10) 
 
+    msy <- msy %>% ungroup()
     p <- ggplot(risk_summary) +
         # geom_vline(xintercept = 0.1, color=gray(0.3), alpha=0.75) +
-        geom_vline(xintercept = 0.2, color=gray(0.5), alpha=0.75) +
+        # geom_vline(xintercept = 0.2, color=gray(0.5), alpha=0.75) +
         # geom_segment(data = summary %>% dplyr::filter(RuleType=="FixedF"), aes(x=B5, xend=B95, y=C50, yend=C50), alpha=0.25, lwd=1.3) +
         # geom_segment(data = summary %>% dplyr::filter(RuleType=="FixedF"), aes(x=B50, xend=B50, y=C5, yend=C95), alpha=0.25, lwd=1.3) +
         geom_segment(aes(x=B5, xend=B95, y=C50, yend=C50, color = SoftLimit), alpha=0.75, lwd=1.3) +
         geom_segment(aes(x=B50, xend=B50, y=C5, yend=C95, color = SoftLimit), alpha=0.75, lwd=1.3) +
         # geom_point(data = summary %>% dplyr::filter(RuleType=="FixedF"), aes(x=B50, y=C50, color=RuleType), pch=19, alpha=0.75, cex=4) +
         geom_point(aes(x=B50, y=C50, fill=SoftLimit), pch=21, alpha=0.75, cex=4) +
-        geom_hline(data=msy %>% filter(MSY_type=="Empirical"), aes(yintercept = C50)) +
-        geom_hline(data=msy %>% filter(MSY_type=="Deterministic"), aes(yintercept = C50), lty=2) + 
+        geom_hline(data=msy %>% filter(MSY_type=="Empirical") %>% filter(MSY_desc == "MaxCatch"), aes(yintercept = C50, linetype = "Empirical, maximise catch")) +
+        geom_hline(data=msy %>% filter(MSY_type=="Empirical") %>% filter(MSY_desc == "MinCV"), aes(yintercept = C50, lty="Empirical, minimise CV")) +
+        geom_hline(data=msy %>% filter(MSY_type=="Deterministic"), aes(yintercept = C50, linetype = "Deterministic")) + 
         expand_limits(x = 0) +
         scale_x_continuous(limits = c(0, 0.7)) +
         facet_grid(Scenario~RuleType, scales="free_y", shrink=FALSE) +
@@ -494,20 +514,22 @@ plot_curves <- function(risk_summary, msy=NULL, figure_dir = "compare_figure/"){
         scale_colour_viridis_c() +
         scale_fill_viridis_c() +
         guides(fill = guide_legend(title = "Probability below\nsoft limit"), color = guide_legend(title = "Probability below\nsoft limit")) +
-        theme_lsd(base_size=14)
-    ggsave(file.path(figure_dir, "Catch_versus_RelSSB_byProb_MSYlines.png"), p, width=12, height=10) 
+        theme_lsd(base_size=14) +
+        scale_linetype_manual(name = "MSY type", values = c(1,2,3))
+    ggsave(file.path(figure_dir, "Catch_versus_RelSSB_byProb_MSYlines.png"), p, width=15, height=10) 
 }
 
-plot_timeseries <- function(model_info, object_list, object_names, figure_dir = "compare_figure/"){
+plot_timeseries <- function(msy_list, object_list, object_names, figure_dir = "compare_figure/"){
 
-    model_names <- unique(sapply(1:nrow(model_info), function(x) paste0(model_info$Scenario[x], "_", model_info$RuleName[x])))
+    msy_info <- msy$msy %>% ungroup()
+    model_names <- unique(sapply(1:nrow(msy_info), function(x) paste0(msy_info$Scenario[x], "_", msy_info$RuleName[x])))
     sub_list <- lapply(1:length(model_names), function(x){
         index <- which(object_names == model_names[x])
         return(object_list[[index]])
     })
 
-    catch_list <- lapply(1:nrow(model_info), function(x){
-        name <- paste0(model_info$Scenario[x], "_", model_info$RuleName[x])
+    catch_list <- lapply(1:nrow(msy_info), function(x){
+        name <- paste0(msy_info$Scenario[x], "_", msy_info$RuleName[x])
         object_list_new <- list()
         object_list_new[[1]] <- sub_list[[which(model_names==name)]]
         catch <- read_catch(object_list = object_list_new, object_names = name)
@@ -515,25 +537,47 @@ plot_timeseries <- function(model_info, object_list, object_names, figure_dir = 
             catch_out <- catch
         }
         if(grepl("rule",name)){
-            catch_out <- catch %>% filter(RuleNum == model_info$RuleNum[x])
+            catch_out <- catch %>% filter(RuleNum == msy_info$RuleNum[x])
         }
-        catch_out$MSY_label = model_info$MSY_label[x]
-        catch_out$CV = model_info$CV[x]
+        catch_out$MSY_type = msy_info$MSY_type[x]
+        catch_out$MSY_desc = msy_info$MSY_desc[x]
+        catch_out$CV = msy_info$CV[x]
+        catch_out$MedTotalCatch = msy_info$MedTotalCatch[x]
         return(catch_out)
     })
     catch_df <- do.call(rbind, catch_list)
-    catch_df$RuleType = sapply(1:nrow(catch_df), function(x) strsplit(catch_df$MSY_label[x],"_")[[1]][1])
-    catch_df$MSYType = sapply(1:nrow(catch_df), function(x) strsplit(catch_df$MSY_label[x],"_")[[1]][2])
+    catch_df$RuleType = sapply(1:nrow(catch_df), function(x) ifelse(grepl("rules", catch_df$RuleName[x]), "CPUErule", "Fixed"))
+    catch_df$RuleType2 = sapply(1:nrow(catch_df), function(x) ifelse(grepl("rules", catch_df$RuleName[x]), "CPUErule", ifelse(grepl("F=",catch_df$RuleName[x]), "FixedF", "FixedCatch")))
+    catch_df$RuleName2 = sapply(1:nrow(catch_df), function(x) paste0(catch_df$RuleType2[x], ", ", catch_df$MSY_desc[x]))
+    catch_df$MSY_desc2 = sapply(1:nrow(catch_df), function(x) ifelse(grepl("rules", catch_df$RuleName[x]), paste0("CPUErule, ", catch_df$MSY_desc[x]), catch_df$RuleType2[x]))
+
+    # catch_df$RuleType = sapply(1:nrow(catch_df), function(x) strsplit(catch_df$MSY_label[x],"_")[[1]][1])
+    # catch_df$MSYType = sapply(1:nrow(catch_df), function(x) strsplit(catch_df$MSY_label[x],"_")[[1]][2])
+    catch_df$MSY_desc[which(catch_df$MSY_desc=="CPUErule")] <- "MaxCatch"
 
         name <- "base_rules"
         object_list_new <- list()
         object_list_new[[1]] <- sub_list[[which(model_names==name)]]
         catch_rules <- read_catch(object_list = object_list_new, object_names = name)
+        maxnum <- data.frame(msy_info %>% filter(RuleType=="CPUErule") %>% filter(MSY_type=="Deterministic"))$RuleNum
+        empnum_mincv <- data.frame(msy_info %>% filter(RuleType=="CPUErule") %>% filter(MSY_type=="Empirical") %>% filter(MSY_desc=="MinCV"))$RuleNum
+        empnum_maxc <- data.frame(msy_info %>% filter(RuleType=="CPUErule") %>% filter(MSY_type=="Empirical") %>% filter(MSY_desc=="MaxCatch"))$RuleNum
 
-    p1 <- ggplot(catch_df) +
-        stat_summary(aes(x=Year, y=Catch, color = RuleType, fill = RuleType), fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
-        stat_summary(aes(x=Year, y=Catch, color = RuleType), fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75) +
-        geom_line(data = catch_df %>% filter(Iteration==1), aes(x=Year, y=Catch)) +
+        Group <- sapply(1:nrow(catch_rules), function(x){
+            out <- "All rules"
+            if(catch_rules$RuleNum[x] == maxnum) out <- "Deterministic MSY"
+            if(catch_rules$RuleNum[x] %in% msy$intermediate_rules$RuleNum) out <- "Empirical MSY alternatives"
+            if(catch_rules$RuleNum[x] == empnum_mincv) out <- "Empirical MSY, MinCV"
+            if(catch_rules$RuleNum[x] == empnum_maxc) out <- "Empirical MSY, MaxCatch"
+            return(out)
+        })
+        catch_rules$Group <- Group
+
+
+    p1 <- ggplot(catch_df %>% filter(MSY_type=="Empirical")) +
+        stat_summary(aes(x=Year, y=Catch, color = RuleName2, fill = RuleName2), fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
+        stat_summary(aes(x=Year, y=Catch, color = RuleName2), fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75) +
+        geom_line(data = catch_df %>% filter(MSY_type=="Empirical") %>% filter(Iteration==1), aes(x=Year, y=Catch)) +
         ylab("TACC") +
         guides(color = FALSE, fill = FALSE) +
         scale_color_viridis_d() +
@@ -541,31 +585,91 @@ plot_timeseries <- function(model_info, object_list, object_names, figure_dir = 
         # scale_color_brewer(palette = "RdYlBu") +
         # scale_fill_brewer(palette = "RdYlBu") +
         expand_limits(y = 0) +
-        theme_lsd()
-    if(length(unique(catch_df$Scenario))==1) p1 <- p1 + facet_grid(MSYType~RuleType)
-    if(length(unique(catch_df$Scenario))>1) p1 <- p1 + facet_wrap(MSYType~Scenario+RuleType)
+        theme_lsd(base_size = 14) +
+        facet_grid(RuleType~MSY_desc)
+    # if(length(unique(catch_df$Scenario))==1) p1 <- p1 + facet_grid(MSYType~RuleType)
+    # if(length(unique(catch_df$Scenario))>1) p1 <- p1 + facet_wrap(MSYType~Scenario+RuleType)
     ggsave(file.path(figure_dir, "TACC_over_time_MSYcompare.png"), p1, width = 8, height=6)
 
-    p2 <- ggplot(catch_df) +
-        geom_line(aes(x = CPUE, y = Catch, color = RuleType)) +
-        facet_grid(.~MSYType) +
-        ylab("TACC") + xlab("Offset-year CPUE") +
-        scale_color_viridis_d() +
-        # scale_color_brewer(palette = "RdYlBu") +
-        expand_limits(y = 0) +
-        theme_lsd()
-    ggsave(file.path(figure_dir, "CPUE_vs_TACC_MSYcompare.png"), p2, width=8, height=6)
-
-    p3 <- ggplot(catch_rules) +
-        stat_summary(aes(x=CPUE, y=Catch, color = RuleType, fill = RuleType), fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
-        stat_summary(aes(x=CPUE, y=Catch, color = RuleType), fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75) +
+    p1_v2 <- ggplot(catch_df %>% filter(MSY_type=="Empirical")) +
+        stat_summary(aes(x=Year, y=Catch, color = RuleName2, fill = RuleName2), fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
+        stat_summary(aes(x=Year, y=Catch, color = RuleName2), fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75) +
+        geom_line(data = catch_df %>% filter(MSY_type=="Empirical") %>% filter(Iteration==1), aes(x=Year, y=Catch)) +
+        ylab("TACC") +
+        guides(color = FALSE, fill = FALSE) +
         scale_color_viridis_d() +
         scale_fill_viridis_d() +
+        # scale_color_brewer(palette = "RdYlBu") +
+        # scale_fill_brewer(palette = "RdYlBu") +
         expand_limits(y = 0) +
-        # guides(color = FALSE) +
-        facet_grid(.~par5) +
-        theme_lsd()
-    ggsave(file.path(figure_dir, "CPUE_vs_TAC_allrules.png"), p3, width=12, height=8)
+        theme_lsd(base_size = 14) +
+        facet_grid(.~MSY_desc2)
+    ggsave(file.path(figure_dir, "TACC_over_time_MSYcompare_v2.png"), p1_v2, width=15, height=6)
+
+    p2 <- ggplot(catch_df %>% filter(MSY_type=="Empirical")) +
+        stat_summary(aes(x=Year, y=VB, color = RuleType, fill = RuleType), fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
+        stat_summary(aes(x=Year, y=VB, color = RuleType), fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75) +
+        geom_line(data = catch_df %>% filter(MSY_type=="Empirical") %>% filter(Iteration==1), aes(x=Year, y=VB)) +
+        ylab("TACC") +
+        guides(color = FALSE, fill = FALSE) +
+        scale_color_viridis_d() +
+        scale_fill_viridis_d() +
+        # scale_color_brewer(palette = "RdYlBu") +
+        # scale_fill_brewer(palette = "RdYlBu") +
+        expand_limits(y = 0) +
+        theme_lsd(base_size = 14) +
+        facet_grid(MSY_desc ~ RuleType)
+    # if(length(unique(catch_df$Scenario))==1) p2 <- p2 + facet_grid(MSYType~RuleType)
+    # if(length(unique(catch_df$Scenario))>1) p2 <- p2 + facet_wrap(MSYType~Scenario+RuleType)
+    ggsave(file.path(figure_dir, "VB_over_time_MSYcompare.png"), p2, width = 8, height=6)
+
+
+    p2_v2 <- ggplot(catch_df %>% filter(MSY_type=="Empirical")) +
+        stat_summary(aes(x=Year, y=VB, color = RuleName2, fill = RuleName2), fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
+        stat_summary(aes(x=Year, y=VB, color = RuleName2), fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75) +
+        geom_line(data = catch_df %>% filter(MSY_type=="Empirical") %>% filter(Iteration==1), aes(x=Year, y=VB)) +
+        ylab("TACC") +
+        guides(color = FALSE, fill = FALSE) +
+        scale_color_viridis_d() +
+        scale_fill_viridis_d() +
+        # scale_color_brewer(palette = "RdYlBu") +
+        # scale_fill_brewer(palette = "RdYlBu") +
+        expand_limits(y = 0) +
+        theme_lsd(base_size = 14) +
+        facet_grid(.~MSY_desc2)
+    # if(length(unique(catch_df$Scenario))==1) p2 <- p2 + facet_grid(MSYType~RuleType)
+    # if(length(unique(catch_df$Scenario))>1) p2 <- p2 + facet_wrap(MSYType~Scenario+RuleType)
+    ggsave(file.path(figure_dir, "VB_over_time_MSYcompare_v2.png"), p2_v2, width = 8, height=6)
+
+
+    p3 <- ggplot(catch_df %>% filter(MSY_type=="Empirical")) +
+        geom_point(aes(x = MedTotalCatch, y = CV, fill = MSY_desc2), pch=21, cex=4) +
+        scale_fill_viridis_d() +
+        guides(fill = guide_legend(title="Rule type")) +
+        xlab("Median total yield") +
+        theme_lsd(base_size = 14)
+    ggsave(file.path(figure_dir, "Total_yield_vs_CV.png"), p3, width=8, height=6)
+
+    p4 <- ggplot(catch_df) +
+        geom_line(aes(x = CPUE, y = Catch, color = RuleName2)) +
+        facet_grid(MSY_type~.) +
+        ylab("TACC") + xlab("Offset-year CPUE") +
+        scale_color_viridis_d() +
+        guides(color = guide_legend(title = "Rule type")) +
+        expand_limits(y = 0) +
+        theme_lsd(base_size=14)
+    ggsave(file.path(figure_dir, "CPUE_vs_TACC_MSYcompare.png"), p4, width=8, height=6)
+
+
+    p5 <- ggplot(catch_rules %>% filter(Iteration == 1)) +
+        geom_line(aes(x = CPUE, y = Catch, color = Group)) + 
+        ylab("TACC") + xlab("Offset-year CPUE") +
+        scale_color_viridis_d() +
+        guides(color = guide_legend(title = "Rule type")) +
+        expand_limits(y = 0) +
+        theme_lsd(base_size=14) #+
+        # facet_wrap(.~Group)
+    ggsave(file.path(figure_dir, "CPUE_vs_TAC_allrules.png"), p5, width=8, height=6)
 
 
 }
@@ -598,7 +702,7 @@ plot_timeseries <- function(model_info, object_list, object_names, figure_dir = 
 #     ggsave(file.path(figure_dir, "Catch_vs_CV.png"), p)
 
 
-#     plot_timeseries(model_info=msy, object_list=object_list, object_names=object_names)
+#     plot_timeseries(msy_info=msy, object_list=object_list, object_names=object_names)
 
 #     return(msy)
 # }

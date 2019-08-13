@@ -53,15 +53,15 @@ plot_rules <- function(rules, rule_labels = NULL, fig_name = NULL, figure_dir = 
     if(all(is.null(rule_labels)==FALSE)){
         rule_df <- rules %>% mutate(Label=rule_labels)
             rp <- ggplot(rule_df) +
-            geom_segment(aes(x=0,y=0,xend=par2,yend=0,color=factor(Label))) +
-            geom_segment(aes(x=par2,y=0,xend=par3,yend=par5,color=factor(Label))) +
-            geom_segment(aes(x=par3,y=par5,xend=par4,yend=par5,color=factor(Label))) +
-            geom_segment(aes(x=par4,y=par5,xend=par4,yend=par5*(1+par7),color=factor(Label))) +
-            geom_segment(aes(x=par4,y=par5*(1+par7),xend=par4+par6,yend=par5*(1+par7),color=factor(Label)))+
-            geom_segment(aes(x=par4+par6,y=par5*(1+par7),xend=par4+par6,yend=(par5*(1+par7))*(1+par7),color=factor(Label))) +
-            geom_segment(aes(x=par4+par6,y=(par5*(1+par7))*(1+par7),xend=par4+par6*2,yend=(par5*(1+par7))*(1+par7),color=factor(Label)))+
-            geom_segment(aes(x=par4+par6*2,y=(par5*(1+par7))*(1+par7),xend=par4+par6*2,yend=((par5*(1+par7))*(1+par7))*(1+par7),color=factor(Label))) +
-            geom_segment(aes(x=par4+par6*2,y=((par5*(1+par7))*(1+par7))*(1+par7),xend=par4+par6*3,yend=((par5*(1+par7))*(1+par7))*(1+par7),color=factor(Label)))+
+            geom_segment(aes(x=0,y=0,xend=par2,yend=0,color=factor(Label),linetype=Scenario)) +
+            geom_segment(aes(x=par2,y=0,xend=par3,yend=par5,color=factor(Label),linetype=Scenario)) +
+            geom_segment(aes(x=par3,y=par5,xend=par4,yend=par5,color=factor(Label),linetype=Scenario)) +
+            geom_segment(aes(x=par4,y=par5,xend=par4,yend=par5*(1+par7),color=factor(Label),linetype=Scenario)) +
+            geom_segment(aes(x=par4,y=par5*(1+par7),xend=par4+par6,yend=par5*(1+par7),color=factor(Label),linetype=Scenario))+
+            geom_segment(aes(x=par4+par6,y=par5*(1+par7),xend=par4+par6,yend=(par5*(1+par7))*(1+par7),color=factor(Label),linetype=Scenario)) +
+            geom_segment(aes(x=par4+par6,y=(par5*(1+par7))*(1+par7),xend=par4+par6*2,yend=(par5*(1+par7))*(1+par7),color=factor(Label),linetype=Scenario))+
+            geom_segment(aes(x=par4+par6*2,y=(par5*(1+par7))*(1+par7),xend=par4+par6*2,yend=((par5*(1+par7))*(1+par7))*(1+par7),color=factor(Label),linetype=Scenario)) +
+            geom_segment(aes(x=par4+par6*2,y=((par5*(1+par7))*(1+par7))*(1+par7),xend=par4+par6*3,yend=((par5*(1+par7))*(1+par7))*(1+par7),color=factor(Label),linetype=Scenario))+
             guides(color=FALSE) +
             xlab("Offset year CPUE") + ylab("TACC") +
             xlim(c(0,3)) +
@@ -467,16 +467,26 @@ find_msy <- function(risk_summary, soft_limit_req=0.1, catch_resid_req=0, figure
     p <- ggplot(msy_ratios) +
         geom_vline(aes(xintercept = 1)) + 
         geom_hline(aes(yintercept = 1)) +
-        geom_point(aes(x = (eBmsy/Bmsy), y = (eMSY / MSY), fill=MSY_desc), cex=4, pch=21) +
         xlab("Empirical / deterministic Bmsy") + ylab("Empirical / deterministic MSY") + 
         scale_fill_viridis_d() +
         # scale_fill_brewer(palette = "Paired") +
         # scale_shape_manual(values = seq(21,by=1,length.out=length(unique(msy_ratios$Scenario)))) +
         expand_limits(x = 0, y = 0) + 
-        guides(fill = guide_legend(title = "Rule type")) +
         scale_x_continuous(expand = c(0,0), limits = c(0, max(c(1.05, msy_ratios$eBmsy/msy_ratios$Bmsy)*1.05))) +
         scale_y_continuous(expand = c(0,0), limits = c(0, max(c(1.05, msy_ratios$eMSY/msy_ratios$MSY)*1.05))) + 
         theme_lsd(base_size = 14) 
+
+    if(length(unique(msy_ratios$Scenarios))==1){
+        p <- p + 
+            geom_point(aes(x = (eBmsy/Bmsy), y = (eMSY / MSY), fill=MSY_desc), cex=4, pch=21) +
+            guides(fill = guide_legend(title = "Rule type"))
+    } else {
+        p <- p + 
+            geom_point(aes(x = (eBmsy/Bmsy), y = (eMSY / MSY), fill=MSY_desc, shape = Scenario), cex=4) +
+            guides(fill = guide_legend(title = "Rule type")) +
+            scale_shape_manual(values = seq(21,by=1,length.out=length(unique(msy_ratios$Scenarios))))
+    }
+
     ggsave(file.path(figure_dir, "eMSY_MSY.png"), p, width=9)  
     out <- list()
     out$msy <- msy_info
@@ -623,7 +633,7 @@ explore_rules <- function(msy_list, object_list, object_names, figure_dir = "com
         # scale_fill_brewer(palette = "RdYlBu") +
         expand_limits(y = 0) +
         theme_lsd(base_size = 14) +
-        facet_grid(RuleType~MSY_desc)
+        facet_grid(Scenario+RuleType~MSY_desc)
     # if(length(unique(catch_df$Scenario))==1) p1 <- p1 + facet_grid(MSYType~RuleType)
     # if(length(unique(catch_df$Scenario))>1) p1 <- p1 + facet_wrap(MSYType~Scenario+RuleType)
     ggsave(file.path(figure_dir, "TACC_over_time_MSYcompare.png"), p1, width = 8, height=6)
@@ -640,7 +650,7 @@ explore_rules <- function(msy_list, object_list, object_names, figure_dir = "com
         # scale_fill_brewer(palette = "RdYlBu") +
         expand_limits(y = 0) +
         theme_lsd(base_size = 14) +
-        facet_grid(.~MSY_desc2)
+        facet_grid(Scenario~MSY_desc2)
     ggsave(file.path(figure_dir, "TACC_over_time_MSYcompare_v2.png"), p1_v2, width=15, height=6)
 
     p2 <- ggplot(catch_df %>% filter(MSY_type=="Empirical")) +
@@ -655,7 +665,7 @@ explore_rules <- function(msy_list, object_list, object_names, figure_dir = "com
         # scale_fill_brewer(palette = "RdYlBu") +
         expand_limits(y = 0) +
         theme_lsd(base_size = 14) +
-        facet_grid(MSY_desc ~ RuleType)
+        facet_grid(Scenario+RuleType~MSY_desc)
     # if(length(unique(catch_df$Scenario))==1) p2 <- p2 + facet_grid(MSYType~RuleType)
     # if(length(unique(catch_df$Scenario))>1) p2 <- p2 + facet_wrap(MSYType~Scenario+RuleType)
     ggsave(file.path(figure_dir, "VB_over_time_MSYcompare.png"), p2, width = 8, height=6)
@@ -673,28 +683,37 @@ explore_rules <- function(msy_list, object_list, object_names, figure_dir = "com
         # scale_fill_brewer(palette = "RdYlBu") +
         expand_limits(y = 0) +
         theme_lsd(base_size = 14) +
-        facet_grid(.~MSY_desc2)
+        facet_grid(Scenario~MSY_desc2)
     # if(length(unique(catch_df$Scenario))==1) p2 <- p2 + facet_grid(MSYType~RuleType)
     # if(length(unique(catch_df$Scenario))>1) p2 <- p2 + facet_wrap(MSYType~Scenario+RuleType)
     ggsave(file.path(figure_dir, "VB_over_time_MSYcompare_v2.png"), p2_v2, width = 8, height=6)
 
 
     p3 <- ggplot(catch_df %>% filter(MSY_type=="Empirical")) +
-        geom_point(aes(x = MedTotalCatch, y = CV, fill = MSY_desc2), pch=21, cex=4) +
-        scale_fill_viridis_d() +
-        guides(fill = guide_legend(title="Rule type")) +
         xlab("Median total yield") +
         theme_lsd(base_size = 14)
+    if(length(unique(catch_df$Scenario))==1){
+        p3 <- p3 + 
+            geom_point(aes(x = MedTotalCatch, y = CV, fill = MSY_desc2), pch=21, cex=4) +
+            scale_fill_viridis_d() +
+            guides(fill = guide_legend(title="Rule type"))
+    } else {
+        p3 <- p3 + 
+            geom_point(aes(x = MedTotalCatch, y = CV, fill = MSY_desc2, shape = Scenario), cex=4) +
+            scale_fill_viridis_d() +
+            guides(fill = guide_legend(title="Rule type")) +
+            scale_shape_manual(values = seq(21,by=1,length.out=length(unique(catch_df$Scenario))))
+    }
     ggsave(file.path(figure_dir, "Total_yield_vs_CV.png"), p3, width=8, height=6)
 
     p4 <- ggplot(catch_df) +
         geom_line(aes(x = CPUE, y = Catch, color = RuleName2)) +
-        facet_grid(MSY_type~.) +
         ylab("TACC") + xlab("Offset-year CPUE") +
         scale_color_viridis_d() +
         guides(color = guide_legend(title = "Rule type")) +
         expand_limits(y = 0) +
-        theme_lsd(base_size=14)
+        theme_lsd(base_size=14) +
+        facet_grid(MSY_type~Scenario)
     ggsave(file.path(figure_dir, "CPUE_vs_TACC_MSYcompare.png"), p4, width=8, height=6)
 
 
@@ -704,8 +723,8 @@ explore_rules <- function(msy_list, object_list, object_names, figure_dir = "com
         scale_color_viridis_d() +
         guides(color = guide_legend(title = "Rule type")) +
         expand_limits(y = 0) +
-        theme_lsd(base_size=14) #+
-        # facet_wrap(.~Group)
+        theme_lsd(base_size=14) +
+        facet_grid(MSY_type~Scenario)
     ggsave(file.path(figure_dir, "CPUE_vs_TAC_allrules.png"), p5, width=8, height=6)
 
 

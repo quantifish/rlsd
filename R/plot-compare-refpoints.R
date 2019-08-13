@@ -1,23 +1,20 @@
 #' Plot rules
 #' 
-#' @param object_list list of mcmc results
-#' @param object_names list of model names
+#' @param rules data frame with rule numbers and parameter values
+#' @param rule_labels data frame with labels for rules - must be the same length as number of rows in rules
+#' @param fig_name name for figure if rule labels are included
 #' @param figure_dir the directory to save the figure to
+#' @param width option to add width of figure
+#' @param height option to add height of figure
 #' @import dplyr
 #' @importFrom reshape2 melt
 #' @importFrom grDevices colorRampPalette gray
 #' @importFrom stats runif quantile
 #' @export
 #' 
-plot_rules <- function(rules=NULL, figure_dir = "compare_figure/"){
+plot_rules <- function(rules, rule_labels = NULL, fig_name = NULL, figure_dir = "compare_figure/", width = 8, height=6){
 
-        if(all(is.null(rules))){
-            data_list <- lapply(1:length(object_list), function(x) object_list[[x]]@data)
-            rules <- data_list[[grep("rules",object_names)[1]]]$mp_rule_parameters
-            colnames(rules) <- paste0("par",1:ncol(rules))
-            rules <- data.frame(rules) %>% mutate(RuleNum = 1:nrow(rules))             
-        }
-
+    if(all(is.null(rule_labels))){
         rp <- ggplot(rules) +
         geom_segment(aes(x=0,y=0,xend=par2,yend=0,color=factor(par2))) +
         geom_segment(aes(x=par2,y=0,xend=par3,yend=par5,color=factor(par2))) +
@@ -33,7 +30,7 @@ plot_rules <- function(rules=NULL, figure_dir = "compare_figure/"){
         xlim(c(0,3)) +
         facet_grid(par3~par4) +
         theme_lsd(base_size=14)
-        ggsave(file.path(figure_dir, "Rules_CPUE at TACC=0.png"), rp)
+        ggsave(file.path(figure_dir, paste0("Rules_CPUE at TACC=0_", fig_name, ".png")), rp)
 
         rp <- ggplot(rules) +
         geom_segment(aes(x=0,y=0,xend=par2,yend=0,color=factor(par5),linetype=factor(par2))) +
@@ -50,7 +47,29 @@ plot_rules <- function(rules=NULL, figure_dir = "compare_figure/"){
         facet_grid(par3~par4) +
         xlim(c(0,3)) +
         theme_lsd(base_size=14)
-        ggsave(file.path(figure_dir, "Rules_TACC Plateau_CPUE at TACC=0.png"), rp)
+        ggsave(file.path(figure_dir, paste0("Rules_TACC Plateau_CPUE at TACC=0_", fig_name, ".png")), rp)
+    }
+
+    if(all(is.null(rule_labels)==FALSE)){
+        rule_df <- rules %>% mutate(Label=rule_labels)
+            rp <- ggplot(rule_df) +
+            geom_segment(aes(x=0,y=0,xend=par2,yend=0,color=factor(Label))) +
+            geom_segment(aes(x=par2,y=0,xend=par3,yend=par5,color=factor(Label))) +
+            geom_segment(aes(x=par3,y=par5,xend=par4,yend=par5,color=factor(Label))) +
+            geom_segment(aes(x=par4,y=par5,xend=par4,yend=par5*(1+par7),color=factor(Label))) +
+            geom_segment(aes(x=par4,y=par5*(1+par7),xend=par4+par6,yend=par5*(1+par7),color=factor(Label)))+
+            geom_segment(aes(x=par4+par6,y=par5*(1+par7),xend=par4+par6,yend=(par5*(1+par7))*(1+par7),color=factor(Label))) +
+            geom_segment(aes(x=par4+par6,y=(par5*(1+par7))*(1+par7),xend=par4+par6*2,yend=(par5*(1+par7))*(1+par7),color=factor(Label)))+
+            geom_segment(aes(x=par4+par6*2,y=(par5*(1+par7))*(1+par7),xend=par4+par6*2,yend=((par5*(1+par7))*(1+par7))*(1+par7),color=factor(Label))) +
+            geom_segment(aes(x=par4+par6*2,y=((par5*(1+par7))*(1+par7))*(1+par7),xend=par4+par6*3,yend=((par5*(1+par7))*(1+par7))*(1+par7),color=factor(Label)))+
+            guides(color=FALSE) +
+            xlab("Offset year CPUE") + ylab("TACC") +
+            xlim(c(0,3)) +
+            scale_color_viridis_d() +
+            facet_wrap(.~factor(Label)) +
+            theme_lsd(base_size=14)
+            ggsave(file.path(figure_dir, paste0(fig_name, ".png")), rp, width=width, height=height)
+    }
 
 }
 
@@ -394,6 +413,7 @@ find_msy <- function(risk_summary, soft_limit_req=0.1, catch_resid_req=0, figure
 
     ## filter rules with info
     rule_summary <- risk_summary %>% filter(RuleType=="CPUErule") #%>% filter(SoftLimit < soft_limit_req) %>% filter(CatchConstraint <= catch_resid_req)
+    plot_rules(rules=rule_summary, fig_name = "all_rules", figure_dir = figure_dir)
 
     # rule_msydet_maxc <- rule_summary %>% filter(C50 == max(C50)) %>% mutate(MSY_type = "Deterministic") %>% mutate(MSY_desc = "MaxCatch")
     # rule_msydet_mincv <- rule_summary %>% filter(CV==min(CV)) %>% mutate(MSY_type = "Deterministic") %>% mutate(MSY_desc = "MinCV")
@@ -409,6 +429,8 @@ find_msy <- function(risk_summary, soft_limit_req=0.1, catch_resid_req=0, figure
                     filter(CV < msy_F$CV) %>% 
                     filter(C50 > msy_catch$C50)
 
+    plot_rules(rules=choose_rules, fig_name="constraints_met", figure_dir = figure_dir)
+    plot_rules(rules=choose_rules, rule_labels = choose_rules$RuleNum, fig_name="Rules_constraints_met", figure_dir = figure_dir)
 
     ## find rule that has higher average yield than fixed catch with the lowest CV
     rule_maxcatch <- choose_rules %>% filter(C50==max(C50)) %>% mutate(MSY_type = "Empirical") %>% mutate(MSY_desc = "MaxCatch")
@@ -419,6 +441,9 @@ find_msy <- function(risk_summary, soft_limit_req=0.1, catch_resid_req=0, figure
 
     write.table(msy_info, file=paste0(figure_dir, "MSY.txt"), sep="\t", row.names=FALSE, col.names=FALSE)
     write.table(choose_rules, file=paste0(figure_dir, "Intermediate_CPUE_rules.txt"), sep="\t", row.names=FALSE, col.names=FALSE)
+
+    msy_info_rules <- msy_info %>% ungroup() %>% filter(RuleName == "rules")
+    plot_rules(rules = msy_info_rules, rule_labels = c("Deterministic MSY", "Empirical MSY, MaxCatch", "Empirical MSY, MinCV"), fig_name = "Rules_MSY", figure_dir = figure_dir)
 
     msy_det <- msy_info %>% ungroup() %>%
     select(Scenario, RuleType, MSY_type, MSY_desc, C50, B50) %>% 

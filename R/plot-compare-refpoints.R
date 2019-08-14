@@ -387,7 +387,7 @@ find_msy <- function(risk_summary, soft_limit_req=0.1, catch_resid_req=0, figure
         dplyr::group_by(Scenario, RuleType) %>%
         dplyr::summarise(MSY = max(C50),
                         Bmsy = B50[which(C50==MSY)]) %>%
-        mutate("MSY_type" = "Deterministic")
+        mutate("MSY_type" = "Theoretical")
 
     ## maximum catch subject to constraints
     msy2 <- risk_summary %>% #filter(RuleType!="CPUErule") %>%
@@ -411,33 +411,12 @@ find_msy <- function(risk_summary, soft_limit_req=0.1, catch_resid_req=0, figure
 
     msy_info$MSY_desc <- sapply(1:nrow(msy_info), function(x) ifelse(msy_info$RuleType[x]=="FixedCatch", "MinCV", ifelse(msy_info$RuleType[x] %in% c("FixedF","CPUErule"), "MaxCatch", "X")))
 
-    msy3 <- risk_summary %>% filter(RuleType=="CPUErule") %>%
-        dplyr::group_by(Scenario, RuleType) %>%
-        dplyr::summarise(MSY = C50[which(CV==min(CV))],
-                        Bmsy = B50[which(CV==min(CV))]) %>%
-        mutate("MSY_type" = "Deterministic") %>%
-        mutate("CV"=min(risk_summary$CV[which(risk_summary$RuleType=="CPUErule")]))
-
-    msy_info2 <- lapply(1:nrow(msy3), function(x){
-        sub1 <- msy3[x,]
-        sub2 <- risk_summary %>% 
-            filter(Scenario==sub1$Scenario) %>%
-            filter(RuleType==sub1$RuleType) %>%
-            filter(C50==sub1$MSY) %>% 
-            filter(CV==min(sub1$CV))
-        sub2$MSY_type  <- sub1$MSY_type
-        return(sub2)
-    })
-    msy_info2 <- do.call(rbind, msy_info2) %>% ungroup() %>% mutate(MSY_desc = "MinCV")
-
-    msy_info <- rbind.data.frame(msy_info2, msy_info)
-
     ## filter rules with info
     rule_summary <- risk_summary %>% filter(RuleType=="CPUErule") #%>% filter(SoftLimit < soft_limit_req) %>% filter(CatchConstraint <= catch_resid_req)
     plot_rules(rules=rule_summary, fig_name = "all_rules", figure_dir = figure_dir)
 
-    # rule_msydet_maxc <- rule_summary %>% filter(C50 == max(C50)) %>% mutate(MSY_type = "Deterministic") %>% mutate(MSY_desc = "MaxCatch")
-    # rule_msydet_mincv <- rule_summary %>% filter(CV==min(CV)) %>% mutate(MSY_type = "Deterministic") %>% mutate(MSY_desc = "MinCV")
+    # rule_msydet_maxc <- rule_summary %>% filter(C50 == max(C50)) %>% mutate(MSY_type = "Theoretical") %>% mutate(MSY_desc = "MaxCatch")
+    # rule_msydet_mincv <- rule_summary %>% filter(CV==min(CV)) %>% mutate(MSY_type = "Theoretical") %>% mutate(MSY_desc = "MinCV")
 
     ## MSY for fixed catch
     msy_catch <- msy_info %>% filter(RuleType=="FixedCatch") %>% filter(MSY_type=="Empirical")
@@ -464,11 +443,11 @@ find_msy <- function(risk_summary, soft_limit_req=0.1, catch_resid_req=0, figure
     write.csv(choose_rules, file=paste0(figure_dir, "Intermediate_CPUE_rules.csv"), row.names=FALSE)
 
     msy_info_rules <- msy_info %>% ungroup() %>% filter(RuleName == "rules")
-    plot_rules(rules = msy_info_rules, rule_labels = c("Deterministic MSY, MinCV", "Deterministic MSY, MaxCatch", "Empirical MSY, MaxCatch", "Empirical MSY, MinCV"), fig_name = "Rules_MSY", figure_dir = figure_dir)
+    plot_rules(rules = msy_info_rules, rule_labels = c("Theoretical MSY", "Empirical MSY, MaxCatch", "Empirical MSY, MinCV"), fig_name = "Rules_MSY", figure_dir = figure_dir)
 
     msy_det <- msy_info %>%# ungroup() %>%
     select(Scenario, RuleType, MSY_type, MSY_desc, C50, B50) %>% 
-    filter(MSY_type=="Deterministic") %>%
+    filter(MSY_type=="Theoretical") %>%
     rename(MSY = C50) %>%
     rename(Bmsy = B50) #%>%
     # select(-c(MSY_type))
@@ -481,18 +460,8 @@ find_msy <- function(risk_summary, soft_limit_req=0.1, catch_resid_req=0, figure
     # select(-c(MSY_type))
 
     msy_ratios <- msy_emp
-    msy_ratios$MSY <- sapply(1:nrow(msy_ratios), function(x){
-        index <- match(msy_ratios$RuleType[x], msy_det$RuleType)
-        if(msy_det$RuleType[index]=="CPUErule"){
-            msy_det$MSY[which(msy_det$RuleType=="CPUErule" & msy_det$MSY_desc=="MaxCatch")]
-        } else {msy_det$MSY[match(msy_ratios$RuleType[x], msy_det$RuleType)]}
-    })
-    msy_ratios$Bmsy <- sapply(1:nrow(msy_ratios), function(x){
-        index <- match(msy_ratios$RuleType[x], msy_det$RuleType)
-        if(msy_det$RuleType[index]=="CPUErule"){
-            msy_det$Bmsy[which(msy_det$RuleType=="CPUErule" & msy_det$MSY_desc=="MaxCatch")]
-        } else {msy_det$Bmsy[match(msy_ratios$RuleType[x], msy_det$RuleType)]}        
-    })
+    msy_ratios$MSY <- sapply(1:nrow(msy_ratios), function(x) msy_det$MSY[match(msy_ratios$RuleType[x], msy_det$RuleType)])
+    msy_ratios$Bmsy <- sapply(1:nrow(msy_ratios), function(x) msy_det$Bmsy[match(msy_ratios$RuleType[x], msy_det$RuleType)])
         
     msy_ratios$MSY_desc <- sapply(1:nrow(msy_ratios), function(x) ifelse(msy_ratios$RuleType[x]=="CPUErule", paste0("CPUErule, ", msy_ratios$MSY_desc[x]), as.character(msy_ratios$RuleType[x])))
 
@@ -500,7 +469,7 @@ find_msy <- function(risk_summary, soft_limit_req=0.1, catch_resid_req=0, figure
         geom_vline(aes(xintercept = 1)) + 
         geom_hline(aes(yintercept = 1)) +
         geom_point(aes(x = (eBmsy/Bmsy), y = (eMSY / MSY), fill=MSY_desc), cex=4, pch=21) +
-        xlab("Empirical / deterministic Bmsy") + ylab("Empirical / deterministic MSY") + 
+        xlab("Empirical / theoretical Bmsy") + ylab("Empirical / theoretical MSY") + 
         scale_fill_viridis_d() +
         # scale_fill_brewer(palette = "Paired") +
         # scale_shape_manual(values = seq(21,by=1,length.out=length(unique(msy_ratios$Scenario)))) +
@@ -548,9 +517,9 @@ plot_curves <- function(risk_summary, msy_info, figure_dir = "compare_figure/"){
         scale_fill_viridis_c() +
         guides(fill = guide_legend(title = "Probability below\nsoft limit"), color = guide_legend(title = "Probability below\nsoft limit")) +
         theme_lsd(base_size=14)
-    ggsave(file.path(figure_dir, "Catch_versus_RelSSB_byProb.png"), p, width=15, height=10) 
+    ggsave(file.path(figure_dir, "Catch_versus_RelSSB_byProb.png"), p, width=15, height=6) 
 
-    index <- which(msy_info$RuleType=="CPUErule" & msy_info$MSY_type=="Deterministic" & msy_info$MSY_desc=="MinCV")
+    index <- which(msy_info$RuleType=="CPUErule" & msy_info$MSY_type=="Theoretical" & msy_info$MSY_desc=="MinCV")
     if(length(index)>0){
         msy <- msy_info[-index,] %>% ungroup()
     } else { msy <- msy_info %>% ungroup()}
@@ -565,7 +534,7 @@ plot_curves <- function(risk_summary, msy_info, figure_dir = "compare_figure/"){
         geom_point(aes(x=B50, y=C50, fill=SoftLimit), pch=21, alpha=0.75, cex=4) +
         geom_hline(data=msy %>% filter(MSY_type=="Empirical") %>% filter(MSY_desc == "MaxCatch"), aes(yintercept = C50, linetype = "Empirical MSY, MaxCatch")) +
         geom_hline(data=msy %>% filter(MSY_type=="Empirical") %>% filter(MSY_desc == "MinCV"), aes(yintercept = C50, lty="Empirical MSY, MinCV")) +
-        geom_hline(data=msy %>% filter(MSY_type=="Deterministic"), aes(yintercept = C50, linetype = "Deterministic MSY")) + 
+        geom_hline(data=msy %>% filter(MSY_type=="Theoretical"), aes(yintercept = C50, linetype = "Theoretical MSY")) + 
         expand_limits(x = 0) +
         scale_x_continuous(limits = c(0, 0.7)) +
         facet_grid(Scenario~RuleType, scales="free_y", shrink=FALSE) +
@@ -576,7 +545,7 @@ plot_curves <- function(risk_summary, msy_info, figure_dir = "compare_figure/"){
         guides(fill = guide_legend(title = "Probability below\nsoft limit"), color = guide_legend(title = "Probability below\nsoft limit")) +
         theme_lsd(base_size=14) +
         scale_linetype_manual(name = "MSY type", values = c(1,2,3))
-    ggsave(file.path(figure_dir, "Catch_versus_RelSSB_byProb_MSYlines.png"), p, width=15, height=10) 
+    ggsave(file.path(figure_dir, "Catch_versus_RelSSB_byProb_MSYlines.png"), p, width=15, height=6) 
 }
 
 #' Various plots to explore rule options
@@ -631,13 +600,13 @@ explore_rules <- function(msy_list, object_list, object_names, figure_dir = "com
         object_list_new <- list()
         object_list_new[[1]] <- sub_list[[which(model_names==name)]]
         catch_rules <- read_catch(object_list = object_list_new, object_names = name)
-        maxnum <- data.frame(msy_info %>% filter(RuleType=="CPUErule") %>% filter(MSY_type=="Deterministic"))$RuleNum
+        maxnum <- data.frame(msy_info %>% filter(RuleType=="CPUErule") %>% filter(MSY_type=="Theoretical"))$RuleNum
         empnum_mincv <- data.frame(msy_info %>% filter(RuleType=="CPUErule") %>% filter(MSY_type=="Empirical") %>% filter(MSY_desc=="MinCV"))$RuleNum
         empnum_maxc <- data.frame(msy_info %>% filter(RuleType=="CPUErule") %>% filter(MSY_type=="Empirical") %>% filter(MSY_desc=="MaxCatch"))$RuleNum
 
         Group <- sapply(1:nrow(catch_rules), function(x){
             out <- "All rules"
-            if(catch_rules$RuleNum[x] == maxnum) out <- "Deterministic MSY"
+            if(catch_rules$RuleNum[x] == maxnum) out <- "Theoretical MSY"
             if(catch_rules$RuleNum[x] %in% msy_list$intermediate_rules$RuleNum) out <- "Empirical MSY alternatives"
             if(catch_rules$RuleNum[x] == empnum_mincv) out <- "Empirical MSY, MinCV"
             if(catch_rules$RuleNum[x] == empnum_maxc) out <- "Empirical MSY, MaxCatch"

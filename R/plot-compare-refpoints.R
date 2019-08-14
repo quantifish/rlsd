@@ -700,7 +700,7 @@ explore_rules <- function(msy_list, object_list, object_names, figure_dir = "com
         stat_summary(aes(x=Year, y=VB, color = RuleName2, fill = RuleName2), fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
         stat_summary(aes(x=Year, y=VB, color = RuleName2), fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75) +
         geom_line(data = catch_df %>% filter(Iteration==1), aes(x=Year, y=VB)) +
-        ylab("TACC") +
+        ylab("Vulnerable biomass") +
         guides(color = FALSE, fill = FALSE) +
         scale_color_viridis_d() +
         scale_fill_viridis_d() +

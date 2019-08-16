@@ -306,7 +306,7 @@ find_refs <- function(object_list, object_names, figure_dir = "compare_figure/")
     plot_rules(rules=CPUE_rules, fig_name = "all_rules", figure_dir = figure_dir)
    
     ## summary of quantiles, CV, and total catch labeled with rule descriptions
-    summary <- full_join(x=info_summary, y=rules)
+    summary <- full_join(x=summary, y=rules)
 
     ## summary with ssb-related risk constraints, and save
     summary_risk <- full_join(summary, ssb_summary_risk)

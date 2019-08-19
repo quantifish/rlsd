@@ -392,8 +392,15 @@ find_refs <- function(object_list, object_names, figure_dir = "compare_figure/")
         scale_fill_viridis_d() +
         guides(fill = guide_legend(title = "Rule type")) +
         theme_lsd(base_size = 14)
-    ggsave(file.path(figure_dir, "TotalYield_vs_CV.png"), p, width=9)  
+    ggsave(file.path(figure_dir, "TotalYield_vs_CV_all.png"), p, width=9)  
 
+    p <- ggplot(msy_info %>% filter(MSY_type == "Empirical")) +
+        geom_point(data = msy_info %>% filter(MSY_type=="Empirical") %>% filter(MSY_desc2 != "CPUErule, Option"), aes(x = MedTotalCatch, y = CV, fill = MSY_desc2), pch=21, cex=4) +
+        xlab("Median total yield") +
+        scale_fill_viridis_d() +
+        guides(fill = guide_legend(title = "Rule type")) +
+        theme_lsd(base_size = 14)
+    ggsave(file.path(figure_dir, "TotalYield_vs_CV_msy.png"), p, width=9)  
 
     ## average yield vs cv
     p <- ggplot(msy_info %>% filter(MSY_type == "Empirical")) +
@@ -403,7 +410,15 @@ find_refs <- function(object_list, object_names, figure_dir = "compare_figure/")
         scale_fill_viridis_d() +
         guides(fill = guide_legend(title = "Rule type")) +
         theme_lsd(base_size = 14)
-    ggsave(file.path(figure_dir, "AnnualYield_vs_CV.png"), p, width=9)  
+    ggsave(file.path(figure_dir, "AnnualYield_vs_CV_all.png"), p, width=9)  
+
+    p <- ggplot(msy_info %>% filter(MSY_type == "Empirical")) +
+        geom_point(data = msy_info %>% filter(MSY_type=="Empirical") %>% filter(MSY_desc2 != "CPUErule, Option"), aes(x = C50, y = CV, fill = MSY_desc2), pch=21, cex=4) +
+        xlab("Median annual yield") +
+        scale_fill_viridis_d() +
+        guides(fill = guide_legend(title = "Rule type")) +
+        theme_lsd(base_size = 14)
+    ggsave(file.path(figure_dir, "AnnualYield_vs_CV_msy.png"), p, width=9)  
 
     ## comparing empirical and theoretical MSY
     ## theoretical
@@ -445,7 +460,23 @@ find_refs <- function(object_list, object_names, figure_dir = "compare_figure/")
         scale_x_continuous(expand = c(0,0), limits = c(0, max(c(1.05, msy_ratios$eBmsy/msy_ratios$Bmsy)*1.05))) +
         scale_y_continuous(expand = c(0,0), limits = c(0, max(c(1.05, msy_ratios$eMSY/msy_ratios$MSY)*1.05))) + 
         theme_lsd(base_size = 14) 
+    ggsave(file.path(figure_dir, "eMSY_MSY_all.png"), p, width=9)  
+
+    p <- ggplot(msy_ratios %>% filter(grepl("Option", MSY_desc)==FALSE)) +
+        geom_vline(aes(xintercept = 1)) + 
+        geom_hline(aes(yintercept = 1)) +
+        geom_point(aes(x = (eBmsy/Bmsy), y = (eMSY / MSY), fill=MSY_desc), cex=4, pch=21, alpha=0.7) +
+        xlab("Empirical / theoretical Bmsy") + ylab("Empirical / theoretical MSY") + 
+        scale_fill_viridis_d() +
+        # scale_fill_brewer(palette = "Paired") +
+        # scale_shape_manual(values = seq(21,by=1,length.out=length(unique(msy_ratios$Scenario)))) +
+        expand_limits(x = 0, y = 0) + 
+        guides(fill = guide_legend(title = "Rule type")) +
+        scale_x_continuous(expand = c(0,0), limits = c(0, max(c(1.05, msy_ratios$eBmsy/msy_ratios$Bmsy)*1.05))) +
+        scale_y_continuous(expand = c(0,0), limits = c(0, max(c(1.05, msy_ratios$eMSY/msy_ratios$MSY)*1.05))) + 
+        theme_lsd(base_size = 14) 
     ggsave(file.path(figure_dir, "eMSY_MSY.png"), p, width=9)  
+
 
     ## curves -- relative SSB by annual catch
     p <- ggplot(summary_risk) +
@@ -532,8 +563,18 @@ find_refs <- function(object_list, object_names, figure_dir = "compare_figure/")
         scale_x_continuous(limits = c(0, max(catch_year_msy_info$CPUE)*1.01), expand=c(0,0)) +
         scale_y_continuous(limits = c(0, max(catch_year_msy_info$Catch)*1.05), expand=c(0,0)) +
         theme_lsd(base_size=14)
-    ggsave(file.path(figure_dir, "CPUE_vs_TACC_MSYcompare.png"), p4, width=8, height=6)
+    ggsave(file.path(figure_dir, "CPUE_vs_TACC_options.png"), p4, width=8, height=6)
 
+    p4 <- ggplot(catch_year_msy_info  %>% filter(grepl("Option", MSY_desc2)==FALSE)) +
+        geom_line(aes(x = CPUE, y = Catch, color = MSY_desc2), lwd=1.5, alpha=0.8) +
+        facet_grid(MSY_type~.) +
+        ylab("TACC") + xlab("Offset-year CPUE") +
+        scale_color_viridis_d() +
+        guides(color = guide_legend(title = "Rule type")) +
+        scale_x_continuous(limits = c(0, max(catch_year_msy_info$CPUE)*1.01), expand=c(0,0)) +
+        scale_y_continuous(limits = c(0, max(catch_year_msy_info$Catch)*1.05), expand=c(0,0)) +
+        theme_lsd(base_size=14)
+    ggsave(file.path(figure_dir, "CPUE_vs_TACC_MSY.png"), p4, width=8, height=6)
 
     catch_year_rules <- catch_year %>% filter(RuleName == "rules")
     maxnum <- msy_info$RuleNum[which(msy_info$RuleType=="CPUErule" & msy_info$MSY_type=="Theoretical" & msy_info$MSY_desc == "MaxCatch")]
@@ -544,12 +585,12 @@ find_refs <- function(object_list, object_names, figure_dir = "compare_figure/")
     Group <- sapply(1:nrow(catch_year_rules), function(x){
             out <- "All rules"
             if(catch_year_rules$RuleNum[x] == maxnum) out <- "Theoretical MSY"
-            if(catch_year_rules$RuleNum[x] %in% emp_opt) out <- "Empirical MSY options"
+            if(catch_year_rules$RuleNum[x] %in% emp_opt) out <- "Empirical MSY, Option"
             if(catch_year_rules$RuleNum[x] == emp_mincv) out <- "Empirical MSY, MinCV"
             if(catch_year_rules$RuleNum[x] == emp_maxc) out <- "Empirical MSY, MaxCatch"
             return(out)
     })
-    catch_year_rules$Group <- factor(Group, levels=c("All rules", "Theoretical MSY", "Empirical MSY options", "Empirical MSY, MaxCatch", "Empirical MSY, MinCV"))
+    catch_year_rules$Group <- factor(Group, levels=c("All rules", "Theoretical MSY", "Empirical MSY, Option", "Empirical MSY, MaxCatch", "Empirical MSY, MinCV"))
 
     p5 <- ggplot(catch_year_rules %>% filter(Iteration == 1)) +
         geom_line(aes(x = CPUE, y = Catch, color = Group), lwd=1.5, alpha=0.8) + 

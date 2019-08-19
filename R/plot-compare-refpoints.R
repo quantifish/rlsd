@@ -381,6 +381,7 @@ find_refs <- function(object_list, object_names, figure_dir = "compare_figure/")
     plot_rules(rules = msy_info_rules, rule_labels = c("Theoretical MSY", "Empirical MSY, MaxCatch", "Empirical MSY, MinCV"), fig_name = "Rules_MSY", figure_dir = figure_dir)
 
     msy_info$MSY_desc2 <- sapply(1:nrow(msy_info), function(x) ifelse(msy_info$RuleType[x]=="CPUErule", paste0("CPUErule, ", msy_info$MSY_desc[x]), as.character(msy_info$RuleType[x])))
+    msy_info$MSY_desc2 <- factor(msy_info$MSY_desc2, levels = c("CPUErule, Option", "CPUErule, MaxCatch", "CPUErule, MinCV", "FixedCatch", "FixedF"))
 
     ## total yield vs cv
     p <- ggplot(msy_info %>% filter(MSY_type == "Empirical")) +
@@ -426,6 +427,7 @@ find_refs <- function(object_list, object_names, figure_dir = "compare_figure/")
     msy_ratios$Bmsy <- sapply(1:nrow(msy_ratios), function(x) msy_det$Bmsy[match(msy_ratios$RuleType[x], msy_det$RuleType)])
         
     msy_ratios$MSY_desc <- sapply(1:nrow(msy_ratios), function(x) ifelse(msy_ratios$RuleType[x]=="CPUErule", paste0("CPUErule, ", msy_ratios$MSY_desc[x]), as.character(msy_ratios$RuleType[x])))
+    msy_ratios$MSY_desc <- factor(MSY_ratios$MSY_desc, levels = c("CPUErule, Option", "CPUErule, MaxCatch", "CPUErule, MinCV", "FixedCatch", "FixedF"))
 
     ## ratios plot eMSY/MSY
     p <- ggplot(msy_ratios) +
@@ -486,6 +488,7 @@ find_refs <- function(object_list, object_names, figure_dir = "compare_figure/")
     attach_info <- msy_info %>% select(Scenario, RuleType, RuleName, RuleNum, MSY_type, MSY_desc, MSY_desc2)
 
     catch_year_msy_info <- inner_join(catch_year_msy, attach_info)
+    catch_year_msy_info$MSY_desc2 <- factor(catch_year_msy_info$MSY_desc2, levels = c("CPUErule, Option", "CPUErule, MaxCatch", "CPUErule, MinCV", "FixedCatch", "FixedF"))
 
     p1 <- ggplot(catch_year_msy_info %>% filter(MSY_desc != "Option")) +
         stat_summary(aes(x=Year, y=Catch, color = MSY_desc2, fill = MSY_desc2), fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +

@@ -25,8 +25,9 @@ plot_ssb_recruitment <- function(object,
     regions <- 1:data$n_area
     n_rules <- data$n_rules
     
-    if (length(map) > 0) {
-    }
+    # if (length(map) > 0) {
+
+    # }
     
     if (length(mcmc) > 0) {
         n_iter <- nrow(mcmc[[1]])
@@ -47,15 +48,16 @@ plot_ssb_recruitment <- function(object,
           dplyr::group_by(Rules, Year, Region) %>%
           dplyr::summarise(SSB = median(SSB), Recruitment = median(Recruitment)) %>%
           dplyr::ungroup()
-    }
-    
-    p <- ggplot(d, aes(x = SSB, y = Recruitment)) +
+
+      p <- ggplot(d, aes(x = SSB, y = Recruitment)) +
         geom_path() +
         geom_text(aes(label = Year, colour = Year)) +
         expand_limits(x = 0, y = 0) +
         labs(x = xlab) +
         facet_wrap(~Region) +
         theme_lsd()
+
+    }
         #stat_smooth(method = "loess") +
     # B0 <- 179280
     # (SSB / B0)/(1-((5*h-1)/(4*h))*(1-(SSB / B0)));

@@ -549,7 +549,7 @@ plot_biomass <- function(object,
     seasons <- c("AW","SS")
     regions <- 1:data$n_area
     YR <- "YR" # label for the season before the season change year
-    rules <- data$n_rules
+    n_rules <- data$n_rules
 
     if (length(map) > 0 & show_map) {
         biomass_recruited_ytrs1 <- map$biomass_recruited_ytrs
@@ -558,7 +558,7 @@ plot_biomass <- function(object,
             dplyr::filter(value > 0)
 
        biomass_vuln_jytrs1 <- map$biomass_vuln_jytrs
-        dimnames(biomass_vuln_jytrs1) <- list("Iteration" = 1, "Rule" = rules, "Year" = pyears, "Season" = seasons, "Region" = regions, Sex = sex)
+        dimnames(biomass_vuln_jytrs1) <- list("Iteration" = 1, "Rule" = 1:n_rules, "Year" = pyears, "Season" = seasons, "Region" = regions, Sex = sex)
         biomass_vuln_ytr1 <- reshape2::melt(biomass_vuln_jytrs1) %>%
             dplyr::filter(value > 0) %>%
             dplyr::mutate(Season = as.character(Season), Season = ifelse(Year >= data$season_change_yr, Season, YR)) %>%

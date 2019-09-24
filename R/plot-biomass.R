@@ -389,7 +389,7 @@ plot_vulnerable_biomass <- function(object,
   
   if (length(map) > 0 & show_map) {
     vb1 <- map$biomass_vuln_jytrs
-    dimnames(vb1) <- list("Iteration" = 1, "Rule"=rules, "Year" = pyears, "Season" = seasons, "Region" = regions, Sex = sex)
+    dimnames(vb1) <- list("Iteration" = 1, "Rule"=1:n_rules, "Year" = pyears, "Season" = seasons, "Region" = regions, Sex = sex)
     vb1 <- reshape2::melt(vb1) %>%
       dplyr::filter(value > 0) %>%
       dplyr::mutate(Season = as.character(Season), Season = ifelse(Year >= data$season_change_yr, Season, YR))
@@ -417,7 +417,7 @@ plot_vulnerable_biomass <- function(object,
     n_iter <- nrow(mcmc[[1]])
     
     vb2 <- mcmc$biomass_vuln_jytrs
-    dimnames(vb2) <- list("Iteration" = 1:n_iter, "Rule"=rules, "Year" = pyears, "Season" = seasons, "Region" = regions, Sex = sex)
+    dimnames(vb2) <- list("Iteration" = 1:n_iter, "Rule"=1:n_rules, "Year" = pyears, "Season" = seasons, "Region" = regions, Sex = sex)
     vb2 <- reshape2::melt(vb2) %>%
       dplyr::filter(value > 0) %>%
       dplyr::mutate(Season = as.character(Season), Season = ifelse(Year >= data$season_change_yr, Season, YR)) %>%
@@ -605,7 +605,7 @@ plot_biomass <- function(object,
             dplyr::filter(value > 0)
 
         biomass_vuln_jytrs2 <- mcmc$biomass_vuln_jytrs
-        dimnames(biomass_vuln_jytrs2) <- list("Iteration" = 1:n_iter, "Rule"=rules, "Year" = pyears, "Season" = seasons, "Region" = regions, Sex = sex)
+        dimnames(biomass_vuln_jytrs2) <- list("Iteration" = 1:n_iter, "Rule"=1:n_rules, "Year" = pyears, "Season" = seasons, "Region" = regions, Sex = sex)
         biomass_vuln_jytr2 <- reshape2::melt(biomass_vuln_jytrs2) %>%
             dplyr::filter(value > 0) %>%
             dplyr::mutate(Season = as.character(Season), Season = ifelse(Year >= data$season_change_yr, Season, YR)) %>%

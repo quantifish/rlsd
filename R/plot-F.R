@@ -28,13 +28,14 @@ plot_F <- function(object, scales = "free_y",
     pyears <- data$first_yr:data$last_proj_yr
     seasons <- c("AW", "SS")
     regions <- 1:data$n_area
+    rules <- 1:data$n_rules
 
     if (length(map) > 0) {
-        F_ytrf1 <- map$proj_F_ytrf
-        dimnames(F_ytrf1) <- list("Iteration" = 1, "Year" = pyears, "Season" = seasons, "Region" = regions, "Fishery" = c("SL","NSL"))
-        F_ytrf1 <- reshape2::melt(F_ytrf1)
+        F_jytrf1 <- map$proj_F_jytrf
+        dimnames(F_jytrf1) <- list("Rules"=rules, "Iteration" = 1, "Year" = pyears, "Season" = seasons, "Region" = regions, "Fishery" = c("SL","NSL"))
+        F_jytrf1 <- reshape2::melt(F_jytrf1)
         if(show_proj == FALSE){
-            F_ytrf1 <- dplyr::filter(F_ytrf1, Year %in% years)
+            F_jytrf1 <- dplyr::filter(F_jytrf1, Year %in% years)
         } 
 
         if("Fmsy" %in% ref){
@@ -43,8 +44,8 @@ plot_F <- function(object, scales = "free_y",
             Fmsy1 <- reshape2::melt(Fmsy1) %>%
                         dplyr::rename("Fmsy" = value) %>%
                         dplyr::group_by(Iteration, Region, Fmsy)
-            F_ytrf1 <- dplyr::left_join(F_ytrf1, Fmsy1, by=c("Iteration", "Region"))
-            F_ytrf1$Fmsy[which(F_ytrf1$Fishery == "NSL")] <- NA
+            F_jytrf1 <- dplyr::left_join(F_jytrf1, Fmsy1, by=c("Iteration", "Region"))
+            F_jytrf1$Fmsy[which(F_jytrf1$Fishery == "NSL")] <- NA
 
         }
 
@@ -54,11 +55,11 @@ plot_F <- function(object, scales = "free_y",
     if (length(mcmc) > 0) {
         n_iter <- nrow(mcmc[[1]])
         #F_ytrf2 <- mcmc$F_ytrf
-        F_ytrf2 <- mcmc$proj_F_ytrf
-        dimnames(F_ytrf2) <- list("Iteration" = 1:n_iter, "Year" = pyears, "Season" = seasons, "Region" = regions, "Fishery" = c("SL","NSL"))
-        F_ytrf2 <- reshape2::melt(F_ytrf2)
+        F_jytrf2 <- mcmc$proj_F_jytrf
+        dimnames(F_jytrf2) <- list("Rule"=rules, "Iteration" = 1:n_iter, "Year" = pyears, "Season" = seasons, "Region" = regions, "Fishery" = c("SL","NSL"))
+        F_jytrf2 <- reshape2::melt(F_jytrf2)
         if(show_proj == FALSE){
-            F_ytrf2 <- dplyr::filter(F_ytrf2, Year %in% years)
+            F_jytrf2 <- dplyr::filter(F_jytrf2, Year %in% years)
         } 
 
         if("Fmsy" %in% ref){
@@ -67,39 +68,39 @@ plot_F <- function(object, scales = "free_y",
             Fmsy <- reshape2::melt(Fmsy) %>%
                         dplyr::rename("Fmsy" = value) %>%
                         dplyr::group_by(Iteration, Region, Fmsy)
-            F_ytrf2 <- dplyr::left_join(F_ytrf2, Fmsy, by=c("Iteration", "Region"))
-            F_ytrf2$Fmsy[which(F_ytrf2$Fishery == "NSL")] <- NA
+            F_jytrf2 <- dplyr::left_join(F_jytrf2, Fmsy, by=c("Iteration", "Region"))
+            F_jytrf2$Fmsy[which(F_jytrf2$Fishery == "NSL")] <- NA
         }
     }
     
     if (length(mcmc) > 0) {
-        p <- ggplot(data = F_ytrf2, aes(x = Year)) 
+        p <- ggplot(data = F_jytrf2, aes(x = Year)) 
     } else if (length(map) > 0) {
-        p <- ggplot(data = F_ytrf1, aes(x = Year))
+        p <- ggplot(data = F_jytrf1, aes(x = Year))
     }
 
     if (length(mcmc) > 0) {
-        # F_ytrf2 <- dplyr::mutate(F_ytrf2, Label = ifelse(Year == max(F_ytrf2$Year) & Iteration == 1, "F", ""))
+        # F_jytrf2 <- dplyr::mutate(F_jytrf2, Label = ifelse(Year == max(F_jytrf2$Year) & Iteration == 1, "F", ""))
 
         p <- p + stat_summary(aes(y = value), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
             stat_summary(aes(y = value),fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
             stat_summary(aes(y = value),fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1)# + 
-            # ggrepel::geom_label_repel(data = F_ytrf2, aes(label = Label, y = value), fill = "black", size = 5, color = 'white', force = 10, segment.color = '#bbbbbb', min.segment.length = unit(0, "lines"))
+            # ggrepel::geom_label_repel(data = F_jytrf2, aes(label = Label, y = value), fill = "black", size = 5, color = 'white', force = 10, segment.color = '#bbbbbb', min.segment.length = unit(0, "lines"))
 
         if("Fmsy" %in% ref){
-            F_ytrf2 <- dplyr::mutate(F_ytrf2, Label = ifelse(Year == max(F_ytrf2$Year) & Iteration == 1, "Fmsy", ""))
+            F_jytrf2 <- dplyr::mutate(F_jytrf2, Label = ifelse(Year == max(F_jytrf2$Year) & Iteration == 1, "Fmsy", ""))
 
             p <- p + stat_summary(aes(y = Fmsy), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, fill = "tomato") +
                 stat_summary(aes(y = Fmsy), fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA, fill = "tomato") +
                 stat_summary(aes(y = Fmsy), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1, colour = "tomato") #+ 
-                # ggrepel::geom_label_repel(data = F_ytrf2, aes(label = Label, y = Fmsy), fill = "tomato", size = 5, color = 'white', force = 10, segment.color = '#bbbbbb', min.segment.length = unit(0, "lines"))
+                # ggrepel::geom_label_repel(data = F_jytrf2, aes(label = Label, y = Fmsy), fill = "tomato", size = 5, color = 'white', force = 10, segment.color = '#bbbbbb', min.segment.length = unit(0, "lines"))
         }
     }
 
     
     if (length(map) > 0) {
-        p <- p + geom_line(data = F_ytrf1, aes(x = Year, y = value), linetype = 2, colour = "black")
-        if("Fmsy" %in% ref) p <- p + geom_line(data = F_ytrf1, aes(x = Year, y = Fmsy), linetype = 2, colour = "tomato")
+        p <- p + geom_line(data = F_jytrf1, aes(x = Year, y = value), linetype = 2, colour = "black")
+        if("Fmsy" %in% ref) p <- p + geom_line(data = F_jytrf1, aes(x = Year, y = Fmsy), linetype = 2, colour = "tomato")
     }
             
     p <- p + expand_limits(y = 0) +
@@ -108,9 +109,17 @@ plot_F <- function(object, scales = "free_y",
         theme_lsd()
     
     if (data$n_area > 1) {
-        p <- p + facet_grid(Region + Fishery ~ Season, scales = scales)
+        if(data$n_rules==1){
+          p <- p + facet_grid(Region + Fishery ~ Season, scales = scales)
+        } else {
+          p <- p + facet_grid(Region + Fishery ~ Season + Rule, scales = scales)            
+        }
     } else {
-        p <- p + facet_grid(Fishery ~ Season, scales = scales)
+        if(data$n_rules==1){
+          p <- p + facet_grid(Fishery ~ Season, scales = scales)
+        } else {
+          p <- p + facet_grid(Fishery ~ Season + Rule, scales = scales)            
+        }
     }
     
     ggsave(paste0(figure_dir, "fishing_mortality.png"), p)

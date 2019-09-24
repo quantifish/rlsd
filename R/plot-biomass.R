@@ -180,171 +180,171 @@ plot_ssb <- function(object,
 }
 
 
-# #' Plot vulnerable reference biomass
-# #'
-# #' @param object and LSD object
-# #' @param scales free or fixed
-# #' @param show_map show MAP or not
-# #' @param show_mcmc show MCMC or not
-# #' @param show_proj show projection or not
-# #' @param show_quants the quantiles to plot
-# #' @param xlab the x axis label
-# #' @param ref which reference biomass to plot
-# #' @import dplyr
-# #' @import ggplot2
-# #' @import ggrepel
-# #' @importFrom reshape2 melt
-# #' @importFrom stats quantile
-# #' @export
-# #' 
-# plot_vulnerable_reference_biomass <- function(object,
-#                                               scales = "free_x",
-#                                               show_map = TRUE,
-#                                               show_mcmc = TRUE,
-#                                               show_proj = FALSE,
-#                                               xlab = "Fishing year (1 April - 31 March)",
-#                                               show_quants = c(0.05, 0.25),
-#                                               ref = c("Bmsy", "Bref"))
-# {
-#   data <- object@data
-#   map <- object@map
-#   mcmc <- object@mcmc
+#' Plot vulnerable reference biomass
+#'
+#' @param object and LSD object
+#' @param scales free or fixed
+#' @param show_map show MAP or not
+#' @param show_mcmc show MCMC or not
+#' @param show_proj show projection or not
+#' @param show_quants the quantiles to plot
+#' @param xlab the x axis label
+#' @param ref which reference biomass to plot
+#' @import dplyr
+#' @import ggplot2
+#' @import ggrepel
+#' @importFrom reshape2 melt
+#' @importFrom stats quantile
+#' @export
+#' 
+plot_vulnerable_reference_biomass <- function(object,
+                                              scales = "free_x",
+                                              show_map = TRUE,
+                                              show_mcmc = TRUE,
+                                              show_proj = FALSE,
+                                              xlab = "Fishing year (1 April - 31 March)",
+                                              show_quants = c(0.05, 0.25),
+                                              ref = c("Bmsy", "Bref"))
+{
+  data <- object@data
+  map <- object@map
+  mcmc <- object@mcmc
   
-#   cpal <- c("#56B4E9", "#009E73", "#E69F00", "tomato")
+  cpal <- c("#56B4E9", "#009E73", "#E69F00", "tomato")
   
-#   years <- data$first_yr:data$last_yr
-#   pyears <- data$first_yr:data$last_proj_yr
-#   sex <- c("Male","Immature female","Mature female")
-#   seasons <- c("AW","SS")
-#   regions <- 1:data$n_area
-#   YR <- "YR" # label for the season before the season change year
-#   n_rules <- data$n_rules
+  years <- data$first_yr:data$last_yr
+  pyears <- data$first_yr:data$last_proj_yr
+  sex <- c("Male","Immature female","Mature female")
+  seasons <- c("AW","SS")
+  regions <- 1:data$n_area
+  YR <- "YR" # label for the season before the season change year
+  n_rules <- data$n_rules
   
-#   if (length(map) > 0 & show_map) {
-#     vbref1 <- map$biomass_vulnref_ytr
-#     dimnames(vbref1) <- list("Iteration" = 1,"Year" = pyears, "Season" = seasons, "Region" = regions)
-#     vbref1 <- reshape2::melt(vbref1) %>%
-#       dplyr::filter(value > 0) %>%
-#       dplyr::mutate(Season = as.character(Season), Season = ifelse(Year >= data$season_change_yr, Season, YR))
+  if (length(map) > 0 & show_map) {
+    vbref1 <- map$biomass_vulnref_ytr
+    dimnames(vbref1) <- list("Iteration" = 1,"Year" = pyears, "Season" = seasons, "Region" = regions)
+    vbref1 <- reshape2::melt(vbref1) %>%
+      dplyr::filter(value > 0) %>%
+      dplyr::mutate(Season = as.character(Season), Season = ifelse(Year >= data$season_change_yr, Season, YR))
     
-#     vbref1 <- vbref1 %>%
-#       dplyr::group_by(Iteration, Year, Season, Region) %>%
-#       dplyr::summarise(value = sum(value))
+    vbref1 <- vbref1 %>%
+      dplyr::group_by(Iteration, Year, Season, Region) %>%
+      dplyr::summarise(value = sum(value))
     
-#     # Bmsy1 <- map$Bmsy_r
-#     # dimnames(Bmsy1) <- list("Iteration" = 1, "Region" = regions)
-#     # Bmsy1 <- reshape2::melt(Bmsy1) %>%
-#     #   dplyr::left_join(expand.grid(Iteration = 1, Year = years), by = "Iteration") %>%
-#     #   dplyr::mutate(Season = "AW") %>%
-#     #   dplyr::group_by(Iteration, Region, value, Year, Season)
+    # Bmsy1 <- map$Bmsy_r
+    # dimnames(Bmsy1) <- list("Iteration" = 1, "Region" = regions)
+    # Bmsy1 <- reshape2::melt(Bmsy1) %>%
+    #   dplyr::left_join(expand.grid(Iteration = 1, Year = years), by = "Iteration") %>%
+    #   dplyr::mutate(Season = "AW") %>%
+    #   dplyr::group_by(Iteration, Region, value, Year, Season)
     
     
-#     # Bref1 <- map$Bref_jr
-#     # dimnames(Bref1) <- list("Iteration" = 1, "Rule" = 1:n_rules, "Region" = regions)
-#     # Bref1 <- reshape2::melt(Bref1) %>%
-#     #   dplyr::left_join(expand.grid(Iteration = 1, Year = years), by = "Iteration") %>%
-#     #   dplyr::mutate(Season = "AW") %>%
-#     #   dplyr::group_by(Iteration, Region, value, Year, Season)
-#   }
+    # Bref1 <- map$Bref_jr
+    # dimnames(Bref1) <- list("Iteration" = 1, "Rule" = 1:n_rules, "Region" = regions)
+    # Bref1 <- reshape2::melt(Bref1) %>%
+    #   dplyr::left_join(expand.grid(Iteration = 1, Year = years), by = "Iteration") %>%
+    #   dplyr::mutate(Season = "AW") %>%
+    #   dplyr::group_by(Iteration, Region, value, Year, Season)
+  }
   
-#   if (length(mcmc) > 0 & show_mcmc) {
-#     n_iter <- nrow(mcmc[[1]])
+  if (length(mcmc) > 0 & show_mcmc) {
+    n_iter <- nrow(mcmc[[1]])
     
-#     vbref <- mcmc$biomass_vulnref_ytr
-#     dimnames(vbref) <- list("Iteration" = 1:n_iter,"Year" = pyears, "Season" = seasons, "Region" = regions)
-#     vbref <- reshape2::melt(vbref) %>%
-#       dplyr::filter(value > 0) %>%
-#       dplyr::mutate(Season = as.character(Season), Season = ifelse(Year >= data$season_change_yr, Season, YR))
+    vbref <- mcmc$biomass_vulnref_ytr
+    dimnames(vbref) <- list("Iteration" = 1:n_iter,"Year" = pyears, "Season" = seasons, "Region" = regions)
+    vbref <- reshape2::melt(vbref) %>%
+      dplyr::filter(value > 0) %>%
+      dplyr::mutate(Season = as.character(Season), Season = ifelse(Year >= data$season_change_yr, Season, YR))
     
-#     vbref <- vbref %>%
-#       dplyr::group_by(Iteration, Year, Season, Region) %>%
-#       dplyr::summarise(value = sum(value))
+    vbref <- vbref %>%
+      dplyr::group_by(Iteration, Year, Season, Region) %>%
+      dplyr::summarise(value = sum(value))
     
-#     Bmsy <- mcmc$Bmsy_r
-#     dimnames(Bmsy) <- list("Iteration" = 1:n_iter, "Region" = regions)
-#     Bmsy <- reshape2::melt(Bmsy) %>%
-#       dplyr::left_join(expand.grid(Iteration = 1:n_iter, Year = years), by = "Iteration") %>%
-#       dplyr::mutate(Season = "AW") %>%
-#       dplyr::group_by(Iteration, Region, value, Year, Season)
+    Bmsy <- mcmc$Bmsy_r
+    dimnames(Bmsy) <- list("Iteration" = 1:n_iter, "Region" = regions)
+    Bmsy <- reshape2::melt(Bmsy) %>%
+      dplyr::left_join(expand.grid(Iteration = 1:n_iter, Year = years), by = "Iteration") %>%
+      dplyr::mutate(Season = "AW") %>%
+      dplyr::group_by(Iteration, Region, value, Year, Season)
     
-#     Bref <- mcmc$Bref_jr
-#     dimnames(Bref) <- list("Iteration" = 1:n_iter, "Rule" = 1:n_rules, "Region" = regions)
-#     Bref <- reshape2::melt(Bref) %>%
-#       dplyr::left_join(expand.grid(Iteration = 1:n_iter, Year = years), by = "Iteration") %>%
-#       dplyr::mutate(Season = "AW") %>%
-#       dplyr::group_by(Iteration, Region, value, Year, Season)
-#   }
+    Bref <- mcmc$Bref_jr
+    dimnames(Bref) <- list("Iteration" = 1:n_iter, "Rule" = 1:n_rules, "Region" = regions)
+    Bref <- reshape2::melt(Bref) %>%
+      dplyr::left_join(expand.grid(Iteration = 1:n_iter, Year = years), by = "Iteration") %>%
+      dplyr::mutate(Season = "AW") %>%
+      dplyr::group_by(Iteration, Region, value, Year, Season)
+  }
   
-#   # Reference biomass - version 1
-#   if (show_proj) {
-#     if (length(map) > 0 & show_map) vbref_in1 <- vbref1
-#     vbref_in2 <- vbref
-#   } else {
-#     if (length(map) > 0 & show_map) {
-#       vbref_in1 <- vbref1 %>%
-#         dplyr::filter(Year <= data$last_yr)
-#     }
-#     vbref_in2 <- vbref %>%
-#       dplyr::filter(Year <= data$last_yr)
-#   }
-#   din <- vbref_in2 %>% dplyr::mutate("Label" = "") %>%
-#     dplyr::group_by(Iteration, Year, Season, Region, value, Label)
+  # Reference biomass - version 1
+  if (show_proj) {
+    if (length(map) > 0 & show_map) vbref_in1 <- vbref1
+    vbref_in2 <- vbref
+  } else {
+    if (length(map) > 0 & show_map) {
+      vbref_in1 <- vbref1 %>%
+        dplyr::filter(Year <= data$last_yr)
+    }
+    vbref_in2 <- vbref %>%
+      dplyr::filter(Year <= data$last_yr)
+  }
+  din <- vbref_in2 %>% dplyr::mutate("Label" = "") %>%
+    dplyr::group_by(Iteration, Year, Season, Region, value, Label)
   
-#   p <- ggplot(data = vbref_in2, aes(x = Year, y = value, colour = Season, fill = Season))
-#   if (show_proj) p <- p + geom_vline(aes(xintercept = data$last_yr), linetype = "dashed")
+  p <- ggplot(data = vbref_in2, aes(x = Year, y = value, colour = Season, fill = Season))
+  if (show_proj) p <- p + geom_vline(aes(xintercept = data$last_yr), linetype = "dashed")
   
-#   if ("Bref" %in% ref) {
-#     Bref <- dplyr::mutate(Bref, Label = ifelse(Year == max(Bref$Year) & Iteration == 1 & Rule == 1, "Bref", ""))
-#     Bmsy <- dplyr::mutate(Bmsy, Label = "")
-#     dl <- rbind(din, Bmsy, Bref) %>% dplyr::filter(Iteration %in% seq(1, n_iter, length.out = 500))
+  if ("Bref" %in% ref) {
+    Bref <- dplyr::mutate(Bref, Label = ifelse(Year == max(Bref$Year) & Iteration == 1 & Rule == 1, "Bref", ""))
+    Bmsy <- dplyr::mutate(Bmsy, Label = "")
+    dl <- rbind(din, Bmsy, Bref) %>% dplyr::filter(Iteration %in% seq(1, n_iter, length.out = 500))
     
-#     p <- p +
-#       geom_vline(aes(xintercept = data$first_ref_yr), linetype = "dashed", colour = cpal[2]) + 
-#       geom_vline(aes(xintercept = data$last_ref_yr), linetype = "dashed", colour = cpal[2]) +
-#       stat_summary(data = Bref, aes(x = Year, y = value), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, fill = cpal[2]) +
-#       stat_summary(data = Bref, aes(x = Year, y = value), fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.25, colour = NA, fill = cpal[2]) +
-#       stat_summary(data = Bref, aes(x = Year, y = value), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1, colour = cpal[2]) +
-#       ggrepel::geom_label_repel(data = dl, aes(label = Label), fill = cpal[2], size = 5, color = 'white', force = 10, segment.color = '#bbbbbb', min.segment.length = unit(0, "lines"))
-#     # if(length(map) > 0 & show_map) p <- p + geom_line(data = Bref1, aes(x = Year, y = value), linetype = 2, colour = cpal[2])
-#   }
+    p <- p +
+      geom_vline(aes(xintercept = data$first_ref_yr), linetype = "dashed", colour = cpal[2]) + 
+      geom_vline(aes(xintercept = data$last_ref_yr), linetype = "dashed", colour = cpal[2]) +
+      stat_summary(data = Bref, aes(x = Year, y = value), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, fill = cpal[2]) +
+      stat_summary(data = Bref, aes(x = Year, y = value), fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.25, colour = NA, fill = cpal[2]) +
+      stat_summary(data = Bref, aes(x = Year, y = value), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1, colour = cpal[2]) +
+      ggrepel::geom_label_repel(data = dl, aes(label = Label), fill = cpal[2], size = 5, color = 'white', force = 10, segment.color = '#bbbbbb', min.segment.length = unit(0, "lines"))
+    # if(length(map) > 0 & show_map) p <- p + geom_line(data = Bref1, aes(x = Year, y = value), linetype = 2, colour = cpal[2])
+  }
   
-#   if ("Bmsy" %in% ref) {
-#     Bmsy <- dplyr::mutate(Bmsy, Label = ifelse(Year == max(Bmsy$Year) & Iteration == 1, "Bmsy", ""))
-#     Bref <- dplyr::mutate(Bref, Label = "")
-#     dl <- rbind(din, Bmsy, Bref) %>% dplyr::filter(Iteration %in% seq(1, n_iter, length.out = 500))
+  if ("Bmsy" %in% ref) {
+    Bmsy <- dplyr::mutate(Bmsy, Label = ifelse(Year == max(Bmsy$Year) & Iteration == 1, "Bmsy", ""))
+    Bref <- dplyr::mutate(Bref, Label = "")
+    dl <- rbind(din, Bmsy, Bref) %>% dplyr::filter(Iteration %in% seq(1, n_iter, length.out = 500))
     
-#     p <- p +
-#       stat_summary(data = Bmsy, aes(x = Year, y = value), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.125, colour = NA, fill = "#BCBDDC") +
-#       stat_summary(data = Bmsy, aes(x = Year, y = value), fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.25, colour = NA, fill = "#BCBDDC") +
-#       stat_summary(data = Bmsy, aes(x = Year, y = value), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1, colour = "#BCBDDC") +
-#       ggrepel::geom_label_repel(data = dl, aes(label = Label), fill = "#BCBDDC", size = 5, color = 'white', force = 10, segment.color = '#bbbbbb', min.segment.length = unit(0, "lines"))
-#     # if(length(map) > 0 & show_map) p <- p + geom_line(data=Bmsy1, aes(x = Year, y = value), linetype = 2, colour = "#BCBDDC")
-#   }
+    p <- p +
+      stat_summary(data = Bmsy, aes(x = Year, y = value), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.125, colour = NA, fill = "#BCBDDC") +
+      stat_summary(data = Bmsy, aes(x = Year, y = value), fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.25, colour = NA, fill = "#BCBDDC") +
+      stat_summary(data = Bmsy, aes(x = Year, y = value), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1, colour = "#BCBDDC") +
+      ggrepel::geom_label_repel(data = dl, aes(label = Label), fill = "#BCBDDC", size = 5, color = 'white', force = 10, segment.color = '#bbbbbb', min.segment.length = unit(0, "lines"))
+    # if(length(map) > 0 & show_map) p <- p + geom_line(data=Bmsy1, aes(x = Year, y = value), linetype = 2, colour = "#BCBDDC")
+  }
   
-#   if (0.05 %in% show_quants) {
-#     p <- p + 
-#       stat_summary(data = din, geom = "ribbon", alpha = 0.125, colour = NA, aes(x = Year, y = value, fill = Season), 
-#                    fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95))
-#   }
-#   if (0.25 %in% show_quants) {
-#     p <- p + 
-#       stat_summary(data = din, geom = "ribbon", alpha = 0.25, colour = NA, aes(x = Year, y = value, fill = Season), 
-#                    fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75))
-#   }
-#   p <- p + stat_summary(data = din, aes(x = Year, y = value, color = Season), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1) +
-#     expand_limits(y = 0) +
-#     labs(x = xlab, y = "Vulnerable reference biomass (tonnes)") +
-#     scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1), expand = c(0, 1)) +
-#     scale_y_continuous(expand = c(0, 0), limits = c(0, max(din$value)*1.05)) +
-#     theme_lsd()
-#   if (length(map) > 0 & show_map) {
-#     p <- p + geom_line(data = vbref_in1, aes(x = Year, y = value), linetype = 2)
-#   }
-#   if (data$n_area > 1) {
-#     p <- p + facet_wrap(~Region)
-#   }
-#   return(p)
-# }
+  if (0.05 %in% show_quants) {
+    p <- p + 
+      stat_summary(data = din, geom = "ribbon", alpha = 0.125, colour = NA, aes(x = Year, y = value, fill = Season), 
+                   fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95))
+  }
+  if (0.25 %in% show_quants) {
+    p <- p + 
+      stat_summary(data = din, geom = "ribbon", alpha = 0.25, colour = NA, aes(x = Year, y = value, fill = Season), 
+                   fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75))
+  }
+  p <- p + stat_summary(data = din, aes(x = Year, y = value, color = Season), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1) +
+    expand_limits(y = 0) +
+    labs(x = xlab, y = "Vulnerable reference biomass (tonnes)") +
+    scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1), expand = c(0, 1)) +
+    scale_y_continuous(expand = c(0, 0), limits = c(0, max(din$value)*1.05)) +
+    theme_lsd()
+  if (length(map) > 0 & show_map) {
+    p <- p + geom_line(data = vbref_in1, aes(x = Year, y = value), linetype = 2)
+  }
+  if (data$n_area > 1) {
+    p <- p + facet_wrap(~Region)
+  }
+  return(p)
+}
 
 
 #' Plot vulnerable reference biomass

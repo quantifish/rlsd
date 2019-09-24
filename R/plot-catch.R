@@ -73,12 +73,12 @@ plot_catch <- function(object,
         dplyr::mutate(Iteration = NA, Type = "NSL", Data = "Observed", Sector = "Customary + illegal")
 
     psl <- mcmc$pred_catch_sl_jryt
-    dimnames(psl) <- list("Rule"=rules, "Iteration" = 1:n_iter, "Region" = regions, "Year" = pyears, "Season" = seasons)
+    dimnames(psl) <- list("Iteration" = 1:n_iter, "Rule"=rules, "Region" = regions, "Year" = pyears, "Season" = seasons)
     psl <- reshape2::melt(psl, value.name = "Catch") %>%
         dplyr::mutate(Type = "SL", Data = "Expected")
     
     pnsl <- mcmc$pred_catch_nsl_jryt
-    dimnames(pnsl) <- list("Rule"=rules, "Iteration" = 1:n_iter, "Region" = regions, "Year" = pyears, "Season" = seasons)
+    dimnames(pnsl) <- list("Iteration" = 1:n_iter, "Rule"=rules, "Region" = regions, "Year" = pyears, "Season" = seasons)
     pnsl <- reshape2::melt(pnsl, value.name = "Catch") %>%
         dplyr::mutate(Type = "NSL", Data = "Expected")
     
@@ -181,12 +181,12 @@ plot_catch <- function(object,
 
     # Catch residuals
     rsl <- mcmc$resid_catch_sl_jryt
-    dimnames(rsl) <- list("Rule"=rules, "Iteration" = 1:n_iter, "Region" = regions,
+    dimnames(rsl) <- list("Iteration" = 1:n_iter, "Rule"=rules, "Region" = regions,
                           "Year" = pyears, "Season" = seasons)
     rsl <- reshape2::melt(rsl, value.name = "Catch") %>%
         dplyr::mutate(Type = "SL", Data = "Residual")
     rnsl <- mcmc$resid_catch_nsl_jryt
-    dimnames(rnsl) <- list("Rule"=rules, "Iteration" = 1:n_iter, "Region" = regions,
+    dimnames(rnsl) <- list("Iteration" = 1:n_iter, "Rule"=rules, "Region" = regions,
                            "Year" = pyears, "Season" = seasons)
     rnsl <- reshape2::melt(rnsl, value.name = "Catch") %>%
         dplyr::mutate(Type = "NSL", Data = "Residual")

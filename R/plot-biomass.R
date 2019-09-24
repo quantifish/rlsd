@@ -549,7 +549,7 @@ plot_biomass <- function(object,
     seasons <- c("AW","SS")
     regions <- 1:data$n_area
     YR <- "YR" # label for the season before the season change year
-    n_rules <- data$n_rules
+    rules <- data$n_rules
 
     if (length(map) > 0 & show_map) {
         biomass_recruited_ytrs1 <- map$biomass_recruited_ytrs

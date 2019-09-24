@@ -32,7 +32,7 @@ plot_F <- function(object, scales = "free_y",
 
     if (length(map) > 0) {
         F_jytrf1 <- map$proj_F_jytrf
-        dimnames(F_jytrf1) <- list("Rules"=rules, "Iteration" = 1, "Year" = pyears, "Season" = seasons, "Region" = regions, "Fishery" = c("SL","NSL"))
+        dimnames(F_jytrf1) <- list("Iteration" = 1, "Rule"=rules, "Year" = pyears, "Season" = seasons, "Region" = regions, "Fishery" = c("SL","NSL"))
         F_jytrf1 <- reshape2::melt(F_jytrf1)
         if(show_proj == FALSE){
             F_jytrf1 <- dplyr::filter(F_jytrf1, Year %in% years)
@@ -56,7 +56,7 @@ plot_F <- function(object, scales = "free_y",
         n_iter <- nrow(mcmc[[1]])
         #F_ytrf2 <- mcmc$F_ytrf
         F_jytrf2 <- mcmc$proj_F_jytrf
-        dimnames(F_jytrf2) <- list("Rule"=rules, "Iteration" = 1:n_iter, "Year" = pyears, "Season" = seasons, "Region" = regions, "Fishery" = c("SL","NSL"))
+        dimnames(F_jytrf2) <- list("Iteration" = 1:n_iter, "Rule"=rules, "Year" = pyears, "Season" = seasons, "Region" = regions, "Fishery" = c("SL","NSL"))
         F_jytrf2 <- reshape2::melt(F_jytrf2)
         if(show_proj == FALSE){
             F_jytrf2 <- dplyr::filter(F_jytrf2, Year %in% years)

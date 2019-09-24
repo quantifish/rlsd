@@ -65,119 +65,119 @@ plot_ssb_recruitment <- function(object,
 }
 
 
-#' Plot SSB
-#' 
-#' @param object and LSD object
-#' @param scales free or fixed
-#' @param show_map show MAP or not
-#' @param show_mcmc show MCMC or not
-#' @param show_proj show projection or not
-#' @param show_target show target or not
-#' @param xlab the x axis label
-#' @import dplyr
-#' @import ggplot2
-#' @importFrom reshape2 melt
-#' @importFrom stats quantile
-#' @export
-#' 
-plot_ssb <- function(object,
-                     scales = "free_x",
-                     show_map = TRUE,
-                     show_mcmc = TRUE,
-                     show_proj = FALSE,
-                     show_target = FALSE,
-                     xlab = "Fishing year (1 April - 31 March)")
-{
-  data <- object@data
-  map <- object@map
-  mcmc <- object@mcmc
+# #' Plot SSB
+# #' 
+# #' @param object and LSD object
+# #' @param scales free or fixed
+# #' @param show_map show MAP or not
+# #' @param show_mcmc show MCMC or not
+# #' @param show_proj show projection or not
+# #' @param show_target show target or not
+# #' @param xlab the x axis label
+# #' @import dplyr
+# #' @import ggplot2
+# #' @importFrom reshape2 melt
+# #' @importFrom stats quantile
+# #' @export
+# #' 
+# plot_ssb <- function(object,
+#                      scales = "free_x",
+#                      show_map = TRUE,
+#                      show_mcmc = TRUE,
+#                      show_proj = FALSE,
+#                      show_target = FALSE,
+#                      xlab = "Fishing year (1 April - 31 March)")
+# {
+#   data <- object@data
+#   map <- object@map
+#   mcmc <- object@mcmc
   
-  cpal <- c("#56B4E9", "#009E73", "#E69F00", "tomato")
+#   cpal <- c("#56B4E9", "#009E73", "#E69F00", "tomato")
   
-  years <- data$first_yr:data$last_yr
-  pyears <- data$first_yr:data$last_proj_yr
-  regions <- 1:data$n_area
-  n_rules <- data$n_rules
+#   years <- data$first_yr:data$last_yr
+#   pyears <- data$first_yr:data$last_proj_yr
+#   regions <- 1:data$n_area
+#   n_rules <- data$n_rules
   
-  if (length(map) > 0 & show_map) {
-    ssb1 <- map$biomass_ssb_jyr
-    dimnames(ssb1) <- list(Iteration = 1, Rule = 1:n_rules, Year = data$first_yr:data$last_proj_yr, Region = regions)
-    ssb1 <- reshape2::melt(ssb1, value.name = "SSB")
-  }
+#   if (length(map) > 0 & show_map) {
+#     ssb1 <- map$biomass_ssb_jyr
+#     dimnames(ssb1) <- list(Iteration = 1, Rule = 1:n_rules, Year = data$first_yr:data$last_proj_yr, Region = regions)
+#     ssb1 <- reshape2::melt(ssb1, value.name = "SSB")
+#   }
   
-  if (length(mcmc) > 0 & show_mcmc) {
-    n_iter <- nrow(mcmc[[1]])
-    ssb <- mcmc$biomass_ssb_jyr
-    dimnames(ssb) <- list(Iteration = 1:n_iter, Rule = 1:n_rules, Year = data$first_yr:data$last_proj_yr, Region = regions)
-    ssb <- reshape2::melt(ssb, value.name = "SSB")
+#   if (length(mcmc) > 0 & show_mcmc) {
+#     n_iter <- nrow(mcmc[[1]])
+#     ssb <- mcmc$biomass_ssb_jyr
+#     dimnames(ssb) <- list(Iteration = 1:n_iter, Rule = 1:n_rules, Year = data$first_yr:data$last_proj_yr, Region = regions)
+#     ssb <- reshape2::melt(ssb, value.name = "SSB")
     
-    SSB0 <- mcmc$SSB0_r
-    dimnames(SSB0) <- list("Iteration" = 1:n_iter, "Region" = regions)
-    hard_limit <- reshape2::melt(SSB0) %>%
-      dplyr::left_join(expand.grid(Iteration = 1:n_iter, Year = years), by = "Iteration") %>%
-      dplyr::group_by(Iteration, Region, value, Year) %>%
-      dplyr::ungroup() %>%
-      dplyr::mutate(Rule = 1, type = "Hard limit", value = value * 0.1)
-    soft_limit <- reshape2::melt(SSB0) %>%
-      dplyr::left_join(expand.grid(Iteration = 1:n_iter, Year = years), by = "Iteration") %>%
-      dplyr::group_by(Iteration, Region, value, Year) %>%
-      dplyr::ungroup() %>%
-      dplyr::mutate(Rule = 1, type = "Soft limit", value = value * 0.2)
+#     SSB0 <- mcmc$SSB0_r
+#     dimnames(SSB0) <- list("Iteration" = 1:n_iter, "Region" = regions)
+#     hard_limit <- reshape2::melt(SSB0) %>%
+#       dplyr::left_join(expand.grid(Iteration = 1:n_iter, Year = years), by = "Iteration") %>%
+#       dplyr::group_by(Iteration, Region, value, Year) %>%
+#       dplyr::ungroup() %>%
+#       dplyr::mutate(Rule = 1, type = "Hard limit", value = value * 0.1)
+#     soft_limit <- reshape2::melt(SSB0) %>%
+#       dplyr::left_join(expand.grid(Iteration = 1:n_iter, Year = years), by = "Iteration") %>%
+#       dplyr::group_by(Iteration, Region, value, Year) %>%
+#       dplyr::ungroup() %>%
+#       dplyr::mutate(Rule = 1, type = "Soft limit", value = value * 0.2)
     
-    SSBref <- mcmc$SSBref_jr
-    dimnames(SSBref) <- list("Iteration" = 1:n_iter, "Rule" = 1:n_rules, "Region" = regions)
-    SSBref <- reshape2::melt(SSBref) %>%
-      dplyr::left_join(expand.grid(Iteration = 1:n_iter, Year = years), by = "Iteration") %>%
-      dplyr::group_by(Iteration, Region, Rule, value, Year) %>%
-      dplyr::ungroup() %>%
-      dplyr::mutate(type = "Target")
-  }
+#     SSBref <- mcmc$SSBref_jr
+#     dimnames(SSBref) <- list("Iteration" = 1:n_iter, "Rule" = 1:n_rules, "Region" = regions)
+#     SSBref <- reshape2::melt(SSBref) %>%
+#       dplyr::left_join(expand.grid(Iteration = 1:n_iter, Year = years), by = "Iteration") %>%
+#       dplyr::group_by(Iteration, Region, Rule, value, Year) %>%
+#       dplyr::ungroup() %>%
+#       dplyr::mutate(type = "Target")
+#   }
   
-  # spawning stock biomass
-  if (show_proj) {
-    ssb_in <- ssb %>%
-      dplyr::mutate(type = "SSB") %>%
-      dplyr::rename(value = SSB) %>%
-      dplyr::bind_rows(soft_limit, hard_limit, SSBref)
-    if (length(map) > 0 & show_map) ssb1_in <- ssb1 %>% dplyr::mutate(type = "SSB")
-  } else {
-    ssb_in <- dplyr::filter(ssb, Year <= data$last_yr) %>%
-      dplyr::mutate(type = "SSB") %>%
-      dplyr::rename(value = SSB) %>%
-      dplyr::bind_rows(soft_limit, hard_limit, SSBref)
-    if (length(map) > 0 & show_map) ssb1_in <- dplyr::filter(ssb1, Year <= data$last_yr) %>% dplyr::mutate(type = "SSB")
-  }
-  ssb_in$type <- factor(ssb_in$type, levels = c("SSB","Target","Soft limit","Hard limit"))
+#   # spawning stock biomass
+#   if (show_proj) {
+#     ssb_in <- ssb %>%
+#       dplyr::mutate(type = "SSB") %>%
+#       dplyr::rename(value = SSB) %>%
+#       dplyr::bind_rows(soft_limit, hard_limit, SSBref)
+#     if (length(map) > 0 & show_map) ssb1_in <- ssb1 %>% dplyr::mutate(type = "SSB")
+#   } else {
+#     ssb_in <- dplyr::filter(ssb, Year <= data$last_yr) %>%
+#       dplyr::mutate(type = "SSB") %>%
+#       dplyr::rename(value = SSB) %>%
+#       dplyr::bind_rows(soft_limit, hard_limit, SSBref)
+#     if (length(map) > 0 & show_map) ssb1_in <- dplyr::filter(ssb1, Year <= data$last_yr) %>% dplyr::mutate(type = "SSB")
+#   }
+#   ssb_in$type <- factor(ssb_in$type, levels = c("SSB","Target","Soft limit","Hard limit"))
 
-  if (!show_target) {
-      ssb_in <- dplyr::filter(ssb_in, type != "Target")
-  }
+#   if (!show_target) {
+#       ssb_in <- dplyr::filter(ssb_in, type != "Target")
+#   }
   
-  p <- ggplot(data = ssb_in, aes(x = Year, y = value))
-  if (show_target) {
-      p <- p + geom_vline(aes(xintercept = data$first_ref_yr), linetype = "dashed", colour = cpal[2]) +
-          geom_vline(aes(xintercept = data$last_ref_yr), linetype = "dashed", colour = cpal[2])
-  }
-  if (show_proj) p <- p + geom_vline(aes(xintercept = data$last_yr), linetype = "dashed")
-  p <- p +
-    stat_summary(aes(fill = type), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.125) +
-    stat_summary(aes(fill = type), fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.25) +
-    stat_summary(aes(colour = type), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1) +
-    expand_limits(y = 0) +
-    labs(x = xlab, y = "Spawning stock biomass (tonnes)", colour = NULL, fill = NULL) +
-    scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1), expand = c(0, 1)) +
-    scale_y_continuous(expand = c(0, 0), limits = c(0, max(ssb_in$value)*1.05)) +
-    scale_fill_manual(values = cpal) +
-    scale_colour_manual(values = cpal) +
-    theme_lsd()
-  if (length(map) > 0 & show_map) {
-    p <- p + geom_line(data = ssb1_in, aes(x = Year, y = SSB, colour = type), linetype = 2)
-  }
-  if (data$n_area > 1) {
-    p <- p + facet_wrap(~Region)
-  }
-  return(p)
-}
+#   p <- ggplot(data = ssb_in, aes(x = Year, y = value))
+#   if (show_target) {
+#       p <- p + geom_vline(aes(xintercept = data$first_ref_yr), linetype = "dashed", colour = cpal[2]) +
+#           geom_vline(aes(xintercept = data$last_ref_yr), linetype = "dashed", colour = cpal[2])
+#   }
+#   if (show_proj) p <- p + geom_vline(aes(xintercept = data$last_yr), linetype = "dashed")
+#   p <- p +
+#     stat_summary(aes(fill = type), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.125) +
+#     stat_summary(aes(fill = type), fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.25) +
+#     stat_summary(aes(colour = type), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1) +
+#     expand_limits(y = 0) +
+#     labs(x = xlab, y = "Spawning stock biomass (tonnes)", colour = NULL, fill = NULL) +
+#     scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1), expand = c(0, 1)) +
+#     scale_y_continuous(expand = c(0, 0), limits = c(0, max(ssb_in$value)*1.05)) +
+#     scale_fill_manual(values = cpal) +
+#     scale_colour_manual(values = cpal) +
+#     theme_lsd()
+#   if (length(map) > 0 & show_map) {
+#     p <- p + geom_line(data = ssb1_in, aes(x = Year, y = SSB, colour = type), linetype = 2)
+#   }
+#   if (data$n_area > 1) {
+#     p <- p + facet_wrap(~Region)
+#   }
+#   return(p)
+# }
 
 
 #' Plot vulnerable reference biomass

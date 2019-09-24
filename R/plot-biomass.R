@@ -388,14 +388,14 @@ plot_vulnerable_biomass <- function(object,
   n_rules <- data$n_rules
   
   if (length(map) > 0 & show_map) {
-    vb1 <- map$biomass_vuln_ytrs
-    dimnames(vb1) <- list("Iteration" = 1, "Year" = pyears, "Season" = seasons, "Region" = regions, Sex = sex)
+    vb1 <- map$biomass_vuln_jytrs
+    dimnames(vb1) <- list("Iteration" = 1, "Rule"=rules, "Year" = pyears, "Season" = seasons, "Region" = regions, Sex = sex)
     vb1 <- reshape2::melt(vb1) %>%
       dplyr::filter(value > 0) %>%
       dplyr::mutate(Season = as.character(Season), Season = ifelse(Year >= data$season_change_yr, Season, YR))
 
     vb1 <- vb1 %>%
-      dplyr::group_by(Iteration, Year, Season, Region) %>%
+      dplyr::group_by(Iteration, Rule, Year, Season, Region) %>%
       dplyr::summarise(value = sum(value))
 
     # Bmsy1 <- map$Bmsy_r
@@ -416,12 +416,12 @@ plot_vulnerable_biomass <- function(object,
   if (length(mcmc) > 0 & show_mcmc) {
     n_iter <- nrow(mcmc[[1]])
     
-    vb2 <- mcmc$biomass_vuln_ytrs
-    dimnames(vb2) <- list("Iteration" = 1:n_iter, "Year" = pyears, "Season" = seasons, "Region" = regions, Sex = sex)
+    vb2 <- mcmc$biomass_vuln_jytrs
+    dimnames(vb2) <- list("Iteration" = 1:n_iter, "Rule"=rules, "Year" = pyears, "Season" = seasons, "Region" = regions, Sex = sex)
     vb2 <- reshape2::melt(vb2) %>%
       dplyr::filter(value > 0) %>%
       dplyr::mutate(Season = as.character(Season), Season = ifelse(Year >= data$season_change_yr, Season, YR)) %>%
-      dplyr::group_by(Iteration, Year, Season, Region) %>%
+      dplyr::group_by(Iteration, Rule, Year, Season, Region) %>%
       dplyr::summarise(value = sum(value))
     
     Bmsy <- mcmc$Bmsy_r
@@ -451,7 +451,7 @@ plot_vulnerable_biomass <- function(object,
   }
 
   vb_in <- vb_in2 %>% dplyr::mutate("Label" = "") %>%
-    dplyr::group_by(Iteration, Year, Season, Region, value, Label)
+    dplyr::group_by(Iteration, Rule, Year, Season, Region, value, Label)
   
   p <- ggplot(data = vb_in, aes(x = Year, y = value, colour = Season, fill = Season))
   if (show_proj) p <- p + geom_vline(aes(xintercept = data$last_yr), linetype = "dashed")
@@ -504,7 +504,11 @@ plot_vulnerable_biomass <- function(object,
     p <- p + geom_line(data = vb_in1, aes(x = Year, y = value), linetype = 2)
   }
   if (data$n_area > 1) {
-    p <- p + facet_wrap(~Region)
+    if(data$n_rules == 1){
+      p <- p + facet_wrap(~Region)
+    } else {
+      p <- p + facet_wrap(Rule~Region)
+    }
   }
   return(p)
 }

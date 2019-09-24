@@ -557,16 +557,16 @@ plot_biomass <- function(object,
         biomass_recruited_ytrs1 <- reshape2::melt(biomass_recruited_ytrs1) %>%
             dplyr::filter(value > 0)
 
-       biomass_vuln_ytrs1 <- map$biomass_vuln_ytrs
-        dimnames(biomass_vuln_ytrs1) <- list("Iteration" = 1, "Year" = pyears, "Season" = seasons, "Region" = regions, Sex = sex)
-        biomass_vuln_ytr1 <- reshape2::melt(biomass_vuln_ytrs1) %>%
+       biomass_vuln_jytrs1 <- map$biomass_vuln_jytrs
+        dimnames(biomass_vuln_jytrs1) <- list("Iteration" = 1, "Rule" = rules, "Year" = pyears, "Season" = seasons, "Region" = regions, Sex = sex)
+        biomass_vuln_ytr1 <- reshape2::melt(biomass_vuln_jytrs1) %>%
             dplyr::filter(value > 0) %>%
             dplyr::mutate(Season = as.character(Season), Season = ifelse(Year >= data$season_change_yr, Season, YR)) %>%
-            dplyr::group_by(Iteration, Year, Season, Region) %>%
+            dplyr::group_by(Iteration, Rule, Year, Season, Region) %>%
             dplyr::summarise(value = sum(value))
         
         biomass_vulnref_ytr1 <- map$biomass_vulnref_ytr
-        dimnames(biomass_vulnref_ytr1) <- list("Iteration" = 1,"Year" = pyears, "Season" = seasons, "Region" = regions)
+        dimnames(biomass_vulnref_ytr1) <- list("Iteration" = 1, "Year" = pyears, "Season" = seasons, "Region" = regions)
         biomass_vulnref_ytr1 <- reshape2::melt(biomass_vulnref_ytr1) %>%
             dplyr::filter(value > 0) %>%
             dplyr::mutate(Season = as.character(Season), Season = ifelse(Year >= data$season_change_yr, Season, YR))
@@ -589,7 +589,7 @@ plot_biomass <- function(object,
             dplyr::summarise(value = sum(value))
     } else {
       biomass_recruited_ytrs1 <- NULL
-      biomass_vuln_ytrs1 <- NULL
+      biomass_vuln_jytrs1 <- NULL
       biomass_vulnref_ytr1 <- NULL
       biomass_vulnref_yt1 <- NULL
       biomass_cpue_ryt1 <- NULL
@@ -604,12 +604,12 @@ plot_biomass <- function(object,
         biomass_recruited_ytrs2 <- reshape2::melt(biomass_recruited_ytrs2) %>%
             dplyr::filter(value > 0)
 
-        biomass_vuln_ytrs2 <- mcmc$biomass_vuln_ytrs
-        dimnames(biomass_vuln_ytrs2) <- list("Iteration" = 1:n_iter, "Year" = pyears, "Season" = seasons, "Region" = regions, Sex = sex)
-        biomass_vuln_ytr2 <- reshape2::melt(biomass_vuln_ytrs2) %>%
+        biomass_vuln_jytrs2 <- mcmc$biomass_vuln_jytrs
+        dimnames(biomass_vuln_jytrs2) <- list("Iteration" = 1:n_iter, "Rule"=rules, "Year" = pyears, "Season" = seasons, "Region" = regions, Sex = sex)
+        biomass_vuln_jytr2 <- reshape2::melt(biomass_vuln_jytrs2) %>%
             dplyr::filter(value > 0) %>%
             dplyr::mutate(Season = as.character(Season), Season = ifelse(Year >= data$season_change_yr, Season, YR)) %>%
-            dplyr::group_by(Iteration, Year, Season, Region) %>%
+            dplyr::group_by(Iteration, Rule, Year, Season, Region) %>%
             dplyr::summarise(value = sum(value))
         
         biomass_vulnref_ytr2 <- mcmc$biomass_vulnref_ytr

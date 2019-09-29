@@ -1,11 +1,12 @@
 Package: lsd
 Title: LSD Package
-Version: 5.50
-Date: 2018-11-12
+Version: 6.06
+Date: 2019-09-30
 Authors@R: c(
     person("Darcy", "Webber", email = "darcy@quantifish.co.nz", role = c("cre", "aut")),
     person("Merrill", "Rudd", email = "merrillrudd@gmail.com", role = "aut"))
-Description: The LSD package for manipulating and plotting LSD inputs and outputs.
+Description: The LSD package for manipulating and plotting LSD inputs and
+    outputs.
 Encoding: UTF-8
 Imports:
     methods,
@@ -17,14 +18,15 @@ Imports:
     tidyr
 Depends:
     dplyr,
-    ggplot2
+    ggplot2,
+    RColorBrewer
 Suggests:
     roxygen2,
     testthat,
     bayesplot,
     loo
 License: MIT + file LICENSE
-RoxygenNote: 6.1.0
+RoxygenNote: 5.0.1
 Collate:
     'TACC.R'
     'create-rules.R'
@@ -39,7 +41,7 @@ Collate:
     'plot-F.R'
     'plot-biomass.R'
     'plot-catch.R'
-    'plot-compare-multi.R'
+    'plot-compare-refpoints.R'
     'plot-compare.R'
     'plot-cpue.R'
     'plot-data-extent.R'

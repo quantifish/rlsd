@@ -74,7 +74,8 @@ plot_sex_ratio <- function(object, scales = "free", xlab = "Fishing year", ylab 
     
     p <- p + geom_point(data = osexr, aes(x = Year, y = value, color = Source)) +
         geom_linerange(data = osexr, aes(x = Year, ymin = value - SD, ymax = value + SD, color = Source), alpha = 0.75) +
-        scale_y_continuous(expand = c(0, 0), limits = c(0, 1)) +
+        scale_y_continuous(expand = c(0, 0)) +
+        coord_cartesian(ylim = c(0, 1)) +
         xlab(xlab) + 
         ylab(ylab) +
         theme_lsd()

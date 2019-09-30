@@ -2,11 +2,13 @@
 #' 
 #' @param object and LSD object
 #' @param figure_dir the directory to save to
+#' @param save_table TRUE or FALSE
 #' @importFrom reshape2 melt
 #' @export
 #'
 table_residuals <- function(object, 
-							figure_dir = "figure/")
+							figure_dir = "figure/",
+							save_table)
 {
 	data <- object@data
 	map <- object@map
@@ -97,8 +99,8 @@ table_residuals <- function(object,
 
     df <- rbind.data.frame(df_tag, df_lf, df_cpue)
 
-    write.csv(df, file.path(figure_dir, "Residual_summaries.csv"), row.names=FALSE, col.names=TRUE)
-
-    return(df)
+    if(save_table == TRUE){
+    	write.csv(df, file.path(figure_dir, "Residual_summaries.csv"), row.names=FALSE, col.names=TRUE)
+    } else { return(df) }
 
 }

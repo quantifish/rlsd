@@ -97,7 +97,7 @@ table_residuals <- function(object,
 
     df <- rbind.data.frame(df_tag, df_lf, df_cpue)
 
-    write.csv(df, file.path(figure_dir, "Residual_summaries.csv"))
+    write.csv(df, file.path(figure_dir, "Residual_summaries.csv"), row.names=FALSE, col.names=TRUE)
 
     return(df)
 

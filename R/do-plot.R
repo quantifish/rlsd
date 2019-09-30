@@ -101,6 +101,7 @@ do_plot <- function(object,
         plot_snail(object, figure_dir = figure_dir)
     }
     
+    table_residuals(object, figure_dir = figure_dir)
     plot_selectivity(object, figure_dir = figure_dir)
     plot_cpue(object, figure_dir = figure_dir)
     plot_puerulus(object, figure_dir = figure_dir)

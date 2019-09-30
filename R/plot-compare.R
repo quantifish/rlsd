@@ -733,3 +733,30 @@ plot_compare_q <- function(object_list, object_names, figure_dir = "compare_figu
       return(p)
     }
 }
+
+#' Table comparing residuals for various data types across models
+#' 
+#' @param object_list list of 'lsd.rds' files from multiple models
+#' @param object_names vector of model names associated with each of the output files in object_list
+#' @param figure_dir the directory to save to
+#' @import dplyr
+#' @importFrom reshape2 melt
+#' @export
+#' 
+table_compare_residuals <- function(object_list, object_names, figure_dir = "compare_figure/")
+{
+
+
+  rlist <- lapply(1:length(object_list), function(x){
+    res <- table_residuals(object = object_list[[x]], figure_dir = figure_dir, save_table = FALSE)
+    res <- res %>% mutate("model"=object_names[[x]])
+    return(res)
+  })
+  rdf <- do.call(rbind, rlist)
+  rdf2 <- rdf %>% 
+        tidyr::pivot_longer(-c(model,data), names_to = "residual_type", values_to="value") %>%
+        tidyr::pivot_wider(names_from = model)
+
+  write.csv(rdf2, file = file.path(figure_dir, "Residual_summaries.csv"), row.names=FALSE, col.names=TRUE)
+
+}

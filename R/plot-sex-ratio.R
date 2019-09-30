@@ -46,6 +46,12 @@ plot_sex_ratio <- function(object, scales = "free", xlab = "Fishing year", ylab 
         psexr1 <- reshape2::melt(psexr1) %>%
             dplyr::left_join(w, by = "LF") %>%
             dplyr::mutate(Source = sources[Source], Season = seasons[Season])
+
+        rsexr1 <- map$resid_sex_ratio_is
+        dimnames(rsexr1) <- list("Iteration" = 1, "LF" = 1:data$n_lf, "Sex" = sex)
+        rsexr1 <- reshape2::melt(rsexr1) %>%
+            dplyr::left_join(w, by = "LF") %>%
+            dplyr::mutate(Source = sources[Source], Season = seasons[Season])
     }
     
     if (length(mcmc) > 0) {
@@ -54,8 +60,36 @@ plot_sex_ratio <- function(object, scales = "free", xlab = "Fishing year", ylab 
         psexr2 <- reshape2::melt(psexr2) %>%
             dplyr::left_join(w, by = "LF") %>%
             dplyr::mutate(Source = sources[Source], Season = seasons[Season])
+
+        rsexr2 <- mcmc$resid_sex_ratio_is
+        dimnames(rsexr2) <- list("Iteration" = 1:n_iter, "LF" = 1:data$n_lf, "Sex" = sex)
+        rsexr2 <- reshape2::melt(rsexr2) %>%
+            dplyr::left_join(w, by = "LF") %>%
+            dplyr::mutate(Source = sources[Source], Season = seasons[Season])
     }
-    
+
+    # sex residuals
+    p <- ggplot(rsexr2) +
+        geom_hline(yintercept = 0, alpha = 0.2) +
+        # expand_limits(y = 0) +
+        xlab(xlab) + ylab("Standardised residual") +
+        theme_lsd() +
+        theme(legend.position = "none")
+    if (n_iter > 10) {
+        p <- p + geom_violin(aes(x = as.factor(Year), y = value, colour = Source, fill = Source)) +
+            scale_x_discrete(breaks = seq(0, 1e6, 5))
+    } else {
+        p <- p + geom_point(aes(x = Year, y = value, color = Source)) +
+            scale_x_continuous(breaks = seq(0, 1e6, 5), minor_breaks = seq(0, 1e6, 1))
+    }
+    if (data$n_area == 1) {
+        p <- p + facet_grid(Sex ~ Season, scales = "free_x")
+    } else {
+        p <- p + facet_grid(Sex ~ Season + Region, scales = "free_x")
+    }
+    ggsave(paste0(figure_dir, "sex_ratio_resid.png"), p, height = 9, width=9)
+
+ 
     if (length(mcmc) > 0) {
         p <- ggplot(data = psexr2, aes(x = Year, y = value))
     } else if (length(map) > 0) {

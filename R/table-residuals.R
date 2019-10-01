@@ -45,7 +45,7 @@ table_residuals <- function(object,
         #dplyr::distinct(Iteration, I, Region, .keep_all = TRUE)
 
 
-    df_tag <- data.frame("data"="tags", "sumresid"=sum(abs(resid$value)), "avgresid"=sum(abs(resid$value))/nrow(resid))
+    df_tag <- data.frame("data"="tags", "avgresid"=sum(abs(resid$value))/nrow(resid))
 
     #########
     ### LFs
@@ -69,7 +69,7 @@ table_residuals <- function(object,
         dplyr::mutate(Source = sources[Source], Season = seasons[Season])
     head(resid)
 
-    df_lf <- data.frame("data"="LF", "sumresid"=sum(abs(resid$value)), "avgresid"=sum(abs(resid$value))/nrow(resid))
+    df_lf <- data.frame("data"="LF", "avgresid"=sum(abs(resid$value))/nrow(resid))
 
     #########
     ## CPUE
@@ -95,9 +95,30 @@ table_residuals <- function(object,
         dplyr::select(-q) %>%
         dplyr::filter(Data == "Residual")
 
-    df_cpue <- data.frame("data"="cpue", "sumresid"=sum(abs(rcpue$CPUE)), "avgresid"=sum(abs(rcpue$CPUE))/nrow(rcpue))
+    df_cpue <- data.frame("data"="cpue", "avgresid"=sum(abs(rcpue$CPUE))/nrow(rcpue))
 
-    df <- rbind.data.frame(df_tag, df_lf, df_cpue)
+    ##############
+    ### Sex ratio
+    ##############
+    years <- data$first_yr:data$last_yr
+    seasons <- c("AW", "SS")
+    sex <- c("Male", "Immature female", "Mature female")
+    sources <- c("LB", "CS")
+    n_iter <- nrow(mcmc[[1]])
+    
+    w <- data.frame(LF = 1:data$n_lf, Year = data$data_lf_year_i, Season = data$data_lf_season_i,
+                    Source = data$data_lf_source_i, Region = data$data_lf_area_i, 
+                    Sigma = map$sigma_sex_ratio_i[1,])
+
+    rsexr2 <- mcmc$resid_sex_ratio_is
+    dimnames(rsexr2) <- list("Iteration" = 1:n_iter, "LF" = 1:data$n_lf, "Sex" = sex)
+    rsexr2 <- reshape2::melt(rsexr2) %>%
+        dplyr::left_join(w, by = "LF") %>%
+        dplyr::mutate(Source = sources[Source], Season = seasons[Season])
+
+    df_sexr <- data.frame("data"="sexratio", "avgresid"=sum(abs(rsexr2$value))/nrow(rsexr2))
+
+    df <- rbind.data.frame(df_tag, df_lf, df_cpue, df_sexr)
 
     if(save_table == TRUE){
     	write.csv(df, file.path(figure_dir, "Residual_summaries.csv"), row.names=FALSE, col.names=TRUE)

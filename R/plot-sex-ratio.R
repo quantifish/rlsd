@@ -76,11 +76,13 @@ plot_sex_ratio <- function(object, scales = "free", xlab = "Fishing year", ylab 
         theme_lsd() +
         theme(legend.position = "none")
     if (n_iter > 10) {
-        p <- p + geom_violin(aes(x = as.factor(Year), y = value, colour = Source, fill = Source)) +
-            scale_x_discrete(breaks = seq(0, 1e6, 5))
+        p <- p + geom_violin(aes(x = as.factor(Year), y = value, colour = Source, fill = Source, alpha = Sigma)) +
+            scale_x_discrete(breaks = seq(0, 1e6, 5)) + 
+            scale_alpha(range = c(1, 0.5))
     } else {
-        p <- p + geom_point(aes(x = Year, y = value, color = Source)) +
-            scale_x_continuous(breaks = seq(0, 1e6, 5), minor_breaks = seq(0, 1e6, 1))
+        p <- p + geom_point(aes(x = Year, y = value, color = Source, alpha = Sigma ), cex = 2) +
+            scale_x_continuous(breaks = seq(0, 1e6, 5), minor_breaks = seq(0, 1e6, 1)) +
+            scale_alpha(range = c(1,0.5))
     }
     if (data$n_area == 1) {
         p <- p + facet_grid(Sex ~ Season, scales = "free_x")

@@ -159,6 +159,7 @@ plot_growth_increment <- function(object,
     bins <- data$size_midpoint_l
     n_morph <- data$n_growth_subset
     pyears <- data$first_yr:data$last_proj_yr
+    n_season <- data$n_season
     #sex <- c("Male","Immature female","Mature female")
     sex <- c("Male", "Female", "Female")
     n_tags <- data$n_tags
@@ -177,15 +178,17 @@ plot_growth_increment <- function(object,
 
     lib <- data$cov_grow_liberty_g
     cap <- data$data_grow_size_capture_g
-    pgi <- mcmc$pred_grow_increment_g
+    # pgi <- mcmc$pred_grow_increment_g
+    # dimnames(pgi) <- list("Iteration" = 1:n_iter, "Tag" = 1:n_tags)
     sex_num <- data$cov_grow_sex_g
     sex_g <- sapply(1:length(sex_num), function(x) ifelse(sex_num[x]==1, "Male","Female"))
-    dimnames(pgi) <- list("Iteration" = 1:n_iter, "Tag" = 1:n_tags)
-    pgi <- reshape2::melt(pgi) %>%
-        dplyr::mutate("Years_at_liberty" = lib) %>%
-        dplyr::mutate("Increment" = value / lib) %>%
-        dplyr::mutate("Size" = cap) %>%
-        dplyr::mutate("Sex" = sex_g)
+    obs_inc <- data$data_grow_size_recapture_g - data$data_grow_size_capture_g
+
+    pgi <- data.frame("Change_in_size" = obs_inc,
+                      "Years_at_liberty" = lib,
+                      "Increment" = obs_inc / lib / n_season,
+                      "Size" = cap,
+                      "Sex" = sex_g)
     pgi$Morph <- sapply(1:nrow(pgi), function(x) ifelse(pgi$Sex[x] == "Male", 1, 2))
     pgi$Sex <- factor(pgi$Sex)
 
@@ -218,7 +221,7 @@ plot_growth_increment <- function(object,
     #}
     ggsave(paste0(figure_dir, "growth_increment.png"), p)
 
-    p2 <- p + geom_point(data = pgi, aes(x = Size, y = Increment, color = Sex), alpha=0.3)
+    p2 <- p + geom_point(data = pgi, aes(x = Size, y = Increment, color = Sex), alpha=0.3) + coord_cartesian(ylim=c(min(gi$Lo)*0.9,max(gi$Hi)*1.1))
     ggsave(paste0(figure_dir, "growth_increment_wPrediction.png"), p2)
 
 }

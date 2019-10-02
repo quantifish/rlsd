@@ -161,6 +161,7 @@ plot_growth_increment <- function(object,
     pyears <- data$first_yr:data$last_proj_yr
     #sex <- c("Male","Immature female","Mature female")
     sex <- c("Male", "Female", "Female")
+    n_tags <- data$n_tags
 
     w <- data$which_growth_rsy
     dimnames(w) <- list("Region" = object@regions, "Sex" = sex, "Year" = pyears)
@@ -173,7 +174,21 @@ plot_growth_increment <- function(object,
         dplyr::mutate(Lo = Increment - SD, Hi = Increment + SD) %>%
         dplyr::inner_join(w, by = "Morph") %>%
         dplyr::distinct(Iteration, Increment, Region, .keep_all = TRUE)
-    
+
+    lib <- data$cov_grow_liberty_g
+    cap <- data$data_grow_size_capture_g
+    pgi <- mcmc$pred_grow_increment_g
+    sex_num <- data$cov_grow_sex_g
+    sex_g <- sapply(1:length(sex_num), function(x) ifelse(sex_num[x]==1, "Male","Female"))
+    dimnames(pgi) <- list("Iteration" = 1:n_iter, "Tag" = 1:n_tags)
+    pgi <- reshape2::melt(pgi) %>%
+        dplyr::mutate("Years_at_liberty" = lib) %>%
+        dplyr::mutate("Increment" = value / lib) %>%
+        dplyr::mutate("Size" = cap) %>%
+        dplyr::mutate("Sex" = sex_g)
+    pgi$Morph <- sapply(1:nrow(pgi), function(x) ifelse(pgi$Sex[x] == "Male", 1, 2))
+    pgi$Sex <- factor(pgi$Sex)
+
     p <- ggplot(data = gi, aes(x = Size, y = Increment, color = Sex, fill = Sex)) +
         stat_summary(fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
         stat_summary(fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1) +
@@ -194,13 +209,18 @@ plot_growth_increment <- function(object,
         stat_summary(aes(x = Size, y = Hi, color = Sex), fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) 
      }
 
+    # p <- p + geom_point(data = pgi, aes(x = Size, y = Increment, color = Sex))
+
     #if (data$n_growth_morph > 1) {
     p <- p + facet_wrap(Sex ~ Morph)
     #} else {
     #    p <- p + facet_wrap(~Sex)
     #}
-
     ggsave(paste0(figure_dir, "growth_increment.png"), p)
+
+    p2 <- p + geom_point(data = pgi, aes(x = Size, y = Increment, color = Sex), alpha=0.3)
+    ggsave(paste0(figure_dir, "growth_increment_wPrediction.png"), p2)
+
 }
 
 

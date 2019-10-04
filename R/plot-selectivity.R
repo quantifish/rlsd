@@ -18,9 +18,14 @@ plot_selectivity <- function(object,
     map <- object@map
     
     years <- data$first_yr:data$last_proj_yr
+    n_seasons <- data$n_season
+    if(n_seasons == 1) seasons = "YR"
+    if(n_seasons == 2) seasons <- c("AW", "SS")
 
-    w <- data$which_sel_rsy
-    dimnames(w) <- list("Region" = object@regions, "Sex" = object@sex, "Year" = years)
+
+
+    w <- data$which_sel_rsyt
+    dimnames(w) <- list("Region" = object@regions, "Sex" = object@sex, "Year" = years, "Season" = seasons)
     w <- reshape2::melt(w, value.name = "Selex")
 
     if (length(map) > 0) {
@@ -63,15 +68,24 @@ plot_selectivity <- function(object,
     }
     
     if (data$n_area > 1) {
-        p <- p + facet_grid(Region ~ Sex)
+        if(n_seasons == 1){
+            p <- p + facet_grid(Region ~ Sex)
+        } else {
+            p <- p + facet_wrap(Region + Season ~ Sex)
+        }
     } else {
-        p <- p + facet_grid( ~ Sex)
+        if(n_seasons == 1){
+            p <- p + facet_grid( ~ Sex)
+        } else {
+            p <- p + facet_grid(Season ~ Sex)
+        }
     }
     
     p <- p + #scale_x_continuous(breaks = seq(30, 90, 10)) +
         expand_limits(y = c(0, 1)) +
         xlab(xlab) +
         theme_lsd()
-        
+
+
     ggsave(paste0(figure_dir, "selectivity.png"), p)
 }

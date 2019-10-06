@@ -568,6 +568,7 @@ plot_compare_selectivity <- function(object_list, object_names, figure_dir = "co
     sel <- do.call(rbind, slist)
 
     nmod <- length(unique(sel$Model))
+    sel$Season <- factor(sel$Season)
 
     ## if multiple seasons, regardless of year
     if(length(unique(sel$Season)) > 1){

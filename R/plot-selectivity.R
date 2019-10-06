@@ -51,12 +51,18 @@ plot_selectivity <- function(object,
     }
     
     if (!is.null(sel2)) {
-        if(length(unique(sel2$Year))>1) p <- ggplot(data = sel2, aes(x = Size, y = Selectivity, col = Year, fill = Year))
-        if(data$n_sel > 2 & length(unique(sel2$Year))==1) p <- ggplot(data = sel2, aes(x = Size, y = Selectivity, col = Season, fill = Season))
+        if(data$n_sel > 2 & length(unique(sel2$Year))==1){
+            p <- ggplot(data = sel2, aes(x = Size, y = Selectivity, col = Season, fill = Season))
+        } else {
+            p <- ggplot(data = sel2, aes(x = Size, y = Selectivity, col = Year, fill = Year))
+        }
 
     } else if (!is.null(sel1)) {
-        if(length(unique(sel2$Year))>1) p <- ggplot(data = sel1, aes(x = Size, y = Selectivity, col = Year, fill = Year))
-        if(data$n_sel > 2 & length(unique(sel2$Year))==1) p <- ggplot(data = sel1, aes(x = Size, y = Selectivity, col = Season, fill = Season))
+        if(data$n_sel > 2 & length(unique(sel2$Year))==1){
+            p <- ggplot(data = sel1, aes(x = Size, y = Selectivity, col = Season, fill = Season))
+        } else {
+            p <- ggplot(data = sel1, aes(x = Size, y = Selectivity, col = Year, fill = Year))
+        }
     }
     
     if (!is.null(sel2)) {

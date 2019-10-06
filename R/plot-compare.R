@@ -569,11 +569,6 @@ plot_compare_selectivity <- function(object_list, object_names, figure_dir = "co
 
     nmod <- length(unique(sel$Model))
 
-        if(data$n_sel > 2 & length(unique(sel2$Year))==1){
-            p <- ggplot(data = sel2, aes(x = Size, y = Selectivity, col = Season, fill = Season))
-        } else {
-            p <- ggplot(data = sel2, aes(x = Size, y = Selectivity, col = Year, fill = Year))
-        }
     ## if multiple seasons, regardless of year
     if(length(unique(sel$Season)) > 1){
       p <- ggplot(data = sel, aes(x = Size, y = Selectivity, col = Model, fill = Model, linetype = Season)) +

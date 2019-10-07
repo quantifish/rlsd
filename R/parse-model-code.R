@@ -34,7 +34,8 @@ parse_model_code <- function(base = "base_lsd",
                          d$ctl_q_drift,
                          d$ctl_init_erate,
                          d$ctl_F,
-                         d$move_on)) # BUG - needs its own ctl
+                         d$move_on,
+                         d$ctl_cpue_pow)) # BUG - needs its own ctl
     
     if (!grepl(".stan", base)) base <- paste0(base, ".stan")
     

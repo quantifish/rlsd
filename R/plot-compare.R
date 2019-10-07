@@ -546,9 +546,10 @@ plot_compare_selectivity <- function(object_list, object_names, figure_dir = "co
 
     slist <- lapply(1:length(object_list), function(x){
         n_iter <- nrow(mcmc_list[[x]][[1]])
+        n_season <- data_list[[x]]$n_season
         
-        w <- data_list[[x]]$which_sel_rsy
-        dimnames(w) <- list("Region" = object_list[[x]]@regions, "Sex" = sex, "Year" = pyears_list[[x]])
+        w <- data_list[[x]]$which_sel_rsyt
+        dimnames(w) <- list("Region" = object_list[[x]]@regions, "Sex" = sex, "Year" = pyears_list[[x]], "Season" = 1:n_season)
         w <- reshape2::melt(w, value.name = "Selex")
 
 
@@ -567,12 +568,22 @@ plot_compare_selectivity <- function(object_list, object_names, figure_dir = "co
     sel <- do.call(rbind, slist)
 
     nmod <- length(unique(sel$Model))
+    sel$Season <- factor(sel$Season)
 
-    p <- ggplot(data = sel, aes(x = Size, y = Selectivity, col = Model, fill = Model, linetype = Year)) +
+    ## if multiple seasons, regardless of year
+    if(length(unique(sel$Season)) > 1){
+      p <- ggplot(data = sel, aes(x = Size, y = Selectivity, col = Model, fill = Model, linetype = Season)) +
+        stat_summary(data = sel, aes(x = Size, y = Selectivity, col = Model, linetype = Season), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
+        stat_summary(data = sel, aes(x = Size, y = Selectivity, col = Model, linetype = Season), fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
+        stat_summary(data = sel, aes(x = Size, y = Selectivity, col = Model, linetype = Season), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1, alpha=0.8) +
+        scale_y_continuous(expand = c(0,0), limits = c(0, 1.05))
+    } else {
+      p <- ggplot(data = sel, aes(x = Size, y = Selectivity, col = Model, fill = Model, linetype = Year)) +
         stat_summary(data = sel, aes(x = Size, y = Selectivity, col = Model, linetype = Year), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
         stat_summary(data = sel, aes(x = Size, y = Selectivity, col = Model, linetype = Year), fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
         stat_summary(data = sel, aes(x = Size, y = Selectivity, col = Model, linetype = Year), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1, alpha=0.8) +
         scale_y_continuous(expand = c(0,0), limits = c(0, 1.05))
+    }
     if(nmod > 5){
         p <- p +
         scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
@@ -584,19 +595,28 @@ plot_compare_selectivity <- function(object_list, object_names, figure_dir = "co
     }
 
         
-        if(length(unique(sel$Year))==1) p <- p + guides(linetype = FALSE)
+        if(length(unique(sel$Year))==1 & length(unique(sel$Season))==1) p <- p + guides(linetype = FALSE)
 
         areas <- unique(sapply(1:length(data_list), function(x) data_list[[x]]$n_area))
         if (length(areas) > 1) {
+          if(length(unique(sel$Season))>1 & length(unique(sel$Year))>1){
+            p <- p + facet_grid(Region + Year ~ Sex)
+          } else {
             p <- p + facet_grid(Region ~ Sex)
+          }
         } else {
+          if(length(unique(sel$Season))>1 & length(unique(sel$Year))>1){
+            p <- p + facet_grid(Year ~ Sex)
+          } else {
             p <- p + facet_grid( ~ Sex)
+          }
         }
         
         p <- p + #scale_x_continuous(breaks = seq(30, 90, 10)) +
             expand_limits(y = c(0, 1)) +
             xlab("Length bin") +
             theme_lsd(base_size=14)
+
    if (save_plot) {
       ggsave(paste0(figure_dir, "selectivity_compare.png"), p, width = 10)
    } else {
@@ -757,6 +777,6 @@ table_compare_residuals <- function(object_list, object_names, figure_dir = "com
         tidyr::pivot_longer(-c(model,data), names_to = "residual_type", values_to="value") %>%
         tidyr::pivot_wider(names_from = model)
 
-  write.csv(rdf2, file = file.path(figure_dir, "Residual_summaries.csv"), row.names=FALSE, col.names=TRUE)
+  write.csv(rdf2, file = file.path(figure_dir, "Residual_summaries.csv"), row.names=FALSE)
 
 }

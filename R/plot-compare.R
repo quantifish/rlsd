@@ -780,3 +780,24 @@ table_compare_residuals <- function(object_list, object_names, figure_dir = "com
   write.csv(rdf2, file = file.path(figure_dir, "Residual_summaries.csv"), row.names=FALSE)
 
 }
+
+# looic <- function(object_list, object_names, figure_dir = "compare_figure/"){
+
+#     mcmc_list <- lapply(1:length(object_list), function(x) object_list[[x]]@mcmc)
+      # niters <- sapply(1:length(mcmc_list), function(x) mcmc_list[[x]]$n_iter)
+      # if(all(niters)<50) warning("MCMC chains not long enough to calculate LOOIC")
+      # if(all(niters)>50){
+   #     ## cpule
+   #     cpue_list <- lapply(1:length(object_list), function(x){
+   #       llcpue <- mcmc_list[[x]]$lp_cpue_i
+   #       llcpue_array <- array(rep(llcpue,3), dim = c(nrow(llcpue)*3,1,ncol(llcpue)))
+   #       r_eff_cpue <- relative_eff(exp(llcpue_array))
+   #       loo_cpue <- loo(llcpue_array, r_eff_cpue)
+   #       return(loo_cpue)
+   #     })
+   #     names(cpue_list) <- object_names
+
+      # }
+
+
+# }

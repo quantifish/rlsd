@@ -29,12 +29,13 @@ plot_mls <- function(object,
 
     p <- ggplot(data = mls_ytrs) + 
         geom_step(aes(x = Year, y = value, color = Sex), linetype = 1, size = 1.5) +
-        facet_wrap(~Season) +
         xlab(xlab) + 
         ylab(ylab) +
         theme_lsd()
     if (data$n_area > 1) {
-      p <- p + facet_wrap(~Region) 
+      p <- p + facet_wrap(Season~Region) 
+    } else {
+      p <- p + facet_wrap(Season ~ .)
     }
     ggsave(paste0(figure_dir, "mls.png"), p, width = 12)
 }

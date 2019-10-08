@@ -27,6 +27,8 @@ plot_mls <- function(object,
     mls_ytrs <- reshape2::melt(mls_ytrs) %>% 
       dplyr::filter(mls_ytrs, Year %in% years, Sex %in% c("Males", "Females"))
 
+    mls_ytrs$Region <- sapply(1:nrow(mls_ytrs), function(x) paste0("Region ", mls_ytrs$Region[x]))
+
     p <- ggplot(data = mls_ytrs) + 
         geom_step(aes(x = Year, y = value, color = Sex), linetype = 1, size = 1.5) +
         xlab(xlab) + 

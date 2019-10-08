@@ -181,16 +181,15 @@ plot_growth_increment <- function(object,
     # pgi <- mcmc$pred_grow_increment_g
     # dimnames(pgi) <- list("Iteration" = 1:n_iter, "Tag" = 1:n_tags)
     sex_num <- data$cov_grow_sex_g
-    sex_g <- sapply(1:length(sex_num), function(x) ifelse(sex_num[x]==1, "Male","Female"))
+    sex_g <- sapply(1:length(sex_num), function(x) ifelse(sex_num[x]==1, "Male", "Female"))
     obs_inc <- data$data_grow_size_recapture_g - data$data_grow_size_capture_g
 
     pgi <- data.frame("Change_in_size" = obs_inc,
                       "Years_at_liberty" = lib,
                       "Increment" = obs_inc / lib / n_season,
                       "Size" = cap,
-                      "Sex" = sex_g)
-    pgi$Morph <- sapply(1:nrow(pgi), function(x) ifelse(pgi$Sex[x] == "Male", 1, 2))
-    pgi$Sex <- factor(pgi$Sex)
+                      "Sex" = factor(sex_g),
+                      "Morph" = data$cov_grow_morph_g)
 
     p <- ggplot(data = gi, aes(x = Size, y = Increment, color = Sex, fill = Sex)) +
         stat_summary(fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
@@ -205,15 +204,14 @@ plot_growth_increment <- function(object,
         theme_lsd()
 
     # plot .75 stats::quantile ribbon, default is FALSE   
-    if (empirical == T) {
-    p = p +   
+    if (empirical) {
+      p <- p +   
         stat_summary(fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
         stat_summary(aes(x = Size, y = Lo, color = Sex), fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
         stat_summary(aes(x = Size, y = Hi, color = Sex), fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) 
      }
 
     # p <- p + geom_point(data = pgi, aes(x = Size, y = Increment, color = Sex))
-
     #if (data$n_growth_morph > 1) {
     p <- p + facet_wrap(Sex ~ Morph)
     #} else {
@@ -221,7 +219,8 @@ plot_growth_increment <- function(object,
     #}
     ggsave(paste0(figure_dir, "growth_increment.png"), p)
 
-    p2 <- p + geom_point(data = pgi, aes(x = Size, y = Increment, color = Sex), alpha=0.3) + coord_cartesian(ylim=c(min(gi$Lo)*0.9,max(gi$Hi)*1.1))
+    p2 <- p + geom_point(data = pgi, aes(x = Size, y = Increment, color = Sex), alpha=0.3) + 
+      coord_cartesian(ylim = c(min(gi$Lo)*0.9, max(gi$Hi)*1.1))
     ggsave(paste0(figure_dir, "growth_increment_wPrediction.png"), p2)
 
 }

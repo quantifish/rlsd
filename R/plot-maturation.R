@@ -23,11 +23,14 @@ plot_maturation <- function(object,
     n_iter <- nrow(mcmc[[1]])
     bins <- data$size_midpoint_l
 
-    colnames(mcmc$maturation_l) <- bins
-    names(attributes(mcmc$maturation_l)$dimnames) <- c("Iteration","Size")
-    mcmc$maturation_l <- reshape2::melt(mcmc$maturation_l)
-    mcmc$maturation_l$Type <- "Maturation"
-    pmat <- mcmc$maturation_l
+    maturation_il <- mcmc$maturation_il
+    dimnames(maturation_il) <- list(Iteration = 1:n_iter, Maturity = 1:dim(maturation_il)[2], Size = bins)
+
+    #names(attributes(mcmc$maturation_l)$dimnames) <- c("Iteration", "Size")
+    maturation_il <- reshape2::melt(maturation_il)
+    maturation_il$Type <- "Maturation"
+    pmat <- maturation_il %>%
+      mutate(Maturity = factor(Maturity))
     
     dmat1 <- data$data_lf_in[,(length(bins)+1):(2*length(bins))]
     dmat1 <- data.frame(dmat1)
@@ -67,17 +70,17 @@ plot_maturation <- function(object,
 #        xlab(xlab) + ylab(ylab) +
 #        theme_lsd()
 
-   p <- ggplot() +
-        stat_summary(data = pmat, aes(x = Size, y = value), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
-        stat_summary(data = pmat, aes(x = Size, y = value), fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
-        stat_summary(data = pmat, aes(x = Size, y = value), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1) +
+   p <- ggplot(data = pmat, aes(colour = Maturity, fill = Maturity, x = Size, y = value)) +
+        stat_summary(fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
+        stat_summary(fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
+        stat_summary(fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1) +
         expand_limits(y = c(0, 1)) +
         xlab(xlab) + 
         ylab(ylab) +
         theme_lsd()
 
-    if (empirical == T) {
-    p = p +
+    if (empirical) {
+      p <- p +
         stat_summary(data = dmat5, aes(x = Size, y = value), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.05, fill = "red", colour = NA) +
         stat_summary(data = dmat5, aes(x = Size, y = value), fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.1, fill = "red", colour = NA) +
         stat_summary(data = dmat5, aes(x = Size, y = value), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.2, colour = "red") 

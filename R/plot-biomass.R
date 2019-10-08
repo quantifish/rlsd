@@ -48,6 +48,7 @@ plot_ssb_recruitment <- function(object,
           dplyr::group_by(Rules, Year, Region) %>%
           dplyr::summarise(SSB = median(SSB), Recruitment = median(Recruitment)) %>%
           dplyr::ungroup()
+        d$Region <- sapply(1:nrow(d), function(x) paste0("Region ", d$Region[x]))
 
       p <- ggplot(d, aes(x = SSB, y = Recruitment)) +
         geom_path() +
@@ -152,6 +153,8 @@ plot_ssb <- function(object,
   if (!show_target) {
       ssb_in <- dplyr::filter(ssb_in, type != "Target")
   }
+  ssb_in$Region <- sapply(1:nrow(ssb_in), function(x) paste0("Region ", ssb_in$Region[x]))
+  ssb1_in$Region <- sapply(1:nrow(ssb1_in), function(x) paste0("Region ", ssb1_in$Region[x]))
   
   p <- ggplot(data = ssb_in, aes(x = Year, y = value))
   if (show_target) {
@@ -289,6 +292,10 @@ plot_vulnerable_reference_biomass <- function(object,
   }
   din <- vbref_in2 %>% dplyr::mutate("Label" = "") %>%
     dplyr::group_by(Iteration, Year, Season, Region, value, Label)
+
+  din$Region <- sapply(1:nrow(din), function(x) paste0("Region ", din$Region[x]))
+  vbref_in1$Region <- sapply(1:nrow(vbref_in1), function(x) paste0("Region ", vbref_in1$Region[x]))
+  vbref_in2$Region <- sapply(1:nrow(vbref_in2), function(x) paste0("Region ", vbref_in2$Region[x]))
   
   p <- ggplot(data = vbref_in2, aes(x = Year, y = value, colour = Season, fill = Season))
   if (show_proj) p <- p + geom_vline(aes(xintercept = data$last_yr), linetype = "dashed")
@@ -452,6 +459,10 @@ plot_vulnerable_biomass <- function(object,
 
   vb_in <- vb_in2 %>% dplyr::mutate("Label" = "") %>%
     dplyr::group_by(Iteration, Rule, Year, Season, Region, value, Label)
+
+  vb_in$Region <- sapply(1:nrow(vb_in), function(x) paste0("Region ", vb_in$Region[x]))
+  vb_in1$Region <- sapply(1:nrow(vb_in1), function(x) paste0("Region ", vb_in1$Region[x]))
+
   
   p <- ggplot(data = vb_in, aes(x = Year, y = value, colour = Season, fill = Season))
   if (show_proj) p <- p + geom_vline(aes(xintercept = data$last_yr), linetype = "dashed")
@@ -661,15 +672,20 @@ plot_biomass <- function(object,
 
     # spawning stock biomass
     p <- plot_ssb(object)
-    ggsave(paste0(figure_dir, "SSB.png"), p, width = 12)
+    ggsave(paste0(figure_dir, "biomass_spawning.png"), p, width = 12)
 
     p <- plot_ssb(object, show_proj = TRUE)
-    ggsave(paste0(figure_dir, "SSB_v2.png"), p, width=15)
+    ggsave(paste0(figure_dir, "biomass_spawning_v2.png"), p, width=15)
 
     
     # Plot recruited biomass - no projection
     biomass_recruited_ytrs2_in <- dplyr::filter(biomass_recruited_ytrs2, Year <= data$last_yr)
-    if (length(map) > 0 & show_map) biomass_recruited_ytrs1_in <- dplyr::filter(biomass_recruited_ytrs1, Year <= data$last_yr)
+    biomass_recruited_ytrs2_in$Region <- sapply(1:nrow(biomass_recruited_ytrs2_in), function(x) paste0("Region ", biomass_recruited_ytrs2_in$Region[x]))
+    if (length(map) > 0 & show_map){
+      biomass_recruited_ytrs1_in <- dplyr::filter(biomass_recruited_ytrs1, Year <= data$last_yr)
+      biomass_recruited_ytrs1_in$Region <- sapply(1:nrow(biomass_recruited_ytrs1_in), function(x) paste0("Region ", biomass_recruited_ytrs1_in$Region[x]))
+    }
+
 
     p <- ggplot(data = biomass_recruited_ytrs2_in, aes(x = Year, y = value, color = Sex, fill = Sex))
     p <- p + stat_summary(fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
@@ -690,8 +706,12 @@ plot_biomass <- function(object,
     ggsave(paste0(figure_dir, "biomass_recruited.png"), p, width = 12)
 
     biomass_recruited_ytrs2_in <- biomass_recruited_ytrs2
-    if (length(map) > 0 & show_map) biomass_recruited_ytrs1_in <- biomass_recruited_ytrs1
-    
+    biomass_recruited_ytrs2_in$Region <- sapply(1:nrow(biomass_recruited_ytrs2_in), function(x) paste0("Region ", biomass_recruited_ytrs2_in$Region[x]))
+    if (length(map) > 0 & show_map){
+      biomass_recruited_ytrs1_in <- biomass_recruited_ytrs1
+      biomass_recruited_ytrs1_in$Region <- sapply(1:nrow(biomass_recruited_ytrs1_in), function(x) paste0("Region ", biomass_recruited_ytrs1_in$Region[x]))
+    }
+
     p <- ggplot(data = biomass_recruited_ytrs2_in, aes(x = Year, y = value, color = Sex, fill = Sex))
     p <- p + geom_vline(aes(xintercept = data$last_yr), linetype = "dashed")
     p <- p + stat_summary(fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
@@ -713,8 +733,13 @@ plot_biomass <- function(object,
 
     
     # Total biomass
-    if (length(map) > 0 & show_map) biomass_total_ytrs1_in <- dplyr::filter(biomass_total_ytrs1, Year <= data$last_yr)
+    if (length(map) > 0 & show_map){
+      biomass_total_ytrs1_in <- dplyr::filter(biomass_total_ytrs1, Year <= data$last_yr)
+      biomass_total_ytrs1_in$Region <- sapply(1:nrow(biomass_total_ytrs1_in), function(x) paste0("Region ", biomass_total_ytrs1_in$Region[x]))
+    }
     biomass_total_ytrs2_in <- dplyr::filter(biomass_total_ytrs2, Year <= data$last_yr)
+    biomass_total_ytrs2_in$Region <- sapply(1:nrow(biomass_total_ytrs2_in), function(x) paste0("Region ", biomass_total_ytrs2_in$Region[x]))
+
     p <- ggplot(data = biomass_total_ytrs2_in, aes(x = Year, y = value, color = Sex, fill = Sex))
     p <- p + stat_summary(fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
         stat_summary(fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
@@ -733,6 +758,7 @@ plot_biomass <- function(object,
     }
     ggsave(paste0(figure_dir, "biomass_total.png"), p, width = 12)
 
+
     p <- ggplot(data = biomass_total_yts2, aes(x = Year, y = value, color = Sex, fill = Sex)) +
         geom_vline(aes(xintercept = data$last_yr), linetype = "dashed") + 
         stat_summary(fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
@@ -744,6 +770,7 @@ plot_biomass <- function(object,
         scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
         theme_lsd()
     if (length(map) > 0 & show_map) {
+        biomass_total_yts1$Region <- sapply(1:nrow(biomass_total_yts1), function(x) paste0("Region ", biomass_total_yts1$Region[x]))
         p <- p + geom_line(data = biomass_total_yts1, aes(x = Year, y = value, colour = Sex), linetype = 2)
     }
     ggsave(paste0(figure_dir, "biomass_total_v2.png"), p, width = 15)
@@ -842,7 +869,9 @@ plot_biomass <- function(object,
 
     din2x <- rbind.data.frame(dinaw2x, dinss2x) %>%
       dplyr::ungroup()
-    
+
+    din2$Region <- sapply(1:nrow(din2), function(x) paste0("Region ", din2$Region[x]))    
+    din2x$Region <- sapply(1:nrow(din2x), function(x) paste0("Region ", din2x$Region[x]))    
     p <- ggplot(data = din2, aes(x = Year, y = BB1, colour = Season, fill = Season)) +
         geom_hline(aes(yintercept = 0.5), linetype = "dashed", colour = "purple") + 
         geom_hline(aes(yintercept = 0.3), linetype = "dashed", colour = "purple") + 
@@ -912,7 +941,9 @@ plot_biomass <- function(object,
                 dplyr::mutate(BB1 = value/B1)
 
     din2x <- rbind.data.frame(dinaw2x, dinss2x) %>% dplyr::ungroup()
-    
+
+    din2$Region <- sapply(1:nrow(din2), function(x) paste0("Region ", din2$Region[x]))    
+    din2x$Region <- sapply(1:nrow(din2x), function(x) paste0("Region ", din2x$Region[x]))      
     p <- ggplot(data = din2, aes(x = Year, y = BB1, colour = Season, fill = Season)) +
         geom_hline(aes(yintercept = 0.5), linetype = "dashed", colour = "purple") + 
         geom_hline(aes(yintercept = 0.3), linetype = "dashed", colour = "purple") + 

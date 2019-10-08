@@ -213,6 +213,7 @@ plot_lfs_resid <- function(object, figure_dir = "figure/", ylim)
         resid$WtSz[which(resid$Size==size[i])] <- szwt[which(names(szwt)==size[i])]
     }
 
+        resid$Region <- sapply(1:nrow(resid), function(x) paste0("Region ", resid$Region[x]))
         p <- ggplot(data = resid) +
             geom_violin(aes(x = factor(Year), y = value, fill = Source, colour = Source, alpha = WtYr), scale="width") +            
             xlab("Year") + ylab("Standardised residuals") +
@@ -221,6 +222,7 @@ plot_lfs_resid <- function(object, figure_dir = "figure/", ylim)
             theme_lsd() + 
             scale_alpha(guide = "none") +
             coord_cartesian(ylim = ylim)
+        if(length(regions)>1) p <- p + facet_grid(Region~.)
 
         ggsave(paste0(figure_dir, "lf_residuals_year_source.png"), p, width=12)
 
@@ -231,6 +233,7 @@ plot_lfs_resid <- function(object, figure_dir = "figure/", ylim)
             theme_lsd() + 
             scale_alpha(guide = "none")  +
             coord_cartesian(ylim = ylim)
+        if(length(regions)>1) p <- p + facet_grid(Region~.)
 
         ggsave(paste0(figure_dir, "lf_residuals_size_source.png"), p, width=16)
 
@@ -241,6 +244,7 @@ plot_lfs_resid <- function(object, figure_dir = "figure/", ylim)
             theme_lsd() + 
             scale_alpha(guide = "none") +
             coord_cartesian(ylim = ylim)
+        if(length(regions)>1) p <- p + facet_grid(Region~.)
 
         ggsave(paste0(figure_dir, "lf_residuals_size_season.png"), p, width=16)
 
@@ -252,6 +256,7 @@ plot_lfs_resid <- function(object, figure_dir = "figure/", ylim)
             theme_lsd() + 
             scale_alpha(guide = "none") +
             coord_cartesian(ylim = ylim)
+        if(length(regions)>1) p <- p + facet_grid(Region~.)
 
         ggsave(paste0(figure_dir, "lf_residuals_year.png"), p, width=10)
 
@@ -262,64 +267,80 @@ plot_lfs_resid <- function(object, figure_dir = "figure/", ylim)
             theme_lsd() + 
             scale_alpha(guide = "none") +
             coord_cartesian(ylim = ylim)
+        if(length(regions)>1) p <- p + facet_grid(Region~.)
 
         ggsave(paste0(figure_dir, "lf_residuals_size.png"), p, width=16)
 
     	p <- ggplot(data = resid) +
         	geom_violin(aes(x = factor(Year), y = value, fill=Source, colour=Source, alpha=WtYr), scale="width") +
-        	facet_grid(Sex ~ ., scales="free_y") +
         	xlab("Year") + ylab("Standardised residuals") +
             scale_x_discrete(breaks = rev(seq(max(years), by = -5))) +
             geom_hline(yintercept = 0, alpha = 0.8) +
         	theme_lsd() + 
             scale_alpha(guide = "none") +
             coord_cartesian(ylim = ylim)
-
+        if(length(regions)>1){
+            p <- p + facet_grid(Sex ~ Region, scales="free_y") 
+        } else {
+            p <- p + facet_grid(Sex ~ ., scales = "free_y")
+        }
         ggsave(paste0(figure_dir, "lf_residuals_sex_year_source.png"), p, width=12)
 
     	p <- ggplot(data = resid) +
         	geom_violin(aes(x = factor(Size), y = value, fill=Source, colour=Source, alpha=WtSz), scale="width") +
-        	facet_grid(Sex ~ ., scales="free_y") +
         	xlab("Size (mm)") + ylab("Standardised residuals") +
             geom_hline(yintercept = 0, alpha = 0.8) +
         	theme_lsd() + 
             scale_alpha(guide = "none") +
             coord_cartesian(ylim = ylim)
-
+        if(length(regions)>1){
+            p <- p + facet_grid(Sex ~ Region, scales="free_y") 
+        } else {
+            p <- p + facet_grid(Sex ~ ., scales = "free_y")
+        }
         ggsave(paste0(figure_dir, "lf_residuals_sex_size_source.png"), p, width=16)
 
         p <- ggplot(data = resid) +
             geom_violin(aes(x = factor(Size), y = value, fill=Season, colour=Season, alpha=WtSz), scale="width") +
-            facet_grid(Sex ~ ., scales="free_y") +
             xlab("Size (mm)") + ylab("Standardised residuals") +
             geom_hline(yintercept = 0, alpha = 0.8) +
             theme_lsd() + 
             scale_alpha(guide = "none") +
             coord_cartesian(ylim = ylim)
-
+        if(length(regions)>1){
+            p <- p + facet_grid(Sex ~ Region, scales="free_y") 
+        } else {
+            p <- p + facet_grid(Sex ~ ., scales = "free_y")
+        }
         ggsave(paste0(figure_dir, "lf_residuals_sex_size_season.png"), p, width=16)
 
     	p <- ggplot(data = resid) +
         	geom_violin(aes(x = factor(Year), y = value, alpha = WtYr), fill="tomato", colour="tomato", scale="width") +
-        	facet_grid(Sex ~ ., scales="free_y") +
             scale_x_discrete(breaks = rev(seq(max(years), by = -5))) +
         	xlab("Year") + ylab("Standardised residuals") +
             geom_hline(yintercept = 0, alpha = 0.8) +
         	theme_lsd() + 
             scale_alpha(guide = "none") +
             coord_cartesian(ylim = ylim)
-
+        if(length(regions)>1){
+            p <- p + facet_grid(Sex ~ Region, scales="free_y") 
+        } else {
+            p <- p + facet_grid(Sex ~ ., scales = "free_y")
+        }
         ggsave(paste0(figure_dir, "lf_residuals_sex_year.png"), p, width=10)
 
     	p <- ggplot(data = resid) +
         	geom_violin(aes(x = factor(Size), y = value, alpha = WtSz), fill="tomato", colour = "tomato", scale="width") +
-        	facet_grid(Sex ~ ., scales="free_y") +
         	xlab("Size (mm)") + ylab("Standardised residuals") +
             geom_hline(yintercept = 0, alpha = 0.8) +
         	theme_lsd() + 
             scale_alpha(guide = "none") +
             coord_cartesian(ylim = ylim)
-
+        if(length(regions)>1){
+            p <- p + facet_grid(Sex ~ Region, scales="free_y") 
+        } else {
+            p <- p + facet_grid(Sex ~ ., scales = "free_y")
+        }
         ggsave(paste0(figure_dir, "lf_residuals_sex_size.png"), p, width = 16)
 
 }

@@ -211,11 +211,9 @@ plot_catch <- function(object,
 
     ## catch area
     msy <- mcmc$MSY_r
+    dimnames(msy) <- list(Iteration = 1:n_iter, "Region" = regions)
     msy <- reshape2::melt(msy) %>%
-            dplyr::rename("Iteration" = iterations) %>%
-            dplyr::select(-Var2) %>%
-            dplyr::group_by(Iteration, value) %>%
-            dplyr::rename("MSY" = value)
+            dplyr::rename("MSY"=value)
 
     dcatch2 <- dcatch %>% 
             dplyr::group_by(Year, Sector, Iteration) %>%
@@ -235,6 +233,12 @@ plot_catch <- function(object,
             stat_summary(aes(x = Year, y = MSY), fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.25, colour = NA) +
             stat_summary(aes(x = Year, y = MSY), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1) + 
             ggrepel::geom_label_repel(data = dcatch2, aes(x = Year, y = MSY, label = Label), fill = "black", size = 5, color = 'white', force = 10, segment.color = '#bbbbbb', min.segment.length = unit(0, "lines"))
+
+    if(data$n_rules==1){
+        p <- p + facet_grid(Region ~ ., scales = "free")
+    } else {
+        p <- p + facet_grid(Region ~ Rule)
+    }
 
     ggsave(paste0(figure_dir, "catch_type.png"), p, width = 10)
 }

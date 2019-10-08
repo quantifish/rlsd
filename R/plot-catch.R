@@ -216,15 +216,16 @@ plot_catch <- function(object,
             dplyr::rename("MSY"=value)
 
     dcatch2 <- dcatch %>% 
-            dplyr::group_by(Year, Sector, Iteration) %>%
+            dplyr::group_by(Region, Year, Sector, Iteration) %>%
             dplyr::summarise(Catch = sum(Catch))
     dcatch2$Iteration <- 1
     dcatch2 <- dplyr::left_join(dcatch2, msy) %>% 
         dplyr::mutate(Label = "") %>%
         dplyr::mutate(Label = ifelse(Iteration == 1 & Year == max(years) & Sector == "Commercial", "MSY", ""))
 
+    dcatch2$Region <- sapply(1:nrow(dcatch2), function(x) paste0("Region ", dcatch2$Region[x]))
     p <- ggplot(dcatch2) + 
-            geom_area(aes(x = Year, y = Catch, colour = Sector, fill = Sector), position = "stack") +
+            geom_area(data = dcatch2, aes(x = Year, y = Catch, colour = Sector, fill = Sector), position = "stack") +
             xlab(xlab) + ylab(ylab) +
             theme_lsd() 
 

@@ -811,7 +811,7 @@ looic <- function(object_list, object_names, figure_dir = "compare_figure/"){
        })
        names(cpue_list) <- object_names
 
-       comp1 <- loo_compare(cpue_list)
+       comp1 <- loo::loo_compare(cpue_list)
        m1 <- rownames(comp1)
        df1 <- data.frame("model"=m1, "dataset"="cpue")
        df2 <- data.frame(comp1)
@@ -828,7 +828,7 @@ looic <- function(object_list, object_names, figure_dir = "compare_figure/"){
        })
        names(sexr_list) <- object_names
 
-       comp1 <- loo_compare(sexr_list)
+       comp1 <- loo::loo_compare(sexr_list)
        m1 <- rownames(comp1)
        df1 <- data.frame("model"=m1, "dataset"="sexratio")
        df2 <- data.frame(comp1)
@@ -842,7 +842,7 @@ looic <- function(object_list, object_names, figure_dir = "compare_figure/"){
        #    check <- colSums(sub)
        #    if(any(check == 0)){
        #      index <- which(check==0)
-       #      sub[1:nrow(sub),index] <- 1
+       #      sub[1:nrow(sub),index] <- 1e-2
        #    } 
        #    return(sub)
        #   })

@@ -744,9 +744,9 @@ plot_compare_q <- function(object_list, object_names, figure_dir = "compare_figu
         scale_fill_brewer(palette = "Set1") +
         scale_color_brewer(palette = "Set1")
     }    
-    if (data_list[[1]]$n_area > 1) {
-        p <- p + facet_wrap(~Region)
-    }
+    # if (data_list[[1]]$n_area > 1) {
+    #     p <- p + facet_wrap(~Region)
+    # }
     if (save_plot) {
       ggsave(paste0(figure_dir, "q_y_compare.png"), p, width = 10)
     } else {

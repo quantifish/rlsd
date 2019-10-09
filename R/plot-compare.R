@@ -798,8 +798,8 @@ looic <- function(object_list, object_names, figure_dir = "compare_figure/"){
     mcmc_list <- lapply(1:length(object_list), function(x) object_list[[x]]@mcmc)
     n_iter <- sapply(1:length(object_list), function(x) nrow(mcmc_list[[x]][[1]]))
 
-    if(any(n_iter)<3) return(NULL)
-    if(any(n_iter)>3){
+    if(any(n_iter<3)) return(NULL)
+    if(all(n_iter>3)){
 
        ## cpue
        cpue_list <- lapply(1:length(object_list), function(x){

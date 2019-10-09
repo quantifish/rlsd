@@ -101,6 +101,9 @@ plot_compare_ssb <- function(object_list, object_names, figure_dir = "compare_fi
         scale_fill_brewer(palette = "Set1") +
         scale_color_brewer(palette = "Set1")
     }
+    if(any(regions_list > 1)){
+      p <- p + facet_wrap(~Region)
+    }
     if (save_plot) {
       ggsave(paste0(figure_dir, "biomass_ssb_compare.png"), p1, width = 10)
     }
@@ -132,6 +135,9 @@ plot_compare_ssb <- function(object_list, object_names, figure_dir = "compare_fi
         p1 <- p1 + 
         scale_fill_brewer(palette = "Set1") +
         scale_color_brewer(palette = "Set1")
+    }
+    if(any(regions_list > 1)){
+      p <- p + facet_wrap(~Region)
     }
     if (save_plot) {
       ggsave(paste0(figure_dir, "biomass_ssb_compare_v2.png"), p1, width = 10)
@@ -177,6 +183,9 @@ plot_compare_ssb <- function(object_list, object_names, figure_dir = "compare_fi
                  geom_hline(data = relssb_next %>% filter(Model == "base"), aes(yintercept = median(RelSSB)), linetype=2)
 
     }
+    if(any(regions_list > 1)){
+      p <- p + facet_wrap(~Region)
+    }
     if(save_plot) {
         ggsave(paste0(figure_dir, "relssb_nextyear_compare.png"), p, width=10)
     }
@@ -213,6 +222,9 @@ plot_compare_ssb <- function(object_list, object_names, figure_dir = "compare_fi
                  geom_hline(data = relssb_next_proj %>% filter(Model == "base") %>% filter(Year==max(years)+1), aes(yintercept = median(RelSSB)), linetype=2)
 
     }
+    if(any(regions_list > 1)){
+      p <- p + facet_wrap(~Region)
+    }
     if(save_plot) {
         ggsave(paste0(figure_dir, "relssb_nextyear_projyear_compare.png"), p, width=10)
     }
@@ -236,6 +248,9 @@ plot_compare_ssb <- function(object_list, object_names, figure_dir = "compare_fi
         p <- p + 
         scale_fill_brewer(palette = "Set1") +
         scale_color_brewer(palette = "Set1")
+    }
+    if(any(regions_list > 1)){
+      p <- p + facet_wrap(~Region)
     }
     if(save_plot){
         ggsave(paste0(figure_dir, "relssb_compare.png"), p, width=10)
@@ -261,6 +276,9 @@ plot_compare_ssb <- function(object_list, object_names, figure_dir = "compare_fi
         p <- p + 
         scale_fill_brewer(palette = "Set1") +
         scale_color_brewer(palette = "Set1")
+    }
+    if(any(regions_list > 1)){
+      p <- p + facet_wrap(~Region)
     }
     if(save_plot){
         ggsave(paste0(figure_dir, "relssb_compare_v2.png"), p, width=10)
@@ -358,6 +376,9 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
         scale_fill_brewer(palette = "Set1") +
         scale_color_brewer(palette = "Set1")
     }
+    if(any(regions_list > 1)){
+      p <- p + facet_wrap(~Region)
+    }
     if (save_plot) {
       ggsave(paste0(figure_dir, "biomass_vulnref_compare.png"), p, width = 10)
     }
@@ -385,6 +406,9 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
         p <- p + 
         scale_fill_brewer(palette = "Set1") +
         scale_color_brewer(palette = "Set1")
+    }
+    if(any(regions_list > 1)){
+      p <- p + facet_wrap(~Region)
     }
     if (save_plot) {
       ggsave(paste0(figure_dir, "biomass_vulnref_compare_v2.png"), p, width = 10)
@@ -481,9 +505,10 @@ plot_compare_recruitment <- function(object_list, object_names, figure_dir = "co
         scale_fill_brewer(palette = "Set1") +
         scale_color_brewer(palette = "Set1")
     }
-    # if (data_list[[1]]$n_area > 1) {
-    #     p <- p + facet_wrap(~Region)
-    # }
+
+    if (any(regions_list > 1)) {
+        p <- p + facet_wrap(~Region)
+    }
     
    if (save_plot) {
       ggsave(paste0(figure_dir, "recruitment_compare.png"), p, width = 10)
@@ -512,9 +537,9 @@ plot_compare_recruitment <- function(object_list, object_names, figure_dir = "co
         scale_fill_brewer(palette = "Set1") +
         scale_color_brewer(palette = "Set1")
     }
-    # if (data_list[[1]]$n_area > 1) {
-    #     p <- p + facet_wrap(~Region)
-    # }
+    if (any(regions_list > 1)) {
+        p <- p + facet_wrap(~Region)
+    }
     
    if (save_plot) {
       ggsave(paste0(figure_dir, "recruitment_compare_v2.png"), p, width = 10)
@@ -735,8 +760,7 @@ plot_compare_q <- function(object_list, object_names, figure_dir = "compare_figu
         expand_limits(y = 0) +
         xlab("Fishing year") + ylab("Catchability coefficient (q)") +
         # scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
-        theme_lsd() +
-        facet_wrap(~qtype, scales = "free")
+        theme_lsd()# +
     if(nmod > 5){
         p <- p +
         scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
@@ -746,6 +770,11 @@ plot_compare_q <- function(object_list, object_names, figure_dir = "compare_figu
         scale_fill_brewer(palette = "Set1") +
         scale_color_brewer(palette = "Set1")
     }    
+    if(any(regions_list > 1)){
+       p <- p + facet_wrap(Region~qtype, scales = "free")
+    } else {
+      p <- p + facet_wrap(~qtype, scales = "free")
+    }
     # if (data_list[[1]]$n_area > 1) {
     #     p <- p + facet_wrap(~Region)
     # }

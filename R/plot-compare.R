@@ -163,8 +163,8 @@ plot_compare_ssb <- function(object_list, object_names, figure_dir = "compare_fi
          geom_hline(aes(yintercept = 0.1), col="gray") +
          geom_text(data = labs_rel, aes(x = "base", y = value, label = type), nudge_x = nmod-1) +
          ylab("Terminal year relative spawning biomass") +
-         xlab("Model") +
-         scale_y_continuous(expand = c(0,0), limits = c(0, 1))
+         xlab("Model") #+
+         # scale_y_continuous(expand = c(0,0), limits = c(0, 1))
     if(nmod > 5){
         p <- p +
         scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
@@ -202,7 +202,7 @@ plot_compare_ssb <- function(object_list, object_names, figure_dir = "compare_fi
          geom_text(data = labs_rel, aes(x = "base", y = value, label = type), nudge_x = nmod-1) +
          ylab("Terminal year relative spawning biomass") +
          xlab("Model") +
-         scale_y_continuous(expand = c(0,0), limits = c(0, 1)) +
+         # scale_y_continuous(expand = c(0,0), limits = c(0, 1)) +
          scale_alpha_manual(values = c(1, 0.5), guide=F)
     if(nmod > 5){
         p <- p +
@@ -238,8 +238,8 @@ plot_compare_ssb <- function(object_list, object_names, figure_dir = "compare_fi
          stat_summary(fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(x = Year, y = RelSSB, fill = Model)) +
          stat_summary(fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(x = Year, y = RelSSB, color = Model)) +
          xlab("Year") + 
-         ylab("Relative spawning biomass") +
-         scale_y_continuous(expand = c(0,0), limits = c(0,1.05))
+         ylab("Relative spawning biomass") #+
+         # scale_y_continuous(expand = c(0,0), limits = c(0,1.05))
     if(nmod > 5){
         p <- p +
         scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
@@ -266,8 +266,8 @@ plot_compare_ssb <- function(object_list, object_names, figure_dir = "compare_fi
          stat_summary(fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(x = Year, y = RelSSB, fill = Model)) +
          stat_summary(fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(x = Year, y = RelSSB, color = Model)) +
          xlab("Year") + 
-         ylab("Relative spawning biomass") +
-         scale_y_continuous(expand = c(0,0), limits = c(0,1.05))
+         ylab("Relative spawning biomass") #+
+         # scale_y_continuous(expand = c(0,0), limits = c(0,1.05))
     if(nmod > 5){
         p <- p +
         scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
@@ -365,8 +365,8 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
         expand_limits(y = 0) +
         xlab("Fishing year") + ylab("Vulnerable reference biomass (tonnes)") +
         scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
-        theme_lsd(base_size=14) +
-        scale_y_continuous(expand = c(0,0), limits = c(0, max(vb$value)*1.05))
+        theme_lsd(base_size=14) #+
+        # scale_y_continuous(expand = c(0,0), limits = c(0, max(vb$value)*1.05))
     if(nmod > 5){
         p <- p +
         scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
@@ -396,8 +396,8 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
         expand_limits(y = 0) +
         xlab("Fishing year") + ylab("Vulnerable reference biomass (tonnes)") +
         scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
-        theme_lsd(base_size=14) +
-        scale_y_continuous(expand = c(0,0), limits = c(0, max(vb$value)*1.05))
+        theme_lsd(base_size=14) #+
+        # scale_y_continuous(expand = c(0,0), limits = c(0, max(vb$value)*1.05))
     if(nmod > 5){
         p <- p +
         scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
@@ -494,8 +494,8 @@ plot_compare_recruitment <- function(object_list, object_names, figure_dir = "co
         expand_limits(y = 0) +
         xlab("Fishing year") + ylab("Recruitment (millions of individuals)") +
         scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
-        theme_lsd(base_size=14) +
-         scale_y_continuous(expand = c(0,0), limits = c(0, max(recruits$value)*1.05))
+        theme_lsd(base_size=14) #+
+         # scale_y_continuous(expand = c(0,0), limits = c(0, max(recruits$value)*1.05))
     if(nmod > 5){
         p <- p +
         scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
@@ -526,8 +526,8 @@ plot_compare_recruitment <- function(object_list, object_names, figure_dir = "co
         expand_limits(y = 0) +
         xlab("Fishing year") + ylab("Recruitment (millions of individuals)") +
         scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
-        theme_lsd(base_size=14) +
-         scale_y_continuous(expand = c(0,0), limits = c(0, max(recruits$value)*1.05))
+        theme_lsd(base_size=14) #+
+         # scale_y_continuous(expand = c(0,0), limits = c(0, max(recruits$value)*1.05))
     if(nmod > 5){
         p <- p +
         scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
@@ -602,14 +602,14 @@ plot_compare_selectivity <- function(object_list, object_names, figure_dir = "co
       p <- ggplot(data = sel, aes(x = Size, y = Selectivity, col = Model, fill = Model, linetype = Season)) +
         stat_summary(data = sel, aes(x = Size, y = Selectivity, col = Model, linetype = Season), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
         stat_summary(data = sel, aes(x = Size, y = Selectivity, col = Model, linetype = Season), fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
-        stat_summary(data = sel, aes(x = Size, y = Selectivity, col = Model, linetype = Season), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1, alpha=0.8) +
-        scale_y_continuous(expand = c(0,0), limits = c(0, 1.05))
+        stat_summary(data = sel, aes(x = Size, y = Selectivity, col = Model, linetype = Season), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1, alpha=0.8) #+
+        # scale_y_continuous(expand = c(0,0), limits = c(0, 1.05))
     } else {
       p <- ggplot(data = sel, aes(x = Size, y = Selectivity, col = Model, fill = Model, linetype = Year)) +
         stat_summary(data = sel, aes(x = Size, y = Selectivity, col = Model, linetype = Year), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
         stat_summary(data = sel, aes(x = Size, y = Selectivity, col = Model, linetype = Year), fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
-        stat_summary(data = sel, aes(x = Size, y = Selectivity, col = Model, linetype = Year), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1, alpha=0.8) +
-        scale_y_continuous(expand = c(0,0), limits = c(0, 1.05))
+        stat_summary(data = sel, aes(x = Size, y = Selectivity, col = Model, linetype = Year), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1, alpha=0.8) #+
+        # scale_y_continuous(expand = c(0,0), limits = c(0, 1.05))
     }
     if(nmod > 5){
         p <- p +

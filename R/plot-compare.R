@@ -547,9 +547,10 @@ plot_compare_selectivity <- function(object_list, object_names, figure_dir = "co
     slist <- lapply(1:length(object_list), function(x){
         n_iter <- nrow(mcmc_list[[x]][[1]])
         n_season <- data_list[[x]]$n_season
+        regions <- 1:data_list[[x]]$n_area
         
         w <- data_list[[x]]$which_sel_rsyt
-        dimnames(w) <- list("Region" = object_list[[x]]@regions, "Sex" = sex, "Year" = pyears_list[[x]], "Season" = 1:n_season)
+        dimnames(w) <- list("Region" = regions, "Sex" = sex, "Year" = pyears_list[[x]], "Season" = 1:n_season)
         w <- reshape2::melt(w, value.name = "Selex")
 
 

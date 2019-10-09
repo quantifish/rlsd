@@ -23,14 +23,26 @@ plot_maturation <- function(object,
     n_iter <- nrow(mcmc[[1]])
     bins <- data$size_midpoint_l
 
-    maturation_il <- mcmc$maturation_il
-    dimnames(maturation_il) <- list(Iteration = 1:n_iter, Maturity = 1:dim(maturation_il)[2], Size = bins)
+    if(is.null(mcmc$maturation_il)==FALSE){
+      maturation_il <- mcmc$maturation_il
+      dimnames(maturation_il) <- list(Iteration = 1:n_iter, Maturity = 1:dim(maturation_il)[2], Size = bins)  
 
-    #names(attributes(mcmc$maturation_l)$dimnames) <- c("Iteration", "Size")
-    maturation_il <- reshape2::melt(maturation_il)
-    maturation_il$Type <- "Maturation"
-    pmat <- maturation_il %>%
-      mutate(Maturity = factor(Maturity))
+      #names(attributes(mcmc$maturation_l)$dimnames) <- c("Iteration", "Size")
+      maturation_il <- reshape2::melt(maturation_il)
+      maturation_il$Type <- "Maturation"
+      pmat <- maturation_il %>%
+        mutate(Maturity = factor(Maturity))    
+    } else {
+      maturation_l <- mcmc$maturation_l
+      # dimnames(maturation_il) <- list(Iteration = 1:n_iter, Maturity = 1:dim(maturation_il)[2], Size = bins)  
+      dimnames(maturation_l) <- list(Iteration = 1:n_iter, Size = bins)
+      #names(attributes(mcmc$maturation_l)$dimnames) <- c("Iteration", "Size")
+
+      maturation_l <- reshape2::melt(maturation_l)
+      maturation_l$Type <- "Maturation"
+      pmat <- maturation_l  %>%
+        mutate(Maturity = factor(1))    
+    }
     
     dmat1 <- data$data_lf_in[,(length(bins)+1):(2*length(bins))]
     dmat1 <- data.frame(dmat1)

@@ -295,36 +295,108 @@ find_refs <- function(object_list, object_names, figure_dir = "compare_figure/")
         dplyr::group_by(Scenario, RuleType, RuleName, RuleNum, Iteration) %>%
         dplyr::summarise(TotalCatch = sum(Catch)) %>%
         dplyr::group_by(Scenario, RuleType, RuleName, RuleNum) %>%
-        dplyr::summarise(MedTotalCatch = median(TotalCatch))   
+        dplyr::summarise(TC5 = quantile(TotalCatch, prob=0.05), TC50 = quantile(TotalCatch, prob=0.5), TC95 = quantile(TotalCatch, prob=0.95))   
 
     ## summary with quantiles, CV, and total catch
     summary <- full_join(summary1, summary2) 
 
     ## unique rules
-    rules <- unique(info_year %>% select(RuleType, RuleName, RuleNum, par1, par2, par3, par4, par5, par6, par7, par8, par9, par10))
-    CPUE_rules <- rules %>% filter(RuleType=="CPUErule")
-    plot_rules(rules=CPUE_rules, fig_name = "all_rules", figure_dir = figure_dir)
+    if(any(grepl("rules",object_names))){
+        rules <- unique(info_year %>% select(RuleType, RuleName, RuleNum, par1, par2, par3, par4, par5, par6, par7, par8, par9, par10))
+        CPUE_rules <- rules %>% filter(RuleType=="CPUErule")
+        plot_rules(rules=CPUE_rules, fig_name = "all_rules", figure_dir = figure_dir)
+    }
    
     ## summary of quantiles, CV, and total catch labeled with rule descriptions
-    summary <- full_join(x=summary, y=rules)
+    if(any(grepl("rules", object_names))) summary <- full_join(x=summary, y=rules)
 
     ## summary with ssb-related risk constraints, and save
     summary_risk <- full_join(summary, ssb_summary_risk)
+
+    ## identify runs affected by risk constraint
+    summary_risk$RiskConstraint <- sapply(1:nrow(summary_risk), function(x) ifelse(summary_risk$SoftLimit[x] > 0.1, 1, 0))
     write.csv(summary_risk, file=paste0(figure_dir, "Summary_Table.csv"), row.names=FALSE)
 
-    ## find maximum catch
-    msy1 <- summary_risk %>% #filter(RuleType!="CPUErule") %>%
+    summary_risk$Constraint <- sapply(1:nrow(summary_risk), function(x){
+        ifelse(summary_risk$RiskConstraint[x] == 1 & summary_risk$CatchConstraint[x] == 1, "Risk&Catch",
+            ifelse(summary_risk$RiskConstraint[x] == 1 & summary_risk$CatchConstraint[x] == 0, "Risk",
+                ifelse(summary_risk$RiskConstraint[x] == 0 & summary_risk$CatchConstraint[x] == 1, "Catch",
+                    "Pass")))
+    })
+    summary_risk$Constraint <- factor(summary_risk$Constraint, levels = c("Pass","Catch","Risk","Risk&Catch"))
+
+    ## curves -- relative SSB by annual catch
+    p <- ggplot(summary_risk) +
+        geom_segment(aes(x=B5, xend=B95, y=C50, yend=C50, color = factor(RiskConstraint)), alpha=0.75, lwd=1.3) +
+        geom_segment(aes(x=B50, xend=B50, y=C5, yend=C95, color = factor(RiskConstraint)), alpha=0.75, lwd=1.3) +
+        geom_point(aes(x=B50, y=C50, fill=factor(RiskConstraint)), pch=21, alpha=0.75, cex=4) +
+        expand_limits(x = 0) +
+        scale_x_continuous(limits = c(0, 0.7)) +
+        facet_grid(Scenario~RuleType, scales="free_y", shrink=FALSE) +
+        xlab("Relative spawning stock biomass") +
+        ylab("Catch") +
+        scale_colour_viridis_d() +
+        scale_fill_viridis_d() +
+        guides(fill = guide_legend(title = ">10% below soft limit"), color = guide_legend(title = ">10% below soft limit")) +
+        theme_lsd(base_size=14)
+    ggsave(file.path(figure_dir, "Catch_versus_RelSSB_RiskConstraint.png"), p, width=15, height=6) 
+
+    ## curves -- relative SSB by annual catch
+    p <- ggplot(summary_risk) +
+        geom_segment(aes(x=B5, xend=B95, y=C50, yend=C50, color = factor(CatchConstraint)), alpha=0.75, lwd=1.3) +
+        geom_segment(aes(x=B50, xend=B50, y=C5, yend=C95, color = factor(CatchConstraint)), alpha=0.75, lwd=1.3) +
+        geom_point(aes(x=B50, y=C50, fill=factor(CatchConstraint)), pch=21, alpha=0.75, cex=4) +
+        expand_limits(x = 0) +
+        scale_x_continuous(limits = c(0, 0.7)) +
+        facet_grid(Scenario~RuleType, scales="free_y", shrink=FALSE) +
+        xlab("Relative spawning stock biomass") +
+        ylab("Catch") +
+        scale_colour_viridis_d() +
+        scale_fill_viridis_d() +
+        guides(fill = guide_legend(title = "Fails catch constraint"), color = guide_legend(title = "Fails catch constraint")) +
+        theme_lsd(base_size=14)
+    ggsave(file.path(figure_dir, "Catch_versus_RelSSB_CatchConstraint.png"), p, width=15, height=6) 
+
+    p <- ggplot(summary_risk) +
+        geom_segment(aes(x=B5, xend=B95, y=C50, yend=C50, color = factor(Constraint)), alpha=0.75, lwd=1.3) +
+        geom_segment(aes(x=B50, xend=B50, y=C5, yend=C95, color = factor(Constraint)), alpha=0.75, lwd=1.3) +
+        geom_point(aes(x=B50, y=C50, fill=factor(Constraint)), pch=21, alpha=0.75, cex=4) +
+        expand_limits(x = 0) +
+        scale_x_continuous(limits = c(0, 0.7)) +
+        facet_grid(Scenario~RuleType, scales="free_y", shrink=FALSE) +
+        xlab("Relative spawning stock biomass") +
+        ylab("Catch") +
+        scale_colour_viridis_d() +
+        scale_fill_viridis_d() +
+        guides(fill = guide_legend(title = "Constraints"), color = guide_legend(title = "Constraints")) +
+        theme_lsd(base_size=14)
+    ggsave(file.path(figure_dir, "Catch_versus_RelSSB_Constraints.png"), p, width=15, height=6) 
+
+
+    ## find MSY for fixed catch and fishing mortality rate
+    summary_fixed <- summary_risk %>% filter(RuleType != "CPUErule")
+
+    ## msy unconstrained
+    msy1 <- summary_fixed %>% #filter(RuleType!="CPUErule") %>%
         dplyr::group_by(Scenario, RuleType) %>%
-        dplyr::summarise(MSY = max(C50),
-                        Bmsy = B50[which(C50==MSY)]) %>%
-        mutate("MSY_type" = "Theoretical")
+        dplyr::summarise(MSY = max(C50[which(CatchConstraint == 0)]))
+    msy1$Bmsy <- sapply(1:nrow(msy1), function(x){
+        sub <- summary_fixed %>% filter(RuleType==msy1$RuleType[x])
+        out <- sub$B50[which(sub$C50==msy1$MSY[x] & sub$CatchConstraint == 0)]
+        return(out)
+    })
+    msy1 <- msy1 %>%  mutate("MSY_type" = "Unconstrained")
 
     ## maximum catch subject to constraints
-    msy2 <- summary_risk %>% #filter(RuleType!="CPUErule") %>%
+    msy2 <- summary_fixed %>%
         dplyr::group_by(Scenario, RuleType) %>%
-        dplyr::summarise(MSY = max(C50[which(SoftLimit < 0.1 & CatchConstraint <= 0)]),
-                        Bmsy = B50[which(C50==MSY)]) %>%
-        mutate("MSY_type" = "Empirical")
+        dplyr::summarise(MSY = max(C50[which(CatchConstraint == 0 & RiskConstraint == 0)]))
+    msy2$Bmsy <- sapply(1:nrow(msy2), function(x){
+        sub <- summary_fixed %>% filter(RuleType==msy2$RuleType[x])
+        out <- sub$B50[which(sub$C50==msy2$MSY[x] & sub$CatchConstraint == 0 & sub$RiskConstraint == 0)]
+        return(out)
+    })
+    msy2 <- msy2 %>%  mutate("MSY_type" = "Constrained")
 
     ## theoretical and empirical MSY
     msy <- rbind.data.frame(msy1, msy2)
@@ -341,265 +413,476 @@ find_refs <- function(object_list, object_names, figure_dir = "compare_figure/")
     })
     msy_info_raw <- do.call(rbind, msy_info_raw) %>% ungroup()
 
-    ## attach description - maximising catch or minimising cv
-    msy_info_raw$MSY_desc <- sapply(1:nrow(msy_info_raw), function(x) ifelse(msy_info_raw$RuleType[x]=="FixedCatch", "MinCV", ifelse(msy_info_raw$RuleType[x] %in% c("FixedF","CPUErule"), "MaxCatch", "X")))
+    if(any(grepl("rules",object_names))){
+        ## filter rules
+        summary_rules <- summary_risk %>% filter(RuleType=="CPUErule")
 
-    ## constrain rules between fixed catch and fixed F MSY
-    ## MSY for fixed catch
-    msy_catch <- msy_info_raw %>% filter(RuleType=="FixedCatch") %>% filter(MSY_type=="Empirical")
-    msy_F <- msy_info_raw %>% filter(RuleType=="FixedF") %>% filter(MSY_type=="Empirical")
+        msy3 <- summary_rules %>%
+            dplyr::group_by(Scenario, RuleType) %>%
+            dplyr::summarise( MSY = max(C50[which(CatchConstraint == 0)]))
 
-    ## find rules that have higher average yield than fixed catch
-    summary_rules <- summary_risk %>% filter(RuleType=="CPUErule")
-    choose_rules <- summary_rules %>% 
-                    filter(SoftLimit < 0.1) %>% 
-                    filter(CatchConstraint <= 0) %>%
-                    filter(CV < msy_F$CV) %>% 
-                    filter(C50 > msy_catch$C50)
+        msy_info_raw_rules <- summary_rules %>% filter(C50 == msy3$MSY) %>% filter(CatchConstraint==0) %>% mutate(MSY_type = "Unconstrained")
 
-    plot_rules(rules=choose_rules, fig_name="constraints_met", figure_dir = figure_dir)
-    plot_rules(rules=choose_rules, rule_labels = choose_rules$RuleNum, fig_name="Rules_constraints_met", figure_dir = figure_dir)
+        summary_rules$Constraint <- sapply(1:nrow(summary_rules), function(x){
+            ifelse(summary_rules$Constraint[x]!="Pass", as.character(summary_rules$Constraint[x]),
+                ifelse(summary_rules$C50[x] < as.numeric(msy2[which(msy2$RuleType == "FixedCatch"),"MSY"]), "LowerThanFixedCatch",
+                    ifelse(summary_rules$CV[x] > as.numeric(msy_info_raw[which(msy_info_raw$RuleType=="FixedF" & msy_info_raw$MSY_type=="Constrained"),"CV"]), "HigherCV", "Pass")))
+        })
+        summary_rules$Constraint <- factor(summary_rules$Constraint, levels = c("Pass", "LowerThanFixedCatch","HigherCV","Catch","Risk","Risk&Catch"))  
 
-    ## find rule that has higher average yield than fixed catch with the lowest CV, and include other options
-    rule_maxcatch <- choose_rules %>% filter(C50==max(C50)) %>% mutate(MSY_type = "Empirical") %>% mutate(MSY_desc = "MaxCatch")
-    rule_mincv <- choose_rules %>% filter(CV==min(CV)) %>% mutate(MSY_type = "Empirical") %>% mutate(MSY_desc = "MinCV")
-    rules_other <- choose_rules %>% filter(C50!=max(C50)) %>% filter(CV!=min(CV)) %>% mutate(MSY_type= "Empirical") %>% mutate(MSY_desc="Option")
+        filter_rules <- summary_rules %>% filter(Constraint == "Pass") %>% mutate("MSY_type"="Constrained") 
 
-    ## remove previous empirical MSY for rules that was not subject to CPUE-rule constraints
-    msy_info_rm <- msy_info_raw[-c(which(msy_info_raw$RuleType=="CPUErule"&msy_info_raw$MSY_type=="Empirical")),]
+        max <- as.numeric(filter_rules[which(filter_rules$C50==max(filter_rules$C50)), "RuleNum"])
+        min <- as.numeric(filter_rules[which(filter_rules$CV==min(filter_rules$CV)), "RuleNum"])
 
-    ## include maxcatch and mincv rule
-    msy_info_minmax <- rbind.data.frame(msy_info_rm, rbind.data.frame(rule_maxcatch, rule_mincv))
+        msy_info_raw_rules_out <- rbind.data.frame(filter_rules, msy_info_raw_rules)
+        msy_info_raw_rules_out$MSY_examples <- NA
+        msy_info_raw_rules_out$MSY_examples[which(msy_info_raw_rules_out$RuleNum == max)] <- "MaxCatch"
+        msy_info_raw_rules_out$MSY_examples[which(msy_info_raw_rules_out$RuleNum == min)] <- "MinCV"
+        msy_info_raw$MSY_examples <- NA
 
-    ## include other options
-    msy_info <- rbind.data.frame(msy_info_minmax, rules_other)
+            rp <- ggplot(summary_rules) +
+            geom_segment(aes(x=0,y=0,xend=par2,yend=0,color=Constraint)) +
+            geom_segment(aes(x=par2,y=0,xend=par3,yend=par5,color=Constraint)) +
+            geom_segment(aes(x=par3,y=par5,xend=par4,yend=par5,color=Constraint)) +
+            geom_segment(aes(x=par4,y=par5,xend=par4,yend=par5*(1+par7),color=Constraint)) +
+            geom_segment(aes(x=par4,y=par5*(1+par7),xend=par4+par6,yend=par5*(1+par7),color=Constraint))+
+            geom_segment(aes(x=par4+par6,y=par5*(1+par7),xend=par4+par6,yend=(par5*(1+par7))*(1+par7),color=Constraint)) +
+            geom_segment(aes(x=par4+par6,y=(par5*(1+par7))*(1+par7),xend=par4+par6*2,yend=(par5*(1+par7))*(1+par7),color=Constraint))+
+            geom_segment(aes(x=par4+par6*2,y=(par5*(1+par7))*(1+par7),xend=par4+par6*2,yend=((par5*(1+par7))*(1+par7))*(1+par7),color=Constraint)) +
+            geom_segment(aes(x=par4+par6*2,y=((par5*(1+par7))*(1+par7))*(1+par7),xend=par4+par6*3,yend=((par5*(1+par7))*(1+par7))*(1+par7),color=Constraint))+
+            # guides(color=guide_legend(title="CPUE at TACC=0")) +
+            scale_color_brewer(palette = "Set1") +
+            geom_segment(data=filter_rules, aes(x=0,y=0,xend=par2,yend=0,color=Constraint), lwd=2) +
+            geom_segment(data=filter_rules, aes(x=par2,y=0,xend=par3,yend=par5,color=Constraint), lwd=2) +
+            geom_segment(data=filter_rules, aes(x=par3,y=par5,xend=par4,yend=par5,color=Constraint), lwd=2) +
+            geom_segment(data=filter_rules, aes(x=par4,y=par5,xend=par4,yend=par5*(1+par7),color=Constraint), lwd=2) +
+            geom_segment(data=filter_rules, aes(x=par4,y=par5*(1+par7),xend=par4+par6,yend=par5*(1+par7),color=Constraint), lwd=2)+
+            geom_segment(data=filter_rules, aes(x=par4+par6,y=par5*(1+par7),xend=par4+par6,yend=(par5*(1+par7))*(1+par7),color=Constraint), lwd=2) +
+            geom_segment(data=filter_rules, aes(x=par4+par6,y=(par5*(1+par7))*(1+par7),xend=par4+par6*2,yend=(par5*(1+par7))*(1+par7),color=Constraint), lwd=2)+
+            geom_segment(data=filter_rules, aes(x=par4+par6*2,y=(par5*(1+par7))*(1+par7),xend=par4+par6*2,yend=((par5*(1+par7))*(1+par7))*(1+par7),color=Constraint), lwd=2) +
+            geom_segment(data=filter_rules, aes(x=par4+par6*2,y=((par5*(1+par7))*(1+par7))*(1+par7),xend=par4+par6*3,yend=((par5*(1+par7))*(1+par7))*(1+par7),color=Constraint), lwd=2)+
+            # scale_color_viridis_d() +
+            xlab("Offset year CPUE") + ylab("TACC") +
+            xlim(c(0,3)) +
+            facet_grid(par3~par4) +
+            theme_lsd(base_size=14)
+            ggsave(file.path(figure_dir, "Filter_rules.png"), rp, width = 15, height = 10)  
 
-    ## save msy_info
-    write.csv(msy_info, file=paste0(figure_dir, "MSY.csv"),row.names=FALSE)
+        summary_msy <- rbind.data.frame(msy_info_raw, msy_info_raw_rules_out)
+        summary_all <- rbind.data.frame(summary_fixed, summary_rules)
+    } else {
+        summary_msy <- msy_info_raw
+        summary_msy$MSY_examples <- NA
+        summary_all <- summary_fixed
+    }
 
-    msy_info_rules <- msy_info %>% ungroup() %>% filter(RuleName == "rules") %>% filter(MSY_desc != "Option")
-    plot_rules(rules = msy_info_rules, rule_labels = c("Theoretical MSY", "Empirical MSY, MaxCatch", "Empirical MSY, MinCV"), fig_name = "Rules_MSY", figure_dir = figure_dir)
-
-    msy_info$MSY_desc2 <- sapply(1:nrow(msy_info), function(x) ifelse(msy_info$RuleType[x]=="CPUErule", paste0("CPUErule, ", msy_info$MSY_desc[x]), as.character(msy_info$RuleType[x])))
-    group <- msy_info$MSY_desc2
-    msy_info$MSY_desc2 <- factor(group, levels = c("CPUErule, Option", "CPUErule, MaxCatch", "CPUErule, MinCV", "FixedCatch", "FixedF"))
-
-    ## total yield vs cv
-    p <- ggplot(msy_info %>% filter(MSY_type == "Empirical")) +
-        geom_point(data = msy_info %>% filter(MSY_type=="Empirical") %>% filter(MSY_desc2 == "CPUErule, Option"), aes(x = MedTotalCatch, y = CV, fill = MSY_desc2), pch=21, cex=4) +    
-        geom_point(data = msy_info %>% filter(MSY_type=="Empirical") %>% filter(MSY_desc2 != "CPUErule, Option"), aes(x = MedTotalCatch, y = CV, fill = MSY_desc2), pch=21, cex=4) +
-        xlab("Median total yield") +
+  ## curves with MSY
+    p <- ggplot(summary_risk) +
+        geom_segment(aes(x=B5, xend=B95, y=C50, yend=C50, color = factor(Constraint)), alpha=0.75, lwd=1.3) +
+        geom_segment(aes(x=B50, xend=B50, y=C5, yend=C95, color = factor(Constraint)), alpha=0.75, lwd=1.3) +
+        geom_point(aes(x=B50, y=C50, fill=factor(Constraint)), pch=21, alpha=0.75, cex=4) +
+        geom_hline(data=summary_msy %>% filter(MSY_type=="Constrained"), aes(yintercept = C50, linetype = "Constrained")) +
+        geom_hline(data=summary_msy %>% filter(MSY_type=="Constrained"), aes(yintercept = C50, lty="Constrained")) +
+        geom_hline(data=summary_msy %>% filter(MSY_type=="Unconstrained"), aes(yintercept = C50, linetype = "Unconstrained")) + 
+        expand_limits(x = 0) +
+        scale_x_continuous(limits = c(0, 0.7)) +
+        facet_grid(Scenario~RuleType, scales="free_y", shrink=FALSE) +
+        xlab("Relative spawning stock biomass") +
+        ylab("Catch") +
+        scale_colour_viridis_d() +
         scale_fill_viridis_d() +
-        guides(fill = guide_legend(title = "Rule type")) +
+        guides(fill = guide_legend(title = "Constraints"), color = guide_legend(title = "Constraints")) +
+        theme_lsd(base_size=14)
+    ggsave(file.path(figure_dir, "Catch_versus_RelSSB_Constraints_MSYlines.png"), p, width=15, height=6) 
+
+    ## total yield vs cv by rule type
+    p <- ggplot(summary_risk) +
+        geom_segment(aes(x = TC5, xend = TC95, y = CV, yend = CV)) +
+        geom_point(aes(x = TC50, y = CV), cex=3) +
+        xlab("Total yield") +
+        ylab("CV") +
+        facet_grid(Scenario~RuleType) +
         theme_lsd(base_size = 14)
-    ggsave(file.path(figure_dir, "TotalYield_vs_CV_all.png"), p, width=9)  
+    ggsave(file.path(figure_dir, "TotalYield_vs_CV_RuleType.png"), p)
 
-    p <- ggplot(msy_info %>% filter(MSY_type == "Empirical")) +
-        geom_point(data = msy_info %>% filter(MSY_type=="Empirical") %>% filter(MSY_desc2 != "CPUErule, Option"), aes(x = MedTotalCatch, y = CV, fill = MSY_desc2), pch=21, cex=4) +
-        xlab("Median total yield") +
-        scale_fill_viridis_d() +
-        guides(fill = guide_legend(title = "Rule type")) +
+    ## total yield vs cv by constraint and rule type
+    p <- ggplot(summary_risk) +
+        geom_segment(aes(x = TC5, xend = TC95, y = CV, yend = CV, color = Constraint)) +
+        geom_point(aes(x = TC50, y = CV, fill = Constraint), pch=21, cex=3) +
+        xlab("Total yield") +
+        ylab("CV") +
+        scale_color_viridis_d(option="C") +
+        scale_fill_viridis_d(option="C") +
+        facet_grid(Scenario~RuleType) +
+        guides( color = FALSE) +
         theme_lsd(base_size = 14)
-    ggsave(file.path(figure_dir, "TotalYield_vs_CV_msy.png"), p, width=9)  
+    ggsave(file.path(figure_dir, "TotalYield_vs_CV_Constraint_RuleType.png"), p)
 
-    ## average yield vs cv
-    p <- ggplot(msy_info %>% filter(MSY_type == "Empirical")) +
-        geom_point(data = msy_info %>% filter(MSY_type=="Empirical") %>% filter(MSY_desc2 == "CPUErule, Option"), aes(x = C50, y = CV, fill = MSY_desc2), pch=21, cex=4) +    
-        geom_point(data = msy_info %>% filter(MSY_type=="Empirical") %>% filter(MSY_desc2 != "CPUErule, Option"), aes(x = C50, y = CV, fill = MSY_desc2), pch=21, cex=4) +
-        xlab("Median annual yield") +
-        scale_fill_viridis_d() +
-        guides(fill = guide_legend(title = "Rule type")) +
+    ## total yield vs cv for constrained MSY (fixed) and filtered rules
+    p <- ggplot(summary_msy) +
+        geom_segment(aes(x = TC5, xend = TC95, y = CV, yend = CV, color = RuleType, alpha = MSY_type)) +
+        geom_point(aes(x = TC50, y = CV, fill = RuleType, alpha = MSY_type), pch=21, cex=3) +
+        scale_alpha_manual(values = c(1, 0.3)) +
+        xlab("Total yield") +
+        ylab("CV") +
+        scale_color_viridis_d(option="C") +
+        scale_fill_viridis_d(option="C") +
+        facet_grid(Scenario~.) +
+        guides( color = FALSE) +
         theme_lsd(base_size = 14)
-    ggsave(file.path(figure_dir, "AnnualYield_vs_CV_all.png"), p, width=9)  
+    ggsave(file.path(figure_dir, "TotalYield_vs_CV_Filtered.png"), p)
 
-    p <- ggplot(msy_info %>% filter(MSY_type == "Empirical")) +
-        geom_point(data = msy_info %>% filter(MSY_type=="Empirical") %>% filter(MSY_desc2 != "CPUErule, Option"), aes(x = C50, y = CV, fill = MSY_desc2), pch=21, cex=4) +
-        xlab("Median annual yield") +
-        scale_fill_viridis_d() +
-        guides(fill = guide_legend(title = "Rule type")) +
+    ## total yield vs cv for constrained MSY
+    p <- ggplot(summary_msy %>% filter(MSY_type == "Constrained")) +
+        geom_segment(aes(x = TC5, xend = TC95, y = CV, yend = CV, color = RuleType)) +
+        geom_point(aes(x = TC50, y = CV, fill = RuleType), pch=21, cex=3) +
+        xlab("Total yield") +
+        ylab("CV") +
+        scale_color_viridis_d(option="C") +
+        scale_fill_viridis_d(option="C") +
+        facet_grid(Scenario~.) +
+        guides( color = FALSE) +
         theme_lsd(base_size = 14)
-    ggsave(file.path(figure_dir, "AnnualYield_vs_CV_msy.png"), p, width=9)  
+    ggsave(file.path(figure_dir, "TotalYield_vs_CV_Constrained.png"), p)
 
-    ## comparing empirical and theoretical MSY
-    ## theoretical
-    msy_det <- msy_info %>%# ungroup() %>%
-    select(Scenario, RuleType, MSY_type, MSY_desc, C50, B50) %>% 
-    filter(MSY_type=="Theoretical") %>%
-    rename(MSY = C50) %>%
-    rename(Bmsy = B50) #%>%
-    # select(-c(MSY_type))
+    ## total yield vs cv by rule type
+    p <- ggplot(summary_risk) +
+        geom_segment(aes(x = C5, xend = C95, y = CV, yend = CV)) +
+        geom_point(aes(x = C50, y = CV), cex=3) +
+        xlab("Total yield") +
+        ylab("CV") +
+        facet_grid(Scenario~RuleType) +
+        theme_lsd(base_size = 14)
+    ggsave(file.path(figure_dir, "AnnualYield_vs_CV_RuleType.png"), p)
 
-    ## empirical
-    msy_emp <- msy_info %>%# ungroup() %>%
-    select(Scenario, RuleType, MSY_type, MSY_desc, C50, B50) %>%
-    filter(grepl("Empirical",MSY_type)) %>%
-    rename(eMSY = C50) %>%
-    rename(eBmsy = B50) #%>%
-    # select(-c(MSY_type))
+    ## total yield vs cv by constraint and rule type
+    p <- ggplot(summary_risk) +
+        geom_segment(aes(x = C5, xend = C95, y = CV, yend = CV, color = Constraint)) +
+        geom_point(aes(x = C50, y = CV, fill = Constraint), pch=21, cex=3) +
+        xlab("Total yield") +
+        ylab("CV") +
+        scale_color_viridis_d(option="C") +
+        scale_fill_viridis_d(option="C") +
+        facet_grid(Scenario~RuleType) +
+        guides( color = FALSE) +
+        theme_lsd(base_size = 14)
+    ggsave(file.path(figure_dir, "AnnualYield_vs_CV_Constraint_RuleType.png"), p)
 
-    ## putting info in the same data frame
-    msy_ratios <- msy_emp 
-    msy_ratios$MSY <- sapply(1:nrow(msy_ratios), function(x) msy_det$MSY[match(msy_ratios$RuleType[x], msy_det$RuleType)])
-    msy_ratios$Bmsy <- sapply(1:nrow(msy_ratios), function(x) msy_det$Bmsy[match(msy_ratios$RuleType[x], msy_det$RuleType)])
+    ## total yield vs cv for constrained MSY (fixed) and filtered rules
+    p <- ggplot(summary_msy) +
+        geom_segment(aes(x = C5, xend = C95, y = CV, yend = CV, color = RuleType, alpha = MSY_type)) +
+        geom_point(aes(x = C50, y = CV, fill = RuleType, alpha = MSY_type), pch=21, cex=3) +
+        scale_alpha_manual(values = c(1, 0.3)) +
+        xlab("Total yield") +
+        ylab("CV") +
+        scale_color_viridis_d(option="C") +
+        scale_fill_viridis_d(option="C") +
+        facet_grid(Scenario~.) +
+        guides( color = FALSE) +
+        theme_lsd(base_size = 14)
+    ggsave(file.path(figure_dir, "AnnualYield_vs_CV_Filtered.png"), p)
+
+    ## total yield vs cv for constrained MSY
+    p <- ggplot(summary_msy %>% filter(MSY_type == "Constrained")) +
+        geom_segment(aes(x = C5, xend = C95, y = CV, yend = CV, color = RuleType)) +
+        geom_point(aes(x = C50, y = CV, fill = RuleType), pch=21, cex=3) +
+        xlab("Total yield") +
+        ylab("CV") +
+        scale_color_viridis_d(option="C") +
+        scale_fill_viridis_d(option="C") +
+        facet_grid(Scenario~.) +
+        guides( color = FALSE) +
+        theme_lsd(base_size = 14)
+    ggsave(file.path(figure_dir, "AnnualYield_vs_CV_Constrained.png"), p)
+
+
+    catch_year2 <- inner_join(catch_year, summary_all)
+    if(any(grepl("rules",object_names))){
+        catch_year2$RuleType = factor(catch_year2$RuleType, levels = c("CPUErule","FixedF","FixedCatch"))
+        catch_year2$Constraint <- factor(catch_year2$Constraint, levels = c("Risk&Catch","Risk","Catch","HigherCV","LowerThanFixedCatch","Pass"))
+    } else { 
+        catch_year2$RuleType = factor(catch_year2$RuleType, levels = c("FixedF","FixedCatch")) 
+        catch_year2$Constraint <- factor(catch_year2$Constraint, levels = c("Risk&Catch","Risk","Catch","Pass"))
+    }
+
+    catch_year_msy <- inner_join(catch_year2, summary_msy)
+    catch_year_msy$MSY_type <- factor(catch_year_msy$MSY_type, levels = c(NA, "Unconstrained", "Constrained"))
+    catch_year_msy$MSY_examples <- factor(catch_year_msy$MSY_examples, levels = c(NA, "MaxCatch", "MinCV"))
+
+    ## CPUE vs TACC by rule type
+    p <- ggplot(catch_year2 %>% filter(Iteration == 1:12)) +
+        geom_line(aes(x = CPUE, y = Catch, color = RuleType), alpha=0.7) +
+        scale_color_viridis_d() +
+        facet_wrap(Iteration~.) +
+        theme_lsd(base_size = 14)
+    ggsave(file.path(figure_dir, "CPUE_vs_TACC_RuleType_multiiter.png"), p)
+
+    p <- ggplot(catch_year2 %>% filter(Iteration == 1)) +
+        geom_line(aes(x = CPUE, y = Catch, color = RuleType), alpha=0.7) +
+        scale_color_viridis_d() +
+        theme_lsd(base_size = 14)
+    ggsave(file.path(figure_dir, "CPUE_vs_TACC_RuleType_iterexample.png"), p)
+
+    ## CPUE vs TACC by constraint and rule type
+    p <- ggplot(catch_year2 %>% filter(Iteration == 1)) +
+        geom_line(aes(x = CPUE, y = Catch, color = Constraint), alpha=0.7, lwd=1.2) +
+        scale_color_viridis_d() +
+        facet_wrap(RuleType~.) +
+        theme_lsd(base_size = 14)
+    ggsave(file.path(figure_dir, "CPUE_vs_TACC_Constraint_RuleType_iterexample.png"), p)
+
+    ## CPUE vs TACC by constraint and rule type with constrained MSY
+    p <- ggplot(catch_year2 %>% filter(Iteration == 1)) +
+        geom_line(aes(x = CPUE, y = Catch, color = Constraint), alpha=0.7, lwd=1.2) +
+        geom_line(data = catch_year_msy %>% filter(Iteration == 1) %>% filter(MSY_type == "Constrained"), aes(x = CPUE, y = Catch), alpha = 0.7, lwd = 2) +
+        scale_color_viridis_d() +
+        facet_wrap(RuleType~.) +
+        theme_lsd(base_size = 14)
+    ggsave(file.path(figure_dir, "CPUE_vs_TACC_Constraint_RuleType_MSY_iterexample.png"), p)
+
+    p <- ggplot(catch_year_msy %>% filter(is.na(MSY_type)==FALSE)) +
+        geom_line(aes(x = CPUE, y = Catch, color = RuleType), alpha=0.7, lwd=1.2) +
+        scale_color_viridis_d() +
+        facet_grid(.~MSY_type) +
+        theme_lsd(base_size = 14)
+    ggsave(file.path(figure_dir, "CPUE_vs_TACC_Constraint_RuleType_MSY.png"), p)
+
+    p <- ggplot(catch_year_msy %>% filter(is.na(MSY_type)==FALSE)) +
+        geom_line(aes(x = CPUE, y = Catch, color = RuleType), alpha=0.7, lwd=1.2) +
+        geom_line(data = catch_year_msy %>% filter(MSY_examples == "MaxCatch"), aes(x = CPUE, y = Catch), alpha = 0.7, lwd=2) +
+        geom_line(data = catch_year_msy %>% filter(MSY_examples == "MinCV"), aes(x = CPUE, y = Catch), alpha = 0.7, lwd=2, lty=2, color = "gray") +        
+        scale_color_viridis_d() +
+        facet_grid(.~MSY_type) +
+        theme_lsd(base_size = 14)
+    ggsave(file.path(figure_dir, "CPUE_vs_TACC_RuleType_MSY_MSYexample.png"), p)
+
+
+
+    # ## catch over time
+    # # catch_year_msy <- catch_year %>% filter(RuleNum %in% msy_info$RuleNum) %>% filter(RuleName %in% msy_info$RuleName) 
+
+    # attach_info <- msy_info %>% select(Scenario, RuleType, RuleName, RuleNum, MSY_type, MSY_desc, MSY_desc2)
+
+    # catch_year_msy_info <- inner_join(catch_year_msy, attach_info)
+    # group <- catch_year_msy_info$MSY_desc2
+    # catch_year_msy_info$MSY_desc2 <- factor(group, levels = c("CPUErule, Option", "CPUErule, MaxCatch", "CPUErule, MinCV", "FixedCatch", "FixedF"))
+
+    # ## attach description - maximising catch or minimising cv
+    # msy_info_raw$MSY_desc <- sapply(1:nrow(msy_info_raw), function(x) ifelse(msy_info_raw$RuleType[x]=="FixedCatch", "MinCV", ifelse(msy_info_raw$RuleType[x] %in% c("FixedF","CPUErule"), "MaxCatch", "X")))
+
+    # ## constrain rules between fixed catch and fixed F MSY
+    # ## MSY for fixed catch
+    # msy_catch <- msy_info_raw %>% filter(RuleType=="FixedCatch") %>% filter(MSY_type=="Empirical")
+    # msy_F <- msy_info_raw %>% filter(RuleType=="FixedF") %>% filter(MSY_type=="Empirical")
+
+    # ## find rules that have higher average yield than fixed catch
+    # summary_rules <- summary_risk %>% filter(RuleType=="CPUErule")
+    # choose_rules <- summary_rules %>% 
+    #                 filter(SoftLimit < 0.1) %>% 
+    #                 filter(CatchConstraint <= 0) %>%
+    #                 filter(CV < msy_F$CV) %>% 
+    #                 filter(C50 > msy_catch$C50)
+
+    # plot_rules(rules=filter_rules, fig_name="constraints_met", figure_dir = figure_dir)
+    # plot_rules(rules=filter_rules, rule_labels = filter_rules$RuleNum, fig_name="Rules_constraints_met", figure_dir = figure_dir)
+
+    # ## find rule that has higher average yield than fixed catch with the lowest CV, and include other options
+    # rule_maxcatch <- choose_rules %>% filter(C50==max(C50)) %>% mutate(MSY_type = "Empirical") %>% mutate(MSY_desc = "MaxCatch")
+    # rule_mincv <- choose_rules %>% filter(CV==min(CV)) %>% mutate(MSY_type = "Empirical") %>% mutate(MSY_desc = "MinCV")
+    # rules_other <- choose_rules %>% filter(C50!=max(C50)) %>% filter(CV!=min(CV)) %>% mutate(MSY_type= "Empirical") %>% mutate(MSY_desc="Option")
+
+    # ## remove previous empirical MSY for rules that was not subject to CPUE-rule constraints
+    # msy_info_rm <- msy_info_raw[-c(which(msy_info_raw$RuleType=="CPUErule"&msy_info_raw$MSY_type=="Empirical")),]
+
+    # ## include maxcatch and mincv rule
+    # msy_info_minmax <- rbind.data.frame(msy_info_rm, rbind.data.frame(rule_maxcatch, rule_mincv))
+
+    # ## include other options
+    # msy_info <- rbind.data.frame(msy_info_minmax, rules_other)
+
+    # ## save msy_info
+    # write.csv(msy_info, file=paste0(figure_dir, "MSY.csv"),row.names=FALSE)
+
+    # msy_info_rules <- msy_info %>% ungroup() %>% filter(RuleName == "rules") %>% filter(MSY_desc != "Option")
+    # plot_rules(rules = msy_info_rules, rule_labels = c("Theoretical MSY", "Empirical MSY, MaxCatch", "Empirical MSY, MinCV"), fig_name = "Rules_MSY", figure_dir = figure_dir)
+
+    # msy_info$MSY_desc2 <- sapply(1:nrow(msy_info), function(x) ifelse(msy_info$RuleType[x]=="CPUErule", paste0("CPUErule, ", msy_info$MSY_desc[x]), as.character(msy_info$RuleType[x])))
+    # group <- msy_info$MSY_desc2
+    # msy_info$MSY_desc2 <- factor(group, levels = c("CPUErule, Option", "CPUErule, MaxCatch", "CPUErule, MinCV", "FixedCatch", "FixedF"))
+
+    # ## total yield vs cv
+    # p <- ggplot(msy_info %>% filter(MSY_type == "Empirical")) +
+    #     geom_point(data = msy_info %>% filter(MSY_type=="Empirical") %>% filter(MSY_desc2 == "CPUErule, Option"), aes(x = MedTotalCatch, y = CV, fill = MSY_desc2), pch=21, cex=4) +    
+    #     geom_point(data = msy_info %>% filter(MSY_type=="Empirical") %>% filter(MSY_desc2 != "CPUErule, Option"), aes(x = MedTotalCatch, y = CV, fill = MSY_desc2), pch=21, cex=4) +
+    #     xlab("Median total yield") +
+    #     scale_fill_viridis_d() +
+    #     guides(fill = guide_legend(title = "Rule type")) +
+    #     theme_lsd(base_size = 14)
+    # ggsave(file.path(figure_dir, "TotalYield_vs_CV_all.png"), p, width=9)  
+
+    # p <- ggplot(msy_info %>% filter(MSY_type == "Empirical")) +
+    #     geom_point(data = msy_info %>% filter(MSY_type=="Empirical") %>% filter(MSY_desc2 != "CPUErule, Option"), aes(x = MedTotalCatch, y = CV, fill = MSY_desc2), pch=21, cex=4) +
+    #     xlab("Median total yield") +
+    #     scale_fill_viridis_d() +
+    #     guides(fill = guide_legend(title = "Rule type")) +
+    #     theme_lsd(base_size = 14)
+    # ggsave(file.path(figure_dir, "TotalYield_vs_CV_msy.png"), p, width=9)  
+
+    # ## average yield vs cv
+    # p <- ggplot(msy_info %>% filter(MSY_type == "Empirical")) +
+    #     geom_point(data = msy_info %>% filter(MSY_type=="Empirical") %>% filter(MSY_desc2 == "CPUErule, Option"), aes(x = C50, y = CV, fill = MSY_desc2), pch=21, cex=4) +    
+    #     geom_point(data = msy_info %>% filter(MSY_type=="Empirical") %>% filter(MSY_desc2 != "CPUErule, Option"), aes(x = C50, y = CV, fill = MSY_desc2), pch=21, cex=4) +
+    #     xlab("Median annual yield") +
+    #     scale_fill_viridis_d() +
+    #     guides(fill = guide_legend(title = "Rule type")) +
+    #     theme_lsd(base_size = 14)
+    # ggsave(file.path(figure_dir, "AnnualYield_vs_CV_all.png"), p, width=9)  
+
+    # p <- ggplot(msy_info %>% filter(MSY_type == "Empirical")) +
+    #     geom_point(data = msy_info %>% filter(MSY_type=="Empirical") %>% filter(MSY_desc2 != "CPUErule, Option"), aes(x = C50, y = CV, fill = MSY_desc2), pch=21, cex=4) +
+    #     xlab("Median annual yield") +
+    #     scale_fill_viridis_d() +
+    #     guides(fill = guide_legend(title = "Rule type")) +
+    #     theme_lsd(base_size = 14)
+    # ggsave(file.path(figure_dir, "AnnualYield_vs_CV_msy.png"), p, width=9)  
+
+    # ## comparing empirical and theoretical MSY
+    # ## theoretical
+    # msy_det <- msy_info %>%# ungroup() %>%
+    # select(Scenario, RuleType, MSY_type, MSY_desc, C50, B50) %>% 
+    # filter(MSY_type=="Theoretical") %>%
+    # rename(MSY = C50) %>%
+    # rename(Bmsy = B50) #%>%
+    # # select(-c(MSY_type))
+
+    # ## empirical
+    # msy_emp <- msy_info %>%# ungroup() %>%
+    # select(Scenario, RuleType, MSY_type, MSY_desc, C50, B50) %>%
+    # filter(grepl("Empirical",MSY_type)) %>%
+    # rename(eMSY = C50) %>%
+    # rename(eBmsy = B50) #%>%
+    # # select(-c(MSY_type))
+
+    # ## putting info in the same data frame
+    # msy_ratios <- msy_emp 
+    # msy_ratios$MSY <- sapply(1:nrow(msy_ratios), function(x) msy_det$MSY[match(msy_ratios$RuleType[x], msy_det$RuleType)])
+    # msy_ratios$Bmsy <- sapply(1:nrow(msy_ratios), function(x) msy_det$Bmsy[match(msy_ratios$RuleType[x], msy_det$RuleType)])
         
-    msy_ratios$MSY_desc <- sapply(1:nrow(msy_ratios), function(x) ifelse(msy_ratios$RuleType[x]=="CPUErule", paste0("CPUErule, ", msy_ratios$MSY_desc[x]), as.character(msy_ratios$RuleType[x])))
-    group <- msy_ratios$MSY_desc
-    msy_ratios$MSY_desc <- factor(group, levels = c("CPUErule, Option", "CPUErule, MaxCatch", "CPUErule, MinCV", "FixedCatch", "FixedF"))
+    # msy_ratios$MSY_desc <- sapply(1:nrow(msy_ratios), function(x) ifelse(msy_ratios$RuleType[x]=="CPUErule", paste0("CPUErule, ", msy_ratios$MSY_desc[x]), as.character(msy_ratios$RuleType[x])))
+    # group <- msy_ratios$MSY_desc
+    # msy_ratios$MSY_desc <- factor(group, levels = c("CPUErule, Option", "CPUErule, MaxCatch", "CPUErule, MinCV", "FixedCatch", "FixedF"))
 
-    ## ratios plot eMSY/MSY
-    p <- ggplot(msy_ratios) +
-        geom_vline(aes(xintercept = 1)) + 
-        geom_hline(aes(yintercept = 1)) +
-        geom_point(aes(x = (eBmsy/Bmsy), y = (eMSY / MSY), fill=MSY_desc), cex=4, pch=21, alpha=0.7) +
-        xlab("Empirical / theoretical Bmsy") + ylab("Empirical / theoretical MSY") + 
-        scale_fill_viridis_d() +
-        # scale_fill_brewer(palette = "Paired") +
-        # scale_shape_manual(values = seq(21,by=1,length.out=length(unique(msy_ratios$Scenario)))) +
-        expand_limits(x = 0, y = 0) + 
-        guides(fill = guide_legend(title = "Rule type")) +
-        scale_x_continuous(expand = c(0,0), limits = c(0, max(c(1.05, msy_ratios$eBmsy/msy_ratios$Bmsy)*1.05))) +
-        scale_y_continuous(expand = c(0,0), limits = c(0, max(c(1.05, msy_ratios$eMSY/msy_ratios$MSY)*1.05))) + 
-        theme_lsd(base_size = 14) 
-    ggsave(file.path(figure_dir, "eMSY_MSY_all.png"), p, width=9)  
+    # ## ratios plot eMSY/MSY
+    # p <- ggplot(msy_ratios) +
+    #     geom_vline(aes(xintercept = 1)) + 
+    #     geom_hline(aes(yintercept = 1)) +
+    #     geom_point(aes(x = (eBmsy/Bmsy), y = (eMSY / MSY), fill=MSY_desc), cex=4, pch=21, alpha=0.7) +
+    #     xlab("Empirical / theoretical Bmsy") + ylab("Empirical / theoretical MSY") + 
+    #     scale_fill_viridis_d() +
+    #     # scale_fill_brewer(palette = "Paired") +
+    #     # scale_shape_manual(values = seq(21,by=1,length.out=length(unique(msy_ratios$Scenario)))) +
+    #     expand_limits(x = 0, y = 0) + 
+    #     guides(fill = guide_legend(title = "Rule type")) +
+    #     scale_x_continuous(expand = c(0,0), limits = c(0, max(c(1.05, msy_ratios$eBmsy/msy_ratios$Bmsy)*1.05))) +
+    #     scale_y_continuous(expand = c(0,0), limits = c(0, max(c(1.05, msy_ratios$eMSY/msy_ratios$MSY)*1.05))) + 
+    #     theme_lsd(base_size = 14) 
+    # ggsave(file.path(figure_dir, "eMSY_MSY_all.png"), p, width=9)  
 
-    p <- ggplot(msy_ratios %>% filter(grepl("Option", MSY_desc)==FALSE)) +
-        geom_vline(aes(xintercept = 1)) + 
-        geom_hline(aes(yintercept = 1)) +
-        geom_point(aes(x = (eBmsy/Bmsy), y = (eMSY / MSY), fill=MSY_desc), cex=4, pch=21, alpha=0.7) +
-        xlab("Empirical / theoretical Bmsy") + ylab("Empirical / theoretical MSY") + 
-        scale_fill_viridis_d() +
-        # scale_fill_brewer(palette = "Paired") +
-        # scale_shape_manual(values = seq(21,by=1,length.out=length(unique(msy_ratios$Scenario)))) +
-        expand_limits(x = 0, y = 0) + 
-        guides(fill = guide_legend(title = "Rule type")) +
-        scale_x_continuous(expand = c(0,0), limits = c(0, max(c(1.05, msy_ratios$eBmsy/msy_ratios$Bmsy)*1.05))) +
-        scale_y_continuous(expand = c(0,0), limits = c(0, max(c(1.05, msy_ratios$eMSY/msy_ratios$MSY)*1.05))) + 
-        theme_lsd(base_size = 14) 
-    ggsave(file.path(figure_dir, "eMSY_MSY.png"), p, width=9)  
+    # p <- ggplot(msy_ratios %>% filter(grepl("Option", MSY_desc)==FALSE)) +
+    #     geom_vline(aes(xintercept = 1)) + 
+    #     geom_hline(aes(yintercept = 1)) +
+    #     geom_point(aes(x = (eBmsy/Bmsy), y = (eMSY / MSY), fill=MSY_desc), cex=4, pch=21, alpha=0.7) +
+    #     xlab("Empirical / theoretical Bmsy") + ylab("Empirical / theoretical MSY") + 
+    #     scale_fill_viridis_d() +
+    #     # scale_fill_brewer(palette = "Paired") +
+    #     # scale_shape_manual(values = seq(21,by=1,length.out=length(unique(msy_ratios$Scenario)))) +
+    #     expand_limits(x = 0, y = 0) + 
+    #     guides(fill = guide_legend(title = "Rule type")) +
+    #     scale_x_continuous(expand = c(0,0), limits = c(0, max(c(1.05, msy_ratios$eBmsy/msy_ratios$Bmsy)*1.05))) +
+    #     scale_y_continuous(expand = c(0,0), limits = c(0, max(c(1.05, msy_ratios$eMSY/msy_ratios$MSY)*1.05))) + 
+    #     theme_lsd(base_size = 14) 
+    # ggsave(file.path(figure_dir, "eMSY_MSY.png"), p, width=9)  
 
 
-    ## curves -- relative SSB by annual catch
-    p <- ggplot(summary_risk) +
-        geom_segment(aes(x=B5, xend=B95, y=C50, yend=C50, color = SoftLimit), alpha=0.75, lwd=1.3) +
-        geom_segment(aes(x=B50, xend=B50, y=C5, yend=C95, color = SoftLimit), alpha=0.75, lwd=1.3) +
-        geom_point(aes(x=B50, y=C50, fill=SoftLimit), pch=21, alpha=0.75, cex=4) +
-        expand_limits(x = 0) +
-        scale_x_continuous(limits = c(0, 0.7)) +
-        facet_grid(Scenario~RuleType, scales="free_y", shrink=FALSE) +
-        xlab("Relative spawning stock biomass") +
-        ylab("Catch") +
-        scale_colour_viridis_c() +
-        scale_fill_viridis_c() +
-        guides(fill = guide_legend(title = "Probability below\nsoft limit"), color = guide_legend(title = "Probability below\nsoft limit")) +
-        theme_lsd(base_size=14)
-    ggsave(file.path(figure_dir, "Catch_versus_RelSSB_byProb.png"), p, width=15, height=6) 
 
-    ## curves with MSY
-    p <- ggplot(summary_risk) +
-        geom_segment(aes(x=B5, xend=B95, y=C50, yend=C50, color = SoftLimit), alpha=0.75, lwd=1.3) +
-        geom_segment(aes(x=B50, xend=B50, y=C5, yend=C95, color = SoftLimit), alpha=0.75, lwd=1.3) +
-        # geom_point(data = summary %>% dplyr::filter(RuleType=="FixedF"), aes(x=B50, y=C50, color=RuleType), pch=19, alpha=0.75, cex=4) +
-        geom_point(aes(x=B50, y=C50, fill=SoftLimit), pch=21, alpha=0.75, cex=4) +
-        geom_hline(data=msy_info %>% filter(MSY_type=="Empirical") %>% filter(MSY_desc == "MaxCatch"), aes(yintercept = C50, linetype = "Empirical MSY, MaxCatch")) +
-        geom_hline(data=msy_info %>% filter(MSY_type=="Empirical") %>% filter(MSY_desc == "MinCV"), aes(yintercept = C50, lty="Empirical MSY, MinCV")) +
-        geom_hline(data=msy_info %>% filter(MSY_type=="Theoretical"), aes(yintercept = C50, linetype = "Theoretical MSY")) + 
-        expand_limits(x = 0) +
-        scale_x_continuous(limits = c(0, 0.7)) +
-        facet_grid(Scenario~RuleType, scales="free_y", shrink=FALSE) +
-        xlab("Relative spawning stock biomass") +
-        ylab("Catch") +
-        scale_colour_viridis_c() +
-        scale_fill_viridis_c() +
-        guides(fill = guide_legend(title = "Probability below\nsoft limit"), color = guide_legend(title = "Probability below\nsoft limit")) +
-        theme_lsd(base_size=14) +
-        scale_linetype_manual(name = "MSY type", values = c(2,3,1))
-    ggsave(file.path(figure_dir, "Catch_versus_RelSSB_byProb_MSYlines.png"), p, width=15, height=6) 
+ 
+    # p1 <- ggplot(catch_year_msy_info %>% filter(MSY_desc != "Option")) +
+    #     stat_summary(aes(x=Year, y=Catch, color = MSY_desc2, fill = MSY_desc2), fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
+    #     stat_summary(aes(x=Year, y=Catch, color = MSY_desc2), fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75) +
+    #     geom_line(data = catch_year_msy_info %>% filter(MSY_desc != "Option")%>% filter(Iteration==1), aes(x=Year, y=Catch)) +
+    #     ylab("TACC") +
+    #     guides(color = FALSE, fill = FALSE) +
+    #     scale_color_viridis_d() +
+    #     scale_fill_viridis_d() +
+    #     # scale_color_brewer(palette = "RdYlBu") +
+    #     # scale_fill_brewer(palette = "RdYlBu") +
+    #     expand_limits(y = 0) +
+    #     theme_lsd(base_size = 14) +
+    #     facet_grid(MSY_type~MSY_desc2)
+    # ggsave(file.path(figure_dir, "TACC_over_time_MSYcompare.png"), p1, width=15, height=6)
 
-    ## catch over time
-    catch_year_msy <- catch_year %>% filter(RuleNum %in% msy_info$RuleNum) %>% filter(RuleName %in% msy_info$RuleName) 
+    # p2 <- ggplot(catch_year_msy_info %>% filter(MSY_desc != "Option")) +
+    #     stat_summary(aes(x=Year, y=VB, color = MSY_desc2, fill = MSY_desc2), fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
+    #     stat_summary(aes(x=Year, y=VB, color = MSY_desc2), fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75) +
+    #     geom_line(data = catch_year_msy_info %>% filter(MSY_desc != "Option")%>% filter(Iteration==1), aes(x=Year, y=VB)) +
+    #     ylab("Vulnerable biomass") +
+    #     guides(color = FALSE, fill = FALSE) +
+    #     scale_color_viridis_d() +
+    #     scale_fill_viridis_d() +
+    #     # scale_color_brewer(palette = "RdYlBu") +
+    #     # scale_fill_brewer(palette = "RdYlBu") +
+    #     expand_limits(y = 0) +
+    #     theme_lsd(base_size = 14) +
+    #     facet_grid(MSY_type~MSY_desc2)
+    # ggsave(file.path(figure_dir, "VB_over_time_MSYcompare.png"), p1, width=15, height=6)
 
-    attach_info <- msy_info %>% select(Scenario, RuleType, RuleName, RuleNum, MSY_type, MSY_desc, MSY_desc2)
+    # p4 <- ggplot(catch_year_msy_info) +
+    #     geom_line(aes(x = CPUE, y = Catch, color = MSY_desc2), lwd=1.5, alpha=0.8) +
+    #     facet_grid(MSY_type~.) +
+    #     ylab("TACC") + xlab("Offset-year CPUE") +
+    #     scale_color_viridis_d() +
+    #     guides(color = guide_legend(title = "Rule type")) +
+    #     scale_x_continuous(limits = c(0, max(catch_year_msy_info$CPUE)*1.01), expand=c(0,0)) +
+    #     scale_y_continuous(limits = c(0, max(catch_year_msy_info$Catch)*1.05), expand=c(0,0)) +
+    #     theme_lsd(base_size=14)
+    # ggsave(file.path(figure_dir, "CPUE_vs_TACC_options.png"), p4, width=8, height=6)
 
-    catch_year_msy_info <- inner_join(catch_year_msy, attach_info)
-    group <- catch_year_msy_info$MSY_desc2
-    catch_year_msy_info$MSY_desc2 <- factor(group, levels = c("CPUErule, Option", "CPUErule, MaxCatch", "CPUErule, MinCV", "FixedCatch", "FixedF"))
+    # p4 <- ggplot(catch_year_msy_info  %>% filter(grepl("Option", MSY_desc2)==FALSE)) +
+    #     geom_line(aes(x = CPUE, y = Catch, color = MSY_desc2), lwd=1.5, alpha=0.8) +
+    #     facet_grid(MSY_type~.) +
+    #     ylab("TACC") + xlab("Offset-year CPUE") +
+    #     scale_color_viridis_d() +
+    #     guides(color = guide_legend(title = "Rule type")) +
+    #     scale_x_continuous(limits = c(0, max(catch_year_msy_info$CPUE)*1.01), expand=c(0,0)) +
+    #     scale_y_continuous(limits = c(0, max(catch_year_msy_info$Catch)*1.05), expand=c(0,0)) +
+    #     theme_lsd(base_size=14)
+    # ggsave(file.path(figure_dir, "CPUE_vs_TACC_MSY.png"), p4, width=8, height=6)
 
-    p1 <- ggplot(catch_year_msy_info %>% filter(MSY_desc != "Option")) +
-        stat_summary(aes(x=Year, y=Catch, color = MSY_desc2, fill = MSY_desc2), fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
-        stat_summary(aes(x=Year, y=Catch, color = MSY_desc2), fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75) +
-        geom_line(data = catch_year_msy_info %>% filter(MSY_desc != "Option")%>% filter(Iteration==1), aes(x=Year, y=Catch)) +
-        ylab("TACC") +
-        guides(color = FALSE, fill = FALSE) +
-        scale_color_viridis_d() +
-        scale_fill_viridis_d() +
-        # scale_color_brewer(palette = "RdYlBu") +
-        # scale_fill_brewer(palette = "RdYlBu") +
-        expand_limits(y = 0) +
-        theme_lsd(base_size = 14) +
-        facet_grid(MSY_type~MSY_desc2)
-    ggsave(file.path(figure_dir, "TACC_over_time_MSYcompare.png"), p1, width=15, height=6)
+    # catch_year_rules <- catch_year %>% filter(RuleName == "rules")
+    # maxnum <- msy_info$RuleNum[which(msy_info$RuleType=="CPUErule" & msy_info$MSY_type=="Theoretical" & msy_info$MSY_desc == "MaxCatch")]
+    # emp_maxc <- msy_info$RuleNum[which(msy_info$RuleType=="CPUErule" & msy_info$MSY_type=="Empirical" & msy_info$MSY_desc == "MaxCatch")]
+    # emp_mincv <- msy_info$RuleNum[which(msy_info$RuleType=="CPUErule" & msy_info$MSY_type=="Empirical" & msy_info$MSY_desc == "MinCV")]
+    # emp_opt <- msy_info$RuleNum[which(msy_info$RuleType=="CPUErule" & msy_info$MSY_type=="Empirical" & msy_info$MSY_desc == "Option")]
 
-    p2 <- ggplot(catch_year_msy_info %>% filter(MSY_desc != "Option")) +
-        stat_summary(aes(x=Year, y=VB, color = MSY_desc2, fill = MSY_desc2), fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
-        stat_summary(aes(x=Year, y=VB, color = MSY_desc2), fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75) +
-        geom_line(data = catch_year_msy_info %>% filter(MSY_desc != "Option")%>% filter(Iteration==1), aes(x=Year, y=VB)) +
-        ylab("Vulnerable biomass") +
-        guides(color = FALSE, fill = FALSE) +
-        scale_color_viridis_d() +
-        scale_fill_viridis_d() +
-        # scale_color_brewer(palette = "RdYlBu") +
-        # scale_fill_brewer(palette = "RdYlBu") +
-        expand_limits(y = 0) +
-        theme_lsd(base_size = 14) +
-        facet_grid(MSY_type~MSY_desc2)
-    ggsave(file.path(figure_dir, "VB_over_time_MSYcompare.png"), p1, width=15, height=6)
+    # Group <- sapply(1:nrow(catch_year_rules), function(x){
+    #         out <- "All rules"
+    #         if(catch_year_rules$RuleNum[x] == maxnum) out <- "Theoretical MSY"
+    #         if(catch_year_rules$RuleNum[x] %in% emp_opt) out <- "Empirical MSY, Option"
+    #         if(catch_year_rules$RuleNum[x] == emp_mincv) out <- "Empirical MSY, MinCV"
+    #         if(catch_year_rules$RuleNum[x] == emp_maxc) out <- "Empirical MSY, MaxCatch"
+    #         return(out)
+    # })
+    # catch_year_rules$Group <- factor(Group, levels=c("All rules", "Theoretical MSY", "Empirical MSY, Option", "Empirical MSY, MaxCatch", "Empirical MSY, MinCV"))
 
-    p4 <- ggplot(catch_year_msy_info) +
-        geom_line(aes(x = CPUE, y = Catch, color = MSY_desc2), lwd=1.5, alpha=0.8) +
-        facet_grid(MSY_type~.) +
-        ylab("TACC") + xlab("Offset-year CPUE") +
-        scale_color_viridis_d() +
-        guides(color = guide_legend(title = "Rule type")) +
-        scale_x_continuous(limits = c(0, max(catch_year_msy_info$CPUE)*1.01), expand=c(0,0)) +
-        scale_y_continuous(limits = c(0, max(catch_year_msy_info$Catch)*1.05), expand=c(0,0)) +
-        theme_lsd(base_size=14)
-    ggsave(file.path(figure_dir, "CPUE_vs_TACC_options.png"), p4, width=8, height=6)
-
-    p4 <- ggplot(catch_year_msy_info  %>% filter(grepl("Option", MSY_desc2)==FALSE)) +
-        geom_line(aes(x = CPUE, y = Catch, color = MSY_desc2), lwd=1.5, alpha=0.8) +
-        facet_grid(MSY_type~.) +
-        ylab("TACC") + xlab("Offset-year CPUE") +
-        scale_color_viridis_d() +
-        guides(color = guide_legend(title = "Rule type")) +
-        scale_x_continuous(limits = c(0, max(catch_year_msy_info$CPUE)*1.01), expand=c(0,0)) +
-        scale_y_continuous(limits = c(0, max(catch_year_msy_info$Catch)*1.05), expand=c(0,0)) +
-        theme_lsd(base_size=14)
-    ggsave(file.path(figure_dir, "CPUE_vs_TACC_MSY.png"), p4, width=8, height=6)
-
-    catch_year_rules <- catch_year %>% filter(RuleName == "rules")
-    maxnum <- msy_info$RuleNum[which(msy_info$RuleType=="CPUErule" & msy_info$MSY_type=="Theoretical" & msy_info$MSY_desc == "MaxCatch")]
-    emp_maxc <- msy_info$RuleNum[which(msy_info$RuleType=="CPUErule" & msy_info$MSY_type=="Empirical" & msy_info$MSY_desc == "MaxCatch")]
-    emp_mincv <- msy_info$RuleNum[which(msy_info$RuleType=="CPUErule" & msy_info$MSY_type=="Empirical" & msy_info$MSY_desc == "MinCV")]
-    emp_opt <- msy_info$RuleNum[which(msy_info$RuleType=="CPUErule" & msy_info$MSY_type=="Empirical" & msy_info$MSY_desc == "Option")]
-
-    Group <- sapply(1:nrow(catch_year_rules), function(x){
-            out <- "All rules"
-            if(catch_year_rules$RuleNum[x] == maxnum) out <- "Theoretical MSY"
-            if(catch_year_rules$RuleNum[x] %in% emp_opt) out <- "Empirical MSY, Option"
-            if(catch_year_rules$RuleNum[x] == emp_mincv) out <- "Empirical MSY, MinCV"
-            if(catch_year_rules$RuleNum[x] == emp_maxc) out <- "Empirical MSY, MaxCatch"
-            return(out)
-    })
-    catch_year_rules$Group <- factor(Group, levels=c("All rules", "Theoretical MSY", "Empirical MSY, Option", "Empirical MSY, MaxCatch", "Empirical MSY, MinCV"))
-
-    p5 <- ggplot(catch_year_rules %>% filter(Iteration == 1)) +
-        geom_line(aes(x = CPUE, y = Catch, color = Group), lwd=1.5, alpha=0.8) + 
-        ylab("TACC") + xlab("Offset-year CPUE") +
-        scale_color_viridis_d() +
-        guides(color = guide_legend(title = "Rule type")) +
-        expand_limits(y = 0) +
-        theme_lsd(base_size=14) +
-        scale_x_continuous(limits = c(0, max(catch_year_rules$CPUE)*1.01), expand=c(0,0)) +
-        scale_y_continuous(limits = c(0, max(catch_year_rules$Catch)*1.05), expand=c(0,0)) 
-    ggsave(file.path(figure_dir, "CPUE_vs_TAC_allrules.png"), p5, width=8, height=6)
+    # p5 <- ggplot(catch_year_rules %>% filter(Iteration == 1)) +
+    #     geom_line(aes(x = CPUE, y = Catch, color = Group), lwd=1.5, alpha=0.8) + 
+    #     ylab("TACC") + xlab("Offset-year CPUE") +
+    #     scale_color_viridis_d() +
+    #     guides(color = guide_legend(title = "Rule type")) +
+    #     expand_limits(y = 0) +
+    #     theme_lsd(base_size=14) +
+    #     scale_x_continuous(limits = c(0, max(catch_year_rules$CPUE)*1.01), expand=c(0,0)) +
+    #     scale_y_continuous(limits = c(0, max(catch_year_rules$Catch)*1.05), expand=c(0,0)) 
+    # ggsave(file.path(figure_dir, "CPUE_vs_TAC_allrules.png"), p5, width=8, height=6)
 }

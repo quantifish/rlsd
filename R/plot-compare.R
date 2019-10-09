@@ -89,7 +89,7 @@ plot_compare_ssb <- function(object_list, object_names, figure_dir = "compare_fi
         expand_limits(y = 0) +
         labs(x = "Fishing year", y = "Spawning stock biomass (tonnes)") +
         scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
-        scale_y_continuous(expand = c(0,0), limits = c(0, max(ssb0$value)*1.05)) +
+        # scale_y_continuous(expand = c(0,0), limits = c(0, max(ssb0$value)*1.05)) +
         theme_lsd(base_size = 14)
 
     if(nmod > 5){
@@ -121,7 +121,7 @@ plot_compare_ssb <- function(object_list, object_names, figure_dir = "compare_fi
         expand_limits(y = 0) +
         labs(x = "Fishing year", y = "Spawning stock biomass (tonnes)") +
         scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
-        scale_y_continuous(expand = c(0,0), limits = c(0, max(ssb0$value)*1.05)) +
+        # scale_y_continuous(expand = c(0,0), limits = c(0, max(ssb0$value)*1.05)) +
         theme_lsd(base_size = 14)
 
     if(nmod > 5){
@@ -781,23 +781,73 @@ table_compare_residuals <- function(object_list, object_names, figure_dir = "com
 
 }
 
-# looic <- function(object_list, object_names, figure_dir = "compare_figure/"){
+looic <- function(object_list, object_names, figure_dir = "compare_figure/"){
 
-#     mcmc_list <- lapply(1:length(object_list), function(x) object_list[[x]]@mcmc)
-      # niters <- sapply(1:length(mcmc_list), function(x) mcmc_list[[x]]$n_iter)
-      # if(all(niters)<50) warning("MCMC chains not long enough to calculate LOOIC")
-      # if(all(niters)>50){
-   #     ## cpule
-   #     cpue_list <- lapply(1:length(object_list), function(x){
-   #       llcpue <- mcmc_list[[x]]$lp_cpue_i
-   #       llcpue_array <- array(rep(llcpue,3), dim = c(nrow(llcpue)*3,1,ncol(llcpue)))
-   #       r_eff_cpue <- relative_eff(exp(llcpue_array))
-   #       loo_cpue <- loo(llcpue_array, r_eff_cpue)
-   #       return(loo_cpue)
-   #     })
-   #     names(cpue_list) <- object_names
+    mcmc_list <- lapply(1:length(object_list), function(x) object_list[[x]]@mcmc)
+    n_iter <- sapply(1:length(object_list), function(x) nrow(mcmc_list[[x]][[1]]))
 
-      # }
+    if(any(n_iter)<3) return(NULL)
+    if(any(n_iter)>3){
+
+       ## cpue
+       cpue_list <- lapply(1:length(object_list), function(x){
+         llcpue <- mcmc_list[[x]]$lp_cpue_i
+         llcpue_array <- array(llcpue, dim = c(nrow(llcpue)/4,4,ncol(llcpue)))
+         r_eff_cpue <- loo::relative_eff(exp(llcpue_array))
+         loo_cpue <- loo::loo(x=llcpue_array, r_eff=r_eff_cpue)
+         return(loo_cpue)
+       })
+       names(cpue_list) <- object_names
+
+       comp1 <- loo_compare(cpue_list)
+       m1 <- rownames(comp1)
+       df1 <- data.frame("model"=m1, "dataset"="cpue")
+       df2 <- data.frame(comp1)
+       cpue_df <- cbind.data.frame(df1, df2)
 
 
-# }
+       ## sexr
+       sexr_list <- lapply(1:length(object_list), function(x){
+         llsexr <- mcmc_list[[x]]$lp_sexr_i
+         llsexr_array <- array(llsexr, dim = c(nrow(llsexr)/4,4,ncol(llsexr)))
+         r_eff_sexr <- loo::relative_eff(exp(llsexr_array))
+         loo_sexr <- loo::loo(x=llsexr_array, r_eff=r_eff_sexr)
+         return(loo_sexr)
+       })
+       names(sexr_list) <- object_names
+
+       comp1 <- loo_compare(sexr_list)
+       m1 <- rownames(comp1)
+       df1 <- data.frame("model"=m1, "dataset"="sexratio")
+       df2 <- data.frame(comp1)
+       sexr_df <- cbind.data.frame(df1, df2)
+
+       # # ## lfs
+       # lf_list <- lapply(1:length(object_list), function(x){
+       #   lllf <- mcmc_list[[x]]$lp_lf_is
+       #   lllf2 <- lapply(1:dim(lllf)[3], function(x){
+       #    sub <- lllf[,,x]
+       #    check <- colSums(sub)
+       #    if(any(check == 0)){
+       #      index <- which(check==0)
+       #      sub[1:nrow(sub),index] <- 1
+       #    } 
+       #    return(sub)
+       #   })
+       #   lllf2 <- do.call(rbind, lllf2)
+       #   lllf_array <- array(lllf2, dim = c(nrow(lllf2)/4,4,ncol(lllf2)))
+       #   r_eff_lf <- loo::relative_eff(exp(lllf_array))
+       #   loo_lf <- loo::loo(x=lllf_array, r_eff=r_eff_lf)
+       #   return(loo_lf)
+       # })
+       # names(lf_list) <- object_names
+
+       # lf_info <- data.frame(loo_compare(lf_list)) %>% mutate("dataset" = "lf")
+
+       out <- rbind.data.frame(cpue_df, sexr_df)
+       write.csv(out, file.path(figure_dir, "LOOIC.csv"), row.names=FALSE)
+
+       return(out)
+    }
+
+}

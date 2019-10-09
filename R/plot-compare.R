@@ -568,6 +568,7 @@ plot_compare_selectivity <- function(object_list, object_names, figure_dir = "co
     years_list <- lapply(1:length(object_list), function(x) data_list[[x]]$first_yr:data_list[[x]]$last_yr)
     pyears_list <- lapply(1:length(object_list), function(x) data_list[[x]]$first_yr:data_list[[x]]$last_proj_yr)
     sex <- c("Male","Immature female" , "Mature female")
+    regions_list <- lapply(1:length(object_list), function(x) 1:data_list[[x]]$n_area)
 
     slist <- lapply(1:length(object_list), function(x){
         n_iter <- nrow(mcmc_list[[x]][[1]])
@@ -668,6 +669,7 @@ plot_compare_q <- function(object_list, object_names, figure_dir = "compare_figu
 {
     data_list <- lapply(1:length(object_list), function(x) object_list[[x]]@data)
     mcmc_list <- lapply(1:length(object_list), function(x) object_list[[x]]@mcmc)
+    regions_list <- lapply(1:length(object_list), function(x) 1:data_list[[x]]$n_area)
 
     n_iter <- nrow(mcmc_list[[1]][[1]])
 

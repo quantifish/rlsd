@@ -10,7 +10,7 @@ do_plot_compare <- function(object_list, object_names, single_stock, figure_dir 
 {
 	dir.create(figure_dir, showWarnings=FALSE)
 	if(single_stock==TRUE){
-		# looic(object_list = object_list, object_names = object_names, figure_dir = figure_dir)
+		looic(object_list = object_list, object_names = object_names, figure_dir = figure_dir)
 		table_compare_residuals(object_list = object_list, object_names = object_names, figure_dir = figure_dir)
 	    plot_compare_vb(object_list = object_list, object_names = object_names, figure_dir = figure_dir)
 	    plot_compare_recruitment(object_list = object_list, object_names = object_names, figure_dir = figure_dir)

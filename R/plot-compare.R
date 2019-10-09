@@ -548,9 +548,10 @@ plot_compare_selectivity <- function(object_list, object_names, figure_dir = "co
         n_iter <- nrow(mcmc_list[[x]][[1]])
         n_season <- data_list[[x]]$n_season
         regions <- 1:data_list[[x]]$n_area
+        pyears <- pyears_list[[x]]
         
         w <- data_list[[x]]$which_sel_rsyt
-        dimnames(w) <- list("Region" = regions, "Sex" = sex, "Year" = pyears_list[[x]], "Season" = 1:n_season)
+        dimnames(w) <- list("Region" = regions, "Sex" = sex, "Year" = pyears, "Season" = 1:n_season)
         w <- reshape2::melt(w, value.name = "Selex")
 
 
@@ -782,6 +783,16 @@ table_compare_residuals <- function(object_list, object_names, figure_dir = "com
 
 }
 
+
+#' Table computing leave-one-out information criterion for various datasets
+#' 
+#' @param object_list list of 'lsd.rds' files from multiple models
+#' @param object_names vector of model names associated with each of the output files in object_list
+#' @param figure_dir the directory to save to
+#' @import loo dplyr
+#' @importFrom reshape2 melt
+#' @export
+#' 
 looic <- function(object_list, object_names, figure_dir = "compare_figure/"){
 
     mcmc_list <- lapply(1:length(object_list), function(x) object_list[[x]]@mcmc)

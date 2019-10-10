@@ -20,6 +20,8 @@ plot_compare_ssb <- function(object_list, object_names, figure_dir = "compare_fi
     years_list <- lapply(1:length(object_list), function(x) data_list[[x]]$first_yr:data_list[[x]]$last_yr)
     pyears_list <- lapply(1:length(object_list), function(x) data_list[[x]]$first_yr:data_list[[x]]$last_proj_yr)
     regions_list <- lapply(1:length(object_list), function(x) 1:data_list[[x]]$n_area)
+    areas <- unique(sapply(1:length(data_list), function(x) data_list[[x]]$n_area))
+
 
     sb_list <- lapply(1:length(object_list), function(x) {
         n_iter <- nrow(mcmc_list[[x]][[1]])
@@ -101,7 +103,7 @@ plot_compare_ssb <- function(object_list, object_names, figure_dir = "compare_fi
         scale_fill_brewer(palette = "Set1") +
         scale_color_brewer(palette = "Set1")
     }
-    if(any(regions_list > 1)){
+    if(any(areas > 1)){
       p <- p + facet_wrap(~Region)
     }
     if (save_plot) {
@@ -136,7 +138,7 @@ plot_compare_ssb <- function(object_list, object_names, figure_dir = "compare_fi
         scale_fill_brewer(palette = "Set1") +
         scale_color_brewer(palette = "Set1")
     }
-    if(any(regions_list > 1)){
+    if(any(areas > 1)){
       p <- p + facet_wrap(~Region)
     }
     if (save_plot) {
@@ -183,7 +185,7 @@ plot_compare_ssb <- function(object_list, object_names, figure_dir = "compare_fi
                  geom_hline(data = relssb_next %>% filter(Model == "base"), aes(yintercept = median(RelSSB)), linetype=2)
 
     }
-    if(any(regions_list > 1)){
+    if(any(areas > 1)){
       p <- p + facet_wrap(~Region)
     }
     if(save_plot) {
@@ -222,7 +224,7 @@ plot_compare_ssb <- function(object_list, object_names, figure_dir = "compare_fi
                  geom_hline(data = relssb_next_proj %>% filter(Model == "base") %>% filter(Year==max(years)+1), aes(yintercept = median(RelSSB)), linetype=2)
 
     }
-    if(any(regions_list > 1)){
+    if(any(areas > 1)){
       p <- p + facet_wrap(~Region)
     }
     if(save_plot) {
@@ -249,7 +251,7 @@ plot_compare_ssb <- function(object_list, object_names, figure_dir = "compare_fi
         scale_fill_brewer(palette = "Set1") +
         scale_color_brewer(palette = "Set1")
     }
-    if(any(regions_list > 1)){
+    if(any(areas > 1)){
       p <- p + facet_wrap(~Region)
     }
     if(save_plot){
@@ -277,7 +279,7 @@ plot_compare_ssb <- function(object_list, object_names, figure_dir = "compare_fi
         scale_fill_brewer(palette = "Set1") +
         scale_color_brewer(palette = "Set1")
     }
-    if(any(regions_list > 1)){
+    if(any(areas > 1)){
       p <- p + facet_wrap(~Region)
     }
     if(save_plot){
@@ -310,6 +312,7 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
     years_list <- lapply(1:length(object_list), function(x) data_list[[x]]$first_yr:data_list[[x]]$last_yr)
     pyears_list <- lapply(1:length(object_list), function(x) data_list[[x]]$first_yr:data_list[[x]]$last_proj_yr)
     regions_list <- lapply(1:length(object_list), function(x) 1:data_list[[x]]$n_area)
+    areas <- unique(sapply(1:length(data_list), function(x) data_list[[x]]$n_area))
     sex <- c("Male","Immature female","Mature female")
     seasons <- c("AW","SS")
     YR <- "YR" # label for the season before the season change year
@@ -376,7 +379,7 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
         scale_fill_brewer(palette = "Set1") +
         scale_color_brewer(palette = "Set1")
     }
-    if(any(regions_list > 1)){
+    if(any(areas > 1)){
       p <- p + facet_wrap(~Region)
     }
     if (save_plot) {
@@ -407,7 +410,7 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
         scale_fill_brewer(palette = "Set1") +
         scale_color_brewer(palette = "Set1")
     }
-    if(any(regions_list > 1)){
+    if(any(areas > 1)){
       p <- p + facet_wrap(~Region)
     }
     if (save_plot) {
@@ -439,6 +442,8 @@ plot_compare_recruitment <- function(object_list, object_names, figure_dir = "co
     years_list <- lapply(1:length(object_list), function(x) data_list[[x]]$first_yr:data_list[[x]]$last_yr)
     pyears_list <- lapply(1:length(object_list), function(x) data_list[[x]]$first_yr:(data_list[[x]]$first_yr + ny_list[[x]] - 1))
     regions_list <- lapply(1:length(object_list), function(x) 1:data_list[[x]]$n_area)
+    areas <- unique(sapply(1:length(data_list), function(x) data_list[[x]]$n_area))
+
 
     rec_list <- lapply(1:length(object_list), function(x){
         n_iter <- nrow(mcmc_list[[x]][[1]])
@@ -506,7 +511,7 @@ plot_compare_recruitment <- function(object_list, object_names, figure_dir = "co
         scale_color_brewer(palette = "Set1")
     }
 
-    if (any(regions_list > 1)) {
+    if (any(areas > 1)) {
         p <- p + facet_wrap(~Region)
     }
     
@@ -537,7 +542,7 @@ plot_compare_recruitment <- function(object_list, object_names, figure_dir = "co
         scale_fill_brewer(palette = "Set1") +
         scale_color_brewer(palette = "Set1")
     }
-    if (any(regions_list > 1)) {
+    if (any(areas > 1)) {
         p <- p + facet_wrap(~Region)
     }
     
@@ -569,6 +574,8 @@ plot_compare_selectivity <- function(object_list, object_names, figure_dir = "co
     pyears_list <- lapply(1:length(object_list), function(x) data_list[[x]]$first_yr:data_list[[x]]$last_proj_yr)
     sex <- c("Male","Immature female" , "Mature female")
     regions_list <- lapply(1:length(object_list), function(x) 1:data_list[[x]]$n_area)
+    areas <- unique(sapply(1:length(data_list), function(x) data_list[[x]]$n_area))
+
 
     slist <- lapply(1:length(object_list), function(x){
         n_iter <- nrow(mcmc_list[[x]][[1]])
@@ -772,7 +779,7 @@ plot_compare_q <- function(object_list, object_names, figure_dir = "compare_figu
         scale_fill_brewer(palette = "Set1") +
         scale_color_brewer(palette = "Set1")
     }    
-    if(any(regions_list > 1)){
+    if(any(areas > 1)){
        p <- p + facet_wrap(Region~qtype, scales = "free")
     } else {
       p <- p + facet_wrap(~qtype, scales = "free")

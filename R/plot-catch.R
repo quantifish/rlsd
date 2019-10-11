@@ -116,7 +116,7 @@ plot_catch <- function(object,
 
     dcatch1 <- dcatch %>%
         dplyr::group_by(Region, Year, Season, Iteration, Type, Data) %>%
-        dplyr::summarise(Catch = sum(Catch)) 
+        dplyr::summarise(Catch = sum(Catch))
     
     p <- ggplot(data = pcatch, aes(x = Year, y = Catch))
     if (show_proj) p <- p + geom_vline(aes(xintercept = data$last_yr), linetype = "dashed")
@@ -129,26 +129,18 @@ plot_catch <- function(object,
         scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
         theme_lsd()
     if (data$n_area > 1) {
-        if(data$n_rules==1){
           p <- p + facet_grid(Region + Type ~ Season, scales = "free")
-        } else {
-          p <- p + facet_wrap(Region~Rule + Type ~ Season, scales="free") 
-        }
     } else {
-        if(data$n_rules==1){
           p <- p + facet_grid(Type ~ Season, scales = "free")
-        } else {
-          p <- p + facet_wrap(Rule+Type ~ Season, scales="free")
-        }
     }
     ggsave(paste0(figure_dir, "catch.png"), p, width = 8)
 
 
     # Plot of catch summed over seasons and drop handling mortality
-    pcatch_sum <- dplyr::group_by(pcatch, Rule, Iteration, Region, Year, Type, Data) %>%
+    pcatch_sum <- pcatch %>% dplyr::group_by(Rule, Iteration, Region, Year, Type, Data) %>%
         dplyr::summarise(Catch = sum(Catch)) %>%
         dplyr::filter(Type != "Handling mortality")
-    dcatch_sum <- dplyr::group_by(dcatch, Iteration, Region, Year, Type, Data) %>%
+    dcatch_sum <- dcatch %>% dplyr::group_by(Iteration, Region, Year, Type, Data) %>%
         dplyr::summarise(Catch = sum(Catch)) %>%
         dplyr::filter(Type != "Handling mortality")
     pcatch_sum$Type <- factor(pcatch_sum$Type, levels = c("SL", "NSL"))
@@ -164,17 +156,9 @@ plot_catch <- function(object,
         scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
         theme_lsd()
     if (data$n_area > 1) {
-        if(data$n_rules == 1){
           p <- p + facet_grid(Region ~ Type, scales = scales)
-        } else{
-          p <- p + facet_wrap(Region+Rule~Type, scales=scales)
-        }
     } else {
-        if(data$n_rules==1){
           p <- p + facet_grid(Type ~ ., scales = scales)
-        } else {
-          p <- p + facet_wrap(Type ~ Rule, scales=scales)
-        }
     }
     ggsave(paste0(figure_dir, "catch_sums.png"), p)
 
@@ -202,11 +186,7 @@ plot_catch <- function(object,
         expand_limits(y = 0) +
         xlab(xlab) + ylab("Residual") +
         theme_lsd()
-    if(data$n_rules==1){
       p <- p + facet_grid(Region + Type ~ Season, scales = "free")
-    } else {
-        p <- p + facet_grid(Region + Type ~ Season + Rule)
-    }
     ggsave(paste0(figure_dir, "catch_resid.png"), p)
 
     ## catch area
@@ -235,11 +215,7 @@ plot_catch <- function(object,
             stat_summary(aes(x = Year, y = MSY), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1) + 
             ggrepel::geom_label_repel(data = dcatch2, aes(x = Year, y = MSY, label = Label), fill = "black", size = 5, color = 'white', force = 10, segment.color = '#bbbbbb', min.segment.length = unit(0, "lines"))
 
-    if(data$n_rules==1){
         p <- p + facet_grid(Region ~ ., scales = "free")
-    } else {
-        p <- p + facet_grid(Region ~ Rule)
-    }
 
     ggsave(paste0(figure_dir, "catch_type.png"), p, width = 10)
 }

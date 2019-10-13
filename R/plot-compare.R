@@ -24,7 +24,7 @@ plot_compare_ssb <- function(object_list, object_names, figure_dir = "compare_fi
     sb_list <- lapply(1:length(object_list), function(x) {
         n_iter <- nrow(mcmc_list[[x]][[1]])
         bio <- mcmc_list[[x]]$biomass_ssb_jyr
-        dimnames(bio) <- list("Iteration" = 1:n_iter, "Rule" = 1, "Year" = pyears_list[[x]], "Region" = regions_list[[x]])
+        dimnames(bio) <- list("Iteration" = 1:n_iter, "Rule" = 1:dim(bio)[2], "Year" = pyears_list[[x]], "Region" = regions_list[[x]])
         bio2 <- reshape2::melt(bio) %>%
             dplyr::group_by(Iteration, Year, Rule) %>% 
             dplyr::summarise(value = sum(value))

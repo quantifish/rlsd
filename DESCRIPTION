@@ -1,7 +1,7 @@
 Package: lsd
 Title: LSD Package
-Version: 6.06
-Date: 2019-09-30
+Version: 6.26
+Date: 2019-10-13
 Authors@R: c(
     person("Darcy", "Webber", email = "darcy@quantifish.co.nz", role = c("cre", "aut")),
     person("Merrill", "Rudd", email = "merrillrudd@gmail.com", role = "aut"))
@@ -14,11 +14,9 @@ Imports:
     plyr,
     RColorBrewer,
     reshape2,
-    rstan,
-    tidyr
+    rstan
 Depends:
-    dplyr,
-    ggplot2,
+    tidyverse,
     RColorBrewer
 Suggests:
     roxygen2,
@@ -26,7 +24,7 @@ Suggests:
     bayesplot,
     loo
 License: MIT + file LICENSE
-RoxygenNote: 5.0.1
+RoxygenNote: 6.1.1
 Collate:
     'TACC.R'
     'create-rules.R'
@@ -64,5 +62,6 @@ Collate:
     'read-stan-map.R'
     'read-stan-mcmc.R'
     'read-stan-var.R'
+    'table-residuals.R'
     'theme-lsd.R'
     'zzz.R'

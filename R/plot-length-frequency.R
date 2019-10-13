@@ -37,32 +37,26 @@ plot_lfs <- function(object,
     # 2. Bin limits
     # 3. Effective N
     mls <- data$cov_mls_ytrs
-    dimnames(mls) <- list("Year" = data$first_yr:data$last_proj_yr,
-                          "Season" = seasons, "Region" = regions, "Sex" = sex)
+    dimnames(mls) <- list("Year" = data$first_yr:data$last_proj_yr, "Season" = seasons, "Region" = regions, "Sex" = sex)
     mls <- reshape2::melt(mls, id.var = "Year", variable.name = "Sex", value.name = "MLS")
     
     lim <- array(NA, dim = c(length(regions), length(sex), 2))
     lim[,,] <- data$data_lf_bin_limits_rsi
-    dimnames(lim) <- list("Region" = regions, "Sex" = sex,
-                          "Limit" = c("lower","upper"))
+    dimnames(lim) <- list("Region" = regions, "Sex" = sex, "Limit" = c("lower","upper"))
     lim <- reshape2::melt(lim, variable.name = "Sex") %>%
-        dplyr::mutate(value = bins[value]) %>%
+        mutate(value = bins[value]) %>%
         tidyr::spread(Limit, value)
-    lim
     
     rawN <- data$data_lf_N_is
     dimnames(rawN) <- list("LF" = 1:data$n_lf, "Sex" = sex)
     rawN <- reshape2::melt(rawN, value.name = "rawN") %>%
-        dplyr::mutate(Iteration = 1)
-    head(rawN)
+        mutate(Iteration = 1)
 
     effN <- mcmc$pred_lf_effN_is
     dimnames(effN) <- list("Iteration" = 1:n_iter, "LF" = 1:data$n_lf, "Sex" = sex)
     effN <- reshape2::melt(effN, value.name = "effN")
-    head(effN)
 
     allN <- dplyr::left_join(rawN, effN)
-    head(allN)
     
     elf <- allN %>%
         dplyr::left_join(w, by = "LF") %>%
@@ -77,8 +71,7 @@ plot_lfs <- function(object,
 
     # Observed LF
     dlf <- mcmc$data_lf_out_isl
-    dimnames(dlf) <- list("Iteration" = 1:n_iter, "LF" = 1:data$n_lf,
-                          "Sex" = sex, "Bin" = 1:length(bins))
+    dimnames(dlf) <- list("Iteration" = 1:n_iter, "LF" = 1:data$n_lf, "Sex" = sex, "Bin" = 1:length(bins))
     dlf <- reshape2::melt(dlf) %>%
         dplyr::left_join(w, by = "LF") %>%
         dplyr::mutate(Source = factor(Source), Source = sources[Source]) %>%
@@ -93,17 +86,17 @@ plot_lfs <- function(object,
     dimnames(plf) <- list("Iteration" = 1:n_iter, "LF" = 1:data$n_lf,
                           "Sex" = sex, "Size" = bins)
     plf <- reshape2::melt(plf) %>%
-        dplyr::left_join(w, by = "LF") %>%
-        dplyr::mutate(Source = sources[Source], Season = seasons[Season]) %>%
-        dplyr::left_join(lim, by = c("Sex", "Region"))
+        left_join(w, by = "LF") %>%
+        mutate(Source = sources[Source], Season = seasons[Season]) %>%
+        left_join(lim, by = c("Sex", "Region"))
     head(plf)
     
     # Give each Region/Year/Season its own plot number, the number of
     # rows in this object is the number of plot panels that will be
     # generated in total
     n2 <- plf %>%
-        dplyr::distinct(Region, Year, Season, Source) %>%
-        dplyr::mutate(Plot = 1:nrow(.))
+        distinct(Region, Year, Season, Source) %>%
+        mutate(Plot = 1:nrow(.))
     sq <- seq(1, nrow(n2), n_panel)
     
     ggplotColours <- function(n = 6, h = c(0, 360) + 15) {
@@ -127,12 +120,12 @@ plot_lfs <- function(object,
     for (i in 1:length(sq)) {
         pq <- sq[i]:(sq[i] + n_panel - 1)
         p <- ggplot() +
-            geom_vline(data = dplyr::filter(elf, LF %in% pq), aes(xintercept = MLS), linetype = "dashed") +
-            geom_label(data = dplyr::filter(elf, LF %in% pq), aes(x = Inf, y = Inf, label = paste(rawN, "\n", effN)), hjust = 1, vjust = 1) +
-            stat_summary(data = dplyr::filter(plf, LF %in% pq, Size >= lower & Size <= upper), aes(x = as.numeric(as.character(Size)), y = value), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
-            stat_summary(data = dplyr::filter(plf, LF %in% pq, Size >= lower & Size <= upper), aes(x = as.numeric(as.character(Size)), y = value), fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
-            stat_summary(data = dplyr::filter(plf, LF %in% pq, Size >= lower & Size <= upper), aes(x = as.numeric(as.character(Size)), y = value), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1) +
-            geom_point(data = dplyr::filter(dlf, LF %in% pq, Size >= lower & Size <= upper), aes(x = as.numeric(as.character(Size)), y = value, shape = Source, colour = Season)) +
+            geom_vline(data = filter(elf, LF %in% pq), aes(xintercept = MLS), linetype = "dashed") +
+            geom_label(data = filter(elf, LF %in% pq), aes(x = Inf, y = Inf, label = paste(rawN, "\n", effN)), hjust = 1, vjust = 1) +
+            stat_summary(data = filter(plf, LF %in% pq, Size >= lower & Size <= upper), aes(x = as.numeric(as.character(Size)), y = value), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
+            stat_summary(data = filter(plf, LF %in% pq, Size >= lower & Size <= upper), aes(x = as.numeric(as.character(Size)), y = value), fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
+            stat_summary(data = filter(plf, LF %in% pq, Size >= lower & Size <= upper), aes(x = as.numeric(as.character(Size)), y = value), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1) +
+            geom_point(data = filter(dlf, LF %in% pq, Size >= lower & Size <= upper), aes(x = as.numeric(as.character(Size)), y = value, shape = Source, colour = Season)) +
             xlab(xlab) + ylab(ylab) +
             guides(shape = FALSE, colour = FALSE) +
             scale_colour_manual(values = rev(ggplotColours(n = length(sources)))) +
@@ -143,21 +136,19 @@ plot_lfs <- function(object,
         } else {
             p <- p + facet_grid(Region + Year + Season + Source ~ Sex, scales = "free_y")
         }
-        p
-        ggsave(paste0(figure_dir, "lf_", i, ".png"), p, height = 12, width=9)
+        ggsave(paste0(figure_dir, "lf_", i, ".png"), p, height = 12, width = 9)
     }
-    
 }
 
 
-#' Plot length frequency residuals
+#' Plot length frequency residuals2
 #'
 #' @param object and LSD object
+#' @param n_panel The number of rows of panels to include per plot.
 #' @param figure_dir the directory to save to
-#' @param ylim the y axis limit
 #' @export
 #' 
-plot_lfs_resid <- function(object, figure_dir = "figure/", ylim)
+plot_lfs_resid2 <- function(object, n_panel = 10, figure_dir = "figure/")
 {
     data <- object@data
     mcmc <- object@mcmc
@@ -168,23 +159,93 @@ plot_lfs_resid <- function(object, figure_dir = "figure/", ylim)
     seasons <- c("AW","SS")
     bins <- data$size_midpoint_l
     regions <- 1:data$n_area
-    sources <- c("LB","CS")
+    sources <- c("LB", "CS")
 
     w <- data.frame(LF = 1:data$n_lf, Year = data$data_lf_year_i, Season = data$data_lf_season_i,
                     Source = data$data_lf_source_i, Region = data$data_lf_area_i,
                     Weight = data$data_lf_weight_i[,1], N = data$data_lf_N_is)
 
     resid <- mcmc$resid_lf_isl
-    dimnames(resid) <- list("Iteration" = 1:n_iter, "LF" = 1:data$n_lf, "Sex"= sex, "Size" = bins)
+    dimnames(resid) <- list("Iteration" = 1:n_iter, "LF" = 1:data$n_lf, "Sex" = sex, "Size" = bins)
     resid <- reshape2::melt(resid) %>%
-        dplyr::left_join(w, by = "LF") %>%
-        dplyr::mutate(Source = sources[Source], Season = seasons[Season])
+        left_join(w, by = "LF") %>%
+        mutate(Source = sources[Source], Season = seasons[Season])
+    head(resid)
+
+    # New residual plot
+    lim <- array(NA, dim = c(length(regions), length(sex), 2))
+    lim[,,] <- data$data_lf_bin_limits_rsi
+    dimnames(lim) <- list("Region" = regions, "Sex" = sex, "Limit" = c("lower","upper"))
+    lim <- reshape2::melt(lim, variable.name = "Sex") %>%
+        mutate(value = bins[value]) %>%
+        tidyr::spread(Limit, value)
+
+    resid_lim <- left_join(resid, lim, by = c("Sex", "Region")) %>%
+      filter(Size > lower, Size < upper)
+    head(resid_lim)
+
+    n2 <- resid_lim %>%
+        distinct(Region, Year, Season) %>%
+        mutate(Plot = 1:nrow(.))
+    sq <- seq(1, nrow(n2), n_panel)
+    resid_lim <- left_join(resid_lim, n2, by = c("Year", "Season", "Region"))
+
+    for (i in 1:length(sq)) {
+      pq <- sq[i]:(sq[i] + n_panel - 1)
+      df <- resid_lim %>% filter(Plot %in% pq)
+
+      p <- ggplot(data = df) +
+        geom_hline(yintercept = 0, linetype = "dashed") +
+        geom_line(aes(x = as.numeric(as.character(Size)), y = value, colour = Source)) +
+        scale_x_continuous(minor_breaks = seq(0, 1e6, 2), limits = c(min(lim$lower), max(lim$upper))) +
+        xlab("Midpoint of size-class (mm)") + ylab("Standardised residuals") +
+        theme_lsd()
+      if (data$n_area == 1) {
+        p <- p + facet_grid(Year + Season ~ Sex, scales = "free_y")
+      } else {
+        p <- p + facet_grid(Region + Year + Season ~ Sex, scales = "free_y")
+      }
+      p
+      ggsave(paste0(figure_dir, "lf_resid_", i, ".png"), p, height = 12, width = 9)
+  }
+}
+
+
+#' Plot length frequency residuals
+#'
+#' @param object and LSD object
+#' @param figure_dir the directory to save to
+#' @param ylim the y axis limit
+#' @export
+#' 
+plot_lfs_resid <- function(object, figure_dir = "figure/", ylim = c(-5, 5))
+{
+    data <- object@data
+    mcmc <- object@mcmc
+    
+    n_iter <- nrow(mcmc[[1]])
+    years <- data$first_yr:data$last_yr
+    sex <- c("Male","Immature female","Mature female")
+    seasons <- c("AW","SS")
+    bins <- data$size_midpoint_l
+    regions <- 1:data$n_area
+    sources <- c("LB", "CS")
+
+    w <- data.frame(LF = 1:data$n_lf, Year = data$data_lf_year_i, Season = data$data_lf_season_i,
+                    Source = data$data_lf_source_i, Region = data$data_lf_area_i,
+                    Weight = data$data_lf_weight_i[,1], N = data$data_lf_N_is)
+
+    resid <- mcmc$resid_lf_isl
+    dimnames(resid) <- list("Iteration" = 1:n_iter, "LF" = 1:data$n_lf, "Sex" = sex, "Size" = bins)
+    resid <- reshape2::melt(resid) %>%
+        left_join(w, by = "LF") %>%
+        mutate(Source = sources[Source], Season = seasons[Season])
     head(resid)
 
     ## add fake data
     allyrs <- min(resid$Year):max(resid$Year)
-    z <- data.frame("Iteration"=1, "LF"=1, "Sex"="Male", "Size"=31, value=0, Year=allyrs[!allyrs %in% unique(resid$Year)], Season="SS", Source="CS", Region = regions, "Weight"=0, "N.1"=0, "N.2"=0, "N.3"=0)
-    resid <- rbind(resid, z)
+    #z <- data.frame("Iteration"=1, "LF"=1, "Sex"="Male", "Size"=31, value=0, Year=allyrs[!allyrs %in% unique(resid$Year)], Season="SS", Source="CS", Region = regions, "Weight"=0, "N.1"=0, "N.2"=0, "N.3"=0)
+    #resid <- rbind(resid, z)
 
     if (min(resid$value) > ylim[1]) ylim <- c(min(resid$value), ylim[2])
     if (max(resid$value) < ylim[2]) ylim <- c(ylim[1], max(resid$value))

@@ -213,6 +213,8 @@ plot_refpoints <- function(object, figure_dir){
         geom_line(aes(x = Year, y = value), lwd = 2) +
         facet_grid(Variable~Region, scales = "free_y") +
         expand_limits(y=0) +
+        xlab("Year") + 
+        ylab("Value") + 
         theme_lsd()
     ggsave(file.path(figure_dir, "Target_Current.png"), p, width=10, height=6)
 
@@ -222,6 +224,8 @@ plot_refpoints <- function(object, figure_dir){
         stat_summary(aes(x = Year, y = value), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.2) +
         stat_summary(aes(x = Year, y = value), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1) +
         facet_grid(Variable~Region, scales = "free_y") +
+        xlab("Year") +
+        ylab("Value") + 
         expand_limits(y=0) +
         theme_lsd()
     ggsave(file.path(figure_dir, "Target_Projections.png"), p, width=12, height=6)
@@ -283,7 +287,7 @@ plot_refpoints <- function(object, figure_dir){
         geom_hline(data = findc, aes(yintercept = C50), lty=2) +
         # scale_x_continuous(limits = c(0, 1)) +
         # facet_grid(.~RuleType, scales="free_y", shrink=FALSE) +
-        xlab("Relative vulnerable biomass") +
+        xlab("Relative vulnerable reference biomass") +
         ylab("Catch") +
         scale_colour_viridis_d() +
         scale_fill_viridis_d() +

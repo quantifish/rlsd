@@ -159,10 +159,12 @@ plot_refpoints <- function(object, figure_dir){
     })
     summary$Constraint <- factor(summary$Constraint, levels = c("Pass", "Catch", "Risk", "Risk&Catch"))
 
-	findu <- summary %>% filter(CatchConstraint==0) %>% filter(C50 == max(C50)) %>% mutate(Type = "Unconstrained")
-	findc <- summary %>% filter(CatchConstraint==0) %>% filter(RiskConstraint < 0.1) %>% filter(C50 == max(C50)) %>% mutate(Type = "Constrained")
+	findu1 <- summary %>% filter(C50 == max(C50)) %>% mutate(Type = "Unconstrained")
+    findu <- summary %>% filter(CatchConstraint==0) %>% filter(C50 == max(C50)) %>% mutate(Type = "CatchConstrained")
+	findc <- summary %>% filter(CatchConstraint==0) %>% filter(RiskConstraint < 0.1) %>% filter(C50 == max(C50)) %>% mutate(Type = "RiskConstrained")
 
-    find <- rbind.data.frame(findu, findc)
+    find <- t(rbind.data.frame(findu1, findu, findc))
+    colnames(find) <- find["Type",]
     write.csv(find, file.path(figure_dir, "MSY_info.csv"))
 
     outputs <- c("Catch", "RelSSB", "RelVB")

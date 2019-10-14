@@ -10,8 +10,14 @@ rds_ref <- function(){
 	ref_info$data <- object@data
 	ref_info$mcmc <- list()
 	ref_info$mcmc$proj_catch_commercial_jryt <- object@mcmc$proj_catch_commercial_jryt
+	ref_info$mcmc$proj_catch_recreational_jryt <- object@mcmc$proj_catch_recreational_jyrt
+	ref_info$mcmc$proj_catch_sl_jryt <- object@mcmc$proj_catch_sl_jryt
+	ref_info$mcmc$proj_catch_nsl_jryt <- object@mcmc$proj_catch_nsl_jryt
 	ref_info$mcmc$pred_catch_sl_jryt <- object@mcmc$pred_catch_sl_jryt
+	ref_info$mcmc$pred_catch_nsl_jryt <- object@mcmc$pred_catch_nsl_jryt
 	ref_info$mcmc$resid_catch_sl_jryt <- object@mcmc$resid_catch_sl_jryt
+	ref_info$mcmc$resid_catch_nsl_jryt <- object@mcmc$resid_catch_nsl_jryt
+	ref_info$mcmc$recruits_ry <- object@mcmc$recruits_ry
 	ref_info$mcmc$mp_offset_cpue_jry <- object@mcmc$mp_offset_cpue_jry
 	ref_info$mcmc$biomass_vuln_jytrs <- object@mcmc$biomass_vuln_jytrs
 	ref_info$mcmc$biomass_vulnref_jytr <- object@mcmc$biomass_vulnref_jytr

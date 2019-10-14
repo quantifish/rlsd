@@ -160,12 +160,28 @@ plot_refpoints <- function(object, figure_dir){
     summary$Constraint <- factor(summary$Constraint, levels = c("Pass", "Catch", "Risk", "Risk&Catch"))
 
 	findu1 <- summary %>% filter(C50 == max(C50)) %>% mutate(Type = "Unconstrained")
+    findu2 <- summary %>% filter(RiskConstraint < 0.1) %>% filter(C50 == max(C50)) %>% mutate(Type = "RiskConstrained")
     findu <- summary %>% filter(CatchConstraint==0) %>% filter(C50 == max(C50)) %>% mutate(Type = "CatchConstrained")
-	findc <- summary %>% filter(CatchConstraint==0) %>% filter(RiskConstraint < 0.1) %>% filter(C50 == max(C50)) %>% mutate(Type = "RiskConstrained")
+	findc <- summary %>% filter(CatchConstraint==0) %>% filter(RiskConstraint < 0.1) %>% filter(C50 == max(C50)) %>% mutate(Type = "Constrained")
 
-    find <- t(rbind.data.frame(findu1, findu, findc))
+    find <- t(rbind.data.frame(findu1, findu2, findu, findc))
     colnames(find) <- find["Type",]
     write.csv(find, file.path(figure_dir, "MSY_info.csv"))
+
+    status <- dinfo %>% filter(Year == (max(Year))) %>%
+        dplyr::group_by(Region) %>%
+        dplyr::summarise(C5 = quantile(Catch, prob = 0.05), 
+                        C50 = quantile(Catch, prob = 0.5),
+                        C95 = quantile(Catch, prob = 0.95),
+                        SB5 = quantile(RelSSB, prob = 0.05),
+                        SB50 = quantile(RelSSB, prob = 0.5),
+                        SB95 = quantile(RelSSB, prob = 0.95),
+                        VB5 = quantile(RelVB, prob = 0.05),
+                        VB50 = quantile(RelVB, prob = 0.5),
+                        VB95 = quantile(RelVB, prob = 0.95))
+    stat2 <- t(status)
+    colnames(stat2) <- max(dinfo$Year)
+    write.csv(stat2, file.path(figure_dir = "Current_status.csv"))
 
     outputs <- c("Catch", "RelSSB", "RelVB")
     findc2 <- lapply(1:length(outputs), function(x){

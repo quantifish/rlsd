@@ -40,9 +40,9 @@ do_extract <- function(dir = ".", data = TRUE,
     # Priors that we want to compare with posteriors
     do_extract_priors <- c("prior_R0_r","prior_M_i", "prior_q_cpue_drift_i",
                            "prior_mat_50_i","prior_mat_95_i",
-                           "prior_grow_alpha_i","prior_grow_shape_i","prior_grow_cv_i","prior_grow_sd_i",
+                           "prior_grow_alpha_i", "prior_grow_diff_i", "prior_grow_shape_i", "prior_grow_cv_i", "prior_grow_sd_i",
                            "prior_sel_1_i", "prior_sel_2_i", "prior_sel_3_i",
-                           "prior_init_erate_i")
+                           "prior_vuln_i", "prior_init_erate_i")
 
     # initialise object
     dS4 <- new("lsdOutput", model.name = model)

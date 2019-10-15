@@ -1,12 +1,11 @@
 Package: lsd
 Title: LSD Package
-Version: 6.26
-Date: 2019-10-13
+Version: 6.27
+Date: 2019-10-15
 Authors@R: c(
     person("Darcy", "Webber", email = "darcy@quantifish.co.nz", role = c("cre", "aut")),
     person("Merrill", "Rudd", email = "merrillrudd@gmail.com", role = "aut"))
-Description: The LSD package for manipulating and plotting LSD inputs and
-    outputs.
+Description: The LSD package for manipulating and plotting LSD inputs and outputs.
 Encoding: UTF-8
 Imports:
     methods,
@@ -14,20 +13,22 @@ Imports:
     plyr,
     RColorBrewer,
     reshape2,
+    tidyr,
     rstan
 Depends:
-    tidyverse,
-    RColorBrewer
+    dplyr,
+    ggplot2,
+    loo
 Suggests:
     roxygen2,
     testthat,
-    bayesplot,
-    loo
+    bayesplot
 License: MIT + file LICENSE
 RoxygenNote: 6.1.1
 Collate:
     'TACC.R'
     'create-rules.R'
+    'do-extract-ref.R'
     'do-extract.R'
     'lsdOutput-class.R'
     'do-extract_old.R'
@@ -54,6 +55,7 @@ Collate:
     'plot-puerulus.R'
     'plot-q.R'
     'plot-recruitment.R'
+    'plot-refpoints.R'
     'plot-retro.R'
     'plot-selectivity.R'
     'plot-sex-ratio.R'

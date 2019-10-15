@@ -3,3 +3,5 @@ Makefile
 update.R
 build_install.R
 README.md
+^.*\.Rproj$
+^\.Rproj\.user$

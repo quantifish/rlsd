@@ -4,7 +4,7 @@
 \alias{plot_lfs_resid}
 \title{Plot length frequency residuals}
 \usage{
-plot_lfs_resid(object, figure_dir = "figure/", ylim)
+plot_lfs_resid(object, figure_dir = "figure/", ylim = c(-5, 5))
 }
 \arguments{
 \item{object}{and LSD object}

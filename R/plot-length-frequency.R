@@ -56,29 +56,29 @@ plot_lfs <- function(object,
     dimnames(effN) <- list("Iteration" = 1:n_iter, "LF" = 1:data$n_lf, "Sex" = sex)
     effN <- reshape2::melt(effN, value.name = "effN")
 
-    allN <- dplyr::left_join(rawN, effN)
+    allN <- left_join(rawN, effN)
     
     elf <- allN %>%
-        dplyr::left_join(w, by = "LF") %>%
-        dplyr::mutate(Source = sources[Source], Season = factor(seasons[Season])) %>%
-        dplyr::left_join(mls, by = c("Region","Year","Season","Sex")) %>%
-        dplyr::left_join(lim, by = c("Region","Sex")) %>%
-        dplyr::select(-Iteration) %>%
-        #dplyr::filter(rawN > 0) %>%
-        dplyr::mutate(effN = paste0("n: ", sprintf("%.2f", effN))) %>%
-        dplyr::mutate(rawN = paste0("N: ", sprintf("%.0f", rawN)))
+        left_join(w, by = "LF") %>%
+        mutate(Source = sources[Source], Season = factor(seasons[Season])) %>%
+        left_join(mls, by = c("Region","Year","Season","Sex")) %>%
+        left_join(lim, by = c("Region","Sex")) %>%
+        select(-Iteration) %>%
+        #filter(rawN > 0) %>%
+        mutate(effN = paste0("n: ", sprintf("%.2f", effN))) %>%
+        mutate(rawN = paste0("N: ", sprintf("%.0f", rawN)))
     head(elf)
 
     # Observed LF
     dlf <- mcmc$data_lf_out_isl
     dimnames(dlf) <- list("Iteration" = 1:n_iter, "LF" = 1:data$n_lf, "Sex" = sex, "Bin" = 1:length(bins))
     dlf <- reshape2::melt(dlf) %>%
-        dplyr::left_join(w, by = "LF") %>%
-        dplyr::mutate(Source = factor(Source), Source = sources[Source]) %>%
-        dplyr::mutate(Season = seasons[Season], Size = bins[Bin]) %>%
-        dplyr::filter(Iteration == 1, value >= 0) %>%
-        dplyr::select(-Iteration) %>%
-        dplyr::left_join(lim, by = c("Sex", "Region"))
+        left_join(w, by = "LF") %>%
+        mutate(Source = factor(Source), Source = sources[Source]) %>%
+        mutate(Season = seasons[Season], Size = bins[Bin]) %>%
+        filter(Iteration == 1, value >= 0) %>%
+        select(-Iteration) %>%
+        left_join(lim, by = c("Sex", "Region"))
     head(dlf)
     
     # Predicted LF
@@ -105,7 +105,7 @@ plot_lfs <- function(object,
     }
 
     # Plot observed only - by sex and source
-    p <- ggplot(data = dplyr::filter(dlf, value > 0)) + 
+    p <- ggplot(data = filter(dlf, value > 0)) + 
             geom_point(aes(x = Year, y = Size, size = value, colour = Source), alpha = 0.7) +
             guides(size = guide_legend(title = "Proportion")) +
             theme_lsd()
@@ -143,9 +143,12 @@ plot_lfs <- function(object,
 
 #' Plot length frequency residuals2
 #'
-#' @param object and LSD object
+#' @param object and LSD object.
 #' @param n_panel The number of rows of panels to include per plot.
-#' @param figure_dir the directory to save to
+#' @param figure_dir the directory to save to.
+#' @importFrom reshape2 melt
+#' @importFrom stats quantile
+#' @importFrom tidyr spread
 #' @export
 #' 
 plot_lfs_resid2 <- function(object, n_panel = 10, figure_dir = "figure/")
@@ -155,8 +158,8 @@ plot_lfs_resid2 <- function(object, n_panel = 10, figure_dir = "figure/")
     
     n_iter <- nrow(mcmc[[1]])
     years <- data$first_yr:data$last_yr
-    sex <- c("Male","Immature female","Mature female")
-    seasons <- c("AW","SS")
+    sex <- c("Male", "Immature female", "Mature female")
+    seasons <- c("AW", "SS")
     bins <- data$size_midpoint_l
     regions <- 1:data$n_area
     sources <- c("LB", "CS")
@@ -170,7 +173,11 @@ plot_lfs_resid2 <- function(object, n_panel = 10, figure_dir = "figure/")
     resid <- reshape2::melt(resid) %>%
         left_join(w, by = "LF") %>%
         mutate(Source = sources[Source], Season = seasons[Season])
-    head(resid)
+
+    mls <- data$cov_mls_ytrs
+    dimnames(mls) <- list("Year" = data$first_yr:data$last_proj_yr, "Season" = seasons, "Region" = regions, "Sex" = sex)
+    mls <- reshape2::melt(mls, id.var = "Year", variable.name = "Sex", value.name = "MLS")
+    head(mls)
 
     # New residual plot
     lim <- array(NA, dim = c(length(regions), length(sex), 2))
@@ -178,25 +185,27 @@ plot_lfs_resid2 <- function(object, n_panel = 10, figure_dir = "figure/")
     dimnames(lim) <- list("Region" = regions, "Sex" = sex, "Limit" = c("lower","upper"))
     lim <- reshape2::melt(lim, variable.name = "Sex") %>%
         mutate(value = bins[value]) %>%
-        tidyr::spread(Limit, value)
+        spread(Limit, value)
 
     resid_lim <- left_join(resid, lim, by = c("Sex", "Region")) %>%
       filter(Size > lower, Size < upper)
-    head(resid_lim)
-
     n2 <- resid_lim %>%
         distinct(Region, Year, Season) %>%
         mutate(Plot = 1:nrow(.))
     sq <- seq(1, nrow(n2), n_panel)
-    resid_lim <- left_join(resid_lim, n2, by = c("Year", "Season", "Region"))
+    resid_lim <- left_join(resid_lim, n2, by = c("Year", "Season", "Region")) %>%
+      left_join(mls, by = c("Sex", "Year", "Season", "Region"))
 
     for (i in 1:length(sq)) {
       pq <- sq[i]:(sq[i] + n_panel - 1)
       df <- resid_lim %>% filter(Plot %in% pq)
 
-      p <- ggplot(data = df) +
+      p <- ggplot(data = df, aes(x = as.numeric(as.character(Size)), y = value, colour = Source, fill = Source)) +
+        geom_vline(aes(xintercept = MLS), linetype = "dashed") +
         geom_hline(yintercept = 0, linetype = "dashed") +
-        geom_line(aes(x = as.numeric(as.character(Size)), y = value, colour = Source)) +
+        stat_summary(fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
+        stat_summary(fun.ymin = function(x) quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
+        stat_summary(fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1) +
         scale_x_continuous(minor_breaks = seq(0, 1e6, 2), limits = c(min(lim$lower), max(lim$upper))) +
         xlab("Midpoint of size-class (mm)") + ylab("Standardised residuals") +
         theme_lsd()
@@ -205,7 +214,6 @@ plot_lfs_resid2 <- function(object, n_panel = 10, figure_dir = "figure/")
       } else {
         p <- p + facet_grid(Region + Year + Season ~ Sex, scales = "free_y")
       }
-      p
       ggsave(paste0(figure_dir, "lf_resid_", i, ".png"), p, height = 12, width = 9)
   }
 }

@@ -1,5 +1,5 @@
 #' Extract model fits and load into lsdOutput object class for plotting
-#' 
+#'
 #' @param dir the directory to extract from
 #' @param data extract a dat file
 #' @param map extract an MAP file
@@ -9,6 +9,7 @@
 #' @import rstan
 #' @import methods
 #' @importFrom plyr adply
+#' @importFrom tidyr spread
 #' @importFrom utils write.csv write.table
 #' @export
 #'
@@ -21,7 +22,7 @@ do_extract <- function(dir = ".", data = TRUE,
                       "vuln_selectivity_ytrsl",
                       "pred_catch_lf_ytrsl","F_ytrf",
                       "par_grow_ip","par_grow_beta_alpha_ip","par_sel_ip","recruits_estimated_ry")
-    
+
     # pars we want for diagnostics
     do_extract <- c("lp__",
                     "lp_total","lp_tag","lp_prior","lp_sexr","lp_lf","lp_cpue","lp_puerulus",
@@ -34,8 +35,8 @@ do_extract <- function(dir = ".", data = TRUE,
                     "Btot0_r", "Btot_curr_jr", "Btot0now_r", "Btot_proj_jr",
                     "Ntot0_r", "Ntot_curr_jr",
                     #"SSBref_jr", "Bref_jr", "n_SSBcurr_g_SSBref_r", "SSBref_SSB0_jr", "Bref_B0_jr", "n_Bcurr_g_Bref_r", "n_Bref_g_Bmsy_r",
-                    "MSY_r", "Fmult_r", "Fmsy_r", 
-                    "Hcurr_r", "Hproj_r", 
+                    "MSY_r", "Fmult_r", "Fmsy_r",
+                    "Hcurr_r", "Hproj_r",
                     "Rmean_r", "B0male_B0female_r", "Bmale_Bfemale_jr",
                     "CPUEcurr_jr", "CPUEproj_jr",
                     "n_Bcurr_g_Bmin_r", "n_Bcurr_g_Bmsy_r", "n_SSBcurr_g_SSBmsy_r", "n_SSBcurr_l_20SSB0_r", "n_SSBcurr_l_10SSB0_r")
@@ -49,7 +50,7 @@ do_extract <- function(dir = ".", data = TRUE,
 
     # initialise object
     dS4 <- new("lsdOutput", model.name = model)
-    
+
     if (data) {
         datfile <- list.files(pattern = "[.]dat")[grepl(model, list.files(pattern = "[.]dat"))]
         if (length(datfile) > 0) {
@@ -65,14 +66,14 @@ do_extract <- function(dir = ".", data = TRUE,
             message("Reading ", mapfile)
             map <- lsd::read_stan_map(mapfile)
             dS4@map <- rstan::extract(map, pars = dont_extract, permuted = TRUE, inc_warmup = FALSE, include = FALSE)
-            
+
             # trim estimated pars
             i <- apply(as.matrix(do_extract), 1, FUN = function(x) {any(grepl(x, names(map)))})
             do_extract_map <- do_extract[i]
             do_extract_map <- c(do_extract_map,
                                 "sdnr_cpue", "sdnr_tag", "sdnr_sexr", "sdnr_lfs", "sdnr_puerulus",
                                 "MAR_puerulus", "MAR_cpue", "MAR_tag", "MAR_sexr", "MAR_lfs", "Francis_lf_new_wt_r")
-            
+
             # write to txt file
             map_tmp <- rstan::extract(map, pars = do_extract_map, permuted = FALSE, inc_warmup = FALSE, include = TRUE)
             map_tmp <- map_tmp
@@ -87,29 +88,29 @@ do_extract <- function(dir = ".", data = TRUE,
             write.table(map_tmp, file = "key_parameters_map.txt", sep = "\t", row.names = FALSE, col.names = TRUE)
         } else warning("no 'map' file")
     }
-    
+
     if (mcmc) {
-        if (file.exists("mpe.csv")){
+        if (file.exists("mpe.csv")) {
             mcmcfiles <- "mpe.csv"
         } else {
             mcmcfiles <- list.files(pattern = "[.]mcmc")[grepl(model, list.files(pattern = "[.]mcmc"))]
         }
         if (length(mcmcfiles) > 0) {
             message("Reading ", mcmcfiles)
-            
+
             # create stanfit object from mcmc outputs
             #mcmc_raw_stan <- rstan::read_stan_csv(mcmcfiles)
             mcmc_raw <- read_stan_mcmc(mcmcfiles)
-            
+
             # create list object containing all model outputs
             dS4@mcmc <- lsd::extract(mcmc_raw, pars = dont_extract, permuted = TRUE, include = FALSE)
-            
+
             # trim estimated pars
             i <- vapply(do_extract, FUN = function(x) { x %in% mcmc_raw$pars_oi}, logical(1))
             do_extract_mcmc <- do_extract[i]
             i <- vapply(do_extract_priors, FUN = function(x) { x %in% mcmc_raw$pars_oi}, logical(1))
             do_extract_priors <- do_extract_priors[i]
-            
+
             # extract pars (with chains) for diagnostic plots
             mcmc_tmp <- lsd::extract(mcmc_raw, pars = do_extract_mcmc, permuted = FALSE, include = TRUE)
             dimnames(mcmc_tmp)[[1]] <- 1:dim(mcmc_tmp)[1]
@@ -120,16 +121,18 @@ do_extract <- function(dir = ".", data = TRUE,
 
             # write to csv
             mcmc_out <- mcmc_tmp %>% tidyr::spread(par, value)
-            write.table(mcmc_out, file = "key_parameters_mcmc.txt", sep="\t", row.names=FALSE, col.names=TRUE)
-            
+            write.table(mcmc_out, file = "key_parameters_mcmc.txt", sep = "\t", row.names = FALSE, col.names = TRUE)
+
             mcmc_tmp <- lsd::extract(mcmc_raw, pars = do_extract_priors, permuted = FALSE, include = TRUE)
             dimnames(mcmc_tmp)[[1]] <- 1:dim(mcmc_tmp)[1]
             dimnames(mcmc_tmp)[[2]] <- 1:dim(mcmc_tmp)[2]
             mcmc_tmp <- plyr::adply(mcmc_tmp, 1:3)
             colnames(mcmc_tmp) <- c('iteration', 'chain', 'par', 'value')
             dS4@mcmc_priors <- mcmc_tmp
-        } else warning("no 'mcmc' files")
+        } else {
+            warning("no 'mcmc' files")
+        }
     }
-    
+
     return(dS4)
 }

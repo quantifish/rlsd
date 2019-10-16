@@ -17,25 +17,28 @@ do_extract_ref <- function(dir = ".", data = TRUE,
 {
 
     # pars we want for diagnostics
-    do_extract_items <- c("proj_catch_commercial_jryt", 
-                          "proj_catch_recreational_jryt",
-                          "proj_catch_sl_jryt", 
-                          "proj_catch_nsl_jryt",
-                          "pred_catch_sl_jryt", 
+    do_extract_items <- c("pred_catch_sl_jryt", 
                           "pred_catch_nsl_jryt",
                           "resid_catch_sl_jryt", 
                           "resid_catch_nsl_jryt",
                           "recruits_ry", 
                           "mp_offset_cpue_jry",
-                          "biomass_vuln_jytrs", 
                           "biomass_vulnref_jytr",
                           "biomass_vulnref_AW_jyr", 
+                          "biomass_total_jytrs",
+                          "Btot0_r",
                           "B0_r", 
                           "biomass_ssb_jyr",
                           "SSB0_r", 
                           "MSY_r",
                           "Bmsy_r")  
 
+    # "proj_catch_commercial_jryt", 
+    # "proj_catch_recreational_jryt",
+    # "proj_catch_sl_jryt", 
+    # "proj_catch_nsl_jryt",
+    # "biomass_vuln_jytrs", 
+    
     # initialise object
     dS4 <- new("lsdOutput", model.name = model)
     

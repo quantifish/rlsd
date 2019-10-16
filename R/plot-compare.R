@@ -20,7 +20,11 @@ plot_compare_ssb <- function(object_list, object_names, figure_dir = "compare_fi
     years_list <- lapply(1:length(object_list), function(x) data_list[[x]]$first_yr:data_list[[x]]$last_yr)
     pyears_list <- lapply(1:length(object_list), function(x) data_list[[x]]$first_yr:data_list[[x]]$last_proj_yr)
     regions_list <- lapply(1:length(object_list), function(x) 1:data_list[[x]]$n_area)
-    regions_list2 <- lapply(1:length(object_list), function(x) ifelse(length(regions_list[[x]])>1, c(regions_list[[x]], "Total"), regions_list[[x]]) )
+    regions_list2 <- lapply(1:length(object_list), function(x){
+        if(length(regions_list[[x]])==1) out <- regions_list[[x]]
+        if(length(regions_list[[x]])>1) out <- c(regions_list[[x]],"Total")
+        return(out)
+    })
 
     sb_list <- lapply(1:length(object_list), function(x) {
         n_iter <- nrow(mcmc_list[[x]][[1]])

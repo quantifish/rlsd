@@ -5,7 +5,7 @@
 \title{Plot miminum legal size (mm) by sex and season}
 \usage{
 plot_mls(object, xlab = "Year", ylab = "Minimum legal size (mm)",
-  figure_dir = "figure/")
+  figure_dir = "figure/", do_save = TRUE)
 }
 \arguments{
 \item{object}{and LSD object}
@@ -15,6 +15,8 @@ plot_mls(object, xlab = "Year", ylab = "Minimum legal size (mm)",
 \item{ylab}{the y axis label}
 
 \item{figure_dir}{the directory to save to}
+
+\item{do_save}{save to file or return}
 }
 \description{
 Plot miminum legal size (mm) by sex and season

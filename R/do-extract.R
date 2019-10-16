@@ -52,19 +52,19 @@ do_extract <- function(dir = ".", data = TRUE,
     dS4 <- new("lsdOutput", model.name = model)
 
     if (data) {
-        datfile <- list.files(pattern = "[.]dat")[grepl(model, list.files(pattern = "[.]dat"))]
+        datfile <- list.files(path = dir, pattern = "[.]dat")[grepl(model, list.files(path = dir, pattern = "[.]dat"))]
         if (length(datfile) > 0) {
             message("Reading ", datfile)
-            dS4@data <- rstan::read_rdump(datfile)
+            dS4@data <- rstan::read_rdump(file.path(dir, datfile))
             dS4@regions <- as.character(1:dS4@data$n_area)
         } else warning("no 'dat' file")
     }
 
     if (map) {
-        mapfile <- list.files(pattern = "[.]map")[grepl(model, list.files(pattern = "[.]map"))]
+        mapfile <- list.files(path = dir, pattern = "[.]map")[grepl(model, list.files(path = dir, pattern = "[.]map"))]
         if (length(mapfile) > 0) {
             message("Reading ", mapfile)
-            map <- lsd::read_stan_map(mapfile)
+            map <- lsd::read_stan_map(file.path(dir, mapfile))
             dS4@map <- rstan::extract(map, pars = dont_extract, permuted = TRUE, inc_warmup = FALSE, include = FALSE)
 
             # trim estimated pars
@@ -93,14 +93,14 @@ do_extract <- function(dir = ".", data = TRUE,
         if (file.exists("mpe.csv")) {
             mcmcfiles <- "mpe.csv"
         } else {
-            mcmcfiles <- list.files(pattern = "[.]mcmc")[grepl(model, list.files(pattern = "[.]mcmc"))]
+            mcmcfiles <- list.files(path = dir, pattern = "[.]mcmc")[grepl(model, list.files(path = dir, pattern = "[.]mcmc"))]
         }
         if (length(mcmcfiles) > 0) {
             message("Reading ", mcmcfiles)
 
             # create stanfit object from mcmc outputs
             #mcmc_raw_stan <- rstan::read_stan_csv(mcmcfiles)
-            mcmc_raw <- read_stan_mcmc(mcmcfiles)
+            mcmc_raw <- read_stan_mcmc(file.path(dir, mcmcfiles))
 
             # create list object containing all model outputs
             dS4@mcmc <- lsd::extract(mcmc_raw, pars = dont_extract, permuted = TRUE, include = FALSE)

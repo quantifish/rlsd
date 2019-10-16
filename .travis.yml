@@ -1,6 +1,17 @@
 language: r
-sudo: false
+
+r:
+  - oldrel
+  - release
+  - devel
+
 cache: packages
+sudo: false
+warnings_are_errors: false
+
+r_packages:
+  - roxygen2
+  - testthat
 
 matrix:
   include:

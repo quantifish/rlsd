@@ -1,6 +1,6 @@
 Package: lsd
 Title: LSD Package
-Version: 6.33
+Version: 6.39
 Date: 2019-10-16
 Authors@R: c(
     person("Darcy", "Webber", email = "darcy@quantifish.co.nz", role = c("cre", "aut")),
@@ -14,6 +14,7 @@ Imports:
     RColorBrewer,
     reshape2,
     tidyr,
+    parallel,
     rstan
 Depends:
     dplyr,

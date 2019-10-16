@@ -59,15 +59,14 @@ do_extract_ref <- function(dir = ".", data = TRUE,
         }
         if (length(mcmcfiles) > 0) {
             message("Reading ", mcmcfiles)
-            
             # create stanfit object from mcmc outputs
             #mcmc_raw_stan <- rstan::read_stan_csv(mcmcfiles)
             mcmc_raw <- read_stan_mcmc(mcmcfiles)
+            message("Extracting ", mcmcfiles)
             
             # create list object containing all model outputs
             dS4@mcmc <- lsd::extract(mcmc_raw, pars = do_extract_items, permuted = TRUE, include = TRUE)
             
-          
         } else warning("no 'mcmc' files")
     }
     

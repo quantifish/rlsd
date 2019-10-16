@@ -32,6 +32,8 @@ plot_catch <- function(object,
     pyears <- data$first_yr:data$last_proj_yr
     seasons <- c("AW", "SS")
     regions <- 1:data$n_area
+    if(length(regions)==1) regions2 <- regions
+    if(length(regions)>1) regions2 <- c(regions, "Total")
     rules <- 1:data$n_rules
 
     # Fit to recreational catch
@@ -191,19 +193,20 @@ plot_catch <- function(object,
 
     ## catch area
     msy <- mcmc$MSY_r
-    dimnames(msy) <- list(Iteration = 1:n_iter, "Region" = regions)
+    dimnames(msy) <- list(Iteration = 1:n_iter, "Region" = regions2)
     msy <- reshape2::melt(msy) %>%
             dplyr::rename("MSY"=value)
 
     dcatch2 <- dcatch %>% 
             dplyr::group_by(Region, Year, Sector, Iteration) %>%
             dplyr::summarise(Catch = sum(Catch))
+    dcatch2$Region <- factor(dcatch2$Region)
     dcatch2$Iteration <- 1
     dcatch2 <- dplyr::left_join(dcatch2, msy) %>% 
         dplyr::mutate(Label = "") %>%
         dplyr::mutate(Label = ifelse(Iteration == 1 & Year == max(years) & Sector == "Commercial", "MSY", ""))
 
-    dcatch2$Region <- sapply(1:nrow(dcatch2), function(x) paste0("Region ", dcatch2$Region[x]))
+    # dcatch2$Region <- sapply(1:nrow(dcatch2), function(x) paste0("Region ", dcatch2$Region[x]))
     p <- ggplot(dcatch2) + 
             geom_area(data = dcatch2, aes(x = Year, y = Catch, colour = Sector, fill = Sector), position = "stack") +
             xlab(xlab) + ylab(ylab) +

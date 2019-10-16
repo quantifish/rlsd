@@ -26,8 +26,8 @@ plot_compare_ssb <- function(object_list, object_names, figure_dir = "compare_fi
         bio <- mcmc_list[[x]]$biomass_ssb_jyr
         dimnames(bio) <- list("Iteration" = 1:n_iter, "Rule" = 1:dim(bio)[2], "Year" = pyears_list[[x]], "Region" = regions_list[[x]])
         bio2 <- reshape2::melt(bio) %>%
-            dplyr::group_by(Iteration, Year, Rule) %>% 
-            dplyr::summarise(value = sum(value))
+            group_by(Iteration, Year, Rule) %>% 
+            summarise(value = sum(value))
         bio2$Model <- object_names[x]
         return(bio2)
     })
@@ -40,56 +40,56 @@ plot_compare_ssb <- function(object_list, object_names, figure_dir = "compare_fi
         bio <- mcmc_list[[x]]$SSB0_r
         dimnames(bio) <- list("Iteration" = 1:n_iter, "Region" = regions_list[[x]])
         hl <- reshape2::melt(bio) %>%
-            dplyr::left_join(expand.grid(Iteration = 1:n_iter, Year = pyears_list[[x]]), by = "Iteration") %>%
-            dplyr::group_by(Iteration, Year) %>%
-            dplyr::summarise(value = sum(value)) %>%
-            dplyr::ungroup() %>%
-            dplyr::mutate(Rule = 1, type = "Hard limit", value = value * 0.1)
+            left_join(expand.grid(Iteration = 1:n_iter, Year = pyears_list[[x]]), by = "Iteration") %>%
+            group_by(Iteration, Year) %>%
+            summarise(value = sum(value)) %>%
+            ungroup() %>%
+            mutate(Rule = 1, type = "Hard limit", value = value * 0.1)
         sl <- reshape2::melt(bio) %>%
-            dplyr::left_join(expand.grid(Iteration = 1:n_iter, Year = pyears_list[[x]]), by = "Iteration") %>%
-            dplyr::group_by(Iteration, Year) %>%
-            dplyr::summarise(value = sum(value)) %>%
-            dplyr::ungroup() %>%
-            dplyr::mutate(Rule = 1, type = "Soft limit", value = value * 0.2)
+            left_join(expand.grid(Iteration = 1:n_iter, Year = pyears_list[[x]]), by = "Iteration") %>%
+            group_by(Iteration, Year) %>%
+            summarise(value = sum(value)) %>%
+            ungroup() %>%
+            mutate(Rule = 1, type = "Soft limit", value = value * 0.2)
         ssb0 <- reshape2::melt(bio) %>%
-            dplyr::left_join(expand.grid(Iteration = 1:n_iter, Year = pyears_list[[x]]), by = "Iteration") %>%
-            dplyr::group_by(Iteration, Year) %>%
-            dplyr::summarise(value = sum(value)) %>%
-            dplyr::ungroup() %>%
-            dplyr::mutate(Rule = 1, type = "SSB0")
+            left_join(expand.grid(Iteration = 1:n_iter, Year = pyears_list[[x]]), by = "Iteration") %>%
+            group_by(Iteration, Year) %>%
+            summarise(value = sum(value)) %>%
+            ungroup() %>%
+            mutate(Rule = 1, type = "SSB0")
         # bio <- mcmc_list[[x]]$SSBref_jr
         # dimnames(bio) <- list("Iteration" = 1:n_iter, "Rule" = 1, "Region" = regions_list[[x]])
         # ref <- reshape2::melt(bio) %>%
-        #     dplyr::left_join(expand.grid(Iteration = 1:n_iter, Year = pyears_list[[x]]), by = "Iteration") %>%
-        #     dplyr::group_by(Iteration, Region, Rule, value, Year) %>%
-        #     dplyr::ungroup() #%>%
-            # dplyr::mutate(type = "Target")
+        #     left_join(expand.grid(Iteration = 1:n_iter, Year = pyears_list[[x]]), by = "Iteration") %>%
+        #     group_by(Iteration, Region, Rule, value, Year) %>%
+        #     ungroup() #%>%
+            # mutate(type = "Target")
         bio2 <- rbind(ssb0, sl, hl) #%>% ##, ref)
-           # dplyr::filter(Year <= max(years_list[[x]]))
+           # filter(Year <= max(years_list[[x]]))
         bio2$Model <- object_names[x]
         return(bio2)
     })
     ssb0 <- data.frame(do.call(rbind, ssb0_list))
 
-    labs <- dplyr::filter(ssb0, Year == max(Year)) %>%
-        dplyr::group_by(Year, type) %>%
-        dplyr::summarise(value = mean(value))
+    labs <- filter(ssb0, Year == max(Year)) %>%
+        group_by(Year, type) %>%
+        summarise(value = mean(value))
 
     nmod <- length(unique(ssb$Model))
     years <- unique(unlist(years_list))
     pyears <- unique(unlist(pyears_list))
 
-    p1 <- ggplot(ssb %>% dplyr::filter(Year %in% years), aes(x = Year, y = value)) +
-        stat_summary(data = ssb0 %>% dplyr::filter(Year %in% years) %>% dplyr::filter(type == "Soft limit"), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
-        stat_summary(data = ssb0 %>% dplyr::filter(Year %in% years) %>% dplyr::filter(type == "Soft limit"), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model)) +
-        stat_summary(data = ssb0 %>% dplyr::filter(Year %in% years) %>% dplyr::filter(type == "Hard limit"), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
-        stat_summary(data = ssb0 %>% dplyr::filter(Year %in% years) %>% dplyr::filter(type == "Hard limit"), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model)) +
-        stat_summary(data = ssb0 %>% dplyr::filter(Year %in% years) %>% dplyr::filter(type == "SSB0"), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
-        stat_summary(data = ssb0 %>% dplyr::filter(Year %in% years) %>% dplyr::filter(type == "SSB0"), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model)) +
-        # stat_summary(data = dplyr::filter(ssb0, type == "Target"), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
-        # stat_summary(data = dplyr::filter(ssb0, type == "Target"), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model)) +
-        stat_summary(data = ssb %>% dplyr::filter(Year %in% years), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
-        stat_summary(data = ssb %>% dplyr::filter(Year %in% years), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model)) +
+    p1 <- ggplot(ssb %>% filter(Year %in% years), aes(x = Year, y = value)) +
+        stat_summary(data = ssb0 %>% filter(Year %in% years) %>% filter(type == "Soft limit"), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
+        stat_summary(data = ssb0 %>% filter(Year %in% years) %>% filter(type == "Soft limit"), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model)) +
+        stat_summary(data = ssb0 %>% filter(Year %in% years) %>% filter(type == "Hard limit"), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
+        stat_summary(data = ssb0 %>% filter(Year %in% years) %>% filter(type == "Hard limit"), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model)) +
+        stat_summary(data = ssb0 %>% filter(Year %in% years) %>% filter(type == "SSB0"), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
+        stat_summary(data = ssb0 %>% filter(Year %in% years) %>% filter(type == "SSB0"), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model)) +
+        # stat_summary(data = filter(ssb0, type == "Target"), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
+        # stat_summary(data = filter(ssb0, type == "Target"), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model)) +
+        stat_summary(data = ssb %>% filter(Year %in% years), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
+        stat_summary(data = ssb %>% filter(Year %in% years), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model)) +
         geom_text(data = labs, aes(x = Year, y = value, label = type), nudge_x = -5) +
         expand_limits(y = 0) +
         labs(x = "Fishing year", y = "Spawning stock biomass (tonnes)") +
@@ -112,14 +112,14 @@ plot_compare_ssb <- function(object_list, object_names, figure_dir = "compare_fi
 
     p1 <- ggplot(ssb, aes(x = Year, y = value)) +
         geom_vline(aes(xintercept = max(years)+0.5), linetype=2) +
-        stat_summary(data = ssb0 %>% dplyr::filter(type == "Soft limit"), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
-        stat_summary(data = ssb0 %>% dplyr::filter(type == "Soft limit"), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model)) +
-        stat_summary(data = ssb0 %>% dplyr::filter(type == "Hard limit"), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
-        stat_summary(data = ssb0 %>% dplyr::filter(type == "Hard limit"), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model)) +
-        stat_summary(data = ssb0 %>% dplyr::filter(type == "SSB0"), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
-        stat_summary(data = ssb0 %>% dplyr::filter(type == "SSB0"), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model)) +
-        # stat_summary(data = dplyr::filter(ssb0, type == "Target"), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
-        # stat_summary(data = dplyr::filter(ssb0, type == "Target"), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model)) +
+        stat_summary(data = ssb0 %>% filter(type == "Soft limit"), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
+        stat_summary(data = ssb0 %>% filter(type == "Soft limit"), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model)) +
+        stat_summary(data = ssb0 %>% filter(type == "Hard limit"), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
+        stat_summary(data = ssb0 %>% filter(type == "Hard limit"), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model)) +
+        stat_summary(data = ssb0 %>% filter(type == "SSB0"), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
+        stat_summary(data = ssb0 %>% filter(type == "SSB0"), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model)) +
+        # stat_summary(data = filter(ssb0, type == "Target"), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
+        # stat_summary(data = filter(ssb0, type == "Target"), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model)) +
         stat_summary(data = ssb, fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
         stat_summary(data = ssb, fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model)) +
         geom_text(data = labs, aes(x = Year, y = value, label = type), nudge_x = -5) +
@@ -142,17 +142,17 @@ plot_compare_ssb <- function(object_list, object_names, figure_dir = "compare_fi
       ggsave(paste0(figure_dir, "biomass_ssb_compare_v2.png"), p1, width = 10)
     }
 
-    relssb <- rbind(ssb, ssb0 %>% dplyr::filter(type=="SSB0")) %>%
+    relssb <- rbind(ssb, ssb0 %>% filter(type=="SSB0")) %>%
         tidyr::spread(type, value) %>%
-        dplyr::mutate(RelSSB = SSB/SSB0)
+        mutate(RelSSB = SSB/SSB0)
 
     labs_rel <- labs %>%
-        dplyr::mutate(value = ifelse(type == "Hard limit", 0.1, ifelse(type == "Soft limit", 0.2, ifelse(type == "SSB0", 1, NA)))) %>%
-        dplyr::filter(type!="SSB0")
+        mutate(value = ifelse(type == "Hard limit", 0.1, ifelse(type == "Soft limit", 0.2, ifelse(type == "SSB0", 1, NA)))) %>%
+        filter(type!="SSB0")
 
     nmod <- length(unique(relssb$Model))
 
-    relssb_next <- relssb %>% dplyr::filter(Year == max(years)+1)
+    relssb_next <- relssb %>% filter(Year == max(years)+1)
 
     p <- ggplot(relssb_next) +
          theme_lsd(base_size=14) +
@@ -186,7 +186,7 @@ plot_compare_ssb <- function(object_list, object_names, figure_dir = "compare_fi
         ggsave(paste0(figure_dir, "relssb_nextyear_compare.png"), p, width=10)
     }
 
-    relssb_next_proj <- relssb %>% dplyr::filter(Year %in% c(max(years)+1, max(pyears)))
+    relssb_next_proj <- relssb %>% filter(Year %in% c(max(years)+1, max(pyears)))
     relssb_next_proj$Year <- factor(relssb_next_proj$Year)
 
     p <- ggplot(relssb_next_proj) +
@@ -222,7 +222,7 @@ plot_compare_ssb <- function(object_list, object_names, figure_dir = "compare_fi
         ggsave(paste0(figure_dir, "relssb_nextyear_projyear_compare.png"), p, width=10)
     }
 
-    p <- ggplot(relssb %>% dplyr::filter(Year %in% years)) +
+    p <- ggplot(relssb %>% filter(Year %in% years)) +
          theme_lsd(base_size=14) +
          expand_limits(y = 0) +
          geom_hline(aes(yintercept = 0.2), col="gray") +
@@ -243,15 +243,15 @@ plot_compare_ssb <- function(object_list, object_names, figure_dir = "compare_fi
         scale_color_brewer(palette = "Set1")
     }
     if(save_plot){
-        ggsave(paste0(figure_dir, "relssb_compare.png"), p, width=10)
+        ggsave(paste0(figure_dir, "relssb_compare.png"), p, width = 10)
     }
 
     p <- ggplot(relssb) +
          theme_lsd(base_size=14) +
-         geom_vline(aes(xintercept = max(years)+0.5), linetype=2) +
+         geom_vline(aes(xintercept = max(years)+0.5), linetype = 2) +
          expand_limits(y = 0) +
-         geom_hline(aes(yintercept = 0.2), col="gray") +
-         geom_hline(aes(yintercept = 0.1), col="gray") +
+         geom_hline(aes(yintercept = 0.2), col = "gray") +
+         geom_hline(aes(yintercept = 0.1), col = "gray") +
          geom_text(data = labs_rel, aes(x = min(Year), y = value, label = type), nudge_x=-5) +
          stat_summary(fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(x = Year, y = RelSSB, fill = Model)) +
          stat_summary(fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(x = Year, y = RelSSB, color = Model)) +
@@ -297,24 +297,25 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
     years_list <- lapply(1:length(object_list), function(x) data_list[[x]]$first_yr:data_list[[x]]$last_yr)
     pyears_list <- lapply(1:length(object_list), function(x) data_list[[x]]$first_yr:data_list[[x]]$last_proj_yr)
     regions_list <- lapply(1:length(object_list), function(x) 1:data_list[[x]]$n_area)
-    sex <- c("Male","Immature female","Mature female")
-    seasons <- c("AW","SS")
+    rules_list <- lapply(1:length(object_list), function(x) 1:data_list[[x]]$n_rules)
+    sex <- c("Male", "Immature female", "Mature female")
+    seasons <- c("AW", "SS")
     YR <- "YR" # label for the season before the season change year
 
     vb_list <- lapply(1:length(object_list), function(x) {
         n_iter <- nrow(mcmc_list[[x]][[1]])
 
-        bvuln_ytr <- mcmc_list[[x]]$biomass_vulnref_ytr
-        dimnames(bvuln_ytr) <- list("Iteration" = 1:n_iter, "Year" = pyears_list[[x]], "Season" = seasons, "Region" = regions_list[[x]])
+        bvuln_ytr <- mcmc_list[[x]]$biomass_vulnref_jytr
+        dimnames(bvuln_ytr) <- list("Iteration" = 1:n_iter, "Rules" = 1:rules_list[[x]], "Year" = pyears_list[[x]], "Season" = seasons, "Region" = regions_list[[x]])
         bvuln_ytr2 <- reshape2::melt(bvuln_ytr) %>%
-            dplyr::filter(value > 0) %>%
-            dplyr::mutate(Season = as.character(Season), Season = ifelse(Year >= data_list[[x]]$season_change_yr, Season, YR)) %>%
-            dplyr::filter(Season %in% c("YR","AW")) %>%
-            #dplyr::filter(Year <= max(years_list[[x]])) %>%
-            dplyr::group_by(Iteration, Year, Season) %>% 
-            dplyr::summarise(value = sum(value))
+            filter(value > 0) %>%
+            mutate(Season = as.character(Season), Season = ifelse(Year >= data_list[[x]]$season_change_yr, Season, YR)) %>%
+            filter(Season %in% c("YR","AW")) %>%
+            #filter(Year <= max(years_list[[x]])) %>%
+            group_by(Iteration, Year, Season) %>% 
+            summarise(value = sum(value))
         bvuln_ytr2$Model <- object_names[x]
-        bvuln_ytr2$qconstant <- as.character(ifelse(grepl("qconstant",object_names[[x]]),1,0))
+        bvuln_ytr2$qconstant <- as.character(ifelse(grepl("qconstant", object_names[[x]]), 1, 0))
         return(bvuln_ytr2)
     })
     vb <- data.frame(do.call(rbind, vb_list))
@@ -341,10 +342,10 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
     pyears <- unique(unlist(pyears_list))
 
     # Vulnerable biomass
-    p <- ggplot(data = vb %>% dplyr::filter(Year %in% years), aes(x = Year, y = value, color = Model, fill = Model)) +
-        stat_summary(data=vb %>% dplyr::filter(Year %in% years), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
+    p <- ggplot(data = vb %>% filter(Year %in% years), aes(x = Year, y = value, color = Model, fill = Model)) +
+        stat_summary(data = vb %>% filter(Year %in% years), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
         #stat_summary(data=vb, fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha=0.45, colour = NA) +
-        stat_summary(data=vb %>% dplyr::filter(Year %in% years), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1, alpha=0.75) +
+        stat_summary(data = vb %>% filter(Year %in% years), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1, alpha=0.75) +
         # scale_fill_manual(values = cols_all, labels = object_names) +
         # scale_colour_manual(values = cols_all, labels = object_names) +
         # guides(colour = guide_legend(override.aes = list(colour = cols_all, linetype = lty_all))) + 
@@ -354,14 +355,14 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
         scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
         theme_lsd(base_size=14) #+
         # scale_y_continuous(expand = c(0,0), limits = c(0, max(vb$value)*1.05))
-    if(nmod > 5){
+    if (nmod > 5) {
         p <- p +
-        scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
-        scale_color_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod)))
-    } else{
+          scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
+          scale_color_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod)))
+    } else {
         p <- p + 
-        scale_fill_brewer(palette = "Set1") +
-        scale_color_brewer(palette = "Set1")
+          scale_fill_brewer(palette = "Set1") +
+          scale_color_brewer(palette = "Set1")
     }
     if (save_plot) {
       ggsave(paste0(figure_dir, "biomass_vulnref_compare.png"), p, width = 10)
@@ -370,9 +371,9 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
     # Vulnerable biomass
     p <- ggplot(data = vb, aes(x = Year, y = value, color = Model, fill = Model)) +
         geom_vline(aes(xintercept = max(years) + 0.5), linetype=2) +
-        stat_summary(data=vb, fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
-        #stat_summary(data=vb, fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha=0.45, colour = NA) +
-        stat_summary(data=vb, fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1, alpha=0.75) +
+        stat_summary(data=vb, fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
+        #stat_summary(data=vb, fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75), geom = "ribbon", alpha=0.45, colour = NA) +
+        stat_summary(data=vb, fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha=0.75) +
         # scale_fill_manual(values = cols_all, labels = object_names) +
         # scale_colour_manual(values = cols_all, labels = object_names) +
         # guides(colour = guide_legend(override.aes = list(colour = cols_all, linetype = lty_all))) + 
@@ -382,14 +383,14 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
         scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
         theme_lsd(base_size=14)# +
         # scale_y_continuous(expand = c(0,0), limits = c(0, max(vb$value)*1.05))
-    if(nmod > 5){
+    if (nmod > 5) {
         p <- p +
-        scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
-        scale_color_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod)))
-    } else{
+          scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
+          scale_color_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod)))
+    } else {
         p <- p + 
-        scale_fill_brewer(palette = "Set1") +
-        scale_color_brewer(palette = "Set1")
+          scale_fill_brewer(palette = "Set1") +
+          scale_color_brewer(palette = "Set1")
     }
     if (save_plot) {
       ggsave(paste0(figure_dir, "biomass_vulnref_compare_v2.png"), p, width = 10)
@@ -409,6 +410,7 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
 #' @import ggplot2
 #' @importFrom reshape2 melt
 #' @importFrom stats quantile
+#' @importFrom RColorBrewer brewer.pal
 #' @export
 #' 
 plot_compare_recruitment <- function(object_list, object_names, figure_dir = "compare_figure/", save_plot = TRUE)
@@ -426,9 +428,9 @@ plot_compare_recruitment <- function(object_list, object_names, figure_dir = "co
         recruits2 <- mcmc_list[[x]]$recruits_ry
         dimnames(recruits2) <- list("Iteration" = 1:n_iter, "Region" = regions_list[[x]], "Year" = pyears_list[[x]])
         recruits2 <- reshape2::melt(recruits2) %>%
-           # dplyr::filter(Year <= max(years_list[[x]])) %>%
-            dplyr::group_by(Iteration, Year) %>%
-            dplyr::summarise(value = sum(value))
+           # filter(Year <= max(years_list[[x]])) %>%
+            group_by(Iteration, Year) %>%
+            summarise(value = sum(value))
 
         recruits2$Model <- object_names[x]
         recruits2$qconstant <- as.character(ifelse(grepl("qconstant",object_names[[x]]),1,0))
@@ -464,7 +466,7 @@ plot_compare_recruitment <- function(object_list, object_names, figure_dir = "co
     years <- unique(unlist(years_list))
     pyears <- unique(unlist(pyears_list))
 
-   p <- ggplot(data = recruits %>% dplyr::filter(Year %in% years), aes(x = Year, y = value, color = Model, fill = Model)) +
+   p <- ggplot(data = recruits %>% filter(Year %in% years), aes(x = Year, y = value, color = Model, fill = Model)) +
         stat_summary(fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
         #stat_summary(fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha=0.45, colour = NA) +
         stat_summary(fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1, alpha=0.75) +
@@ -508,14 +510,14 @@ plot_compare_recruitment <- function(object_list, object_names, figure_dir = "co
         scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
         theme_lsd(base_size=14) #+
          # scale_y_continuous(expand = c(0,0), limits = c(0, max(recruits$value)*1.05))
-    if(nmod > 5){
+    if (nmod > 5) {
         p <- p +
-        scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
-        scale_color_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod)))
-    } else{
+          scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
+          scale_color_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod)))
+    } else {
         p <- p + 
-        scale_fill_brewer(palette = "Set1") +
-        scale_color_brewer(palette = "Set1")
+          scale_fill_brewer(palette = "Set1") +
+          scale_color_brewer(palette = "Set1")
     }
     # if (data_list[[1]]$n_area > 1) {
     #     p <- p + facet_wrap(~Region)
@@ -563,11 +565,11 @@ plot_compare_selectivity <- function(object_list, object_names, figure_dir = "co
         sel2 <- mcmc_list[[x]]$selectivity_ml
         dimnames(sel2) <- list("Iteration" = 1:n_iter, "Selex" = 1:data_list[[x]]$n_sel, "Size" = data_list[[x]]$size_midpoint_l)
         sel2 <- reshape2::melt(sel2, value.name = "Selectivity") %>%
-            dplyr::inner_join(w, by = "Selex") %>%
-            dplyr::filter(Year <= max(years_list[[x]])) %>%
-            dplyr::mutate(Year = factor(Year)) %>%
-            dplyr::mutate(Sex = ifelse(grepl("female", Sex), "Female", "Male")) %>%
-            dplyr::distinct(Iteration, Sex, Size, Selectivity, Region, .keep_all = TRUE)
+            inner_join(w, by = "Selex") %>%
+            filter(Year <= max(years_list[[x]])) %>%
+            mutate(Year = factor(Year)) %>%
+            mutate(Sex = ifelse(grepl("female", Sex), "Female", "Male")) %>%
+            distinct(Iteration, Sex, Size, Selectivity, Region, .keep_all = TRUE)
         sel2$Model <- object_names[[x]]
 
         return(sel2)
@@ -670,8 +672,8 @@ plot_compare_q <- function(object_list, object_names, figure_dir = "compare_figu
             q_info_list[[x]]$qtype <- subq
         }
         q_info_list[[x]] %>%
-            dplyr::filter(Season == 1) %>%
-            dplyr::mutate(QY = paste(Year, qtype))
+            filter(Season == 1) %>%
+            mutate(QY = paste(Year, qtype))
     })
 
     q_list <- lapply(1:length(object_list), function(x) {
@@ -693,10 +695,10 @@ plot_compare_q <- function(object_list, object_names, figure_dir = "compare_figu
         }
 
         q2 <- q2 %>%
-           # dplyr::filter(Year <= max(years_list[[x]])) %>%
-            dplyr::filter(Year %in% unique(q_info_list[[x]]$Year)) %>%
-            dplyr::mutate(QY = paste(Year, qtype)) %>%
-            dplyr::filter(QY %in% q_info_list[[x]]$QY)
+           # filter(Year <= max(years_list[[x]])) %>%
+            filter(Year %in% unique(q_info_list[[x]]$Year)) %>%
+            mutate(QY = paste(Year, qtype)) %>%
+            filter(QY %in% q_info_list[[x]]$QY)
         
         q2$Model <- object_names[x]
         q2$qconstant <- as.character(ifelse(grepl("qdrift",object_names[[x]]),0,1))
@@ -729,7 +731,7 @@ plot_compare_q <- function(object_list, object_names, figure_dir = "compare_figu
     years <- unique(unlist(years_list))
     pyears <- unique(unlist(pyears_list))
 
-    p <- ggplot(data = q %>% dplyr::filter(Year %in% years), aes(x = Year, y = value, colour=Model, fill=Model)) +
+    p <- ggplot(data = q %>% filter(Year %in% years), aes(x = Year, y = value, colour=Model, fill=Model)) +
         stat_summary(fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
         # stat_summary(fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha=0.45, colour = NA) +
         stat_summary(fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1, alpha=0.75) +

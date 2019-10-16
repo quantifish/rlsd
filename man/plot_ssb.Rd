@@ -2,7 +2,7 @@
 % Please edit documentation in R/plot-biomass.R
 \name{plot_ssb}
 \alias{plot_ssb}
-\title{Plot SSB}
+\title{Plot spawning stock biomass (SSB)}
 \usage{
 plot_ssb(object, scales = "free_x", show_map = TRUE,
   show_mcmc = TRUE, show_proj = FALSE, show_target = FALSE,
@@ -24,5 +24,5 @@ plot_ssb(object, scales = "free_x", show_map = TRUE,
 \item{xlab}{the x axis label}
 }
 \description{
-Plot SSB
+Plot spawning stock biomass (SSB)
 }

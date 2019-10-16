@@ -99,7 +99,7 @@ plot_ssb <- function(object,
   pyears <- data$first_yr:data$last_proj_yr
   regions <- 1:data$n_area
   if(length(regions)>1) regions2 <- c(regions, "Total")
-  if(length(regions)==1) regions2 <- regions1
+  if(length(regions)==1) regions2 <- regions
   n_rules <- data$n_rules
   
   if (length(map) > 0 & show_map) {
@@ -121,13 +121,13 @@ plot_ssb <- function(object,
       left_join(expand.grid(Iteration = 1:n_iter, Year = years), by = "Iteration") %>%
       group_by(Iteration, Region, value, Year) %>%
       ungroup() %>%
-      mutate(Rule = 1, type = "Hard limit", value = value * 0.1, Region = as.factor(Region))
+      mutate(Rule = 1, type = "Hard limit", value = value * 0.1)
     soft_limit <- reshape2::melt(SSB0) %>%
       filter(Region != "Total") %>%
       left_join(expand.grid(Iteration = 1:n_iter, Year = years), by = "Iteration") %>%
       group_by(Iteration, Region, value, Year) %>%
       ungroup() %>%
-      mutate(Rule = 1, type = "Soft limit", value = value * 0.2, Region = as.factor(Region))
+      mutate(Rule = 1, type = "Soft limit", value = value * 0.2)
     
     SSBref <- mcmc$SSBref_jr
     dimnames(SSBref) <- list("Iteration" = 1:n_iter, "Rule" = 1:n_rules, "Region" = regions2)
@@ -136,7 +136,7 @@ plot_ssb <- function(object,
       left_join(expand.grid(Iteration = 1:n_iter, Year = years), by = "Iteration") %>%
       group_by(Iteration, Region, Rule, value, Year) %>%
       ungroup() %>%
-      mutate(type = "Target", Region = as.factor(Region))
+      mutate(type = "Target")
   }
   
   # spawning stock biomass
@@ -144,13 +144,13 @@ plot_ssb <- function(object,
     ssb_in <- ssb %>%
       mutate(type = "SSB") %>%
       rename(value = SSB) %>%
-      bind_rows(soft_limit, hard_limit, SSBref)
+      rbind(soft_limit, hard_limit, SSBref)
     if (length(map) > 0 & show_map) ssb1_in <- ssb1 %>% mutate(type = "SSB")
   } else {
     ssb_in <- filter(ssb, Year <= data$last_yr) %>%
       mutate(type = "SSB") %>%
       rename(value = SSB) %>%
-      bind_rows(soft_limit, hard_limit, SSBref)
+      rbind(soft_limit, hard_limit, SSBref)
     if (length(map) > 0 & show_map) ssb1_in <- filter(ssb1, Year <= data$last_yr) %>% mutate(type = "SSB")
   }
   ssb_in$type <- factor(ssb_in$type, levels = c("SSB", "Target", "Soft limit", "Hard limit"))

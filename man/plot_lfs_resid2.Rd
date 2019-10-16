@@ -7,11 +7,11 @@
 plot_lfs_resid2(object, n_panel = 10, figure_dir = "figure/")
 }
 \arguments{
-\item{object}{and LSD object}
+\item{object}{and LSD object.}
 
 \item{n_panel}{The number of rows of panels to include per plot.}
 
-\item{figure_dir}{the directory to save to}
+\item{figure_dir}{the directory to save to.}
 }
 \description{
 Plot length frequency residuals2

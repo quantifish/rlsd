@@ -15,6 +15,8 @@ plot_refpoints <- function(object, figure_dir){
     cutyears <- max(pyears-99):max(pyears)
     seasons <- c("AW","SS")
     regions <- 1:data$n_area
+    if(length(regions) > 1) regions2 <- c(regions, "Total")
+    if(length(regions) == 1) regions2 <- regions
     sex <- c("Male","Immature female","Mature female")
     n_iter <- nrow(mcmc[[1]])
     rules <- data$mp_rule_parameters
@@ -61,6 +63,10 @@ plot_refpoints <- function(object, figure_dir){
     pcatch2 <- pcatch %>% 
         dplyr::group_by(Iteration, Year, Region, RuleNum) %>%
         dplyr::summarise("Catch" = sum(Catch))
+    
+    rm(slcatch)
+    rm(nslcatch)
+    gc()
 
     slrcatch <- mcmc$resid_catch_sl_jryt
         dimnames(slrcatch) <- list("Iteration"=1:n_iter, "RuleNum"=1:dim(slrcatch)[2], "Region"=regions, "Year"=pyears, "Season"=seasons)
@@ -80,6 +86,10 @@ plot_refpoints <- function(object, figure_dir){
     rcatch2 <- rcatch %>% 
         dplyr::group_by(Iteration, Year, Region, RuleNum) %>%
         dplyr::summarise("CatchResidual" = sum(CatchResidual))
+    
+    rm(slrcatch)
+    rm(nslrcatch)
+    gc()
 
     # cpue <- mcmc$mp_offset_cpue_jry
     #     dimnames(cpue) <- list("Iteration"=1:n_iter, "RuleNum"=1:dim(cpue)[2], "Region"=regions, "Year"=pyears)
@@ -89,29 +99,32 @@ plot_refpoints <- function(object, figure_dir){
 
     catch <- full_join(pcatch2, rcatch2)
     # catch_cpue <- full_join(catch, cpue2)
+    
+    rm(pcatch2)
+    rm(rcatch2)
+    gc()
 
     # catch_cpue$RuleType <- sapply(1:nrow(rules), function(x) ifelse(rules[x,1]==1, "FixedCatch", "CPUErule"))
     # catch_cpue$Rule <- sapply(1:nrow(rules), function(x) ifelse(catch_cpue$RuleType[x]=="FixedCatch", rules[x,2], NA))
     # catch_cpue$Rule[which(catch_cpue$RuleType=="CPUErule")] <- paste0("Rule", 1:length(which(catch_cpue$RuleType=="CPUErule")))
     # catch_cpue <- catch_cpue %>% select(-RuleNum)
 
-    vb <- mcmc$biomass_vulnref_jytr
-    dimnames(vb) <- list("Iteration" = 1:n_iter, "RuleNum" = 1:dim(vb)[2], "Year" = pyears, "Season"=seasons, "Region" = regions)
+    vb <- mcmc$biomass_vulnref_AW_jyr
+    dimnames(vb) <- list("Iteration" = 1:n_iter, "RuleNum" = 1:dim(vb)[2], "Year" = pyears, "Region" = regions)
     vb2 <- reshape2::melt(vb) %>% 
-        dplyr::group_by(Iteration, Year, RuleNum, Region) %>%
-        dplyr::summarise("VB" = sum(value))
+        dplyr::rename(VB = value)
 
     vb0 <- mcmc$B0_r
-    dimnames(vb0) <- list("Iteration" = 1:n_iter, "Region" = regions)
+    dimnames(vb0) <- list("Iteration" = 1:n_iter, "Region" = regions2)
     vb0 <- reshape2::melt(vb0) %>%
-        dplyr::rename("VB0" = value)
+        dplyr::rename(VB0 = value)
 
     ssb <- mcmc$biomass_ssb_jyr
     dimnames(ssb) <- list("Iteration" = 1:n_iter, "RuleNum" = 1:dim(ssb)[2], "Year" = pyears, "Region" = regions)
     ssb2 <- reshape2::melt(ssb) %>% dplyr::rename("SSB"=value) 
 
     ssb0 <- mcmc$SSB0_r
-    dimnames(ssb0) <- list("Iteration" = 1:n_iter, "Region" = regions)
+    dimnames(ssb0) <- list("Iteration" = 1:n_iter, "Region" = regions2)
     ssb0 <- reshape2::melt(ssb0) %>%
         dplyr::rename(SSB0=value) 
 

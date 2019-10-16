@@ -36,18 +36,18 @@ plot_ssb_recruitment <- function(object,
                               Year = data$first_yr:data$last_proj_yr, 
                               Region = regions)
         ssb <- reshape2::melt(ssb, value.name = "SSB") %>%
-            dplyr::filter(Year %in% data$first_yr:data$last_yr)
+            filter(Year %in% data$first_yr:data$last_yr)
         
         rec <- mcmc$recruits_ry
         dimnames(rec) <- list(Iteration = 1:n_iter, Region = regions, 
                               Year = data$first_yr:data$last_proj_yr)
         rec <- reshape2::melt(rec, value.name = "Recruitment") %>%
-            dplyr::filter(Year %in% data$first_yr:data$last_yr)
+            filter(Year %in% data$first_yr:data$last_yr)
         
         d <- inner_join(ssb, rec) %>%
-          dplyr::group_by(Rules, Year, Region) %>%
-          dplyr::summarise(SSB = median(SSB), Recruitment = median(Recruitment)) %>%
-          dplyr::ungroup()
+          group_by(Rules, Year, Region) %>%
+          summarise(SSB = median(SSB), Recruitment = median(Recruitment)) %>%
+          ungroup()
         d$Region <- sapply(1:nrow(d), function(x) paste0("Region ", d$Region[x]))
 
       p <- ggplot(d, aes(x = SSB, y = Recruitment)) +
@@ -66,7 +66,7 @@ plot_ssb_recruitment <- function(object,
 }
 
 
-#' Plot SSB
+#' Plot spawning stock biomass (SSB)
 #' 
 #' @param object and LSD object
 #' @param scales free or fixed
@@ -111,47 +111,50 @@ plot_ssb <- function(object,
     ssb <- mcmc$biomass_ssb_jyr
     dimnames(ssb) <- list(Iteration = 1:n_iter, Rule = 1:n_rules, Year = data$first_yr:data$last_proj_yr, Region = regions)
     ssb <- reshape2::melt(ssb, value.name = "SSB")
-    
+
     SSB0 <- mcmc$SSB0_r
-    dimnames(SSB0) <- list("Iteration" = 1:n_iter, "Region" = regions)
+    dimnames(SSB0) <- list("Iteration" = 1:n_iter, "Region" = c(regions, "Total"))
     hard_limit <- reshape2::melt(SSB0) %>%
-      dplyr::left_join(expand.grid(Iteration = 1:n_iter, Year = years), by = "Iteration") %>%
-      dplyr::group_by(Iteration, Region, value, Year) %>%
-      dplyr::ungroup() %>%
-      dplyr::mutate(Rule = 1, type = "Hard limit", value = value * 0.1)
+      filter(Region != "Total") %>%
+      left_join(expand.grid(Iteration = 1:n_iter, Year = years), by = "Iteration") %>%
+      group_by(Iteration, Region, value, Year) %>%
+      ungroup() %>%
+      mutate(Rule = 1, type = "Hard limit", value = value * 0.1, Region = as.integer(Region))
     soft_limit <- reshape2::melt(SSB0) %>%
-      dplyr::left_join(expand.grid(Iteration = 1:n_iter, Year = years), by = "Iteration") %>%
-      dplyr::group_by(Iteration, Region, value, Year) %>%
-      dplyr::ungroup() %>%
-      dplyr::mutate(Rule = 1, type = "Soft limit", value = value * 0.2)
+      filter(Region != "Total") %>%
+      left_join(expand.grid(Iteration = 1:n_iter, Year = years), by = "Iteration") %>%
+      group_by(Iteration, Region, value, Year) %>%
+      ungroup() %>%
+      mutate(Rule = 1, type = "Soft limit", value = value * 0.2, Region = as.integer(Region))
     
     SSBref <- mcmc$SSBref_jr
-    dimnames(SSBref) <- list("Iteration" = 1:n_iter, "Rule" = 1:n_rules, "Region" = regions)
+    dimnames(SSBref) <- list("Iteration" = 1:n_iter, "Rule" = 1:n_rules, "Region" = c(regions, "Total"))
     SSBref <- reshape2::melt(SSBref) %>%
-      dplyr::left_join(expand.grid(Iteration = 1:n_iter, Year = years), by = "Iteration") %>%
-      dplyr::group_by(Iteration, Region, Rule, value, Year) %>%
-      dplyr::ungroup() %>%
-      dplyr::mutate(type = "Target")
+      filter(Region != "Total") %>%
+      left_join(expand.grid(Iteration = 1:n_iter, Year = years), by = "Iteration") %>%
+      group_by(Iteration, Region, Rule, value, Year) %>%
+      ungroup() %>%
+      mutate(type = "Target", Region = as.integer(Region))
   }
   
   # spawning stock biomass
   if (show_proj) {
     ssb_in <- ssb %>%
-      dplyr::mutate(type = "SSB") %>%
-      dplyr::rename(value = SSB) %>%
-      dplyr::bind_rows(soft_limit, hard_limit, SSBref)
-    if (length(map) > 0 & show_map) ssb1_in <- ssb1 %>% dplyr::mutate(type = "SSB")
+      mutate(type = "SSB") %>%
+      rename(value = SSB) %>%
+      bind_rows(soft_limit, hard_limit, SSBref)
+    if (length(map) > 0 & show_map) ssb1_in <- ssb1 %>% mutate(type = "SSB")
   } else {
-    ssb_in <- dplyr::filter(ssb, Year <= data$last_yr) %>%
-      dplyr::mutate(type = "SSB") %>%
-      dplyr::rename(value = SSB) %>%
-      dplyr::bind_rows(soft_limit, hard_limit, SSBref)
-    if (length(map) > 0 & show_map) ssb1_in <- dplyr::filter(ssb1, Year <= data$last_yr) %>% dplyr::mutate(type = "SSB")
+    ssb_in <- filter(ssb, Year <= data$last_yr) %>%
+      mutate(type = "SSB") %>%
+      rename(value = SSB) %>%
+      bind_rows(soft_limit, hard_limit, SSBref)
+    if (length(map) > 0 & show_map) ssb1_in <- filter(ssb1, Year <= data$last_yr) %>% mutate(type = "SSB")
   }
-  ssb_in$type <- factor(ssb_in$type, levels = c("SSB","Target","Soft limit","Hard limit"))
+  ssb_in$type <- factor(ssb_in$type, levels = c("SSB", "Target", "Soft limit", "Hard limit"))
 
   if (!show_target) {
-      ssb_in <- dplyr::filter(ssb_in, type != "Target")
+      ssb_in <- filter(ssb_in, type != "Target")
   }
   ssb_in$Region <- sapply(1:nrow(ssb_in), function(x) paste0("Region ", ssb_in$Region[x]))
   ssb1_in$Region <- sapply(1:nrow(ssb1_in), function(x) paste0("Region ", ssb1_in$Region[x]))
@@ -227,27 +230,27 @@ plot_vulnerable_reference_biomass <- function(object,
     vbref1 <- map$biomass_vulnref_ytr
     dimnames(vbref1) <- list("Iteration" = 1,"Year" = pyears, "Season" = seasons, "Region" = regions)
     vbref1 <- reshape2::melt(vbref1) %>%
-      dplyr::filter(value > 0) %>%
-      dplyr::mutate(Season = as.character(Season), Season = ifelse(Year >= data$season_change_yr, Season, YR))
+      filter(value > 0) %>%
+      mutate(Season = as.character(Season), Season = ifelse(Year >= data$season_change_yr, Season, YR))
     
     vbref1 <- vbref1 %>%
-      dplyr::group_by(Iteration, Year, Season, Region) %>%
-      dplyr::summarise(value = sum(value))
+      group_by(Iteration, Year, Season, Region) %>%
+      summarise(value = sum(value))
     
     # Bmsy1 <- map$Bmsy_r
     # dimnames(Bmsy1) <- list("Iteration" = 1, "Region" = regions)
     # Bmsy1 <- reshape2::melt(Bmsy1) %>%
-    #   dplyr::left_join(expand.grid(Iteration = 1, Year = years), by = "Iteration") %>%
-    #   dplyr::mutate(Season = "AW") %>%
-    #   dplyr::group_by(Iteration, Region, value, Year, Season)
+    #   left_join(expand.grid(Iteration = 1, Year = years), by = "Iteration") %>%
+    #   mutate(Season = "AW") %>%
+    #   group_by(Iteration, Region, value, Year, Season)
     
     
     # Bref1 <- map$Bref_jr
     # dimnames(Bref1) <- list("Iteration" = 1, "Rule" = 1:n_rules, "Region" = regions)
     # Bref1 <- reshape2::melt(Bref1) %>%
-    #   dplyr::left_join(expand.grid(Iteration = 1, Year = years), by = "Iteration") %>%
-    #   dplyr::mutate(Season = "AW") %>%
-    #   dplyr::group_by(Iteration, Region, value, Year, Season)
+    #   left_join(expand.grid(Iteration = 1, Year = years), by = "Iteration") %>%
+    #   mutate(Season = "AW") %>%
+    #   group_by(Iteration, Region, value, Year, Season)
   }
   
   if (length(mcmc) > 0 & show_mcmc) {
@@ -256,26 +259,26 @@ plot_vulnerable_reference_biomass <- function(object,
     vbref <- mcmc$biomass_vulnref_ytr
     dimnames(vbref) <- list("Iteration" = 1:n_iter,"Year" = pyears, "Season" = seasons, "Region" = regions)
     vbref <- reshape2::melt(vbref) %>%
-      dplyr::filter(value > 0) %>%
-      dplyr::mutate(Season = as.character(Season), Season = ifelse(Year >= data$season_change_yr, Season, YR))
+      filter(value > 0) %>%
+      mutate(Season = as.character(Season), Season = ifelse(Year >= data$season_change_yr, Season, YR))
     
     vbref <- vbref %>%
-      dplyr::group_by(Iteration, Year, Season, Region) %>%
-      dplyr::summarise(value = sum(value))
+      group_by(Iteration, Year, Season, Region) %>%
+      summarise(value = sum(value))
     
     Bmsy <- mcmc$Bmsy_r
     dimnames(Bmsy) <- list("Iteration" = 1:n_iter, "Region" = regions)
     Bmsy <- reshape2::melt(Bmsy) %>%
-      dplyr::left_join(expand.grid(Iteration = 1:n_iter, Year = years), by = "Iteration") %>%
-      dplyr::mutate(Season = "AW") %>%
-      dplyr::group_by(Iteration, Region, value, Year, Season)
+      left_join(expand.grid(Iteration = 1:n_iter, Year = years), by = "Iteration") %>%
+      mutate(Season = "AW") %>%
+      group_by(Iteration, Region, value, Year, Season)
     
     Bref <- mcmc$Bref_jr
     dimnames(Bref) <- list("Iteration" = 1:n_iter, "Rule" = 1:n_rules, "Region" = regions)
     Bref <- reshape2::melt(Bref) %>%
-      dplyr::left_join(expand.grid(Iteration = 1:n_iter, Year = years), by = "Iteration") %>%
-      dplyr::mutate(Season = "AW") %>%
-      dplyr::group_by(Iteration, Region, value, Year, Season)
+      left_join(expand.grid(Iteration = 1:n_iter, Year = years), by = "Iteration") %>%
+      mutate(Season = "AW") %>%
+      group_by(Iteration, Region, value, Year, Season)
   }
   
   # Reference biomass - version 1
@@ -285,13 +288,13 @@ plot_vulnerable_reference_biomass <- function(object,
   } else {
     if (length(map) > 0 & show_map) {
       vbref_in1 <- vbref1 %>%
-        dplyr::filter(Year <= data$last_yr)
+        filter(Year <= data$last_yr)
     }
     vbref_in2 <- vbref %>%
-      dplyr::filter(Year <= data$last_yr)
+      filter(Year <= data$last_yr)
   }
-  din <- vbref_in2 %>% dplyr::mutate("Label" = "") %>%
-    dplyr::group_by(Iteration, Year, Season, Region, value, Label)
+  din <- vbref_in2 %>% mutate("Label" = "") %>%
+    group_by(Iteration, Year, Season, Region, value, Label)
 
   din$Region <- sapply(1:nrow(din), function(x) paste0("Region ", din$Region[x]))
   vbref_in1$Region <- sapply(1:nrow(vbref_in1), function(x) paste0("Region ", vbref_in1$Region[x]))
@@ -301,9 +304,9 @@ plot_vulnerable_reference_biomass <- function(object,
   if (show_proj) p <- p + geom_vline(aes(xintercept = data$last_yr), linetype = "dashed")
   
   if ("Bref" %in% ref) {
-    Bref <- dplyr::mutate(Bref, Label = ifelse(Year == max(Bref$Year) & Iteration == 1 & Rule == 1, "Bref", ""))
-    Bmsy <- dplyr::mutate(Bmsy, Label = "")
-    dl <- rbind(din, Bmsy, Bref) %>% dplyr::filter(Iteration %in% seq(1, n_iter, length.out = 500))
+    Bref <- mutate(Bref, Label = ifelse(Year == max(Bref$Year) & Iteration == 1 & Rule == 1, "Bref", ""))
+    Bmsy <- mutate(Bmsy, Label = "")
+    dl <- rbind(din, Bmsy, Bref) %>% filter(Iteration %in% seq(1, n_iter, length.out = 500))
     
     p <- p +
       geom_vline(aes(xintercept = data$first_ref_yr), linetype = "dashed", colour = cpal[2]) + 
@@ -316,9 +319,9 @@ plot_vulnerable_reference_biomass <- function(object,
   }
   
   if ("Bmsy" %in% ref) {
-    Bmsy <- dplyr::mutate(Bmsy, Label = ifelse(Year == max(Bmsy$Year) & Iteration == 1, "Bmsy", ""))
-    Bref <- dplyr::mutate(Bref, Label = "")
-    dl <- rbind(din, Bmsy, Bref) %>% dplyr::filter(Iteration %in% seq(1, n_iter, length.out = 500))
+    Bmsy <- mutate(Bmsy, Label = ifelse(Year == max(Bmsy$Year) & Iteration == 1, "Bmsy", ""))
+    Bref <- mutate(Bref, Label = "")
+    dl <- rbind(din, Bmsy, Bref) %>% filter(Iteration %in% seq(1, n_iter, length.out = 500))
     
     p <- p +
       stat_summary(data = Bmsy, aes(x = Year, y = value), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.125, colour = NA, fill = "#BCBDDC") +
@@ -398,26 +401,26 @@ plot_vulnerable_biomass <- function(object,
     vb1 <- map$biomass_vuln_jytrs
     dimnames(vb1) <- list("Iteration" = 1, "Rule"=1:n_rules, "Year" = pyears, "Season" = seasons, "Region" = regions, Sex = sex)
     vb1 <- reshape2::melt(vb1) %>%
-      dplyr::filter(value > 0) %>%
-      dplyr::mutate(Season = as.character(Season), Season = ifelse(Year >= data$season_change_yr, Season, YR))
+      filter(value > 0) %>%
+      mutate(Season = as.character(Season), Season = ifelse(Year >= data$season_change_yr, Season, YR))
 
     vb1 <- vb1 %>%
-      dplyr::group_by(Iteration, Rule, Year, Season, Region) %>%
-      dplyr::summarise(value = sum(value))
+      group_by(Iteration, Rule, Year, Season, Region) %>%
+      summarise(value = sum(value))
 
     # Bmsy1 <- map$Bmsy_r
     # dimnames(Bmsy1) <- list("Iteration" = 1, "Region" = regions)
     # Bmsy1 <- reshape2::melt(Bmsy1) %>%
-    #   dplyr::left_join(expand.grid(Iteration = 1, Year = years), by = "Iteration") %>%
-    #   dplyr::mutate(Season = "AW") %>%
-    #   dplyr::group_by(Iteration, Region, value, Year, Season)
+    #   left_join(expand.grid(Iteration = 1, Year = years), by = "Iteration") %>%
+    #   mutate(Season = "AW") %>%
+    #   group_by(Iteration, Region, value, Year, Season)
     
     # Bref1 <- map$Bref_jr
     # dimnames(Bref1) <- list("Iteration" = 1, "Rule" = 1:n_rules, "Region" = regions)
     # Bref1 <- reshape2::melt(Bref1) %>%
-    #   dplyr::left_join(expand.grid(Iteration = 1, Year = years), by = "Iteration") %>%
-    #   dplyr::mutate(Season = "AW") %>%
-    #   dplyr::group_by(Iteration, Region, value, Year, Season)
+    #   left_join(expand.grid(Iteration = 1, Year = years), by = "Iteration") %>%
+    #   mutate(Season = "AW") %>%
+    #   group_by(Iteration, Region, value, Year, Season)
   }
   
   if (length(mcmc) > 0 & show_mcmc) {
@@ -426,24 +429,24 @@ plot_vulnerable_biomass <- function(object,
     vb2 <- mcmc$biomass_vuln_jytrs
     dimnames(vb2) <- list("Iteration" = 1:n_iter, "Rule"=1:n_rules, "Year" = pyears, "Season" = seasons, "Region" = regions, Sex = sex)
     vb2 <- reshape2::melt(vb2) %>%
-      dplyr::filter(value > 0) %>%
-      dplyr::mutate(Season = as.character(Season), Season = ifelse(Year >= data$season_change_yr, Season, YR)) %>%
-      dplyr::group_by(Iteration, Rule, Year, Season, Region) %>%
-      dplyr::summarise(value = sum(value))
+      filter(value > 0) %>%
+      mutate(Season = as.character(Season), Season = ifelse(Year >= data$season_change_yr, Season, YR)) %>%
+      group_by(Iteration, Rule, Year, Season, Region) %>%
+      summarise(value = sum(value))
     
     Bmsy <- mcmc$Bmsy_r
     dimnames(Bmsy) <- list("Iteration" = 1:n_iter, "Region" = regions)
     Bmsy <- reshape2::melt(Bmsy) %>%
-      dplyr::left_join(expand.grid(Iteration = 1:n_iter, Year = years), by = "Iteration") %>%
-      dplyr::mutate(Season = "AW") %>%
-      dplyr::group_by(Iteration, Region, value, Year, Season)
+      left_join(expand.grid(Iteration = 1:n_iter, Year = years), by = "Iteration") %>%
+      mutate(Season = "AW") %>%
+      group_by(Iteration, Region, value, Year, Season)
     
     Bref <- mcmc$Bref_jr
     dimnames(Bref) <- list("Iteration" = 1:n_iter, "Rule" = 1:n_rules, "Region" = regions)
     Bref <- reshape2::melt(Bref) %>%
-      dplyr::left_join(expand.grid(Iteration = 1:n_iter, Year = years), by = "Iteration") %>%
-      dplyr::mutate(Season = "AW") %>%
-      dplyr::group_by(Iteration, Region, value, Year, Season)
+      left_join(expand.grid(Iteration = 1:n_iter, Year = years), by = "Iteration") %>%
+      mutate(Season = "AW") %>%
+      group_by(Iteration, Region, value, Year, Season)
   }
   
   # vulnerable biomass
@@ -452,13 +455,13 @@ plot_vulnerable_biomass <- function(object,
     vb_in2 <- vb2
   } else {
     if (length(map) > 0 & show_map) {
-      vb_in1 <- vb1 %>% dplyr::filter(Year <= data$last_yr)
+      vb_in1 <- vb1 %>% filter(Year <= data$last_yr)
     }
-    vb_in2 <- vb2 %>% dplyr::filter(Year <= data$last_yr)
+    vb_in2 <- vb2 %>% filter(Year <= data$last_yr)
   }
 
-  vb_in <- vb_in2 %>% dplyr::mutate("Label" = "") %>%
-    dplyr::group_by(Iteration, Rule, Year, Season, Region, value, Label)
+  vb_in <- vb_in2 %>% mutate("Label" = "") %>%
+    group_by(Iteration, Rule, Year, Season, Region, value, Label)
 
   vb_in$Region <- sapply(1:nrow(vb_in), function(x) paste0("Region ", vb_in$Region[x]))
   vb_in1$Region <- sapply(1:nrow(vb_in1), function(x) paste0("Region ", vb_in1$Region[x]))
@@ -468,9 +471,9 @@ plot_vulnerable_biomass <- function(object,
   if (show_proj) p <- p + geom_vline(aes(xintercept = data$last_yr), linetype = "dashed")
   
   if ("Bref" %in% ref) {
-    Bref <- dplyr::mutate(Bref, Label = ifelse(Year == max(Bref$Year) & Iteration == 1 & Rule == 1, "Bref", ""))
-    Bmsy <- dplyr::mutate(Bmsy, Label = "")
-    dl <- rbind(vb_in, Bmsy, Bref) %>% dplyr::filter(Iteration %in% seq(1, n_iter, length.out = 500))
+    Bref <- mutate(Bref, Label = ifelse(Year == max(Bref$Year) & Iteration == 1 & Rule == 1, "Bref", ""))
+    Bmsy <- mutate(Bmsy, Label = "")
+    dl <- rbind(vb_in, Bmsy, Bref) %>% filter(Iteration %in% seq(1, n_iter, length.out = 500))
     
     p <- p +
       geom_vline(aes(xintercept = data$first_ref_yr), linetype = "dashed", colour = cpal[2]) + 
@@ -483,9 +486,9 @@ plot_vulnerable_biomass <- function(object,
   }
   
   if ("Bmsy" %in% ref) {
-    Bmsy <- dplyr::mutate(Bmsy, Label = ifelse(Year == max(Bmsy$Year) & Iteration == 1, "Bmsy", ""))
-    Bref <- dplyr::mutate(Bref, Label = "")
-    dl <- rbind(vb_in, Bmsy, Bref) %>% dplyr::filter(Iteration %in% seq(1, n_iter, length.out = 500))
+    Bmsy <- mutate(Bmsy, Label = ifelse(Year == max(Bmsy$Year) & Iteration == 1, "Bmsy", ""))
+    Bref <- mutate(Bref, Label = "")
+    dl <- rbind(vb_in, Bmsy, Bref) %>% filter(Iteration %in% seq(1, n_iter, length.out = 500))
     
     p <- p +
       stat_summary(data = Bmsy, aes(x = Year, y = value), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.125, colour = NA, fill = "#BCBDDC") +
@@ -599,66 +602,66 @@ plot_biomass <- function(object,
             group_by(Iteration, Year, Season, Sex) %>%
             summarise(value = sum(value))
     } else {
-      biomass_recruited_ytrs1 <- NULL
+      biomass_recruited_jytrs1 <- NULL
       biomass_vuln_jytrs1 <- NULL
-      biomass_vulnref_ytr1 <- NULL
+      biomass_vulnref_jytr1 <- NULL
       biomass_vulnref_yt1 <- NULL
       biomass_cpue_ryt1 <- NULL
-      biomass_total_ytrs1 <- NULL
+      biomass_total_jytrs1 <- NULL
       biomass_total_yts1 <- NULL
     }
     
     if (length(mcmc) > 0 & show_mcmc) {
         n_iter <- nrow(mcmc[[1]])
-        biomass_recruited_ytrs2 <- mcmc$biomass_recruited_ytrs
-        dimnames(biomass_recruited_ytrs2) <- list("Iteration" = 1:n_iter,"Year" = pyears, "Season" = seasons, "Region" = regions, Sex = c(sex,"Total"))
-        biomass_recruited_ytrs2 <- reshape2::melt(biomass_recruited_ytrs2) %>%
-            dplyr::filter(value > 0)
+        biomass_recruited_jytrs2 <- mcmc$biomass_recruited_jytrs
+        dimnames(biomass_recruited_jytrs2) <- list("Iteration" = 1:n_iter, "Rule" = 1:n_rules, "Year" = pyears, "Season" = seasons, "Region" = regions, Sex = c(sex, "Total"))
+        biomass_recruited_jytrs2 <- reshape2::melt(biomass_recruited_jytrs2) %>%
+            filter(value > 0)
 
         biomass_vuln_jytrs2 <- mcmc$biomass_vuln_jytrs
-        dimnames(biomass_vuln_jytrs2) <- list("Iteration" = 1:n_iter, "Rule"=1:n_rules, "Year" = pyears, "Season" = seasons, "Region" = regions, Sex = sex)
+        dimnames(biomass_vuln_jytrs2) <- list("Iteration" = 1:n_iter, "Rule" = 1:n_rules, "Year" = pyears, "Season" = seasons, "Region" = regions, Sex = sex)
         biomass_vuln_jytr2 <- reshape2::melt(biomass_vuln_jytrs2) %>%
-            dplyr::filter(value > 0) %>%
-            dplyr::mutate(Season = as.character(Season), Season = ifelse(Year >= data$season_change_yr, Season, YR)) %>%
-            dplyr::group_by(Iteration, Rule, Year, Season, Region) %>%
-            dplyr::summarise(value = sum(value))
+            filter(value > 0) %>%
+            mutate(Season = as.character(Season), Season = ifelse(Year >= data$season_change_yr, Season, YR)) %>%
+            group_by(Iteration, Rule, Year, Season, Region) %>%
+            summarise(value = sum(value))
         
-        biomass_vulnref_ytr2 <- mcmc$biomass_vulnref_ytr
-        dimnames(biomass_vulnref_ytr2) <- list("Iteration" = 1:n_iter,"Year" = pyears, "Season" = seasons, "Region" = regions)
-        biomass_vulnref_ytr2 <- reshape2::melt(biomass_vulnref_ytr2) %>%
-            dplyr::filter(value > 0) %>%
-            dplyr::mutate(Season = as.character(Season), Season = ifelse(Year >= data$season_change_yr, Season, YR))
+        biomass_vulnref_jytr2 <- mcmc$biomass_vulnref_jytr
+        dimnames(biomass_vulnref_jytr2) <- list("Iteration" = 1:n_iter, "Rule" = 1:n_rules, "Year" = pyears, "Season" = seasons, "Region" = regions)
+        biomass_vulnref_jytr2 <- reshape2::melt(biomass_vulnref_jytr2) %>%
+            filter(value > 0) %>%
+            mutate(Season = as.character(Season), Season = ifelse(Year >= data$season_change_yr, Season, YR))
         
-        biomass_vulnref_yt2 <- biomass_vulnref_ytr2 %>%
-            dplyr::group_by(Iteration, Year, Season) %>%
-            dplyr::summarise(value = sum(value))
+        biomass_vulnref_yt2 <- biomass_vulnref_jytr2 %>%
+            group_by(Iteration, Year, Season) %>%
+            summarise(value = sum(value))
         
         biomass_cpue_ryt2 <- mcmc$biomass_cpue_ryt
         dimnames(biomass_cpue_ryt2) <- list("Iteration" = 1:n_iter, "Region" = regions, "Year" = years, "Season" = seasons)
         biomass_cpue_ryt2 <- reshape2::melt(biomass_cpue_ryt2)
         
-        biomass_total_ytrs2 <- mcmc$biomass_total_ytrs
-        dimnames(biomass_total_ytrs2) <- list("Iteration" = 1:n_iter, "Year" = pyears, "Season" = seasons, "Region" = regions, "Sex" = c(sex,"Total"))
-        biomass_total_ytrs2 <- reshape2::melt(biomass_total_ytrs2) %>%
-            dplyr::filter(value > 0)
+        biomass_total_jytrs2 <- mcmc$biomass_total_jytrs
+        dimnames(biomass_total_jytrs2) <- list("Iteration" = 1:n_iter, "Rule" = 1:n_rules, "Year" = pyears, "Season" = seasons, "Region" = regions, "Sex" = c(sex,"Total"))
+        biomass_total_jytrs2 <- reshape2::melt(biomass_total_jytrs2) %>%
+            filter(value > 0)
         
-        biomass_total_yts2 <- biomass_total_ytrs2 %>%
-            dplyr::group_by(Iteration, Year, Season, Sex) %>%
-            dplyr::summarise(value = sum(value))
+        biomass_total_yts2 <- biomass_total_jytrs2 %>%
+            group_by(Iteration, Year, Season, Sex) %>%
+            summarise(value = sum(value))
 
         Bmsy <- mcmc$Bmsy_r
-        dimnames(Bmsy) <- list("Iteration" = 1:n_iter, "Region" = regions)
+        dimnames(Bmsy) <- list("Iteration" = 1:n_iter, "Region" = c(regions, "Total"))
         Bmsy <- reshape2::melt(Bmsy) %>%
-            dplyr::left_join(expand.grid(Iteration = 1:n_iter, Year = years), by = "Iteration") %>%
-            dplyr::mutate(Season = "AW") %>%
-            dplyr::group_by(Iteration, Region, value, Year, Season)
+            left_join(expand.grid(Iteration = 1:n_iter, Year = years), by = "Iteration") %>%
+            mutate(Season = "AW") %>%
+            group_by(Iteration, Region, value, Year, Season)
         
         Bref <- mcmc$Bref_jr
-        dimnames(Bref) <- list("Iteration" = 1:n_iter, "Rule" = 1:n_rules, "Region" = regions)
+        dimnames(Bref) <- list("Iteration" = 1:n_iter, "Rule" = 1:n_rules, "Region" = c(regions, "Total"))
         Bref <- reshape2::melt(Bref) %>%
-            dplyr::left_join(expand.grid(Iteration = 1:n_iter, Year = years), by = "Iteration") %>%
-            dplyr::mutate(Season = "AW") %>%
-            dplyr::group_by(Iteration, Region, value, Year, Season)
+            left_join(expand.grid(Iteration = 1:n_iter, Year = years), by = "Iteration") %>%
+            mutate(Season = "AW") %>%
+            group_by(Iteration, Region, value, Year, Season)
     } else {
       biomass_recruited_ytrs2 <- NULL
       biomass_vuln_ytrs2 <- NULL
@@ -679,10 +682,10 @@ plot_biomass <- function(object,
 
     
     # Plot recruited biomass - no projection
-    biomass_recruited_ytrs2_in <- dplyr::filter(biomass_recruited_ytrs2, Year <= data$last_yr)
+    biomass_recruited_ytrs2_in <- filter(biomass_recruited_ytrs2, Year <= data$last_yr)
     biomass_recruited_ytrs2_in$Region <- sapply(1:nrow(biomass_recruited_ytrs2_in), function(x) paste0("Region ", biomass_recruited_ytrs2_in$Region[x]))
     if (length(map) > 0 & show_map){
-      biomass_recruited_ytrs1_in <- dplyr::filter(biomass_recruited_ytrs1, Year <= data$last_yr)
+      biomass_recruited_ytrs1_in <- filter(biomass_recruited_ytrs1, Year <= data$last_yr)
       biomass_recruited_ytrs1_in$Region <- sapply(1:nrow(biomass_recruited_ytrs1_in), function(x) paste0("Region ", biomass_recruited_ytrs1_in$Region[x]))
     }
 
@@ -734,10 +737,10 @@ plot_biomass <- function(object,
     
     # Total biomass
     if (length(map) > 0 & show_map){
-      biomass_total_ytrs1_in <- dplyr::filter(biomass_total_ytrs1, Year <= data$last_yr)
+      biomass_total_ytrs1_in <- filter(biomass_total_ytrs1, Year <= data$last_yr)
       biomass_total_ytrs1_in$Region <- sapply(1:nrow(biomass_total_ytrs1_in), function(x) paste0("Region ", biomass_total_ytrs1_in$Region[x]))
     }
-    biomass_total_ytrs2_in <- dplyr::filter(biomass_total_ytrs2, Year <= data$last_yr)
+    biomass_total_ytrs2_in <- filter(biomass_total_ytrs2, Year <= data$last_yr)
     biomass_total_ytrs2_in$Region <- sapply(1:nrow(biomass_total_ytrs2_in), function(x) paste0("Region ", biomass_total_ytrs2_in$Region[x]))
 
     p <- ggplot(data = biomass_total_ytrs2_in, aes(x = Year, y = value, color = Sex, fill = Sex))
@@ -813,62 +816,62 @@ plot_biomass <- function(object,
     # Reference biomass - version 3 - no projection
     if (length(map) > 0 & show_map) {
       bvref_in1 <- biomass_vulnref_ytr1 %>%
-        dplyr::filter(Year <= data$last_yr)
+        filter(Year <= data$last_yr)
     }
     bvref_in2 <- biomass_vulnref_ytr2 %>%
-      dplyr::filter(Year <= data$last_yr)
+      filter(Year <= data$last_yr)
     din <- bvref_in2 %>% 
-      dplyr::group_by(Iteration, Year, Season, Region, value)
+      group_by(Iteration, Year, Season, Region, value)
 
-    dinaw <- din %>% dplyr::filter(Season == "AW")
-    dinaw1 <- dinaw %>% dplyr::filter(Year == 1979) %>%
-                        dplyr::rename("B1" = value)
+    dinaw <- din %>% filter(Season == "AW")
+    dinaw1 <- dinaw %>% filter(Year == 1979) %>%
+                        rename("B1" = value)
     dinaw2 <- full_join(dinaw, dinaw1, by = c("Iteration", "Season", "Region")) %>%
-                dplyr::select(-Year.y) %>%
-                dplyr::rename("Year" = Year.x) %>%
-                dplyr::mutate(BB1 = value/B1)
+                select(-Year.y) %>%
+                rename("Year" = Year.x) %>%
+                mutate(BB1 = value/B1)
 
-    dinss <- din %>% dplyr::filter(Season == "SS")
-    dinss1 <- dinss %>% dplyr::filter(Year == 1979) %>%
-                        dplyr::rename("B1" = value)
+    dinss <- din %>% filter(Season == "SS")
+    dinss1 <- dinss %>% filter(Year == 1979) %>%
+                        rename("B1" = value)
     dinss2 <- full_join(dinss, dinss1, by = c("Iteration", "Season", "Region")) %>%
-                dplyr::select(-Year.y) %>%
-                dplyr::rename("Year" = Year.x) %>%
-                dplyr::mutate(BB1 = value/B1)
+                select(-Year.y) %>%
+                rename("Year" = Year.x) %>%
+                mutate(BB1 = value/B1)
 
     din2 <- rbind.data.frame(dinaw2, dinss2) %>%
-      dplyr::ungroup()
+      ungroup()
 
     if(length(map)>0){
-      dinx <- bvref_in1 %>% dplyr::group_by(Iteration, Year, Season, Region, value)
+      dinx <- bvref_in1 %>% group_by(Iteration, Year, Season, Region, value)
     } else{
       dinx <- NULL
     }
     if(length(mcmc)>0){
-      dinx <- bvref_in2 %>% dplyr::group_by(Iteration, Year, Season, Region, value)
+      dinx <- bvref_in2 %>% group_by(Iteration, Year, Season, Region, value)
     } else{
       dinx <- NULL
 
     }
 
-    dinawx <- dinx %>% dplyr::filter(Season == "AW")
-    dinaw1x <- dinawx %>% dplyr::filter(Year == 1979) %>%
-                        dplyr::rename("B1" = value)
+    dinawx <- dinx %>% filter(Season == "AW")
+    dinaw1x <- dinawx %>% filter(Year == 1979) %>%
+                        rename("B1" = value)
     dinaw2x <- full_join(dinawx, dinaw1x, by = c("Iteration", "Season", "Region")) %>%
-                dplyr::select(-Year.y) %>%
-                dplyr::rename("Year" = Year.x) %>%
-                dplyr::mutate(BB1 = value/B1)
+                select(-Year.y) %>%
+                rename("Year" = Year.x) %>%
+                mutate(BB1 = value/B1)
 
-    dinssx <- dinx %>% dplyr::filter(Season == "SS")
-    dinss1x <- dinssx %>% dplyr::filter(Year == 1979) %>%
-                        dplyr::rename("B1" = value)
+    dinssx <- dinx %>% filter(Season == "SS")
+    dinss1x <- dinssx %>% filter(Year == 1979) %>%
+                        rename("B1" = value)
     dinss2x <- full_join(dinssx, dinss1x, by = c("Iteration", "Season", "Region")) %>%
-                dplyr::select(-Year.y) %>%
-                dplyr::rename("Year" = Year.x) %>%
-                dplyr::mutate(BB1 = value/B1)
+                select(-Year.y) %>%
+                rename("Year" = Year.x) %>%
+                mutate(BB1 = value/B1)
 
     din2x <- rbind.data.frame(dinaw2x, dinss2x) %>%
-      dplyr::ungroup()
+      ungroup()
 
     din2$Region <- sapply(1:nrow(din2), function(x) paste0("Region ", din2$Region[x]))    
     din2x$Region <- sapply(1:nrow(din2x), function(x) paste0("Region ", din2x$Region[x]))    
@@ -893,54 +896,54 @@ plot_biomass <- function(object,
     
     if (length(map) > 0 & show_map) bvref_in1 <- biomass_vulnref_ytr1
     bvref_in2 <- biomass_vulnref_ytr2
-    din <- bvref_in2 %>% dplyr::group_by(Iteration, Year, Season, Region, value)
+    din <- bvref_in2 %>% group_by(Iteration, Year, Season, Region, value)
 
-    dinaw <- din %>% dplyr::filter(Season == "AW")
-    dinaw1 <- dinaw %>% dplyr::filter(Year == 1979) %>%
-                        dplyr::rename("B1" = value)
+    dinaw <- din %>% filter(Season == "AW")
+    dinaw1 <- dinaw %>% filter(Year == 1979) %>%
+                        rename("B1" = value)
     dinaw2 <- full_join(dinaw, dinaw1, by = c("Iteration", "Season", "Region")) %>%
-                dplyr::select(-Year.y) %>%
-                dplyr::rename("Year" = Year.x) %>%
-                dplyr::mutate(BB1 = value/B1)
+                select(-Year.y) %>%
+                rename("Year" = Year.x) %>%
+                mutate(BB1 = value/B1)
 
-    dinss <- din %>% dplyr::filter(Season == "SS")
-    dinss1 <- dinss %>% dplyr::filter(Year == 1979) %>%
-                        dplyr::rename("B1" = value)
+    dinss <- din %>% filter(Season == "SS")
+    dinss1 <- dinss %>% filter(Year == 1979) %>%
+                        rename("B1" = value)
     dinss2 <- full_join(dinss, dinss1, by = c("Iteration", "Season", "Region")) %>%
-                dplyr::select(-Year.y) %>%
-                dplyr::rename("Year" = Year.x) %>%
-                dplyr::mutate(BB1 = value/B1)
+                select(-Year.y) %>%
+                rename("Year" = Year.x) %>%
+                mutate(BB1 = value/B1)
 
-    din2 <- rbind.data.frame(dinaw2, dinss2) %>% dplyr::ungroup()
+    din2 <- rbind.data.frame(dinaw2, dinss2) %>% ungroup()
 
     if (length(map) > 0) {
-      dinx <- bvref_in1 %>% dplyr::group_by(Iteration, Year, Season, Region, value)
+      dinx <- bvref_in1 %>% group_by(Iteration, Year, Season, Region, value)
     } else{
       dinx <- NULL
     }
     if (length(mcmc) > 0) {
-      dinx <- bvref_in2 %>% dplyr::group_by(Iteration, Year, Season, Region, value)
+      dinx <- bvref_in2 %>% group_by(Iteration, Year, Season, Region, value)
     } else{
       dinx <- NULL
     }
 
-    dinawx <- dinx %>% dplyr::filter(Season == "AW")
-    dinaw1x <- dinawx %>% dplyr::filter(Year == 1979) %>%
-                        dplyr::rename("B1" = value)
+    dinawx <- dinx %>% filter(Season == "AW")
+    dinaw1x <- dinawx %>% filter(Year == 1979) %>%
+                        rename("B1" = value)
     dinaw2x <- full_join(dinawx, dinaw1x, by = c("Iteration", "Season", "Region")) %>%
-                dplyr::select(-Year.y) %>%
-                dplyr::rename("Year" = Year.x) %>%
-                dplyr::mutate(BB1 = value/B1)
+                select(-Year.y) %>%
+                rename("Year" = Year.x) %>%
+                mutate(BB1 = value/B1)
 
-    dinssx <- dinx %>% dplyr::filter(Season == "SS")
-    dinss1x <- dinssx %>% dplyr::filter(Year == 1979) %>%
-                        dplyr::rename("B1" = value)
+    dinssx <- dinx %>% filter(Season == "SS")
+    dinss1x <- dinssx %>% filter(Year == 1979) %>%
+                        rename("B1" = value)
     dinss2x <- full_join(dinssx, dinss1x, by = c("Iteration", "Season", "Region")) %>%
-                dplyr::select(-Year.y) %>%
-                dplyr::rename("Year" = Year.x) %>%
-                dplyr::mutate(BB1 = value/B1)
+                select(-Year.y) %>%
+                rename("Year" = Year.x) %>%
+                mutate(BB1 = value/B1)
 
-    din2x <- rbind.data.frame(dinaw2x, dinss2x) %>% dplyr::ungroup()
+    din2x <- rbind.data.frame(dinaw2x, dinss2x) %>% ungroup()
 
     din2$Region <- sapply(1:nrow(din2), function(x) paste0("Region ", din2$Region[x]))    
     din2x$Region <- sapply(1:nrow(din2x), function(x) paste0("Region ", din2x$Region[x]))      

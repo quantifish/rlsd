@@ -6,10 +6,10 @@
 #' @param figure_dir the directory to save figures to
 #' @export
 #'
-do_plot_compare <- function(object_list, object_names, single_stock, figure_dir = "compare_figure/")
-{
-	dir.create(figure_dir, showWarnings=FALSE)
-	if(single_stock==TRUE){
+do_plot_compare <- function(object_list, object_names, single_stock, figure_dir = "compare_figure/") {
+	dir.create(figure_dir, showWarnings = FALSE)
+	
+	if (single_stock == TRUE) {
 		table_compare_residuals(object_list = object_list, object_names = object_names, figure_dir = figure_dir)
 	    plot_compare_vb(object_list = object_list, object_names = object_names, figure_dir = figure_dir)
 	    plot_compare_recruitment(object_list = object_list, object_names = object_names, figure_dir = figure_dir)
@@ -19,7 +19,7 @@ do_plot_compare <- function(object_list, object_names, single_stock, figure_dir 
 		## end of figures and tables that should run for all comparisons
 		looic(object_list = object_list, object_names = object_names, figure_dir = figure_dir)
 	}
-	if(single_stock==FALSE){
+	if (single_stock == FALSE) {
 		find_refs(object_list = object_list, object_names = object_names, figure_dir = figure_dir)
 	}
 }

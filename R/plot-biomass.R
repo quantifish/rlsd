@@ -98,7 +98,7 @@ plot_ssb <- function(object,
   years <- data$first_yr:data$last_yr
   pyears <- data$first_yr:data$last_proj_yr
   regions <- 1:data$n_area
-  if(length(regions)>1) regions2 <- c(regions, max(regions)+1)
+  if(length(regions)>1) regions2 <- c(regions, "Total")
   if(length(regions)==1) regions2 <- regions1
   n_rules <- data$n_rules
   
@@ -115,7 +115,7 @@ plot_ssb <- function(object,
     ssb <- reshape2::melt(ssb, value.name = "SSB")
 
     SSB0 <- mcmc$SSB0_r
-    dimnames(SSB0) <- list("Iteration" = 1:n_iter, "Region" = c(regions, "Total"))
+    dimnames(SSB0) <- list("Iteration" = 1:n_iter, "Region" = regions2)
     hard_limit <- reshape2::melt(SSB0) %>%
       filter(Region != "Total") %>%
       left_join(expand.grid(Iteration = 1:n_iter, Year = years), by = "Iteration") %>%
@@ -130,7 +130,7 @@ plot_ssb <- function(object,
       mutate(Rule = 1, type = "Soft limit", value = value * 0.2, Region = as.integer(Region))
     
     SSBref <- mcmc$SSBref_jr
-    dimnames(SSBref) <- list("Iteration" = 1:n_iter, "Rule" = 1:n_rules, "Region" = c(regions, "Total"))
+    dimnames(SSBref) <- list("Iteration" = 1:n_iter, "Rule" = 1:n_rules, "Region" = regions2)
     SSBref <- reshape2::melt(SSBref) %>%
       filter(Region != "Total") %>%
       left_join(expand.grid(Iteration = 1:n_iter, Year = years), by = "Iteration") %>%
@@ -225,7 +225,7 @@ plot_vulnerable_reference_biomass <- function(object,
   sex <- c("Male","Immature female","Mature female")
   seasons <- c("AW","SS")
   regions <- 1:data$n_area
-  if(length(regions)>1) regions2 <- c(regions, max(regions)+1)
+  if(length(regions)>1) regions2 <- c(regions, "Total")
   if(length(regions)==1) regions2 <- regions1
   YR <- "YR" # label for the season before the season change year
   n_rules <- data$n_rules
@@ -295,14 +295,14 @@ plot_vulnerable_reference_biomass <- function(object,
     }   
 
     Bmsy <- mcmc$Bmsy_r
-    dimnames(Bmsy) <- list("Iteration" = 1:n_iter, "Region" = c(regions, "Total"))
+    dimnames(Bmsy) <- list("Iteration" = 1:n_iter, "Region" = regions2)
     Bmsy <- reshape2::melt(Bmsy) %>%
       left_join(expand.grid(Iteration = 1:n_iter, Year = years), by = "Iteration") %>%
       mutate(Season = "AW") %>%
       group_by(Iteration, Region, value, Year, Season)
     
     Bref <- mcmc$Bref_jr
-    dimnames(Bref) <- list("Iteration" = 1:n_iter, "Rule" = 1:n_rules, "Region" = c(regions, "Total"))
+    dimnames(Bref) <- list("Iteration" = 1:n_iter, "Rule" = 1:n_rules, "Region" = regions2)
     Bref <- reshape2::melt(Bref) %>%
       left_join(expand.grid(Iteration = 1:n_iter, Year = years), by = "Iteration") %>%
       mutate(Season = "AW") %>%
@@ -465,14 +465,14 @@ plot_vulnerable_biomass <- function(object,
       summarise(value = sum(value))
     
     Bmsy <- mcmc$Bmsy_r
-    dimnames(Bmsy) <- list("Iteration" = 1:n_iter, "Region" = c(regions, "Total"))
+    dimnames(Bmsy) <- list("Iteration" = 1:n_iter, "Region" = regions2)
     Bmsy <- reshape2::melt(Bmsy) %>%
       left_join(expand.grid(Iteration = 1:n_iter, Year = years), by = "Iteration") %>%
       mutate(Season = "AW") %>%
       group_by(Iteration, Region, value, Year, Season)
     
     Bref <- mcmc$Bref_jr
-    dimnames(Bref) <- list("Iteration" = 1:n_iter, "Rule" = 1:n_rules, "Region" = c(regions, "Total"))
+    dimnames(Bref) <- list("Iteration" = 1:n_iter, "Rule" = 1:n_rules, "Region" = regions2)
     Bref <- reshape2::melt(Bref) %>%
       left_join(expand.grid(Iteration = 1:n_iter, Year = years), by = "Iteration") %>%
       mutate(Season = "AW") %>%
@@ -722,14 +722,14 @@ plot_biomass <- function(object,
             dplyr::summarise(value = sum(value))
 
         Bmsy <- mcmc$Bmsy_r
-        dimnames(Bmsy) <- list("Iteration" = 1:n_iter, "Region" = c(regions, "Total"))
+        dimnames(Bmsy) <- list("Iteration" = 1:n_iter, "Region" = regions2)
         Bmsy <- reshape2::melt(Bmsy) %>%
             left_join(expand.grid(Iteration = 1:n_iter, Year = years), by = "Iteration") %>%
             mutate(Season = "AW") %>%
             group_by(Iteration, Region, value, Year, Season)
         
         Bref <- mcmc$Bref_jr
-        dimnames(Bref) <- list("Iteration" = 1:n_iter, "Rule" = 1:n_rules, "Region" = c(regions, "Total"))
+        dimnames(Bref) <- list("Iteration" = 1:n_iter, "Rule" = 1:n_rules, "Region" = regions2)
         Bref <- reshape2::melt(Bref) %>%
             dplyr::left_join(expand.grid(Iteration = 1:n_iter, Year = years), by = "Iteration") %>%
             dplyr::mutate(Season = "AW") %>%
@@ -779,7 +779,7 @@ plot_biomass <- function(object,
             dplyr::group_by(Iteration, Region, value, Year, Season)
         
         Bref <- mcmc$Bref_jr
-        dimnames(Bref) <- list("Iteration" = 1:n_iter, "Rule" = 1:n_rules, "Region" = c(regions, "Total"))
+        dimnames(Bref) <- list("Iteration" = 1:n_iter, "Rule" = 1:n_rules, "Region" = regions2)
         Bref <- reshape2::melt(Bref) %>%
             left_join(expand.grid(Iteration = 1:n_iter, Year = years), by = "Iteration") %>%
             mutate(Season = "AW") %>%

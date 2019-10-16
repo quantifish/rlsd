@@ -590,6 +590,7 @@ plot_biomass <- function(object,
     years <- data$first_yr:data$last_yr
     pyears <- data$first_yr:data$last_proj_yr
     sex <- c("Male","Immature female","Mature female")
+    
     seasons <- c("AW","SS")
     regions <- 1:data$n_area
     if(length(regions)>1) regions2 <- c(regions, max(regions + 1))
@@ -600,7 +601,7 @@ plot_biomass <- function(object,
     if (length(map) > 0 & show_map) {
       if("biomass_recruited_jytrs" %in% names(map)){
         biomass_recruited_jytrs1 <- map$biomass_recruited_jytrs
-        dimnames(biomass_recruited_jytrs1) <- list("Iteration" = 1, "Rule" = 1:n_rules, "Year" = pyears, "Season" = seasons, "Region" = regions, Sex = sex)
+        dimnames(biomass_recruited_jytrs1) <- list("Iteration" = 1, "Rule" = 1:n_rules, "Year" = pyears, "Season" = seasons, "Region" = regions, Sex = c(sex,"Total"))
         biomass_recruited_jytrs1 <- reshape2::melt(biomass_recruited_jytrs1) %>%
             filter(value > 0)
 
@@ -627,7 +628,7 @@ plot_biomass <- function(object,
         biomass_cpue_ryt1 <- reshape2::melt(biomass_cpue_ryt1)
         
         biomass_total_jytrs1 <- map$biomass_total_jytrs
-        dimnames(biomass_total_jytrs1) <- list("Iteration" = 1, "Rule" = 1:n_rules, "Year" = pyears, "Season" = seasons, "Region" = regions, "Sex" = sex)
+        dimnames(biomass_total_jytrs1) <- list("Iteration" = 1, "Rule" = 1:n_rules, "Year" = pyears, "Season" = seasons, "Region" = regions, "Sex" = c(sex,"Total"))
         biomass_total_jytrs1 <- reshape2::melt(biomass_total_jytrs1) %>%
             filter(value > 0)
         
@@ -636,7 +637,7 @@ plot_biomass <- function(object,
             summarise(value = sum(value))        
       } else {
         biomass_recruited_jytrs1 <- map$biomass_recruited_ytrs
-        dimnames(biomass_recruited_jytrs1) <- list("Iteration" = 1, "Year" = pyears, "Season" = seasons, "Region" = regions, Sex = sex)
+        dimnames(biomass_recruited_jytrs1) <- list("Iteration" = 1, "Year" = pyears, "Season" = seasons, "Region" = regions, Sex = c(sex,"Total"))
         biomass_recruited_jytrs1 <- reshape2::melt(biomass_recruited_jytrs1) %>%
             filter(value > 0)
 
@@ -663,7 +664,7 @@ plot_biomass <- function(object,
         biomass_cpue_ryt1 <- reshape2::melt(biomass_cpue_ryt1)
         
         biomass_total_jytrs1 <- map$biomass_total_ytrs
-        dimnames(biomass_total_jytrs1) <- list("Iteration" = 1, "Year" = pyears, "Season" = seasons, "Region" = regions, "Sex" = sex)
+        dimnames(biomass_total_jytrs1) <- list("Iteration" = 1, "Year" = pyears, "Season" = seasons, "Region" = regions, "Sex" = c(sex,"Total"))
         biomass_total_jytrs1 <- reshape2::melt(biomass_total_jytrs1) %>%
             filter(value > 0)
         
@@ -684,9 +685,9 @@ plot_biomass <- function(object,
     
     if (length(mcmc) > 0 & show_mcmc) {
         n_iter <- nrow(mcmc[[1]])
-      if("biomass_recruited_jyrts" %in% names(mcmc)){
+      if("biomass_recruited_jytrs" %in% names(mcmc)){
         biomass_recruited_jytrs2 <- mcmc$biomass_recruited_jytrs
-        dimnames(biomass_recruited_jytrs2) <- list("Iteration" = 1:n_iter, "Rule"=1:n_rules, "Year" = pyears, "Season" = seasons, "Region" = regions, Sex = sex)
+        dimnames(biomass_recruited_jytrs2) <- list("Iteration" = 1:n_iter, "Rule"=1:n_rules, "Year" = pyears, "Season" = seasons, "Region" = regions, Sex = c(sex,"Total"))
         biomass_recruited_jytrs2 <- reshape2::melt(biomass_recruited_jytrs2) %>%
             dplyr::filter(value > 0)
 
@@ -713,7 +714,7 @@ plot_biomass <- function(object,
         biomass_cpue_ryt2 <- reshape2::melt(biomass_cpue_ryt2)
         
         biomass_total_jytrs2 <- mcmc$biomass_total_jytrs
-        dimnames(biomass_total_jytrs2) <- list("Iteration" = 1:n_iter, "Rules" = 1:n_rules, "Year" = pyears, "Season" = seasons, "Region" = regions, "Sex" = sex)
+        dimnames(biomass_total_jytrs2) <- list("Iteration" = 1:n_iter, "Rules" = 1:n_rules, "Year" = pyears, "Season" = seasons, "Region" = regions, "Sex" = c(sex,"Total"))
         biomass_total_jytrs2 <- reshape2::melt(biomass_total_jytrs2) %>%
             dplyr::filter(value > 0)
         
@@ -736,7 +737,7 @@ plot_biomass <- function(object,
             dplyr::group_by(Iteration, Region, value, Year, Season)
       } else {
          biomass_recruited_jytrs2 <- mcmc$biomass_recruited_ytrs
-        dimnames(biomass_recruited_jytrs2) <- list("Iteration" = 1:n_iter,"Year" = pyears, "Season" = seasons, "Region" = regions, Sex = sex)
+        dimnames(biomass_recruited_jytrs2) <- list("Iteration" = 1:n_iter,"Year" = pyears, "Season" = seasons, "Region" = regions, Sex = c(sex,"Total"))
         biomass_recruited_jytrs2 <- reshape2::melt(biomass_recruited_jytrs2) %>%
             dplyr::filter(value > 0)
 
@@ -763,7 +764,7 @@ plot_biomass <- function(object,
         biomass_cpue_ryt2 <- reshape2::melt(biomass_cpue_ryt2)
         
         biomass_total_jytrs2 <- mcmc$biomass_total_ytrs
-        dimnames(biomass_total_jytrs2) <- list("Iteration" = 1:n_iter, "Year" = pyears, "Season" = seasons, "Region" = regions, "Sex" = sex)
+        dimnames(biomass_total_jytrs2) <- list("Iteration" = 1:n_iter, "Year" = pyears, "Season" = seasons, "Region" = regions, "Sex" = c(sex,"Total"))
         biomass_total_jytrs2 <- reshape2::melt(biomass_total_jytrs2) %>%
             dplyr::filter(value > 0)
         

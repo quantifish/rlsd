@@ -1,5 +1,5 @@
 #' Compare vulnerable biomass from multiple models
-#' 
+#'
 #' @param object_list list of 'lsd.rds' files from multiple models
 #' @param object_names vector of model names associated with each of the output files in object_list
 #' @param figure_dir the directory to save to
@@ -10,7 +10,7 @@
 #' @importFrom grDevices colorRampPalette gray
 #' @importFrom stats quantile
 #' @export
-#' 
+#'
 plot_compare_ssb <- function(object_list, object_names, figure_dir = "compare_figure/", save_plot = TRUE)
 {
     data_list <- lapply(1:length(object_list), function(x) object_list[[x]]@data)
@@ -27,7 +27,7 @@ plot_compare_ssb <- function(object_list, object_names, figure_dir = "compare_fi
         bio <- mcmc_list[[x]]$biomass_ssb_jyr
         dimnames(bio) <- list("Iteration" = 1:n_iter, "Rule" = 1:dim(bio)[2], "Year" = pyears_list[[x]], "Region" = regions_list[[x]])
         bio2 <- reshape2::melt(bio) %>%
-            group_by(Iteration, Year, Rule) %>% 
+            group_by(Iteration, Year, Rule) %>%
             summarise(value = sum(value))
         bio2$Model <- object_names[x]
         return(bio2)
@@ -35,7 +35,7 @@ plot_compare_ssb <- function(object_list, object_names, figure_dir = "compare_fi
     ssb <- data.frame(do.call(rbind, sb_list))
     ssb$Model <- factor(ssb$Model)
     ssb <- ssb %>% mutate(type="SSB")
-    
+
     ssb0_list <- lapply(1:length(object_list), function(x) {
         n_iter <- nrow(mcmc_list[[x]][[1]])
         bio <- mcmc_list[[x]]$SSB0_r
@@ -103,7 +103,7 @@ plot_compare_ssb <- function(object_list, object_names, figure_dir = "compare_fi
         scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
         scale_color_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod)))
     } else{
-        p1 <- p1 + 
+        p1 <- p1 +
         scale_fill_brewer(palette = "Set1") +
         scale_color_brewer(palette = "Set1")
     }
@@ -135,7 +135,7 @@ plot_compare_ssb <- function(object_list, object_names, figure_dir = "compare_fi
         scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
         scale_color_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod)))
     } else{
-        p1 <- p1 + 
+        p1 <- p1 +
         scale_fill_brewer(palette = "Set1") +
         scale_color_brewer(palette = "Set1")
     }
@@ -170,13 +170,13 @@ plot_compare_ssb <- function(object_list, object_names, figure_dir = "compare_fi
         scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
         scale_color_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod)))
     } else{
-        p <- p + 
+        p <- p +
         scale_fill_brewer(palette = "Set1") +
         scale_color_brewer(palette = "Set1")
     }
     if(max(relssb_next$Iteration)==1){
         p <- p + geom_point(aes(x = Model, y=RelSSB, fill = Model), cex=4, pch=21) +
-                 geom_hline(data = relssb_next %>% filter(Model == "base"), aes(yintercept = unique(RelSSB)), linetype=2) 
+                 geom_hline(data = relssb_next %>% filter(Model == "base"), aes(yintercept = unique(RelSSB)), linetype=2)
 
     } else {
         p <- p + geom_violin(aes(x = Model, y=RelSSB, fill = Model)) +
@@ -206,13 +206,13 @@ plot_compare_ssb <- function(object_list, object_names, figure_dir = "compare_fi
         scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
         scale_color_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod)))
     } else{
-        p <- p + 
+        p <- p +
         scale_fill_brewer(palette = "Set1") +
         scale_color_brewer(palette = "Set1")
     }
     if(max(relssb_next_proj$Iteration)==1){
         p <- p + geom_point(aes(x = Model, y=RelSSB, fill = Model, alpha=Year), cex=4, pch=21) +
-                 geom_hline(data = relssb_next_proj %>% filter(Model == "base") %>% filter(Year==max(years)+1), aes(yintercept = unique(RelSSB)), linetype=2) 
+                 geom_hline(data = relssb_next_proj %>% filter(Model == "base") %>% filter(Year==max(years)+1), aes(yintercept = unique(RelSSB)), linetype=2)
 
     } else {
         p <- p + geom_violin(aes(x = Model, y=RelSSB, fill = Model, alpha=Year)) +
@@ -231,7 +231,7 @@ plot_compare_ssb <- function(object_list, object_names, figure_dir = "compare_fi
          geom_text(data = labs_rel, aes(x = min(Year), y = value, label = type), nudge_x=-5) +
          stat_summary(fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(x = Year, y = RelSSB, fill = Model)) +
          stat_summary(fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(x = Year, y = RelSSB, color = Model)) +
-         xlab("Year") + 
+         xlab("Year") +
          ylab("Relative spawning biomass") #+
          # scale_y_continuous(expand = c(0,0), limits = c(0,1.05))
     if(nmod > 5){
@@ -239,7 +239,7 @@ plot_compare_ssb <- function(object_list, object_names, figure_dir = "compare_fi
         scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
         scale_color_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod)))
     } else{
-        p <- p + 
+        p <- p +
         scale_fill_brewer(palette = "Set1") +
         scale_color_brewer(palette = "Set1")
     }
@@ -256,7 +256,7 @@ plot_compare_ssb <- function(object_list, object_names, figure_dir = "compare_fi
          geom_text(data = labs_rel, aes(x = min(Year), y = value, label = type), nudge_x=-5) +
          stat_summary(fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(x = Year, y = RelSSB, fill = Model)) +
          stat_summary(fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(x = Year, y = RelSSB, color = Model)) +
-         xlab("Year") + 
+         xlab("Year") +
          ylab("Relative spawning biomass") #+
          # scale_y_continuous(expand = c(0,0), limits = c(0,1.05))
     if(nmod > 5){
@@ -264,7 +264,7 @@ plot_compare_ssb <- function(object_list, object_names, figure_dir = "compare_fi
         scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
         scale_color_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod)))
     } else{
-        p <- p + 
+        p <- p +
         scale_fill_brewer(palette = "Set1") +
         scale_color_brewer(palette = "Set1")
     }
@@ -279,7 +279,7 @@ plot_compare_ssb <- function(object_list, object_names, figure_dir = "compare_fi
 
 
 #' Compare vulnerable biomass from multiple models
-#' 
+#'
 #' @param object_list list of 'lsd.rds' files from multiple models
 #' @param object_names vector of model names associated with each of the output files in object_list
 #' @param figure_dir the directory to save to
@@ -289,7 +289,7 @@ plot_compare_ssb <- function(object_list, object_names, figure_dir = "compare_fi
 #' @importFrom reshape2 melt
 #' @importFrom stats quantile
 #' @export
-#' 
+#'
 plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_figure/", save_plot = TRUE)
 {
     data_list <- lapply(1:length(object_list), function(x) object_list[[x]]@data)
@@ -314,8 +314,8 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
                 mutate(Season = as.character(Season), Season = ifelse(Year >= data_list[[x]]$season_change_yr, Season, YR)) %>%
                 filter(Season %in% c("YR","AW")) %>%
                 #filter(Year <= max(years_list[[x]])) %>%
-                group_by(Iteration, Year, Season) %>% 
-                summarise(value = sum(value))            
+                group_by(Iteration, Year, Season) %>%
+                summarise(value = sum(value))
         } else {
             bvuln_ytr <- mcmc_list[[x]]$biomass_vulnref_ytr
             dimnames(bvuln_ytr) <- list("Iteration" = 1:n_iter, "Year" = pyears_list[[x]], "Season" = seasons, "Region" = regions_list[[x]])
@@ -324,7 +324,7 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
                 mutate(Season = as.character(Season), Season = ifelse(Year >= data_list[[x]]$season_change_yr, Season, YR)) %>%
                 filter(Season %in% c("YR","AW")) %>%
                 #filter(Year <= max(years_list[[x]])) %>%
-                group_by(Iteration, Year, Season) %>% 
+                group_by(Iteration, Year, Season) %>%
                 summarise(value = sum(value))
         }
 
@@ -362,7 +362,7 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
         stat_summary(data = vb %>% filter(Year %in% years), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1, alpha=0.75) +
         # scale_fill_manual(values = cols_all, labels = object_names) +
         # scale_colour_manual(values = cols_all, labels = object_names) +
-        # guides(colour = guide_legend(override.aes = list(colour = cols_all, linetype = lty_all))) + 
+        # guides(colour = guide_legend(override.aes = list(colour = cols_all, linetype = lty_all))) +
         # scale_linetype(guide=FALSE) +
         expand_limits(y = 0) +
         xlab("Fishing year") + ylab("Vulnerable reference biomass (tonnes)") +
@@ -374,7 +374,7 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
           scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
           scale_color_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod)))
     } else {
-        p <- p + 
+        p <- p +
           scale_fill_brewer(palette = "Set1") +
           scale_color_brewer(palette = "Set1")
     }
@@ -390,7 +390,7 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
         stat_summary(data=vb, fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha=0.75) +
         # scale_fill_manual(values = cols_all, labels = object_names) +
         # scale_colour_manual(values = cols_all, labels = object_names) +
-        # guides(colour = guide_legend(override.aes = list(colour = cols_all, linetype = lty_all))) + 
+        # guides(colour = guide_legend(override.aes = list(colour = cols_all, linetype = lty_all))) +
         # scale_linetype(guide=FALSE) +
         expand_limits(y = 0) +
         xlab("Fishing year") + ylab("Vulnerable reference biomass (tonnes)") +
@@ -402,7 +402,7 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
           scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
           scale_color_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod)))
     } else {
-        p <- p + 
+        p <- p +
           scale_fill_brewer(palette = "Set1") +
           scale_color_brewer(palette = "Set1")
     }
@@ -415,7 +415,7 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
 
 
 #' Compare recruitment from multiple models
-#' 
+#'
 #' @param object_list list of 'lsd.rds' files from multiple models
 #' @param object_names vector of model names associated with each of the output files in object_list
 #' @param figure_dir the directory to save to
@@ -426,12 +426,12 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
 #' @importFrom stats quantile
 #' @importFrom RColorBrewer brewer.pal
 #' @export
-#' 
+#'
 plot_compare_recruitment <- function(object_list, object_names, figure_dir = "compare_figure/", save_plot = TRUE)
 {
     data_list <- lapply(1:length(object_list), function(x) object_list[[x]]@data)
     mcmc_list <- lapply(1:length(object_list), function(x) object_list[[x]]@mcmc)
-    
+
     ny_list <- lapply(1:length(object_list), function(x) dim(mcmc_list[[x]]$recruits_ry)[3])
     years_list <- lapply(1:length(object_list), function(x) data_list[[x]]$first_yr:data_list[[x]]$last_yr)
     pyears_list <- lapply(1:length(object_list), function(x) data_list[[x]]$first_yr:(data_list[[x]]$first_yr + ny_list[[x]] - 1))
@@ -459,18 +459,18 @@ plot_compare_recruitment <- function(object_list, object_names, figure_dir = "co
 
     # plot recruitment
     xmin <- min(recruits$Year)
-    xmax <- max(recruits$Year)	
-    
+    xmax <- max(recruits$Year)
+
     # n1 <- sapply(1:length(object_names), function(x) strsplit(object_names[x], "_")[[1]][1])
     # # n2 <- sapply(1:length(object_names), function(x) strsplit(object_names[x], paste0(n1[x],"_"))[[1]][2])
     # # n2[which(is.na(n2))] <- "base"
-    
+
     # n2u <- unique(n1)
     # nm <- length(n2u)
     # if(nm > 2) cols <- brewer.pal(nm, "Set1")
     # if(nm == 2) cols <- c("tomato", "steelblue")
     # if(nm == 1) cols <- "tomato"
-    
+
     # cols_all <- unlist(as.vector(sapply(1:nm, function(x) rep(cols[x],length(which(n1==n2u[x]))))))
     # names(cols_all) <- object_names
     # lty_all <- rep(1, length(object_names))
@@ -486,7 +486,7 @@ plot_compare_recruitment <- function(object_list, object_names, figure_dir = "co
         stat_summary(fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1, alpha=0.75) +
         # scale_fill_manual(values = cols_all, labels = object_names) +
         # scale_colour_manual(values = cols_all, labels = object_names) +
-        # guides(colour = guide_legend(override.aes = list(colour = cols_all, linetype = lty_all))) + 
+        # guides(colour = guide_legend(override.aes = list(colour = cols_all, linetype = lty_all))) +
         # scale_linetype(guide=FALSE) +
         expand_limits(y = 0) +
         xlab("Fishing year") + ylab("Recruitment (millions of individuals)") +
@@ -498,14 +498,14 @@ plot_compare_recruitment <- function(object_list, object_names, figure_dir = "co
         scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
         scale_color_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod)))
     } else{
-        p <- p + 
+        p <- p +
         scale_fill_brewer(palette = "Set1") +
         scale_color_brewer(palette = "Set1")
     }
     # if (data_list[[1]]$n_area > 1) {
     #     p <- p + facet_wrap(~Region)
     # }
-    
+
    if (save_plot) {
       ggsave(paste0(figure_dir, "recruitment_compare.png"), p, width = 10)
    }
@@ -517,7 +517,7 @@ plot_compare_recruitment <- function(object_list, object_names, figure_dir = "co
         stat_summary(fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1, alpha=0.75) +
         # scale_fill_manual(values = cols_all, labels = object_names) +
         # scale_colour_manual(values = cols_all, labels = object_names) +
-        # guides(colour = guide_legend(override.aes = list(colour = cols_all, linetype = lty_all))) + 
+        # guides(colour = guide_legend(override.aes = list(colour = cols_all, linetype = lty_all))) +
         # scale_linetype(guide=FALSE) +
         expand_limits(y = 0) +
         xlab("Fishing year") + ylab("Recruitment (millions of individuals)") +
@@ -529,14 +529,14 @@ plot_compare_recruitment <- function(object_list, object_names, figure_dir = "co
           scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
           scale_color_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod)))
     } else {
-        p <- p + 
+        p <- p +
           scale_fill_brewer(palette = "Set1") +
           scale_color_brewer(palette = "Set1")
     }
     # if (data_list[[1]]$n_area > 1) {
     #     p <- p + facet_wrap(~Region)
     # }
-    
+
    if (save_plot) {
       ggsave(paste0(figure_dir, "recruitment_compare_v2.png"), p, width = 10)
    } else {
@@ -546,7 +546,7 @@ plot_compare_recruitment <- function(object_list, object_names, figure_dir = "co
 
 
 #' Compare selectivity
-#' 
+#'
 #' @param object_list list of 'lsd.rds' files from multiple stocks
 #' @param object_names vector of model names associated with each of the output files in object_list
 #' @param figure_dir the directory to save to
@@ -556,7 +556,7 @@ plot_compare_recruitment <- function(object_list, object_names, figure_dir = "co
 #' @importFrom reshape2 melt
 #' @importFrom stats quantile
 #' @export
-#' 
+#'
 plot_compare_selectivity <- function(object_list, object_names, figure_dir = "compare_figure/", save_plot=TRUE){
     data_list <- lapply(1:length(object_list), function(x) object_list[[x]]@data)
     mcmc_list <- lapply(1:length(object_list), function(x) object_list[[x]]@mcmc)
@@ -570,7 +570,7 @@ plot_compare_selectivity <- function(object_list, object_names, figure_dir = "co
         n_season <- data_list[[x]]$n_season
         regions <- 1:data_list[[x]]$n_area
         pyears <- pyears_list[[x]]
-        
+
         w <- data_list[[x]]$which_sel_rsyt
         dimnames(w) <- list("Region" = regions, "Sex" = sex, "Year" = pyears, "Season" = 1:n_season)
         w <- reshape2::melt(w, value.name = "Selex")
@@ -612,12 +612,12 @@ plot_compare_selectivity <- function(object_list, object_names, figure_dir = "co
         scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
         scale_color_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod)))
     } else{
-        p <- p + 
+        p <- p +
         scale_fill_brewer(palette = "Set1") +
         scale_color_brewer(palette = "Set1")
     }
 
-        
+
         if(length(unique(sel$Year))==1 & length(unique(sel$Season))==1) p <- p + guides(linetype = FALSE)
 
         areas <- unique(sapply(1:length(data_list), function(x) data_list[[x]]$n_area))
@@ -634,7 +634,7 @@ plot_compare_selectivity <- function(object_list, object_names, figure_dir = "co
             p <- p + facet_grid( ~ Sex)
           }
         }
-        
+
         p <- p + #scale_x_continuous(breaks = seq(30, 90, 10)) +
             expand_limits(y = c(0, 1)) +
             xlab("Length bin") +
@@ -649,7 +649,7 @@ plot_compare_selectivity <- function(object_list, object_names, figure_dir = "co
 
 
 #' Compare catchability coefficient q from multiple models
-#' 
+#'
 #' @param object_list list of 'lsd.rds' files from multiple models
 #' @param object_names vector of model names associated with each of the output files in object_list
 #' @param figure_dir the directory to save to
@@ -659,7 +659,7 @@ plot_compare_selectivity <- function(object_list, object_names, figure_dir = "co
 #' @importFrom reshape2 melt
 #' @importFrom stats quantile
 #' @export
-#' 
+#'
 plot_compare_q <- function(object_list, object_names, figure_dir = "compare_figure/", save_plot = TRUE)
 {
     data_list <- lapply(1:length(object_list), function(x) object_list[[x]]@data)
@@ -681,7 +681,7 @@ plot_compare_q <- function(object_list, object_names, figure_dir = "compare_figu
                     subq[i] <- maxq
                     next
                 }
-                if (subq[i]!=max) subq[i] <- subq[i] + (maxq - max) 
+                if (subq[i]!=max) subq[i] <- subq[i] + (maxq - max)
             }
             q_info_list[[x]]$qtype <- subq
         }
@@ -713,13 +713,13 @@ plot_compare_q <- function(object_list, object_names, figure_dir = "compare_figu
             filter(Year %in% unique(q_info_list[[x]]$Year)) %>%
             mutate(QY = paste(Year, qtype)) %>%
             filter(QY %in% q_info_list[[x]]$QY)
-        
+
         q2$Model <- object_names[x]
         q2$qconstant <- as.character(ifelse(grepl("qdrift",object_names[[x]]),0,1))
         # if (data_list[[x]]$n_area > 1 & "Region" %in% colnames(q2) == FALSE) q2$Region <- "All regions"
         return(q2)
     })
-    
+
     q <- data.frame(do.call(rbind, q_list)) %>%
         group_by(Iteration, Year, Model, qconstant, qtype, QY)
     q$Model <- factor(q$Model)
@@ -736,7 +736,7 @@ plot_compare_q <- function(object_list, object_names, figure_dir = "compare_figu
     # if(nm == 2) cols <- c("tomato", "steelblue")
     # if(nm == 1) cols <- "tomato"
 
-    # cols_all <- unlist(as.vector(sapply(1:nm, function(x) rep(cols[x],length(which(n1==n2u[x]))))))    
+    # cols_all <- unlist(as.vector(sapply(1:nm, function(x) rep(cols[x],length(which(n1==n2u[x]))))))
     # names(cols_all) <- object_names
     # lty_all <- rep(1, length(object_names))
     # if (length(unique(n1)) > 1) lty_all[which(n1 == "qconstant")] <- 3
@@ -751,7 +751,7 @@ plot_compare_q <- function(object_list, object_names, figure_dir = "compare_figu
         stat_summary(fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1, alpha=0.75) +
         # scale_fill_manual(values=cols_all, labels=object_names) +
         # scale_colour_manual(values=cols_all, labels=object_names) +
-        # guides(colour = guide_legend(override.aes = list(colour = cols_all, linetype = lty_all))) + 
+        # guides(colour = guide_legend(override.aes = list(colour = cols_all, linetype = lty_all))) +
         # scale_linetype(guide=FALSE) +
         expand_limits(y = 0) +
         xlab("Fishing year") + ylab("Catchability coefficient (q)") +
@@ -763,10 +763,10 @@ plot_compare_q <- function(object_list, object_names, figure_dir = "compare_figu
         scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
         scale_color_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod)))
     } else{
-        p <- p + 
+        p <- p +
         scale_fill_brewer(palette = "Set1") +
         scale_color_brewer(palette = "Set1")
-    }    
+    }
     # if (data_list[[1]]$n_area > 1) {
     #     p <- p + facet_wrap(~Region)
     # }
@@ -778,43 +778,43 @@ plot_compare_q <- function(object_list, object_names, figure_dir = "compare_figu
 }
 
 #' Table comparing residuals for various data types across models
-#' 
+#'
 #' @param object_list list of 'lsd.rds' files from multiple models
 #' @param object_names vector of model names associated with each of the output files in object_list
 #' @param figure_dir the directory to save to
 #' @import dplyr
 #' @importFrom reshape2 melt
+#' @importFrom tidyr pivot_longer pivot_wider
 #' @export
-#' 
-table_compare_residuals <- function(object_list, object_names, figure_dir = "compare_figure/")
-{
-
-
+#'
+table_compare_residuals <- function(object_list, object_names, figure_dir = "compare_figure/") {
   rlist <- lapply(1:length(object_list), function(x){
     res <- table_residuals(object = object_list[[x]], figure_dir = figure_dir, save_table = FALSE)
     res <- res %>% mutate("model"=object_names[[x]])
     return(res)
   })
   rdf <- do.call(rbind, rlist)
-  rdf2 <- rdf %>% 
-        tidyr::pivot_longer(-c(model,data), names_to = "residual_type", values_to="value") %>%
+  rdf2 <- rdf %>%
+        tidyr::pivot_longer(-c(model,data), names_to = "residual_type", values_to = "value") %>%
         tidyr::pivot_wider(names_from = model)
 
-  write.csv(rdf2, file = file.path(figure_dir, "Residual_summaries.csv"), row.names=FALSE)
-
+  write.csv(rdf2, file = file.path(figure_dir, "Residual_summaries.csv"), row.names = FALSE)
 }
 
 
 #' Table computing leave-one-out information criterion for various datasets
-#' 
+#'
 #' @param object_list list of 'lsd.rds' files from multiple models
 #' @param object_names vector of model names associated with each of the output files in object_list
 #' @param figure_dir the directory to save to
 #' @import loo dplyr
 #' @importFrom reshape2 melt
+#' @importFrom parallel detectCores
 #' @export
-#' 
-looic <- function(object_list, object_names, figure_dir = "compare_figure/"){
+#'
+looic <- function(object_list, object_names, figure_dir = "compare_figure/") {
+
+  options(mc.cores = detectCores())
 
     mcmc_list <- lapply(1:length(object_list), function(x) object_list[[x]]@mcmc)
     n_iter <- sapply(1:length(object_list), function(x) nrow(mcmc_list[[x]][[1]]))
@@ -864,7 +864,7 @@ looic <- function(object_list, object_names, figure_dir = "compare_figure/"){
        #    if(any(check == 0)){
        #      index <- which(check==0)
        #      sub[1:nrow(sub),index] <- 1e-2
-       #    } 
+       #    }
        #    return(sub)
        #   })
        #   lllf2 <- do.call(rbind, lllf2)

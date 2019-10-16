@@ -20,6 +20,7 @@ plot_compare_ssb <- function(object_list, object_names, figure_dir = "compare_fi
     years_list <- lapply(1:length(object_list), function(x) data_list[[x]]$first_yr:data_list[[x]]$last_yr)
     pyears_list <- lapply(1:length(object_list), function(x) data_list[[x]]$first_yr:data_list[[x]]$last_proj_yr)
     regions_list <- lapply(1:length(object_list), function(x) 1:data_list[[x]]$n_area)
+    regions_list2 <- lapply(1:length(object_list), function(x) c(regions_list[[x]], "Total"))
 
     sb_list <- lapply(1:length(object_list), function(x) {
         n_iter <- nrow(mcmc_list[[x]][[1]])
@@ -38,7 +39,7 @@ plot_compare_ssb <- function(object_list, object_names, figure_dir = "compare_fi
     ssb0_list <- lapply(1:length(object_list), function(x) {
         n_iter <- nrow(mcmc_list[[x]][[1]])
         bio <- mcmc_list[[x]]$SSB0_r
-        dimnames(bio) <- list("Iteration" = 1:n_iter, "Region" = regions_list[[x]])
+        dimnames(bio) <- list("Iteration" = 1:n_iter, "Region" = regions_list2[[x]])
         hl <- reshape2::melt(bio) %>%
             left_join(expand.grid(Iteration = 1:n_iter, Year = pyears_list[[x]]), by = "Iteration") %>%
             group_by(Iteration, Year) %>%
@@ -197,7 +198,7 @@ plot_compare_ssb <- function(object_list, object_names, figure_dir = "compare_fi
          geom_hline(aes(yintercept = 0.1), col="gray") +
          geom_text(data = labs_rel, aes(x = "base", y = value, label = type), nudge_x = nmod-1) +
          ylab("Terminal year relative spawning biomass") +
-         xlab("Model") #+
+         xlab("Model") +
          # scale_y_continuous(expand = c(0,0), limits = c(0, 1)) +
          scale_alpha_manual(values = c(1, 0.5), guide=F)
     if(nmod > 5){
@@ -305,15 +306,28 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
     vb_list <- lapply(1:length(object_list), function(x) {
         n_iter <- nrow(mcmc_list[[x]][[1]])
 
-        bvuln_ytr <- mcmc_list[[x]]$biomass_vulnref_jytr
-        dimnames(bvuln_ytr) <- list("Iteration" = 1:n_iter, "Rules" = 1:rules_list[[x]], "Year" = pyears_list[[x]], "Season" = seasons, "Region" = regions_list[[x]])
-        bvuln_ytr2 <- reshape2::melt(bvuln_ytr) %>%
-            filter(value > 0) %>%
-            mutate(Season = as.character(Season), Season = ifelse(Year >= data_list[[x]]$season_change_yr, Season, YR)) %>%
-            filter(Season %in% c("YR","AW")) %>%
-            #filter(Year <= max(years_list[[x]])) %>%
-            group_by(Iteration, Year, Season) %>% 
-            summarise(value = sum(value))
+        if("biomass_vulnref_jytr" %in% names(mcmc_list[[x]])){
+            bvuln_ytr <- mcmc_list[[x]]$biomass_vulnref_jytr
+            dimnames(bvuln_ytr) <- list("Iteration" = 1:n_iter, "Rules" = 1:rules_list[[x]], "Year" = pyears_list[[x]], "Season" = seasons, "Region" = regions_list[[x]])
+            bvuln_ytr2 <- reshape2::melt(bvuln_ytr) %>%
+                filter(value > 0) %>%
+                mutate(Season = as.character(Season), Season = ifelse(Year >= data_list[[x]]$season_change_yr, Season, YR)) %>%
+                filter(Season %in% c("YR","AW")) %>%
+                #filter(Year <= max(years_list[[x]])) %>%
+                group_by(Iteration, Year, Season) %>% 
+                summarise(value = sum(value))            
+        } else {
+            bvuln_ytr <- mcmc_list[[x]]$biomass_vulnref_ytr
+            dimnames(bvuln_ytr) <- list("Iteration" = 1:n_iter, "Year" = pyears_list[[x]], "Season" = seasons, "Region" = regions_list[[x]])
+            bvuln_ytr2 <- reshape2::melt(bvuln_ytr) %>%
+                filter(value > 0) %>%
+                mutate(Season = as.character(Season), Season = ifelse(Year >= data_list[[x]]$season_change_yr, Season, YR)) %>%
+                filter(Season %in% c("YR","AW")) %>%
+                #filter(Year <= max(years_list[[x]])) %>%
+                group_by(Iteration, Year, Season) %>% 
+                summarise(value = sum(value))
+        }
+
         bvuln_ytr2$Model <- object_names[x]
         bvuln_ytr2$qconstant <- as.character(ifelse(grepl("qconstant", object_names[[x]]), 1, 0))
         return(bvuln_ytr2)

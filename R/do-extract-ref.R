@@ -11,27 +11,22 @@
 #' @importFrom utils write.csv write.table
 #' @export
 #'
-do_extract_ref <- function(dir = ".", data = TRUE,
-                       mcmc = FALSE, variational = FALSE,
-                       model = "ref_lsd")
+do_extract_ref <- function(dir = ".", model = "ref_lsd")
 {
-
     # pars we want for diagnostics
     do_extract_items <- c("pred_catch_sl_jryt", 
                           "pred_catch_nsl_jryt",
                           "resid_catch_sl_jryt", 
                           "resid_catch_nsl_jryt",
                           "recruits_ry", 
-                          "mp_offset_cpue_jry",
-                          "biomass_vulnref_jytr",
+                          #"mp_offset_cpue_jry",
+                          #"biomass_vulnref_jytr",
                           "biomass_vulnref_AW_jyr", 
                           "biomass_total_jytrs",
                           "Btot0_r",
                           "B0_r", 
                           "biomass_ssb_jyr",
-                          "SSB0_r", 
-                          "MSY_r",
-                          "Bmsy_r")  
+                          "SSB0_r")
 
     # "proj_catch_commercial_jryt", 
     # "proj_catch_recreational_jryt",
@@ -42,22 +37,17 @@ do_extract_ref <- function(dir = ".", data = TRUE,
     # initialise object
     dS4 <- new("lsdOutput", model.name = model)
     
-    if (data) {
         datfile <- list.files(pattern = "[.]dat")[grepl(model, list.files(pattern = "[.]dat"))]
         if (length(datfile) > 0) {
             message("Reading ", datfile)
             dS4@data <- rstan::read_rdump(datfile)
             dS4@regions <- as.character(1:dS4@data$n_area)
-        } else warning("no 'dat' file")
-    }
-
-    if (mcmc) {
-        if (file.exists("mpe.csv")){
-            mcmcfiles <- "mpe.csv"
         } else {
-            mcmcfiles <- list.files(pattern = "[.]mcmc")[grepl(model, list.files(pattern = "[.]mcmc"))]
+          warning("no 'dat' file")
         }
-        if (length(mcmcfiles) > 0) {
+
+        if (file.exists("mpe.csv")){
+          mcmcfiles <- "mpe.csv"
             message("Reading ", mcmcfiles)
             # create stanfit object from mcmc outputs
             #mcmc_raw_stan <- rstan::read_stan_csv(mcmcfiles)
@@ -66,9 +56,9 @@ do_extract_ref <- function(dir = ".", data = TRUE,
             
             # create list object containing all model outputs
             dS4@mcmc <- lsd::extract(mcmc_raw, pars = do_extract_items, permuted = TRUE, include = TRUE)
-            
-        } else warning("no 'mcmc' files")
-    }
+        } else {
+          warning("no 'mpe' file")
+        }
     
     return(dS4)
 }

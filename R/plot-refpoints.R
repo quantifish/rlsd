@@ -113,6 +113,7 @@ plot_refpoints <- function(object, figure_dir){
   dimnames(vb) <- list("Iteration" = 1:n_iter, "RuleNum" = 1:dim(vb)[2], "Year" = pyears, "Region" = regions)
   vb2 <- reshape2::melt(vb) %>% 
     dplyr::rename(VB = value)
+  vb2$Region <- factor(vb2$Region)
   
   vb0 <- mcmc$B0_r
   dimnames(vb0) <- list("Iteration" = 1:n_iter, "Region" = regions2)
@@ -120,11 +121,12 @@ plot_refpoints <- function(object, figure_dir){
     dplyr::rename(VB0 = value)
   
   tb <- mcmc$biomass_total_jytrs
-  dimnames(tb) <- list("Iteration" = 1:n_iter, "RuleNum" = 1:dim(vb)[2], "Year" = pyears, "Season" = seasons, "Region" = regions, "Sex" = c(sex, "Total"))
+  dimnames(tb) <- list("Iteration" = 1:n_iter, "RuleNum" = 1:dim(tb)[2], "Year" = pyears, "Season" = seasons, "Region" = regions, "Sex" = c(sex, "Total"))
   tb2 <- reshape2::melt(tb) %>% 
     dplyr::filter(Sex == "Total") %>%
     dplyr::group_by(Iteration, RuleNum, Year, Region) %>%
     dplyr::summarise(TB = sum(value))
+  tb2$Region <- factor(tb2$Region)
   
   tb0 <- mcmc$Btot0_r
   dimnames(tb0) <- list("Iteration" = 1:n_iter, "Region" = regions2)
@@ -134,6 +136,7 @@ plot_refpoints <- function(object, figure_dir){
   ssb <- mcmc$biomass_ssb_jyr
   dimnames(ssb) <- list("Iteration" = 1:n_iter, "RuleNum" = 1:dim(ssb)[2], "Year" = pyears, "Region" = regions)
   ssb2 <- reshape2::melt(ssb) %>% dplyr::rename("SSB"=value) 
+  ssb2$Region <- factor(ssb2$Region)
   
   ssb0 <- mcmc$SSB0_r
   dimnames(ssb0) <- list("Iteration" = 1:n_iter, "Region" = regions2)
@@ -144,6 +147,7 @@ plot_refpoints <- function(object, figure_dir){
   dimnames(rec) <- list("Iteration" = 1:n_iter, "Region" = regions, "Year" = pyears)
   rec2 <- reshape2::melt(rec) %>%
     dplyr::rename(Recruitment = value)
+  rec2$Region <- factor(rec2$Region)
   
   relssb <- inner_join(ssb2, ssb0) %>%
     dplyr::mutate(RelSSB = SSB/SSB0)
@@ -162,9 +166,14 @@ plot_refpoints <- function(object, figure_dir){
   # relssb$Rule <- sapply(1:nrow(rules), function(x) ifelse(relssb$RuleType[x]=="FixedCatch", rules[x,2], NA))
   # relssb$Rule[which(relssb$RuleType=="CPUErule")] <- paste0("Rule", 1:length(which(relssb$RuleType=="CPUErule")))
   # relssb <- relssb %>% select(-RuleNum)
-  
+  catch$Region <- factor(catch$Region)
   info <- full_join(catch, relb3) 
   info$Region <- paste0("Region ", info$Region)
+  
+  rm(relb3)
+  rm(catch)
+  gc()
+  
   pinfo <- info %>% filter(Year %in% cutyears)
   dinfo <- info %>% ungroup() %>% filter(Year %in% years) %>% filter(RuleNum == 1) %>% select(-c(RuleNum))
   
@@ -179,9 +188,9 @@ plot_refpoints <- function(object, figure_dir){
                      VB5 = quantile(RelVB, prob = 0.05),
                      VB50 = quantile(RelVB, prob = 0.5),
                      VB95 = quantile(RelVB, prob = 0.95),
-                     TB5 = quantile(RelTB, prob = 0.05),
-                     TB50 = quantile(RelTB, prob = 0.5),
-                     TB95 = quantile(RelTB, prob = 0.95),		
+                     # TB5 = quantile(RelTB, prob = 0.05),
+                     # TB50 = quantile(RelTB, prob = 0.5),
+                     # TB95 = quantile(RelTB, prob = 0.95),		
                      R5 = quantile(Recruitment, prob = 0.05),
                      R50 = quantile(Recruitment, prob = 0.5),
                      R95 = quantile(Recruitment, prob = 0.95),	
@@ -235,15 +244,15 @@ plot_refpoints <- function(object, figure_dir){
                      SB95 = quantile(RelSSB, prob = 0.95),
                      VB5 = quantile(RelVB, prob = 0.05),
                      VB50 = quantile(RelVB, prob = 0.5),
-                     VB95 = quantile(RelVB, prob = 0.95),
-                     TB5 = quantile(RelTB, prob = 0.05),
-                     TB50 = quantile(RelTB, prob = 0.5),
-                     TB95 = quantile(RelTB, prob = 0.95))
+                     VB95 = quantile(RelVB, prob = 0.95))#,
+                     # TB5 = quantile(RelTB, prob = 0.05),
+                     # TB50 = quantile(RelTB, prob = 0.5),
+                     # TB95 = quantile(RelTB, prob = 0.95))
   stat2 <- t(status)
-  colnames(stat2) <- max(dinfo$Year)
+  colnames(stat2) <- rep(max(dinfo$Year),length(regions))
   write.csv(stat2, file.path(figure_dir, "Current_status.csv"))
   
-  outputs <- c("Catch", "RelSSB", "RelVB", "RelTB", "Recruitment")
+  outputs <- c("Catch", "RelSSB", "RelVB",  "Recruitment")
   findc2 <- lapply(1:length(outputs), function(x){
     if(outputs[x] == "Catch"){
       sub <- findc %>% select(Region, RuleNum, C5, C50, C95, AvgTotalCatch, CV, CatchConstraint, Prisk, RiskConstraint, FixedCatch, Constraint, Type)
@@ -282,45 +291,76 @@ plot_refpoints <- function(object, figure_dir){
   findc3 <- findc2 %>% tidyr::pivot_wider(names_from = Percentile, values_from = Target, names_prefix = "Percentile")
   
   dinfo2 <- dinfo %>% 
-    select(Year, Region, Catch, RelSSB, RelVB, RelTB, Recruitment) %>%
-    tidyr::pivot_longer(cols = c(Catch, RelSSB, RelVB, RelTB, Recruitment), names_to = "Variable")
+    select(Year, Region, Catch, RelSSB, RelVB,  Recruitment) %>%
+    tidyr::pivot_longer(cols = c(Catch, RelSSB, RelVB,  Recruitment), names_to = "Variable")
   dinfo3 <- inner_join(dinfo2, findc3) 
   
   pinfo2 <- pinfo %>%
-    select(Iteration, Year, Region, RuleNum, Catch, RelSSB, RelVB, RelTB, Recruitment) %>%
-    tidyr::pivot_longer(cols = c(Catch, RelSSB, RelVB, RelTB, Recruitment), names_to = "Variable")
+    select(Iteration, Year, Region, RuleNum, Catch, RelSSB, RelVB, Recruitment) %>%
+    tidyr::pivot_longer(cols = c(Catch, RelSSB, RelVB,  Recruitment), names_to = "Variable")
   pinfo3 <- inner_join(pinfo2, findc3)
   
   info2 <- info %>%
-    select(Iteration, Year, Region, RuleNum, Catch, RelSSB, RelVB, RelTB, Recruitment) %>%
-    tidyr::pivot_longer(cols = c(Catch, RelSSB, RelVB, RelTB, Recruitment), names_to = "Variable")
+    select(Iteration, Year, Region, RuleNum, Catch, RelSSB, RelVB,  Recruitment) %>%
+    tidyr::pivot_longer(cols = c(Catch, RelSSB, RelVB, Recruitment), names_to = "Variable")
   info3 <- inner_join(info2, findc3)
   
   p <- ggplot(dinfo3) +
     geom_ribbon(aes(x = Year, ymin = Percentile5, ymax = Percentile95), alpha = 0.2, color = NA, fill = "forestgreen") +
     geom_line(aes(x = Year, y = Percentile50), color = "forestgreen", lwd = 1.5) +
     geom_line(aes(x = Year, y = value), lwd = 2) +
-    facet_wrap(Variable~Region, scales = "free_y") +
     expand_limits(y=0) +
     xlab("Year") + 
     ylab("Value") + 
     theme_lsd()
-  ggsave(file.path(figure_dir, "Target_Current.png"), p, width=10, height=6)
+  if(length(regions) == 1)  p <- p + facet_wrap(Variable~Region, scales = "free_y")
+  if(length(regions) > 1) p <- p + facet_wrap(Region~Variable, scales = "free_y", nrow = length(regions))
+  ggsave(file.path(figure_dir, "Target_Current.png"), p, width=12, height=6)
   
   p2 <- ggplot(info3) +
     geom_ribbon(aes(x = Year, ymin = Percentile5, ymax = Percentile95), alpha = 0.3, color = NA, fill = "forestgreen") +
     geom_line(aes(x = Year, y = Percentile50), color = "forestgreen", lwd = 1.5) +
     stat_summary(aes(x = Year, y = value), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.2) +
     stat_summary(aes(x = Year, y = value), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1) +
-    geom_line(data = info2 %>% filter(Iteration == 1) %>% filter(RuleNum == unique(info3$RuleNum)), aes(x = Year, y = value), lty=2) +
-    geom_line(data = info2 %>% filter(Iteration == 2) %>% filter(RuleNum == unique(info3$RuleNum)), aes(x = Year, y = value), lty=2) +
-    geom_line(data = info2 %>% filter(Iteration == 3) %>% filter(RuleNum == unique(info3$RuleNum)), aes(x = Year, y = value), lty=2) +
-    facet_wrap(Variable~Region, scales = "free_y") +
     xlab("Year") +
     ylab("Value") + 
     expand_limits(y=0) +
     theme_lsd()
+  if(length(regions) == 1){
+    p2 <- p2 + facet_wrap(Variable~Region, scales = "free_y")
+  }
+  if(length(regions) > 1){
+    p2 <- p2 + facet_wrap(Region~Variable, scales = "free_y", nrow = length(regions))
+  }
   ggsave(file.path(figure_dir, "Target_Projections.png"), p2, width=12, height=6)
+  
+  p2_v2 <- ggplot(info3) +
+    geom_ribbon(aes(x = Year, ymin = Percentile5, ymax = Percentile95), alpha = 0.3, color = NA, fill = "forestgreen") +
+    geom_line(aes(x = Year, y = Percentile50), color = "forestgreen", lwd = 1.5) +
+    stat_summary(aes(x = Year, y = value), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.2) +
+    stat_summary(aes(x = Year, y = value), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1) +
+    xlab("Year") +
+    ylab("Value") + 
+    expand_limits(y=0) +
+    theme_lsd()
+  if(length(regions) == 1){
+    p2_v2 <- p2_v2 +
+      geom_line(data = info2 %>% filter(Iteration == 1) %>% filter(RuleNum == as.numeric(findc[which(findc$Region == 1),"RuleNum"])), aes(x = Year, y = value), lty=2) +
+      geom_line(data = info2 %>% filter(Iteration == 2) %>% filter(RuleNum == as.numeric(findc[which(findc$Region == 1),"RuleNum"])), aes(x = Year, y = value), lty=2) +
+      geom_line(data = info2 %>% filter(Iteration == 3) %>% filter(RuleNum == as.numeric(findc[which(findc$Region == 1),"RuleNum"])), aes(x = Year, y = value), lty=2) 
+    p2_v2 <- p2_v2 + facet_wrap(Variable~Region, scales = "free_y")
+  }
+  if(length(regions) > 1){
+    p2_v2 <- p2_v2 +
+      geom_line(data = info2 %>% filter(Iteration == 1) %>% filter(RuleNum == as.numeric(findc[which(findc$Region == 1),"RuleNum"])) %>% filter(Region == 1), aes(x = Year, y = value), lty=2) +
+      geom_line(data = info2 %>% filter(Iteration == 2) %>% filter(RuleNum == as.numeric(findc[which(findc$Region == 1),"RuleNum"])) %>% filter(Region == 1), aes(x = Year, y = value), lty=2) +
+      geom_line(data = info2 %>% filter(Iteration == 3) %>% filter(RuleNum == as.numeric(findc[which(findc$Region == 1),"RuleNum"])) %>% filter(Region == 1), aes(x = Year, y = value), lty=2) +
+      geom_line(data = info2 %>% filter(Iteration == 1) %>% filter(RuleNum == as.numeric(findc[which(findc$Region == 2),"RuleNum"])) %>% filter(Region == 2), aes(x = Year, y = value), lty=2) +
+      geom_line(data = info2 %>% filter(Iteration == 2) %>% filter(RuleNum == as.numeric(findc[which(findc$Region == 2),"RuleNum"])) %>% filter(Region == 2), aes(x = Year, y = value), lty=2) +
+      geom_line(data = info2 %>% filter(Iteration == 3) %>% filter(RuleNum == as.numeric(findc[which(findc$Region == 2),"RuleNum"])) %>% filter(Region == 2), aes(x = Year, y = value), lty=2) 
+    p2_v2 <- p2_v2 + facet_wrap(Region~Variable, scales = "free_y", nrow = length(regions))
+  }
+  ggsave(file.path(figure_dir, "Target_Projections_wIters.png"), p2_v2, width=12, height=6)
   
   p3 <- ggplot(summary) +
     geom_segment(aes(x=SB5, xend=SB95, y=C50, yend=C50, color = factor(RiskConstraint)), alpha=0.75, lwd=1.3) +
@@ -368,8 +408,40 @@ plot_refpoints <- function(object, figure_dir){
     theme_lsd(base_size=14)
   ggsave(file.path(figure_dir, "Catch_versus_RelSSB_AllConstraints.png"), p5, width=12, height=6) 
   
-  
+  p5_v2 <- ggplot(summary) +
+    geom_segment(aes(x=SB5, xend=SB95, y=C50, yend=C50, color = factor(Constraint)), alpha=0.75, lwd=1.3) +
+    geom_segment(aes(x=SB50, xend=SB50, y=C5, yend=C95, color = factor(Constraint)), alpha=0.75, lwd=1.3) +
+    geom_point(aes(x=SB50, y=C50, fill=factor(Constraint)), pch=21, alpha=0.75, cex=4) +
+    expand_limits(x = 0, y = 0) +
+    # scale_x_continuous(limits = c(0, 1)) +
+    facet_grid(.~Region, scales="free_y", shrink=FALSE) +
+    geom_vline(data = findc, aes(xintercept = SB50), lty=2) +
+    geom_hline(data = findc, aes(yintercept = C50), lty=2) +
+    xlab("Relative spawning stock biomass") +
+    ylab("Catch") +
+    scale_colour_viridis_d() +
+    scale_fill_viridis_d() +
+    guides(fill = guide_legend(title = "Constraint"), color = guide_legend(title = "Constraint")) +
+    theme_lsd(base_size=14)
+  ggsave(file.path(figure_dir, "Catch_versus_RelSSB_AllConstraints_wRef.png"), p5_v2, width=12, height=6) 
+ 
   p6 <- ggplot(summary) +
+    geom_segment(aes(x=VB5, xend=VB95, y=C50, yend=C50, color = factor(Constraint)), alpha=0.75, lwd=1.3) +
+    geom_segment(aes(x=VB50, xend=VB50, y=C5, yend=C95, color = factor(Constraint)), alpha=0.75, lwd=1.3) +
+    geom_point(aes(x=VB50, y=C50, fill=factor(Constraint)), pch=21, alpha=0.75, cex=4) +
+    expand_limits(x = 0, y = 0) +
+    # geom_point(data=findc, aes(x = VB50, y = C50), pch=21, cex=4) +
+    # scale_x_continuous(limits = c(0, 1)) +
+    facet_grid(.~Region, scales="free_y", shrink=FALSE) +
+    xlab("Relative vulnerable reference biomass") +
+    ylab("Catch") +
+    scale_colour_viridis_d() +
+    scale_fill_viridis_d() +
+    guides(fill = guide_legend(title = "Constraint"), color = guide_legend(title = "Constraint")) +
+    theme_lsd(base_size=14)
+  ggsave(file.path(figure_dir, "Catch_versus_RelVB_AllConstraint.png"), p6, width=12, height=6) 
+  
+  p6_v2 <- ggplot(summary) +
     geom_segment(aes(x=VB5, xend=VB95, y=C50, yend=C50, color = factor(Constraint)), alpha=0.75, lwd=1.3) +
     geom_segment(aes(x=VB50, xend=VB50, y=C5, yend=C95, color = factor(Constraint)), alpha=0.75, lwd=1.3) +
     geom_point(aes(x=VB50, y=C50, fill=factor(Constraint)), pch=21, alpha=0.75, cex=4) +
@@ -385,6 +457,6 @@ plot_refpoints <- function(object, figure_dir){
     scale_fill_viridis_d() +
     guides(fill = guide_legend(title = "Constraint"), color = guide_legend(title = "Constraint")) +
     theme_lsd(base_size=14)
-  ggsave(file.path(figure_dir, "Catch_versus_RelVB_AllConstraint.png"), p6, width=12, height=6) 
+  ggsave(file.path(figure_dir, "Catch_versus_RelVB_AllConstraint_wRef.png"), p6_v2, width=12, height=6) 
   
 }

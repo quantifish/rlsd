@@ -196,6 +196,7 @@ plot_catch <- function(object,
     dimnames(msy) <- list(Iteration = 1:n_iter, "Region" = regions2)
     msy <- reshape2::melt(msy) %>%
             dplyr::rename("MSY"=value)
+    msy$Region <- factor(msy$Region)
 
     dcatch2 <- dcatch %>% 
             dplyr::group_by(Region, Year, Sector, Iteration) %>%

@@ -4,19 +4,18 @@
 \alias{do_extract_ref}
 \title{Extract model fits and load into lsdOutput object class for plotting}
 \usage{
-do_extract_ref(dir = ".", data = TRUE, mcmc = FALSE,
-  variational = FALSE, model = "ref_lsd")
+do_extract_ref(dir = ".", model = "ref_lsd")
 }
 \arguments{
 \item{dir}{the directory to extract from}
+
+\item{model}{a name or label for the model being extracted}
 
 \item{data}{extract a dat file}
 
 \item{mcmc}{extract one or more MCMC files}
 
 \item{variational}{extract a var file}
-
-\item{model}{a name or label for the model being extracted}
 }
 \description{
 Extract model fits and load into lsdOutput object class for plotting

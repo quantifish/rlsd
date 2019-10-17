@@ -236,7 +236,7 @@ plot_refpoints <- function(object, figure_dir){
   dinfo2 <- dinfo %>% 
     select(Year, Region, Catch, RelSSB, RelVB, Recruitment) %>%
     tidyr::pivot_longer(cols = c(Catch, RelSSB, RelVB, Recruitment), names_to = "Variable")
-  dinfo3 <- inner_join(dinfo2, findc3) 
+  dinfo3 <- inner_join(dinfo2, findc3)
   
   pinfo2 <- pinfo %>%
     select(Iteration, Year, Region, RuleNum, Catch, RelSSB, RelVB,Recruitment) %>%
@@ -246,7 +246,8 @@ plot_refpoints <- function(object, figure_dir){
   info2 <- info %>%
     select(Iteration, Year, Region, RuleNum, Catch, RelSSB, RelVB, Recruitment) %>%
     tidyr::pivot_longer(cols = c(Catch, RelSSB, RelVB, Recruitment), names_to = "Variable")
-  info3 <- inner_join(info2, findc3)
+  info3 <- inner_join(info2, findc3) %>%
+    dplyr::filter(Year != data$first_proj_yr)
   
   p <- ggplot(dinfo3) +
     geom_ribbon(aes(x = Year, ymin = Percentile5, ymax = Percentile95), alpha = 0.2, color = NA, fill = "forestgreen") +

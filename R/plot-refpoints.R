@@ -119,6 +119,7 @@ plot_refpoints <- function(object, figure_dir){
   dimnames(vb0) <- list("Iteration" = 1:n_iter, "Region" = regions2)
   vb0 <- reshape2::melt(vb0) %>%
     dplyr::rename(VB0 = value)
+  vb0$Region <- factor(vb0$Region)
   
   tb <- mcmc$biomass_total_jytrs
   dimnames(tb) <- list("Iteration" = 1:n_iter, "RuleNum" = 1:dim(tb)[2], "Year" = pyears, "Season" = seasons, "Region" = regions, "Sex" = c(sex, "Total"))
@@ -132,6 +133,7 @@ plot_refpoints <- function(object, figure_dir){
   dimnames(tb0) <- list("Iteration" = 1:n_iter, "Region" = regions2)
   tb0 <- reshape2::melt(tb0) %>%
     dplyr::rename(TB0 = value)    
+  tb0$Region <- factor(tb0$Region)
   
   ssb <- mcmc$biomass_ssb_jyr
   dimnames(ssb) <- list("Iteration" = 1:n_iter, "RuleNum" = 1:dim(ssb)[2], "Year" = pyears, "Region" = regions)
@@ -142,6 +144,7 @@ plot_refpoints <- function(object, figure_dir){
   dimnames(ssb0) <- list("Iteration" = 1:n_iter, "Region" = regions2)
   ssb0 <- reshape2::melt(ssb0) %>%
     dplyr::rename(SSB0=value) 
+  ssb0$Region <- factor(ssb0$Region)
   
   rec <- mcmc$recruits_ry
   dimnames(rec) <- list("Iteration" = 1:n_iter, "Region" = regions, "Year" = pyears)
@@ -161,7 +164,7 @@ plot_refpoints <- function(object, figure_dir){
   relb <- full_join(relssb, relvb)
   relb2 <- full_join(relb, reltb)
   relb3 <- full_join(relb2, rec2)
-  
+ 
   # relssb$RuleType <- sapply(1:nrow(rules), function(x) ifelse(rules[x,1]==1, "FixedCatch", "CPUErule"))
   # relssb$Rule <- sapply(1:nrow(rules), function(x) ifelse(relssb$RuleType[x]=="FixedCatch", rules[x,2], NA))
   # relssb$Rule[which(relssb$RuleType=="CPUErule")] <- paste0("Rule", 1:length(which(relssb$RuleType=="CPUErule")))
@@ -170,9 +173,12 @@ plot_refpoints <- function(object, figure_dir){
   info <- full_join(catch, relb3) 
   info$Region <- paste0("Region ", info$Region)
   
+  rm(relb)
+  rm(relb2)
   rm(relb3)
   rm(catch)
   gc()
+  
   
   pinfo <- info %>% filter(Year %in% cutyears)
   dinfo <- info %>% ungroup() %>% filter(Year %in% years) %>% filter(RuleNum == 1) %>% select(-c(RuleNum))
@@ -188,9 +194,9 @@ plot_refpoints <- function(object, figure_dir){
                      VB5 = quantile(RelVB, prob = 0.05),
                      VB50 = quantile(RelVB, prob = 0.5),
                      VB95 = quantile(RelVB, prob = 0.95),
-                     # TB5 = quantile(RelTB, prob = 0.05),
-                     # TB50 = quantile(RelTB, prob = 0.5),
-                     # TB95 = quantile(RelTB, prob = 0.95),		
+                     TB5 = quantile(RelTB, prob = 0.05),
+                     TB50 = quantile(RelTB, prob = 0.5),
+                     TB95 = quantile(RelTB, prob = 0.95),
                      R5 = quantile(Recruitment, prob = 0.05),
                      R50 = quantile(Recruitment, prob = 0.5),
                      R95 = quantile(Recruitment, prob = 0.95),	
@@ -244,15 +250,15 @@ plot_refpoints <- function(object, figure_dir){
                      SB95 = quantile(RelSSB, prob = 0.95),
                      VB5 = quantile(RelVB, prob = 0.05),
                      VB50 = quantile(RelVB, prob = 0.5),
-                     VB95 = quantile(RelVB, prob = 0.95))#,
-                     # TB5 = quantile(RelTB, prob = 0.05),
-                     # TB50 = quantile(RelTB, prob = 0.5),
-                     # TB95 = quantile(RelTB, prob = 0.95))
+                     VB95 = quantile(RelVB, prob = 0.95),
+                     TB5 = quantile(RelTB, prob = 0.05),
+                     TB50 = quantile(RelTB, prob = 0.5),
+                     TB95 = quantile(RelTB, prob = 0.95))
   stat2 <- t(status)
   colnames(stat2) <- rep(max(dinfo$Year),length(regions))
   write.csv(stat2, file.path(figure_dir, "Current_status.csv"))
   
-  outputs <- c("Catch", "RelSSB", "RelVB",  "Recruitment")
+  outputs <- c("Catch", "RelSSB", "RelVB", "RelTB", "Recruitment")
   findc2 <- lapply(1:length(outputs), function(x){
     if(outputs[x] == "Catch"){
       sub <- findc %>% select(Region, RuleNum, C5, C50, C95, AvgTotalCatch, CV, CatchConstraint, Prisk, RiskConstraint, FixedCatch, Constraint, Type)
@@ -291,24 +297,25 @@ plot_refpoints <- function(object, figure_dir){
   findc3 <- findc2 %>% tidyr::pivot_wider(names_from = Percentile, values_from = Target, names_prefix = "Percentile")
   
   dinfo2 <- dinfo %>% 
-    select(Year, Region, Catch, RelSSB, RelVB,  Recruitment) %>%
-    tidyr::pivot_longer(cols = c(Catch, RelSSB, RelVB,  Recruitment), names_to = "Variable")
+    select(Year, Region, Catch, RelSSB, RelVB, RelTB, Recruitment) %>%
+    tidyr::pivot_longer(cols = c(Catch, RelSSB, RelVB, RelTB, Recruitment), names_to = "Variable")
   dinfo3 <- inner_join(dinfo2, findc3) 
   
   pinfo2 <- pinfo %>%
-    select(Iteration, Year, Region, RuleNum, Catch, RelSSB, RelVB, Recruitment) %>%
-    tidyr::pivot_longer(cols = c(Catch, RelSSB, RelVB,  Recruitment), names_to = "Variable")
+    select(Iteration, Year, Region, RuleNum, Catch, RelSSB, RelVB, RelTB, Recruitment) %>%
+    tidyr::pivot_longer(cols = c(Catch, RelSSB, RelVB, RelTB, Recruitment), names_to = "Variable")
   pinfo3 <- inner_join(pinfo2, findc3)
   
   info2 <- info %>%
-    select(Iteration, Year, Region, RuleNum, Catch, RelSSB, RelVB,  Recruitment) %>%
-    tidyr::pivot_longer(cols = c(Catch, RelSSB, RelVB, Recruitment), names_to = "Variable")
+    select(Iteration, Year, Region, RuleNum, Catch, RelSSB, RelVB, RelTB, Recruitment) %>%
+    tidyr::pivot_longer(cols = c(Catch, RelSSB, RelVB, RelTB, Recruitment), names_to = "Variable")
   info3 <- inner_join(info2, findc3)
   
   p <- ggplot(dinfo3) +
     geom_ribbon(aes(x = Year, ymin = Percentile5, ymax = Percentile95), alpha = 0.2, color = NA, fill = "forestgreen") +
     geom_line(aes(x = Year, y = Percentile50), color = "forestgreen", lwd = 1.5) +
-    geom_line(aes(x = Year, y = value), lwd = 2) +
+    stat_summary(aes(x = Year, y = value), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.2) +
+    stat_summary(aes(x = Year, y = value), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1) +
     expand_limits(y=0) +
     xlab("Year") + 
     ylab("Value") + 

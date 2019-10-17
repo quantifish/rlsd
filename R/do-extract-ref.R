@@ -34,31 +34,29 @@ do_extract_ref <- function(dir = ".", model = "ref_lsd")
     # "proj_catch_nsl_jryt",
     # "biomass_vuln_jytrs", 
     
-    # initialise object
-    dS4 <- new("lsdOutput", model.name = model)
+  # initialise object
+  dS4 <- new("lsdOutput", model.name = model)
     
-        datfile <- list.files(pattern = "[.]dat")[grepl(model, list.files(pattern = "[.]dat"))]
-        if (length(datfile) > 0) {
-            message("Reading ", datfile)
-            dS4@data <- rstan::read_rdump(datfile)
-            dS4@regions <- as.character(1:dS4@data$n_area)
-        } else {
-          warning("no 'dat' file")
-        }
+  datfile <- "lsd.dat"
+  if (file.exists(datfile)) {
+    message("Reading ", datfile)
+    dS4@data <- rstan::read_rdump(datfile)
+    dS4@regions <- as.character(1:dS4@data$n_area)
+  } else {
+    warning("no 'dat' file")
+  }
 
-        if (file.exists("mpe.csv")){
-          mcmcfiles <- "mpe.csv"
-            message("Reading ", mcmcfiles)
-            # create stanfit object from mcmc outputs
-            #mcmc_raw_stan <- rstan::read_stan_csv(mcmcfiles)
-            mcmc_raw <- read_stan_mcmc(mcmcfiles)
-            message("Extracting ", mcmcfiles)
-            
-            # create list object containing all model outputs
-            dS4@mcmc <- lsd::extract(mcmc_raw, pars = do_extract_items, permuted = TRUE, include = TRUE)
-        } else {
-          warning("no 'mpe' file")
-        }
-    
-    return(dS4)
+  mcmcfiles <- "mpe.csv"
+  if (file.exists(mcmcfiles)) {
+    message("Reading ", mcmcfiles)
+    # create stanfit object from mcmc outputs
+    #mcmc_raw_stan <- rstan::read_stan_csv(mcmcfiles)
+    mcmc_raw <- read_stan_mcmc(mcmcfiles)
+    message("Extracting ", mcmcfiles)
+    # create list object containing all model outputs
+    dS4@mcmc <- lsd::extract(mcmc_raw, pars = do_extract_items, permuted = TRUE, include = TRUE)
+  } else {
+    warning("no 'mpe' file")
+  }
+  return(dS4)
 }

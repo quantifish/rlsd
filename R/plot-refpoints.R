@@ -161,6 +161,8 @@ plot_refpoints <- function(object, figure_dir){
   })
   summary$Constraint <- factor(summary$Constraint, levels = c("Pass", "Catch", "Risk", "Risk&Catch"))
   
+  write.csv(summary, file.path(figure_dir, "Summary.csv"))
+  
   findu1 <- summary %>% 
     dplyr::group_by(Region) %>%
     filter(C50 == max(C50)) %>% 

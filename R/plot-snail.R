@@ -49,8 +49,9 @@ plot_snail <- function(object,
     
     ssbmsy <- mcmc$SSBmsy_r
     dimnames(ssbmsy) <- list(Iteration = 1:n_iter, Region = regions2)
-    ssbmsy <- reshape2::melt(ssbmsy, value.name = "SSBmsy") %>%
-        dplyr::left_join(ssb0) %>%
+    ssbmsy <- reshape2::melt(ssbmsy, value.name = "SSBmsy") 
+    ssbmsy$Region <- factor(ssbmsy$Region)
+    ssbmsy <- dplyr::left_join(ssbmsy, ssb0) %>%
         dplyr::mutate(SSBmsy_SSB0 = SSBmsy / SSB0)
     head(ssbmsy)
     

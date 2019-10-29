@@ -25,22 +25,23 @@ plot_sex_ratio <- function(object, scales = "free", xlab = "Fishing year", ylab 
     sources <- c("LB", "CS")
     n_iter <- nrow(mcmc[[1]])
     
-    w <- data.frame(LF = 1:data$n_lf, Year = data$data_lf_year_i, Season = data$data_lf_season_i,
+    if(length(map) > 0){
+    
+        w <- data.frame(LF = 1:data$n_lf, Year = data$data_lf_year_i, Season = data$data_lf_season_i,
                     Source = data$data_lf_source_i, Region = data$data_lf_area_i, 
                     Sigma = map$sigma_sex_ratio_i[1,])
 
-    # Observed sex-ratio's
-    osexr <- map$data_sex_ratio_out_is
-    dimnames(osexr) <- list("Iteration" = 1, "LF" = 1:data$n_lf, "Sex" = sex)
-    osexr <- reshape2::melt(osexr) %>%
-        dplyr::left_join(w, by = "LF") %>%
-        dplyr::mutate(EffN = 1 / Sigma, SD = sqrt(value * (1 - value) / EffN)) %>%
-        dplyr::mutate(Source = factor(Source), Source = sources[Source], Season = seasons[Season]) %>%
-        dplyr::filter(Iteration == 1) %>%
-        dplyr::select(-Iteration)
+        # Observed sex-ratio's
+        osexr <- map$data_sex_ratio_out_is
+        dimnames(osexr) <- list("Iteration" = 1, "LF" = 1:data$n_lf, "Sex" = sex)
+        osexr <- reshape2::melt(osexr) %>%
+            dplyr::left_join(w, by = "LF") %>%
+            dplyr::mutate(EffN = 1 / Sigma, SD = sqrt(value * (1 - value) / EffN)) %>%
+            dplyr::mutate(Source = factor(Source), Source = sources[Source], Season = seasons[Season]) %>%
+            dplyr::filter(Iteration == 1) %>%
+            dplyr::select(-Iteration)
 
-    # Predicted sex-ratio's
-    if (length(map) > 0) {
+        # Predicted sex-ratio's
         psexr1 <- map$pred_sex_ratio_is
         dimnames(psexr1) <- list("Iteration" = 1, "LF" = 1:data$n_lf, "Sex" = sex)
         psexr1 <- reshape2::melt(psexr1) %>%
@@ -55,6 +56,20 @@ plot_sex_ratio <- function(object, scales = "free", xlab = "Fishing year", ylab 
     }
     
     if (length(mcmc) > 0) {
+        w <- data.frame(LF = 1:data$n_lf, Year = data$data_lf_year_i, Season = data$data_lf_season_i,
+                        Source = data$data_lf_source_i, Region = data$data_lf_area_i, 
+                        Sigma = mcmc$sigma_sex_ratio_i[1,])
+        
+        # Observed sex-ratio's
+        osexr <- mcmc$data_sex_ratio_out_is
+        dimnames(osexr) <- list("Iteration" = 1:n_iter, "LF" = 1:data$n_lf, "Sex" = sex)
+        osexr <- reshape2::melt(osexr) %>%
+            dplyr::left_join(w, by = "LF") %>%
+            dplyr::mutate(EffN = 1 / Sigma, SD = sqrt(value * (1 - value) / EffN)) %>%
+            dplyr::mutate(Source = factor(Source), Source = sources[Source], Season = seasons[Season]) %>%
+            dplyr::filter(Iteration == 1) %>%
+            dplyr::select(-Iteration)
+        
         psexr2 <- mcmc$pred_sex_ratio_is
         dimnames(psexr2) <- list("Iteration" = 1:n_iter, "LF" = 1:data$n_lf, "Sex" = sex)
         psexr2 <- reshape2::melt(psexr2) %>%

@@ -203,9 +203,9 @@ plot_snail <- function(object,
         theme_lsd(base_size = 16) +
         theme(legend.position = "none")
     if (data$n_area > 1){
-        p2 <- p2 + facet_wrap(Fishery + Region ~ Season)
+        p2 <- p2 + facet_wrap(Fishery + Region ~ Season, scales = "free_y")
     } else {
-        p2 <- p2 + facet_grid(Fishery ~ Season)
+        p2 <- p2 + facet_grid(Fishery ~ Season, scales = "free_y")
     }
     p2
     ggsave(file.path(figure_dir, "snail_trail_v2.png"), p2)

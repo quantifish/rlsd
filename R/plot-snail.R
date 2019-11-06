@@ -17,9 +17,13 @@ plot_snail <- function(object,
 
     n_iter <- nrow(mcmc[[1]])
     years <- data$first_yr:data$last_yr
+    pyears <- data$first_yr:data$last_proj_yr
     regions <- 1:data$n_area
     if(length(regions)>1) regions2 <- c(regions, "Total")
     if(length(regions)==1) regions2 <- regions
+    rules <- 1:data$n_rules
+    seasons <- c("AW", "SS")
+    fleets <- c("SL", "NSL")
     
     F_Fmsy <- mcmc$F_Fmsy_ry
     dimnames(F_Fmsy) <- list(Iteration = 1:n_iter, Region = regions, Year = years)
@@ -40,7 +44,7 @@ plot_snail <- function(object,
     head(ssb0)
     ssb0$Region <- factor(ssb0$Region)
 
-
+    ## VERSION 1: Fmsy on Y axis
     d <- dplyr::left_join(F_Fmsy, ssb) %>%
         dplyr::left_join(ssb0) %>%
         dplyr::mutate(SSB_SSB0 = SSB / SSB0)
@@ -129,6 +133,83 @@ plot_snail <- function(object,
     p
     ggsave(file.path(figure_dir, "snail_trail.png"), p)
 
+    ## VERSION 2: F on Y axis
+    F_jytrf <- mcmc$proj_F_jytrf
+    dimnames(F_jytrf) <- list(Iteration = 1:n_iter, Rule = rules, Year = pyears, Season = seasons, Region = regions, Fishery = fleets)
+    F_jytrf <- reshape2::melt(F_jytrf) %>% rename(F_val = value)
+    F_jytrf$Region <- factor(F_jytrf$Region)
+    
+    d <- dplyr::left_join(F_jytrf, ssb) %>%
+        dplyr::left_join(ssb0) %>%
+        dplyr::mutate(SSB_SSB0 = SSB / SSB0)
+    head(d)
+    tail(d)
+    
+    ssbmsy <- mcmc$SSBmsy_r
+    dimnames(ssbmsy) <- list(Iteration = 1:n_iter, Region = regions2)
+    ssbmsy <- reshape2::melt(ssbmsy, value.name = "SSBmsy") 
+    ssbmsy$Region <- factor(ssbmsy$Region)
+    ssbmsy <- dplyr::left_join(ssbmsy, ssb0) %>%
+        dplyr::mutate(SSBmsy_SSB0 = SSBmsy / SSB0)
+    head(ssbmsy)
+    
+    dmed <- d %>%
+        dplyr::group_by(Year, Region, Season, Fishery, Year) %>%
+        dplyr::summarise(F_val = median(F_val), SSB = median(SSB), SSB0 = median(SSB0), SSB_SSB0 = median(SSB_SSB0)) %>%
+        dplyr::ungroup()
+    df_thin <- dplyr::select(dmed, Year, Season, Fishery, SSB_SSB0, F_val) %>%
+        dplyr::mutate(Year = ifelse(Year %in% c(min(Year), max(Year), seq(0, 1e6, 5)), Year, ""))
+    lyr <- dplyr::filter(d, Year %in% 2016) %>%
+        dplyr::filter(F_val > stats::quantile(F_val, 0.05)) %>%
+        dplyr::select(Year, SSB_SSB0, F_val) %>%
+        dplyr::mutate(Year = "")
+    head(df_thin)
+    
+    left <- dplyr::filter(df_thin,
+                        SSB_SSB0 < median(ssbmsy$SSBmsy_SSB0))
+    right <- dplyr::filter(df_thin,
+                               SSB_SSB0 >= median(ssbmsy$SSBmsy_SSB0))
+    
+    p2 <- ggplot(data = d %>% filter(Region %in% regions)) +
+        annotate("rect", xmin = stats::quantile(ssbmsy$SSBmsy_SSB0, 0.05), xmax = stats::quantile(ssbmsy$SSBmsy_SSB0, 0.95), ymin = -Inf, ymax = Inf, alpha = 0.125) +
+        annotate("rect", xmin = stats::quantile(ssbmsy$SSBmsy_SSB0, 0.25), xmax = stats::quantile(ssbmsy$SSBmsy_SSB0, 0.75), ymin = -Inf, ymax = Inf, alpha = 0.25) +
+        geom_vline(data = ssbmsy %>% filter(Region %in% regions), aes(xintercept = median(SSBmsy_SSB0))) +
+        geom_density_2d(data = dplyr::filter(d, Year %in% 2016) %>% filter(Region %in% regions), aes(x = SSB_SSB0, y = F_val, colour = ..level..)) +
+        #scale_colour_gradient(low = "white", high = "red") +
+        geom_segment(data = dmed %>% filter(Region %in% regions) %>% filter(Season == "AW") %>% filter(Fishery == "SL"), aes(x = SSB_SSB0, y = F_val, xend = dplyr::lead(SSB_SSB0), yend = dplyr::lead(F_val)), arrow = arrow(length = unit(0.2,"cm")), colour = "navy") +
+        geom_segment(data = dmed %>% filter(Region %in% regions) %>% filter(Season == "SS") %>% filter(Fishery == "SL"), aes(x = SSB_SSB0, y = F_val, xend = dplyr::lead(SSB_SSB0), yend = dplyr::lead(F_val)), arrow = arrow(length = unit(0.2,"cm")), colour = "navy") +
+        geom_segment(data = dmed %>% filter(Region %in% regions) %>% filter(Season == "AW") %>% filter(Fishery == "NSL"), aes(x = SSB_SSB0, y = F_val, xend = dplyr::lead(SSB_SSB0), yend = dplyr::lead(F_val)), arrow = arrow(length = unit(0.2,"cm")), colour = "navy") +
+        geom_segment(data = dmed %>% filter(Region %in% regions) %>% filter(Season == "SS") %>% filter(Fishery == "NSL"), aes(x = SSB_SSB0, y = F_val, xend = dplyr::lead(SSB_SSB0), yend = dplyr::lead(F_val)), arrow = arrow(length = unit(0.2,"cm")), colour = "navy") +
+        #geom_path(data = dmed, aes(x = SSB_SSB0, y = F_val, colour = Year), colour = "red", arrow = arrow()) +
+        #geom_point(data = dmed, aes(x = SSB_SSB0, y = F_val, colour = Year), colour = "red") +
+        expand_limits(y = 0, x = c(0, 1.01)) +
+        scale_y_continuous(expand = c(0, 0)) +
+        scale_x_continuous(expand = c(0, 0), breaks = seq(0, 1, 0.1), minor_breaks = seq(0, 1, 0.05)) +
+        labs(x = expression(SSB/SSB[0]), y = expression(paste("Fishing mortality rate (", F, ")"))) +
+        ggrepel::geom_text_repel(
+            data = left,
+            aes(SSB_SSB0, F_val, label = Year),
+            #force = 5, min.segment.length = 0, point.padding = 0.5,
+            #xlim = c(0, median(ssbmsy$SSBmsy_SSB0)),
+            #ylim = c(1, NA)
+        ) +
+        ggrepel::geom_text_repel(
+            data = right,
+            aes(SSB_SSB0, F_val, label = Year),
+            #force = 15, min.segment.length = 0, point.padding = 0.5,
+            #xlim = c(median(ssbmsy$SSBmsy_SSB0), NA),
+            #ylim = c(1, NA)
+        ) +
+        theme_lsd(base_size = 16) +
+        theme(legend.position = "none")
+    if (data$n_area > 1){
+        p2 <- p2 + facet_wrap(Fishery + Region ~ Season)
+    } else {
+        p2 <- p2 + facet_grid(Fishery ~ Season)
+    }
+    p2
+    ggsave(file.path(figure_dir, "snail_trail_v2.png"), p2)
+    
 #    ggplot(df, aes(Bmed, Fmed)) +
 #        geom_rect(xmin = -Inf, xmax = 1, ymin = -Inf, ymax = 1, fill = "yellow", alpha = 0.005) +
 #        geom_rect(xmin = 1, xmax = Inf, ymin = -Inf, ymax = 1, fill = "green", alpha = 0.005) +

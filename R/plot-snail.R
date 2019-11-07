@@ -140,7 +140,8 @@ plot_snail <- function(object,
         rename(F_val = value) %>%
         dplyr::filter(Season == "AW") %>%
         dplyr::group_by(Iteration, Rule, Year, Region) %>%
-        dplyr::summarise(F_aw = sum(F_val))
+        dplyr::summarise(F_aw = sum(F_val)) %>%
+        dplyr::filter(Year %in% years)
     F_jytrf$Region <- factor(F_jytrf$Region)
     
     d <- dplyr::left_join(F_jytrf, ssb) %>%

@@ -11,8 +11,8 @@
 #'
 do_plot <- function(object,
                     map = FALSE, mcmc = FALSE, variational = FALSE,
-                    figure_dir = "figure/")
-{
+                    figure_dir = "figure/") {
+    
     # Data only plots
     plot_data_extent(object, figure_dir = figure_dir)
 

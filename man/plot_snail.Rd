@@ -4,12 +4,14 @@
 \alias{plot_snail}
 \title{Plot snail trial}
 \usage{
-plot_snail(object, figure_dir = "figure/")
+plot_snail(object, figure_dir = "figure/", irule = 1)
 }
 \arguments{
 \item{object}{an LSD object}
 
 \item{figure_dir}{the directory to save the figure to}
+
+\item{irule}{if multiple rules then which rule}
 }
 \description{
 Plot snail trial

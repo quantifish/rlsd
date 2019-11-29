@@ -2,15 +2,18 @@
 #' 
 #' @param object an LSD object
 #' @param figure_dir the directory to save the figure to
+#' @param irule if multiple rules then which rule
 #' @import dplyr
 #' @import ggplot2
 #' @importFrom utils head tail
 #' @importFrom reshape2 melt
 #' @importFrom stats quantile
+#' @importFrom ggrepel geom_text_repel
 #' @export
 #' 
 plot_snail <- function(object,
-                       figure_dir = "figure/")
+                       figure_dir = "figure/",
+                       irule = 1)
 {
     data <- object@data
     mcmc <- object@mcmc
@@ -34,7 +37,7 @@ plot_snail <- function(object,
     dimnames(ssb) <- list(Iteration = 1:n_iter, Rule = 1:dim(ssb)[2],
                           Year = data$first_yr:data$last_proj_yr, Region = regions)
     ssb <- reshape2::melt(ssb, value.name = "SSB") %>%
-        dplyr::filter(Rule == 1)
+        filter(Rule == 1)
     head(ssb)
     ssb$Region <- factor(ssb$Region)
 
@@ -45,9 +48,9 @@ plot_snail <- function(object,
     ssb0$Region <- factor(ssb0$Region)
 
     ## VERSION 1: Fmsy on Y axis
-    d <- dplyr::left_join(F_Fmsy, ssb) %>%
-        dplyr::left_join(ssb0) %>%
-        dplyr::mutate(SSB_SSB0 = SSB / SSB0)
+    d <- left_join(F_Fmsy, ssb) %>%
+        left_join(ssb0) %>%
+        mutate(SSB_SSB0 = SSB / SSB0)
     head(d)
     tail(d)
     
@@ -55,64 +58,64 @@ plot_snail <- function(object,
     dimnames(ssbmsy) <- list(Iteration = 1:n_iter, Region = regions2)
     ssbmsy <- reshape2::melt(ssbmsy, value.name = "SSBmsy") 
     ssbmsy$Region <- factor(ssbmsy$Region)
-    ssbmsy <- dplyr::left_join(ssbmsy, ssb0) %>%
-        dplyr::mutate(SSBmsy_SSB0 = SSBmsy / SSB0)
+    ssbmsy <- left_join(ssbmsy, ssb0) %>%
+        mutate(SSBmsy_SSB0 = SSBmsy / SSB0)
     head(ssbmsy)
     
     dmed <- d %>%
-        dplyr::group_by(Year, Region, Year) %>%
-        dplyr::summarise(F_Fmsy = median(F_Fmsy), SSB = median(SSB), SSB0 = median(SSB0), SSB_SSB0 = median(SSB_SSB0)) %>%
-        dplyr::ungroup()
-    df_thin <- dplyr::select(dmed, Year, SSB_SSB0, F_Fmsy) %>%
-        dplyr::mutate(Year = ifelse(Year %in% c(min(Year), max(Year), seq(0, 1e6, 5)), Year, ""))
-    lyr <- dplyr::filter(d, Year %in% 2016) %>%
-        dplyr::filter(F_Fmsy > stats::quantile(F_Fmsy, 0.05)) %>%
-        dplyr::select(Year, SSB_SSB0, F_Fmsy) %>%
-        dplyr::mutate(Year = "")
+        group_by(Year, Region, Year) %>%
+        summarise(F_Fmsy = median(F_Fmsy), SSB = median(SSB), SSB0 = median(SSB0), SSB_SSB0 = median(SSB_SSB0)) %>%
+        ungroup()
+    df_thin <- select(dmed, Year, SSB_SSB0, F_Fmsy) %>%
+        mutate(Year = ifelse(Year %in% c(min(Year), max(Year), seq(0, 1e6, 5)), Year, ""))
+    lyr <- filter(d, Year %in% 2016) %>%
+        filter(F_Fmsy > quantile(F_Fmsy, 0.05)) %>%
+        select(Year, SSB_SSB0, F_Fmsy) %>%
+        mutate(Year = "")
     head(df_thin)
 
-    top_left <- dplyr::filter(df_thin,
+    top_left <- filter(df_thin,
                               SSB_SSB0 < median(ssbmsy$SSBmsy_SSB0),
                               F_Fmsy > 1)
-    top_right <- dplyr::filter(df_thin,
+    top_right <- filter(df_thin,
                                SSB_SSB0 >= median(ssbmsy$SSBmsy_SSB0),
                                F_Fmsy > 1)
-    bottom_left <- dplyr::filter(df_thin,
+    bottom_left <- filter(df_thin,
                                  SSB_SSB0 < median(ssbmsy$SSBmsy_SSB0),
                                  F_Fmsy <= 1)
-    bottom_right <- dplyr::filter(df_thin,
+    bottom_right <- filter(df_thin,
                                   SSB_SSB0 >= median(ssbmsy$SSBmsy_SSB0),
                                   F_Fmsy <= 1)
     
     p <- ggplot(data = d %>% filter(Region %in% regions)) +
-        annotate("rect", xmin = stats::quantile(ssbmsy$SSBmsy_SSB0, 0.05), xmax = stats::quantile(ssbmsy$SSBmsy_SSB0, 0.95), ymin = -Inf, ymax = Inf, alpha = 0.125) +
-        annotate("rect", xmin = stats::quantile(ssbmsy$SSBmsy_SSB0, 0.25), xmax = stats::quantile(ssbmsy$SSBmsy_SSB0, 0.75), ymin = -Inf, ymax = Inf, alpha = 0.25) +
+        annotate("rect", xmin = quantile(ssbmsy$SSBmsy_SSB0, 0.05), xmax = quantile(ssbmsy$SSBmsy_SSB0, 0.95), ymin = -Inf, ymax = Inf, alpha = 0.125) +
+        annotate("rect", xmin = quantile(ssbmsy$SSBmsy_SSB0, 0.25), xmax = quantile(ssbmsy$SSBmsy_SSB0, 0.75), ymin = -Inf, ymax = Inf, alpha = 0.25) +
         geom_hline(yintercept = 1) +
         geom_vline(data = ssbmsy %>% filter(Region %in% regions), aes(xintercept = median(SSBmsy_SSB0))) +
-        geom_density_2d(data = dplyr::filter(d, Year %in% 2016) %>% filter(Region %in% regions), aes(x = SSB_SSB0, y = F_Fmsy, colour = ..level..)) +
+        geom_density_2d(data = filter(d, Year %in% data$last_yr) %>% filter(Region %in% regions), aes(x = SSB_SSB0, y = F_Fmsy, colour = ..level..)) +
         scale_colour_gradient(low = "white", high = "red") +
-        geom_segment(data = dmed %>% filter(Region %in% regions), aes(x = SSB_SSB0, y = F_Fmsy, xend = dplyr::lead(SSB_SSB0), yend = dplyr::lead(F_Fmsy)), arrow = arrow(length = unit(0.2,"cm")), colour = "red") +
+        geom_segment(data = dmed %>% filter(Region %in% regions), aes(x = SSB_SSB0, y = F_Fmsy, xend = lead(SSB_SSB0), yend = lead(F_Fmsy)), arrow = arrow(length = unit(0.2,"cm")), colour = "red") +
         #geom_path(data = dmed, aes(x = SSB_SSB0, y = F_Fmsy, colour = Year), colour = "red", arrow = arrow()) +
         #geom_point(data = dmed, aes(x = SSB_SSB0, y = F_Fmsy, colour = Year), colour = "red") +
         expand_limits(y = 0, x = c(0, 1.01)) +
         scale_y_continuous(expand = c(0, 0)) +
         scale_x_continuous(expand = c(0, 0), breaks = seq(0, 1, 0.1), minor_breaks = seq(0, 1, 0.05)) +
         labs(x = expression(SSB/SSB[0]), y = expression(paste("Fishing intensity (", F/F[MSY], ")"))) +
-        ggrepel::geom_text_repel(
+        geom_text_repel(
             data = top_left,
             aes(SSB_SSB0, F_Fmsy, label = Year),
             force = 5, min.segment.length = 0, point.padding = 0.5,
             xlim = c(0, median(ssbmsy$SSBmsy_SSB0)),
             ylim = c(1, NA)
         ) +
-        ggrepel::geom_text_repel(
+        geom_text_repel(
             data = top_right,
             aes(SSB_SSB0, F_Fmsy, label = Year),
             force = 15, min.segment.length = 0, point.padding = 0.5, 
             xlim = c(median(ssbmsy$SSBmsy_SSB0), NA),
             ylim = c(1, NA)
         ) +
-        ggrepel::geom_text_repel(
+        geom_text_repel(
             data = bottom_left,
             aes(SSB_SSB0, F_Fmsy, label = Year),
             force = 15, min.segment.length = 0, max.iter = 5000,
@@ -120,7 +123,7 @@ plot_snail <- function(object,
             xlim = c(0, median(ssbmsy$SSBmsy_SSB0)),
             ylim = c(0, 1)
         ) +
-        ggrepel::geom_text_repel(
+        geom_text_repel(
             data = bottom_right,
             aes(SSB_SSB0, F_Fmsy, label = Year),
             force = 5, min.segment.length = 0, point.padding = 0.5,
@@ -130,100 +133,60 @@ plot_snail <- function(object,
         theme_lsd(base_size = 16) +
         theme(legend.position = "none")
     if (data$n_area > 1) p <- p + facet_wrap(~Region)
-    p
     ggsave(file.path(figure_dir, "snail_trail.png"), p)
 
-    ## VERSION 2: F on Y axis
+
+
+    # VERSION 2: F on Y axis
     F_jytrf <- mcmc$proj_F_jytrf
     dimnames(F_jytrf) <- list(Iteration = 1:n_iter, Rule = rules, Year = pyears, Season = seasons, Region = regions, Fishery = fleets)
     F_jytrf <- reshape2::melt(F_jytrf) %>% 
         rename(F_val = value) %>%
-        dplyr::filter(Season == "AW") %>%
-        dplyr::group_by(Iteration, Rule, Year, Region) %>%
-        dplyr::summarise(F_aw = sum(F_val)) %>%
-        dplyr::filter(Year %in% years)
+        filter(Season == "AW") %>%
+        group_by(Iteration, Rule, Year, Region) %>%
+        summarise(F_aw = sum(F_val)) %>%
+        filter(Year %in% years, Rule %in% irule)
     F_jytrf$Region <- factor(F_jytrf$Region)
-    
-    d <- dplyr::left_join(F_jytrf, ssb) %>%
-        dplyr::left_join(ssb0) %>%
-        dplyr::mutate(SSB_SSB0 = SSB / SSB0)
-    head(d)
-    tail(d)
+
+    d <- left_join(F_jytrf, ssb) %>%
+        left_join(ssb0) %>%
+        mutate(SSB_SSB0 = SSB / SSB0) %>%
+        ungroup()
     
     ssbmsy <- mcmc$SSBmsy_r
     dimnames(ssbmsy) <- list(Iteration = 1:n_iter, Region = regions2)
     ssbmsy <- reshape2::melt(ssbmsy, value.name = "SSBmsy") 
     ssbmsy$Region <- factor(ssbmsy$Region)
-    ssbmsy <- dplyr::left_join(ssbmsy, ssb0) %>%
-        dplyr::mutate(SSBmsy_SSB0 = SSBmsy / SSB0)
-    head(ssbmsy)
+    ssbmsy <- left_join(ssbmsy, ssb0) %>%
+        mutate(SSBmsy_SSB0 = SSBmsy / SSB0)
     
     dmed <- d %>%
-        dplyr::group_by(Year, Region, Year) %>%
-        dplyr::summarise(F_aw = median(F_aw), SSB = median(SSB), SSB0 = median(SSB0), SSB_SSB0 = median(SSB_SSB0)) %>%
-        dplyr::ungroup()
-    df_thin <- dplyr::select(dmed, Year, SSB_SSB0, F_aw) %>%
-        dplyr::mutate(Year = ifelse(Year %in% c(min(Year), max(Year), seq(0, 1e6, 5)), Year, ""))
-    lyr <- dplyr::filter(d, Year %in% 2016) %>%
-        dplyr::filter(F_aw > stats::quantile(F_aw, 0.05)) %>%
-        dplyr::select(Year, SSB_SSB0, F_aw) %>%
-        dplyr::mutate(Year = "")
-    head(df_thin)
+        group_by(Year, Region, Year) %>%
+        summarise(F_aw = median(F_aw), SSB = median(SSB), SSB0 = median(SSB0), SSB_SSB0 = median(SSB_SSB0)) %>%
+        ungroup()
+    df_thin <- select(dmed, Region, Year, SSB_SSB0, F_aw) %>%
+        mutate(Year = ifelse(Year %in% c(min(Year), max(Year), seq(0, 1e6, 10)), Year, ""))
     
-    left <- dplyr::filter(df_thin,
-                        SSB_SSB0 < median(ssbmsy$SSBmsy_SSB0))
-    right <- dplyr::filter(df_thin,
-                               SSB_SSB0 >= median(ssbmsy$SSBmsy_SSB0))
-    
-    p2 <- ggplot(data = d %>% filter(Region %in% regions)) +
-        annotate("rect", xmin = stats::quantile(ssbmsy$SSBmsy_SSB0, 0.05), xmax = stats::quantile(ssbmsy$SSBmsy_SSB0, 0.95), ymin = -Inf, ymax = Inf, alpha = 0.125) +
-        annotate("rect", xmin = stats::quantile(ssbmsy$SSBmsy_SSB0, 0.25), xmax = stats::quantile(ssbmsy$SSBmsy_SSB0, 0.75), ymin = -Inf, ymax = Inf, alpha = 0.25) +
-        geom_vline(data = ssbmsy %>% filter(Region %in% regions), aes(xintercept = median(SSBmsy_SSB0))) +
-        geom_density_2d(data = dplyr::filter(d, Year %in% 2016) %>% filter(Region %in% regions), aes(x = SSB_SSB0, y = F_aw, colour = ..level..)) +
+    xmax <- round(max(dmed$SSB_SSB0), 2)
+
+    p2 <- ggplot(data = d) +
+        #annotate("rect", xmin = quantile(ssbmsy$SSBmsy_SSB0, 0.05), xmax = quantile(ssbmsy$SSBmsy_SSB0, 0.95), ymin = -Inf, ymax = Inf, alpha = 0.125) +
+        #annotate("rect", xmin = quantile(ssbmsy$SSBmsy_SSB0, 0.25), xmax = quantile(ssbmsy$SSBmsy_SSB0, 0.75), ymin = -Inf, ymax = Inf, alpha = 0.25) +
+        #geom_vline(data = ssbmsy %>% filter(Region %in% regions), aes(xintercept = median(SSBmsy_SSB0))) +
+        geom_density_2d(data = filter(d, Year %in% data$last_yr) %>% filter(Region %in% regions), aes(x = SSB_SSB0, y = F_aw, colour = ..level..)) +
         scale_colour_gradient(low = "white", high = "red") +
-        geom_segment(data = dmed %>% filter(Region %in% regions), aes(x = SSB_SSB0, y = F_aw, xend = dplyr::lead(SSB_SSB0), yend = dplyr::lead(F_aw)), arrow = arrow(length = unit(0.2,"cm")), colour = "red") +
-        #geom_path(data = dmed, aes(x = SSB_SSB0, y = F_aw, colour = Year), colour = "red", arrow = arrow()) +
-        #geom_point(data = dmed, aes(x = SSB_SSB0, y = F_aw, colour = Year), colour = "red") +
+        geom_path(data = dmed, aes(x = SSB_SSB0, y = F_aw), colour = "red") +
+        geom_point(data = dmed, aes(x = SSB_SSB0, y = F_aw), colour = "red") +
+        geom_text_repel(
+            data = df_thin, 
+            aes(x = SSB_SSB0, y = F_aw, label = Year), 
+            force = 5, min.segment.length = 0, point.padding = 0.5) +
         expand_limits(y = 0, x = c(0, 1.01)) +
         scale_y_continuous(expand = c(0, 0)) +
-        scale_x_continuous(expand = c(0, 0), breaks = seq(0, 1, 0.1), minor_breaks = seq(0, 1, 0.05)) +
-        labs(x = expression(SSB/SSB[0]), y = expression(paste("Fishing mortality rate (", F, ")"))) +
-        ggrepel::geom_text_repel(
-            data = left,
-            aes(SSB_SSB0, F_aw, label = Year),
-            #force = 5, min.segment.length = 0, point.padding = 0.5,
-            #xlim = c(0, median(ssbmsy$SSBmsy_SSB0)),
-            #ylim = c(1, NA)
-        ) +
-        ggrepel::geom_text_repel(
-            data = right,
-            aes(SSB_SSB0, F_aw, label = Year),
-            #force = 15, min.segment.length = 0, point.padding = 0.5,
-            #xlim = c(median(ssbmsy$SSBmsy_SSB0), NA),
-            #ylim = c(1, NA)
-        ) +
+        scale_x_continuous(expand = c(0, 0), breaks = seq(0, xmax, 0.1), minor_breaks = seq(0, xmax, 0.05)) +
+        labs(x = expression(SSB/SSB[0]), y = "Fishing mortality (F)") +
         theme_lsd(base_size = 16) +
         theme(legend.position = "none")
     if (data$n_area > 1) p2 <- p2 + facet_wrap(~Region)
-    p2
-    ggsave(file.path(figure_dir, "snail_trail_v2.png"), p2)
-    
-#    ggplot(df, aes(Bmed, Fmed)) +
-#        geom_rect(xmin = -Inf, xmax = 1, ymin = -Inf, ymax = 1, fill = "yellow", alpha = 0.005) +
-#        geom_rect(xmin = 1, xmax = Inf, ymin = -Inf, ymax = 1, fill = "green", alpha = 0.005) +
-#        geom_rect(xmin = -Inf, xmax = 1, ymin = 1, ymax = Inf, fill = "red", alpha = 0.005) +
-#        geom_rect(xmin = 1, xmax = Inf, ymin = 1, ymax = Inf, fill = "yellow", alpha = 0.005) +
-#        geom_errorbar(aes(ymin = F25, ymax = F75), alpha = 0.2) +
-#        geom_errorbarh(aes(xmin = B25, xmax = B75), alpha = 0.2) +
-#        geom_segment(aes(xend = c(tail(Bmed, n=-1), NA), yend = c(tail(Fmed, n=-1), NA), alpha = alpha), arrow = arrow(length = unit(0.1, "cm"))) +
-#        #ggrepel::geom_label_repel(data = df_thin, aes(Bmed, Fmed, label = Year), box.padding = unit(1.0, "lines"), min.segment.length = unit(2.0, "lines"), colour = "grey") +
-#        #ggrepel::geom_label_repel(data = df_thin, aes(Bmed, Fmed, label = Year), box.padding = unit(0.65, "lines"), min.segment.length = unit(0.0, "lines"), colour = "grey", alpha = 0.5, force = 35, max.iter = 4000) +
-#        ggrepel::geom_label_repel(data = df_thin, aes(Bmed, Fmed, label = Year), box.padding = unit(0.65, "lines"), colour = "grey", alpha = 0.5, min.segment.length = unit(0.0, "lines"), force = 3) +
-#        theme_bw(base_size = 16) +
-#        theme(legend.position = "none") +
-#        expand_limits(x = 0, y = 0) +
-#        scale_x_continuous(expand = c(0, 0), breaks = seq(0, 100, 1), minor_breaks = seq(0, 100, 0.5)) +
-#        scale_y_continuous(expand = c(0, 0)) +
-#        #coord_fixed() +
-#        labs(x = xlab, y = ylab)
+    ggsave(file.path(figure_dir, "snail_trail_v2.png"), p2, width = 16, height = 8)
 }

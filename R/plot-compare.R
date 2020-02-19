@@ -11,8 +11,7 @@
 #' @importFrom stats quantile
 #' @export
 #'
-plot_compare_ssb <- function(object_list, object_names, figure_dir = "compare_figure/", save_plot = TRUE)
-{
+plot_compare_ssb <- function(object_list, object_names, figure_dir = "compare_figure/", save_plot = TRUE) {
     data_list <- lapply(1:length(object_list), function(x) object_list[[x]]@data)
     mcmc_list <- lapply(1:length(object_list), function(x) object_list[[x]]@mcmc)
     data <- data_list[[1]]
@@ -173,16 +172,16 @@ plot_compare_ssb <- function(object_list, object_names, figure_dir = "compare_fi
          ylab("Terminal year relative spawning biomass") +
          xlab("Model") #+
          # scale_y_continuous(expand = c(0,0), limits = c(0, 1))
-    if(nmod > 5){
+    if (nmod > 5) {
         p <- p +
         scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
         scale_color_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod)))
-    } else{
+    } else {
         p <- p +
         scale_fill_brewer(palette = "Set1") +
         scale_color_brewer(palette = "Set1")
     }
-    if(max(relssb_next$Iteration)==1){
+    if (max(relssb_next$Iteration) == 1) {
         p <- p + geom_point(aes(x = Model, y=RelSSB, fill = Model), cex=4, pch=21) +
                  geom_hline(data = relssb_next %>% filter(Model == "base"), aes(yintercept = unique(RelSSB)), linetype=2)
 
@@ -195,7 +194,7 @@ plot_compare_ssb <- function(object_list, object_names, figure_dir = "compare_fi
         ggsave(paste0(figure_dir, "relssb_nextyear_compare.png"), p, width=10)
     }
 
-    relssb_next_proj <- relssb %>% filter(Year %in% c(max(years)+1, max(pyears)))
+    relssb_next_proj <- relssb %>% filter(Year %in% c(max(years) + 1, max(pyears)))
     relssb_next_proj$Year <- factor(relssb_next_proj$Year)
 
     p <- ggplot(relssb_next_proj) +
@@ -209,16 +208,16 @@ plot_compare_ssb <- function(object_list, object_names, figure_dir = "compare_fi
          xlab("Model") +
          # scale_y_continuous(expand = c(0,0), limits = c(0, 1)) +
          scale_alpha_manual(values = c(1, 0.5), guide=F)
-    if(nmod > 5){
+    if (nmod > 5) {
         p <- p +
         scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
         scale_color_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod)))
-    } else{
+    } else {
         p <- p +
         scale_fill_brewer(palette = "Set1") +
         scale_color_brewer(palette = "Set1")
     }
-    if(max(relssb_next_proj$Iteration)==1){
+    if (max(relssb_next_proj$Iteration) == 1) {
         p <- p + geom_point(aes(x = Model, y=RelSSB, fill = Model, alpha=Year), cex=4, pch=21) +
                  geom_hline(data = relssb_next_proj %>% filter(Model == "base") %>% filter(Year==max(years)+1), aes(yintercept = unique(RelSSB)), linetype=2)
 
@@ -227,7 +226,7 @@ plot_compare_ssb <- function(object_list, object_names, figure_dir = "compare_fi
                  geom_hline(data = relssb_next_proj %>% filter(Model == "base") %>% filter(Year==max(years)+1), aes(yintercept = median(RelSSB)), linetype=2)
 
     }
-    if(save_plot) {
+    if (save_plot) {
         ggsave(paste0(figure_dir, "relssb_nextyear_projyear_compare.png"), p, width=10)
     }
 
@@ -242,16 +241,16 @@ plot_compare_ssb <- function(object_list, object_names, figure_dir = "compare_fi
          xlab("Year") +
          ylab("Relative spawning biomass") #+
          # scale_y_continuous(expand = c(0,0), limits = c(0,1.05))
-    if(nmod > 5){
+    if (nmod > 5) {
         p <- p +
         scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
         scale_color_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod)))
-    } else{
+    } else {
         p <- p +
         scale_fill_brewer(palette = "Set1") +
         scale_color_brewer(palette = "Set1")
     }
-    if(save_plot){
+    if (save_plot){
         ggsave(paste0(figure_dir, "relssb_compare.png"), p, width = 10)
     }
 
@@ -267,20 +266,20 @@ plot_compare_ssb <- function(object_list, object_names, figure_dir = "compare_fi
          xlab("Year") +
          ylab("Relative spawning biomass") #+
          # scale_y_continuous(expand = c(0,0), limits = c(0,1.05))
-    if(nmod > 5){
+    if (nmod > 5) {
         p <- p +
         scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
         scale_color_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod)))
-    } else{
+    } else {
         p <- p +
         scale_fill_brewer(palette = "Set1") +
         scale_color_brewer(palette = "Set1")
     }
-    if(save_plot){
+    if (save_plot) {
         ggsave(paste0(figure_dir, "relssb_compare_v2.png"), p, width=10)
     }
 
-    if (save_plot == FALSE){
+    if (save_plot == FALSE) {
         return(p1)
     }
 }
@@ -390,21 +389,18 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
       ggsave(paste0(figure_dir, "biomass_vulnref_compare.png"), p, width = 10)
     }
 
+
     # Vulnerable biomass
     p <- ggplot(data = vb, aes(x = Year, y = value, color = Model, fill = Model)) +
-        geom_vline(aes(xintercept = max(years) + 0.5), linetype=2) +
-        stat_summary(data=vb, fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
-        #stat_summary(data=vb, fun.ymin = function(x) quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75), geom = "ribbon", alpha=0.45, colour = NA) +
-        stat_summary(data=vb, fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha=0.75) +
-        # scale_fill_manual(values = cols_all, labels = object_names) +
-        # scale_colour_manual(values = cols_all, labels = object_names) +
-        # guides(colour = guide_legend(override.aes = list(colour = cols_all, linetype = lty_all))) +
-        # scale_linetype(guide=FALSE) +
+        geom_vline(aes(xintercept = max(years) + 0.5), linetype = 2) +
+        stat_summary(data = vb, fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
+        #stat_summary(data = vb, fun.ymin = function(x) quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75), geom = "ribbon", alpha=0.45, colour = NA) +
+        stat_summary(data = vb, fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75) +
         expand_limits(y = 0) +
         xlab("Fishing year") + ylab("Vulnerable reference biomass (tonnes)") +
         scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
-        theme_lsd(base_size=14)# +
-        # scale_y_continuous(expand = c(0,0), limits = c(0, max(vb$value)*1.05))
+        theme_lsd(base_size = 14)# +
+
     if (nmod > 5) {
         p <- p +
           scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
@@ -414,8 +410,13 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
           scale_fill_brewer(palette = "Set1") +
           scale_color_brewer(palette = "Set1")
     }
+
     if (save_plot) {
       ggsave(paste0(figure_dir, "biomass_vulnref_compare_v2.png"), p, width = 10)
+      vb_summary <- vb %>%
+        group_by(Year, Season, Model) %>%
+        summarise(p05 = quantile(value, probs = 0.05), p50 = median(value), p95 = quantile(value, probs = 0.95))
+      write.csv(vb_summary, file = paste0(figure_dir, "biomass_vulnref_compare_v2.csv"))      
     } else {
       return(p)
     }

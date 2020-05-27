@@ -20,13 +20,17 @@ do_extract_ref <- function(dir = ".", model = "ref_lsd")
                           "resid_catch_nsl_jryt",
                           "recruits_ry", 
                           #"mp_offset_cpue_jry",
-                          #"biomass_vulnref_jytr",
                           "biomass_vulnref_AW_jyr", 
                           "biomass_total_jytrs",
                           "Btot0_r",
+                          "Btot0now_r",
                           "B0_r", 
+                          "B0now_r",
                           "biomass_ssb_jyr",
-                          "SSB0_r")
+                          "SSB0_r",
+                          "SSB0now_r",
+                          "MSY_r",
+                          "Bmsy_r")
 
     # "proj_catch_commercial_jryt", 
     # "proj_catch_recreational_jryt",

@@ -30,7 +30,8 @@ do_extract_ref <- function(dir = ".", model = "ref_lsd")
                           "SSB0_r",
                           "SSB0now_r",
                           "MSY_r",
-                          "Bmsy_r")
+                          "Bmsy_r",
+                          "proj_F_jytrf")
 
     # "proj_catch_commercial_jryt", 
     # "proj_catch_recreational_jryt",

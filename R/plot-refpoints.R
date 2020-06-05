@@ -246,7 +246,7 @@ plot_refpoints <- function(object, figure_dir){
 
   status <- dinfo %>%
     dplyr::filter(Year == max(Year)) %>%
-    tidyr::pivot_longer(cols=c(Catch,SSB,SSB0,RelSSB,VB,VB0now,RelVB,Recruitment), names_to = "Variable", values_to = "Value") %>%
+    tidyr::pivot_longer(cols=c(Catch,SSB,SSB0now,RelSSB,VB,VB0now,RelVB,Recruitment), names_to = "Variable", values_to = "Value") %>%
     dplyr::group_by(Region, Variable) %>%
     dplyr::summarise(P5 = quantile(Value, 0.05),
                      P50 = quantile(Value, 0.5),
@@ -435,6 +435,8 @@ plot_refpoints <- function(object, figure_dir){
     guides(color = FALSE, fill = FALSE) +
     facet_wrap(RuleType~Constraint) +
     theme_bw(base_size = 20)
+  ggsave(file.path(figure_dir, "CompareConstraints_Catch.png"), p_constr, height = 10, width = 15)
+
 
   check1 <- cinfo %>%
     dplyr::filter(RuleNum %in% find_max$RuleNum) %>%
@@ -459,6 +461,8 @@ plot_refpoints <- function(object, figure_dir){
     guides(color = FALSE, fill = FALSE) +
     facet_grid(RuleType~Constraint) +
     theme_bw(base_size = 20)
+  ggsave(file.path(figure_dir, "CompareConstraints_Fixed.png"), p_constr_fixed, height = 10, width = 15)
+
 
   check1 <- cinfo %>%
     dplyr::filter(RuleNum %in% find_max$RuleNum) %>%
@@ -483,6 +487,7 @@ plot_refpoints <- function(object, figure_dir){
     guides(color = FALSE, fill = FALSE) +
     facet_wrap(RuleType~Constraint, ncol = 3) +
     theme_bw(base_size = 20)
+  ggsave(file.path(figure_dir, "CompareConstraints_MP.png"), p_constr_cpue, height = 10, width = 15)
 
 
   # check <- full_join(dinfo, pinfo) %>%

@@ -224,7 +224,6 @@ plot_refpoints <- function(object, figure_dir){
     dplyr::group_by(Region, RuleType, Constraint) %>%
     dplyr::filter(P50 == max(P50))
 
-  write.csv(find_max, file.path(figure_dir, "MSY_info.csv"))
 
   ## remove duplicates of MSY --- choose rule with higher average total catch
   find_msy <- find_max %>% filter(Constraint == "Pass")
@@ -251,7 +250,9 @@ plot_refpoints <- function(object, figure_dir){
 
   msy_info <- output2 %>% right_join(find_msy %>% select(-P50))
   max_info <- output2 %>% right_join(find_max %>% select(-P50))
-  
+  write.csv(max_info, file.path(figure_dir, "MAX_info.csv"))
+  write.csv(msy_info, file.path(figure_dir, "MSY_info.csv"))
+
 
   output3 <- output2 %>% 
     tidyr::pivot_longer(cols = P5:P95, names_to = "Percentile", values_to = "Value") %>%
@@ -269,6 +270,8 @@ plot_refpoints <- function(object, figure_dir){
   constx <- c(const1,const2)
   const <- c(constx, const[which(const %in% constx == FALSE)])
   output4$Constraint <- factor(output4$Constraint, levels = const)
+
+  output5 <- output4 %>% right_join(find_msy %>% select(-P50))
   
 
   status <- dinfo %>%
@@ -332,22 +335,10 @@ plot_refpoints <- function(object, figure_dir){
   }
   ggsave(file.path(figure_dir, "RelVB_vs_Catch_byConstraint.png"), p_relvb, height = 8, width = 20)
   
-  p_relvb_v2 <- ggplot(output4) +
-    geom_segment(aes(x = RelVB_P5, xend = RelVB_P95, y = Catch_P50, yend = Catch_P50, color = Constraint), lwd = 1.2, alpha = 0.8) +
-    geom_segment(aes(x = RelVB_P50, xend = RelVB_P50, y = Catch_P5, yend = Catch_P95, color = Constraint), lwd = 1.2, alpha = 0.8) +
-    geom_point(aes(x = RelVB_P50, y = Catch_P50, fill = Constraint), pch = 21, cex = 3) +
-    expand_limits(y = 0, x = 0) +
-    geom_vline(data = output4 %>% right_join(find_msy %>% select(-P50)), aes(xintercept = RelVB_P50), linetype = 2) +
-    geom_hline(data = output4 %>% right_join(find_msy %>% select(-P50)), aes(yintercept = Catch_P50), linetype = 2) +
-    xlab("Relatve vulnerable biomass (VB/VB0now)") + ylab("Average annual catch") +
-    scale_fill_tableau() +
-    scale_color_tableau() +
-    theme_bw(base_size = 20)
-  if(length(regions) > 1){
-    p_relvb_v2 <- p_relvb_v2 + facet_grid(Region~RuleType) 
-  } else {
-    p_relvb_v2 <- p_relvb_v2 + facet_grid(~RuleType)
-  }
+  output5$RuleType <- factor(output5$RuleType, levels = levels(output4$RuleType))
+  p_relvb_v2 <- p_relvb +
+    geom_vline(data = output5, aes(xintercept = RelVB_P50), linetype = 2) +
+    geom_hline(data = output5, aes(yintercept = Catch_P50), linetype = 2)
   ggsave(file.path(figure_dir, "RelVB_vs_Catch_byConstraint_wTarget.png"), p_relvb_v2, height = 8, width = 20)
   
   p_vb <- ggplot(output4) +
@@ -366,23 +357,10 @@ plot_refpoints <- function(object, figure_dir){
   } 
   ggsave(file.path(figure_dir, "VB_vs_Catch_byConstraint.png"), p_vb, height = 8, width = 20)
   
-  p_vb_v2 <- ggplot(output4) +
-    geom_segment(aes(x = VB_P5, xend = VB_P95, y = Catch_P50, yend = Catch_P50, color = Constraint), lwd = 1.2, alpha = 0.8) +
-    geom_segment(aes(x = VB_P50, xend = VB_P50, y = Catch_P5, yend = Catch_P95, color = Constraint), lwd = 1.2, alpha = 0.8) +
-    geom_point(aes(x = VB_P50, y = Catch_P50, fill = Constraint), pch = 21, cex = 3) +
-    expand_limits(y = 0, x = 0) +
-    geom_vline(data = output4 %>% right_join(find_msy %>% select(-P50)), aes(xintercept = VB_P50), linetype = 2) +
-    geom_hline(data = output4 %>% right_join(find_msy %>% select(-P50)), aes(yintercept = Catch_P50), linetype = 2) +
-    xlab("Vulnerable biomass") + ylab("Average annual catch") +
-    scale_fill_tableau() +
-    scale_color_tableau() +
-    theme_bw(base_size = 20)  
-  if(length(regions) > 1){
-    p_vb_v2 <- p_vb_v2 + facet_wrap(Region~RuleType, scales = "free_x", nrow = length(regions)) 
-  } else {
-    p_vb_v2 <- p_vb_v2 + facet_wrap(~RuleType, scales = "free_x", nrow = length(regions))
-  }
-
+  output5$RuleType <- factor(output5$RuleType, levels = levels(output4$RuleType))
+  p_vb_v2 <- p_vb +
+    geom_vline(data = output5, aes(xintercept = VB_P50), linetype = 2) +
+    geom_hline(data = output5, aes(yintercept = Catch_P50), linetype = 2)
   ggsave(file.path(figure_dir, "VB_vs_Catch_byConstraint_wTarget.png"), p_vb_v2, height = 8, width = 20)
   
   p_vbcatch <- ggplot(output4) +
@@ -437,7 +415,7 @@ plot_refpoints <- function(object, figure_dir){
   } else {
     p_vbcv <- p_vbcv + facet_wrap(~RuleType, scales = "free_x", nrow = length(regions))
   }
-  ggsave(file.path(figure_dir, "VB_vs_Catch_CVConstraint.png"), p_vbcatch, height = 8, width = 20)
+  ggsave(file.path(figure_dir, "VB_vs_Catch_CVConstraint.png"), p_vbcv, height = 8, width = 20)
   
 
   ###################################################

@@ -149,11 +149,8 @@ plot_refpoints <- function(object, figure_dir){
   ##########################
   ## projection time series
   ##########################
-    # cutyears <- (projyears[1]+10):(data$last_proj_yr)
-    cutyears <- (projyears[1]+10):(projyears[1]+30)
+    cutyears <- (projyears[1]+10):(data$last_proj_yr)
     cinfo <- info %>% filter(Year %in% cutyears)
-    
-    # pinfo <- info %>% filter(Year %in% projyears)
     dinfo <- info %>% ungroup() %>% filter(Year %in% years) %>% filter(RuleNum == 1) %>% dplyr::select(-c(RuleNum))
 
   #######################################
@@ -171,7 +168,7 @@ plot_refpoints <- function(object, figure_dir){
   #####################
   ## start summarising
   #####################
-    summary <- info %>%
+    summary <- cinfo %>%
       tidyr::pivot_longer(cols=c(Catch,SSB,SSB0now,RelSSB,VB,VB0now,RelVB,Recruitment,CPUE), names_to = "Variable", values_to = "Value") %>%
       dplyr::group_by(Region, RuleNum, Variable) %>%
       dplyr::summarise(P5 = quantile(Value, 0.05),
@@ -336,14 +333,14 @@ plot_refpoints <- function(object, figure_dir){
     require(ggthemes)
 # 
 #   ## plots of rules over time
-#   info2 <- info %>%
-#     dplyr::select(Iteration, Region, RuleNum, Year, Catch, RelSSB, RelVB, Recruitment) %>%
-#     tidyr::pivot_longer(-c(Iteration, Region, RuleNum, Year), names_to = "Variable", values_to = "Value") %>%
-#     dplyr::group_by(Year, Region, RuleNum, Variable) %>%
-#     dplyr::summarise(P5 = quantile(Value, 0.05),
-#                      P50 = quantile(Value, 0.50),
-#                      P95 = quantile(Value, 0.95))
-# 
+  info2 <- info %>%
+    dplyr::select(Iteration, Region, RuleNum, Year, Catch, RelSSB, RelVB, Recruitment) %>%
+    tidyr::pivot_longer(-c(Iteration, Region, RuleNum, Year), names_to = "Variable", values_to = "Value") %>%
+    dplyr::group_by(Year, Region, RuleNum, Variable) %>%
+    dplyr::summarise(P5 = quantile(Value, 0.05),
+                     P50 = quantile(Value, 0.50),
+                     P95 = quantile(Value, 0.95))
+
 # 
 #   check <- info2 %>% filter(Variable %in% c("Catch","RelSSB", "RelVB")) %>%
 #     left_join(ruledf)
@@ -684,6 +681,9 @@ plot_refpoints <- function(object, figure_dir){
        scale_color_tableau() +
         xlab("Offset-year CPUE") +
         theme_bw(base_size = 20)
+      if(length(regions) > 1){
+        p_cpue_mp <- p_cpue_mp + facet_grid(Region~., scales = "free_x") 
+      } 
       ggsave(file.path(figure_dir, "CPUE_vs_Catch_MP.png"), p_cpue_mp, height = 10, width = 12)
 
       p_cpue_mp_v2 <- p_cpue_mp +
@@ -714,8 +714,12 @@ plot_refpoints <- function(object, figure_dir){
       geom_point(data = check1 %>% filter(Constraint == "Pass"), aes(x = CPUE, y = Catch, color = Constraint), cex = 2, alpha = 0.5) +
       scale_color_tableau() +
       xlab("Offset-year CPUE") +
-      facet_wrap(~RuleType) +
       theme_bw(base_size = 20)
+    if(length(regions) > 1){
+      p_cpue_all <- p_cpue_all + facet_wrap(Region~RuleType)
+    } else {
+      p_cpue_all <- p_cpue_all + facet_wrap(~RuleType)
+    }
     ggsave(file.path(figure_dir, "CPUE_vs_Catch.png"), p_cpue_all, height = 10, width = 12)
     
     if(length(unique(msy_info2$RuleType == 3))) msy_info2$RuleType <- factor(msy_info2$RuleType, levels = c("FixedCatch", "CPUE-based", "FixedF"))
@@ -748,6 +752,9 @@ plot_refpoints <- function(object, figure_dir){
        scale_color_tableau() +
         xlab("Offset-year CPUE") +
         theme_bw(base_size = 20)
+      if(length(regions) > 1){
+        p_cpue_mp <- p_cpue_mp + facet_wrap(Region~.)
+      }
       ggsave(file.path(figure_dir, "CPUE_vs_Catch_MP_Max.png"), p_cpue_mp, height = 10, width = 12)
 
       p_cpue_mp_v2 <- p_cpue_mp +
@@ -765,6 +772,9 @@ plot_refpoints <- function(object, figure_dir){
       scale_color_tableau() +
       xlab("Offset-year CPUE") +
       theme_bw(base_size = 20)
+    if(length(regions) > 1){
+      p_cpue_all <- p_cpue_all + facet_wrap(Region~.)
+    }
     ggsave(file.path(figure_dir, "CPUE_vs_Catch.png"), p_cpue_all, height = 10, width = 12)
     
     if(length(unique(msy_info2$RuleType == 3))) msy_info2$RuleType <- factor(msy_info2$RuleType, levels = c("FixedCatch", "CPUE-based", "FixedF"))

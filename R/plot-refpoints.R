@@ -333,13 +333,13 @@ plot_refpoints <- function(object, figure_dir){
     require(ggthemes)
 # 
 #   ## plots of rules over time
-  info2 <- info %>%
-    dplyr::select(Iteration, Region, RuleNum, Year, Catch, RelSSB, RelVB, Recruitment) %>%
-    tidyr::pivot_longer(-c(Iteration, Region, RuleNum, Year), names_to = "Variable", values_to = "Value") %>%
-    dplyr::group_by(Year, Region, RuleNum, Variable) %>%
-    dplyr::summarise(P5 = quantile(Value, 0.05),
-                     P50 = quantile(Value, 0.50),
-                     P95 = quantile(Value, 0.95))
+  # info2 <- info %>%
+  #   dplyr::select(Iteration, Region, RuleNum, Year, Catch, RelSSB, RelVB, Recruitment) %>%
+  #   tidyr::pivot_longer(-c(Iteration, Region, RuleNum, Year), names_to = "Variable", values_to = "Value") %>%
+  #   dplyr::group_by(Year, Region, RuleNum, Variable) %>%
+  #   dplyr::summarise(P5 = quantile(Value, 0.05),
+  #                    P50 = quantile(Value, 0.50),
+  #                    P95 = quantile(Value, 0.95))
 
 # 
 #   check <- info2 %>% filter(Variable %in% c("Catch","RelSSB", "RelVB")) %>%

@@ -102,6 +102,11 @@ do_plot <- function(object,
     }
     
     # tres <- table_residuals(object, figure_dir = figure_dir)
+    print("plotting biomass")
+    plot_biomass(object, figure_dir = figure_dir, ref = NA)
+    print("plotting catch and Fs")
+    plot_F(object, figure_dir = figure_dir, ref = NULL)
+    plot_catch(object, figure_dir = figure_dir, show_proj = FALSE)
     plot_selectivity(object, figure_dir = figure_dir)
     print("plotting CPUE")
     plot_cpue(object, figure_dir = figure_dir)
@@ -127,11 +132,6 @@ do_plot <- function(object,
     print("plotting MLS and handling mortality")
     plot_mls(object, figure_dir = figure_dir)
     plot_handling_mortality(object, figure_dir = figure_dir)
-    print("plotting biomass")
-    plot_biomass(object, figure_dir = figure_dir, ref = NA)
-    print("plotting catch and Fs")
-    plot_F(object, figure_dir = figure_dir, ref = NULL)
-    plot_catch(object, figure_dir = figure_dir, show_proj = FALSE)
 
     #plot_offset_cpue(object, figure_dir = figure_dir)
     #plot_offset_cpue_lm(object, figure_dir = figure_dir)

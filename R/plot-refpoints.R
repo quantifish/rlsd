@@ -12,6 +12,12 @@ plot_refpoints <- function(object, figure_dir){
   ##############################
   ## read model output
   ##############################
+  ### TESTING
+  # mcmc1 <- object1@mcmc
+  # data1 <- object1@data
+  # pyears1 <- data1$first_yr:data1$last_proj_yr
+  # n_iter1 <- nrow(mcmc1[[1]])
+  
   mcmc <- object@mcmc
   data <- object@data
   years <- data$first_yr:data$last_yr
@@ -40,14 +46,39 @@ plot_refpoints <- function(object, figure_dir){
   dimnames(slcatch) <- list("Iteration"=1:n_iter, "RuleNum"=1:dim(slcatch)[2], "Region"=regions, "Year"=pyears, "Season"=seasons)
   slcatch2 <- reshape2::melt(slcatch, value.name = "Catch") %>% 
     dplyr::group_by(Iteration, Year, Region, RuleNum) %>%
-    summarise(Catch = sum(Catch)) %>%
+    dplyr::summarise(Catch = sum(Catch)) %>%
     dplyr::mutate("CatchType" = "SL")
 
   nslcatch <- mcmc$pred_catch_nsl_jryt
   dimnames(nslcatch) <- list("Iteration"=1:n_iter, "RuleNum"=1:dim(nslcatch)[2], "Region"=regions, "Year"=pyears, "Season"=seasons)
   nslcatch2 <- reshape2::melt(nslcatch, value.name = "Catch") %>% 
     dplyr::group_by(Iteration, Year, Region, RuleNum) %>%
-    summarise(Catch = sum(Catch)) %>%
+    dplyr::summarise(Catch = sum(Catch)) %>%
+    dplyr::mutate("CatchType" = "NSL")    
+  
+  pcatch <- rbind.data.frame(slcatch2, nslcatch2)
+  pcatch2 <- pcatch %>% 
+    dplyr::group_by(Iteration, Year, Region, RuleNum) %>%
+    dplyr::summarise("Catch" = sum(Catch))
+  
+  ### TESTING
+  # slcatch1 <- mcmc1$pred_catch_sl_jryt
+  # dimnames(slcatch1) <- list("Iteration"=1:n_iter1, "RuleNum"=1:dim(slcatch1)[2], "Region"=regions, "Year"=pyears1, "Season"=seasons)
+  # slcatch3 <- reshape2::melt(slcatch1, value.name = "Catch") %>%
+  #   dplyr::group_by(Iteration, Year, Region, RuleNum) %>%
+  #   summarise(Catch = sum(Catch)) %>%
+  #   dplyr::mutate("CatchType" = "SL")
+
+  # check1 <- slcatch2 %>% filter(RuleNum == 1) %>% filter(Year %in% years) %>% group_by(RuleNum, Year, Region, CatchType) %>% summarise(Catch = median(Catch)) %>% mutate(Model = "Ref")
+  # check2 <- slcatch3 %>% filter(Year %in% years) %>% group_by(RuleNum, Year, Region, CatchType) %>% summarise(Catch = median(Catch)) %>% mutate(Model = "Base")
+  # check <- rbind.data.frame(check1, check2)
+  # p <- ggplot(check) + geom_line(aes(x = Year, y = Catch, color = Model, linetype = Model)) + facet_wrap(~Region) +theme_bw()
+ 
+  nslcatch <- mcmc$pred_catch_nsl_jryt
+  dimnames(nslcatch) <- list("Iteration"=1:n_iter, "RuleNum"=1:dim(nslcatch)[2], "Region"=regions, "Year"=pyears, "Season"=seasons)
+  nslcatch2 <- reshape2::melt(nslcatch, value.name = "Catch") %>% 
+    dplyr::group_by(Iteration, Year, Region, RuleNum) %>%
+    dplyr::summarise(Catch = sum(Catch)) %>%
     dplyr::mutate("CatchType" = "NSL")    
   
   pcatch <- rbind.data.frame(slcatch2, nslcatch2)
@@ -63,14 +94,14 @@ plot_refpoints <- function(object, figure_dir){
   dimnames(slrcatch) <- list("Iteration"=1:n_iter, "RuleNum"=1:dim(slrcatch)[2], "Region"=regions, "Year"=pyears, "Season"=seasons)
   slrcatch2 <- reshape2::melt(slrcatch, value.name = "CatchResidual") %>% 
     dplyr::group_by(Iteration, Year, Region, RuleNum) %>%
-    summarise(CatchResidual = sum(CatchResidual)) 
+    dplyr::summarise(CatchResidual = sum(CatchResidual)) 
   slrcatch2$CatchResidual[which(abs(slrcatch2$CatchResidual)<1)] <- 0
   
   nslrcatch <- mcmc$resid_catch_nsl_jryt
   dimnames(nslrcatch) <- list("Iteration"=1:n_iter, "RuleNum"=1:dim(nslrcatch)[2], "Region"=regions, "Year"=pyears, "Season"=seasons)
   nslrcatch2 <- reshape2::melt(nslrcatch, value.name = "CatchResidual") %>% 
     dplyr::group_by(Iteration, Year, Region, RuleNum) %>%
-    summarise(CatchResidual = sum(CatchResidual)) 
+    dplyr::summarise(CatchResidual = sum(CatchResidual)) 
   nslrcatch2$CatchResidual[which(abs(nslrcatch2$CatchResidual)<1)] <- 0
   
   rcatch <- rbind.data.frame(slrcatch2, nslrcatch2)
@@ -94,6 +125,18 @@ plot_refpoints <- function(object, figure_dir){
   vb2 <- reshape2::melt(vb) %>% 
     dplyr::rename(VB = value)
   vb2$Region <- factor(vb2$Region)
+  
+  # ### TESTING
+  # vb1 <- mcmc1$biomass_vulnref_AW_jyr
+  # dimnames(vb1) <- list("Iteration" = 1:n_iter1, "RuleNum" = 1:dim(vb1)[2], "Year" = pyears1, "Region" = regions)
+  # vb3 <- reshape2::melt(vb1) %>%
+  #   dplyr::rename(VB = value)
+  # vb3$Region <- factor(vb3$Region)
+
+  # check1 <- vb2 %>% filter(RuleNum == 1) %>% filter(Year %in% years) %>% group_by(RuleNum, Year, Region) %>% summarise(VB = median(VB)) %>% mutate(Model = "Ref")
+  # check2 <- vb3 %>% filter(Year %in% years) %>% mutate(Model = "Base") %>% ungroup() %>% dplyr::select(-Iteration)
+  # check <- rbind.data.frame(check1, check2)
+  # p <- ggplot(check) + geom_line(aes(x = Year, y = VB, color = Model, linetype = Model)) + facet_wrap(~Region) + theme_bw()
   
   vb0 <- mcmc$B0now_r
   dimnames(vb0) <- list("Iteration" = 1:n_iter, "Region" = regions2)
@@ -158,7 +201,7 @@ plot_refpoints <- function(object, figure_dir){
   #######################################
     constraints <- cinfo %>%
       dplyr::group_by(Region, RuleNum) %>%
-      summarise(AvgTotalCatch = sum(Catch)/max(Iteration),
+      dplyr::summarise(AvgTotalCatch = sum(Catch)/max(Iteration),
                 CV = sd(Catch)/mean(Catch),
                 CatchConstraint = ifelse(quantile(Catch, prob = 0.95) - quantile(Catch, prob = 0.05) > 2, 1, 0),
                 Prisk = length(which(RelSSB <= 0.2))/length(RelSSB),
@@ -272,7 +315,7 @@ plot_refpoints <- function(object, figure_dir){
     tidyr::pivot_wider(names_from = Variable, values_from = P50)
 
   msy_info3 <- cinfo %>%
-    dplyr::right_join(msy_info %>% select(Region, RuleNum)) %>%
+    dplyr::right_join(msy_info %>% dplyr::select(Region, RuleNum)) %>%
     dplyr::left_join(ruledf)
   if(length(regions) > 1){
     msy_info4 <- unique(msy_info3) %>%
@@ -508,10 +551,14 @@ plot_refpoints <- function(object, figure_dir){
     scale_fill_tableau() +
     scale_color_tableau() +
     ylab("Vulnerable biomass (VB)") +
-    facet_grid(Region~RuleType) +
     guides(color = FALSE, fill = FALSE) +
     coord_cartesian(xlim = c(min(check$Year),max(check$Year)), expand = FALSE) +
     theme_bw(base_size = 20)
+  if(length(regions) > 1){
+    p_vbcurr <- p_vbcurr + facet_grid(Region~RuleType, scales = "free_y")
+  } else {
+    p_vbcurr <- p_vbcurr + facet_grid(~RuleType, scales = "free_y")
+  }
   ggsave(file.path(figure_dir, "VBcurrent.png"), p_vbcurr, height = 10, width = 20)
   
   check <- dinfo %>% left_join(msy_info %>% filter(Variable == "RelVB")) 
@@ -525,16 +572,41 @@ plot_refpoints <- function(object, figure_dir){
     scale_fill_tableau() +
     guides(color = FALSE, fill = FALSE) +
     ylab("Relative vulnerable biomass (VB/VB0now)") +
-    facet_grid(Region~RuleType) +
     coord_cartesian(xlim = c(min(check$Year),max(check$Year)), expand = FALSE) +
     theme_bw(base_size = 20)
+  if(length(regions) > 1){
+    p_relvbcurr <- p_relvbcurr + facet_grid(Region~RuleType)
+  } else {
+    p_relvbcurr <- p_relvbcurr + facet_grid(~RuleType)
+  }
   ggsave(file.path(figure_dir, "RelVBcurrent.png"), p_relvbcurr, height = 10, width = 20)
 
   #######################################
   ## examine variability across filters
   #######################################
+  ## examples from find_max
+  reg <- unique(find_max$Region)
+  find_max_sub <- lapply(1:length(reg), function(x){
+    sub <- find_max %>% filter(Region == reg[x])
+    types <- unique(sub$RuleType)
+    byType <- lapply(1:length(types), function(y){
+      sub2 <- sub %>% filter(RuleType == types[y])
+      con <- unique(sub2$Constraint)
+      byCon <- lapply(1:length(con), function(z){
+        sub3 <- sub2 %>% filter(Constraint == con[z])
+        out <- sub3[nrow(sub3),]
+        return(out)
+      })
+      byCon <- do.call(rbind, byCon)
+      return(byCon)
+    })
+    byType <- do.call(rbind, byType)
+    return(byType)
+  })
+  find_max_sub <- do.call(rbind, find_max_sub)
+  
   check1 <- cinfo %>%
-    dplyr::right_join(find_max %>% dplyr::select(-P50)) %>%
+    dplyr::right_join(find_max_sub %>% dplyr::select(-P50)) %>%
     dplyr::left_join(max_info %>% filter(Variable == "Catch")) %>%
     dplyr::select(Iteration, Year, Region, RuleNum, RuleType, Constraint, Catch, RelVB, RelSSB) %>%
     tidyr::pivot_longer(cols = c(Catch,RelVB,RelSSB), names_to = "Variable", values_to = "Value") %>%
@@ -547,6 +619,20 @@ plot_refpoints <- function(object, figure_dir){
                        P95 = quantile(Value, 0.95))
     if(length(unique(check2$RuleType))==3) check2$RuleType <- factor(check2$RuleType, levels = c("FixedCatch", "CPUE-based", "FixedF"))
     if(length(unique(check1$RuleType))==3) check1$RuleType <- factor(check1$RuleType, levels = c("FixedCatch", "CPUE-based", "FixedF"))
+    const <- unique(as.character(check1$Constraint))
+    const1 <- const[grepl("CV",const)==FALSE]
+    const1_1 <- const1[grepl("catch", const1) == FALSE]
+    const1_2 <- const1[grepl("catch", const1)]
+    const1 <- c(const1_1, const1_2)
+    const2 <- const[grepl("CV", const)]
+    const2_1 <- const2[grepl("%", const2) == FALSE]
+    const2_2 <- const2[grepl("5%", const2)]
+    const2_3 <- const2[grepl("10%", const2)]
+    const2 <- c(const2_1, const2_2, const2_3)
+    constx <- c(const1,const2)
+    const <- rev(c(constx, const[which(const %in% constx == FALSE)]))
+    check1$Constraint <- factor(check1$Constraint, levels = const)
+    check2$Constraint <- factor(check2$Constraint, levels = const)
     p_constr1 <- ggplot() +
       geom_ribbon(data = check2 %>% filter(Variable %in% c("Catch","RelSSB","RelVB")), aes(x = Year, ymin = P5, ymax = P95, fill = Constraint), color = NA, alpha = 0.5) +
       geom_line(data = check2 %>% filter(Variable %in% c("Catch","RelSSB","RelVB")), aes(x = Year, y = P50, color = Constraint), lwd = 1.5) +
@@ -554,6 +640,7 @@ plot_refpoints <- function(object, figure_dir){
       scale_color_brewer(palette = "Set1") +
       scale_fill_brewer(palette = "Set1") +
       expand_limits(y = 0) +
+      ylab("Value") + xlab("Projection Year") +
       guides(color = FALSE, fill = FALSE) +
       theme_bw(base_size = 20)
     if(length(regions)>1){
@@ -566,7 +653,7 @@ plot_refpoints <- function(object, figure_dir){
   
 
   check1 <- cinfo %>%
-    dplyr::right_join(find_max %>% dplyr::select(-P50)) %>%
+    dplyr::right_join(find_max_sub %>% dplyr::select(-P50)) %>%
     dplyr::left_join(max_info %>% filter(Variable == "Catch")) %>%
     dplyr::select(Iteration, Year, Region, RuleNum, RuleType, Constraint, Catch, RelVB, RelSSB) %>%
     tidyr::pivot_longer(cols = c(Catch,RelVB,RelSSB), names_to = "Variable", values_to = "Value") %>%
@@ -579,12 +666,27 @@ plot_refpoints <- function(object, figure_dir){
                        P95 = quantile(Value, 0.95))
     if(length(unique(check2$RuleType))==3) check2$RuleType <- factor(check2$RuleType, levels = c("FixedCatch", "CPUE-based", "FixedF"))
     if(length(unique(check1$RuleType))==3) check1$RuleType <- factor(check1$RuleType, levels = c("FixedCatch", "CPUE-based", "FixedF"))
+    const <- unique(as.character(check1$Constraint))
+    const1 <- const[grepl("CV",const)==FALSE]
+    const1_1 <- const1[grepl("catch", const1) == FALSE]
+    const1_2 <- const1[grepl("catch", const1)]
+    const1 <- c(const1_1, const1_2)
+    const2 <- const[grepl("CV", const)]
+    const2_1 <- const2[grepl("%", const2) == FALSE]
+    const2_2 <- const2[grepl("5%", const2)]
+    const2_3 <- const2[grepl("10%", const2)]
+    const2 <- c(const2_1, const2_2, const2_3)
+    constx <- c(const1,const2)
+    const <- rev(c(constx, const[which(const %in% constx == FALSE)]))
+    check1$Constraint <- factor(check1$Constraint, levels = const)
+    check2$Constraint <- factor(check2$Constraint, levels = const)
     p_constr2 <- ggplot() +
       geom_ribbon(data = check2 %>% filter(Variable %in% c("Catch","RelSSB","RelVB")), aes(x = Year, ymin = P5, ymax = P95, fill = Constraint), color = NA, alpha = 0.5) +
       geom_line(data = check2 %>% filter(Variable %in% c("Catch","RelSSB","RelVB")), aes(x = Year, y = P50, color = Constraint), lwd = 1.5) +
       geom_line(data = check1 %>% filter(Iteration == 1) %>% filter(Variable %in% c("Catch","RelSSB","RelVB")), aes(x = Year, y = Value)) +
       scale_color_brewer(palette = "Set1") +
       scale_fill_brewer(palette = "Set1") +
+      ylab("Value") + xlab("Projection Year") +
       expand_limits(y = 0) +
       guides(color = FALSE, fill = FALSE) +
       theme_bw(base_size = 20)
@@ -595,9 +697,9 @@ plot_refpoints <- function(object, figure_dir){
     }
     ggsave(file.path(figure_dir, "CompareConstraints_FixedF.png"), p_constr2, height = 10, width = 15)
   }
- 
+
   check1 <- cinfo %>%
-    dplyr::right_join(find_max %>% dplyr::select(-P50)) %>%
+    dplyr::right_join(find_max_sub %>% dplyr::select(-P50)) %>%
     dplyr::left_join(max_info %>% filter(Variable == "Catch")) %>%
     dplyr::select(Iteration, Year, Region, RuleNum, RuleType, Constraint, Catch, RelVB, RelSSB) %>%
     tidyr::pivot_longer(cols = c(Catch,RelVB,RelSSB), names_to = "Variable", values_to = "Value") %>%
@@ -610,6 +712,20 @@ plot_refpoints <- function(object, figure_dir){
                        P95 = quantile(Value, 0.95))
     if(length(unique(check2$RuleType))==3) check2$RuleType <- factor(check2$RuleType, levels = c("FixedCatch", "CPUE-based", "FixedF"))
     if(length(unique(check1$RuleType))==3) check1$RuleType <- factor(check1$RuleType, levels = c("FixedCatch", "CPUE-based", "FixedF"))
+    const <- unique(as.character(check1$Constraint))
+    const1 <- const[grepl("CV",const)==FALSE]
+    const1_1 <- const1[grepl("catch", const1) == FALSE]
+    const1_2 <- const1[grepl("catch", const1)]
+    const1 <- c(const1_1, const1_2)
+    const2 <- const[grepl("CV", const)]
+    const2_1 <- const2[grepl("%", const2) == FALSE]
+    const2_2 <- const2[grepl("5%", const2)]
+    const2_3 <- const2[grepl("10%", const2)]
+    const2 <- c(const2_1, const2_2, const2_3)
+    constx <- c(const1, const2)
+    const <- rev(c(constx, const[which(const %in% constx == FALSE)]))
+    check1$Constraint <- factor(check1$Constraint, levels = const)
+    check2$Constraint <- factor(check2$Constraint, levels = const)
     p_constr3 <- ggplot() +
       geom_ribbon(data = check2 %>% filter(Variable %in% c("Catch","RelSSB","RelVB")), aes(x = Year, ymin = P5, ymax = P95, fill = Constraint), color = NA, alpha = 0.5) +
       geom_line(data = check2 %>% filter(Variable %in% c("Catch","RelSSB","RelVB")), aes(x = Year, y = P50, color = Constraint), lwd = 1.5) +
@@ -617,6 +733,7 @@ plot_refpoints <- function(object, figure_dir){
       scale_color_brewer(palette = "Set1") +
       scale_fill_brewer(palette = "Set1") +
       expand_limits(y = 0) +
+      ylab("Value") + xlab("Projection Year") +
       guides(color = FALSE, fill = FALSE) +
       theme_bw(base_size = 20)
     if(length(regions)>1){
@@ -641,7 +758,7 @@ plot_refpoints <- function(object, figure_dir){
     if(length(regions) > 1){
       p_cv <- p_cv + facet_grid(Region~., scales = "free_x") 
     } 
-    ggsave(file.path(figure_dir, "CV_vs_Catch_MP.png"), p_cv, height = 8, width = 20)
+    ggsave(file.path(figure_dir, "CV_vs_Catch_MP.png"), p_cv, height = 8, width = 12)
     
     p_cv <- ggplot(check %>% filter(Constraint == "Pass")) +
       geom_segment(aes(x = CV, xend = CV, y = Catch_P5, yend = Catch_P95, color = Constraint), lwd = 1.2, alpha = 0.8) +
@@ -654,7 +771,7 @@ plot_refpoints <- function(object, figure_dir){
     if(length(regions) > 1){
       p_cv <- p_cv + facet_grid(Region~., scales = "free_x") 
     } 
-    ggsave(file.path(figure_dir, "CV_vs_Catch_MP_Pass.png"), p_cv, height = 8, width = 20)
+    ggsave(file.path(figure_dir, "CV_vs_Catch_MP_Pass.png"), p_cv, height = 8, width = 12)
   }
 
     check1 <- cinfo %>%
@@ -694,7 +811,7 @@ plot_refpoints <- function(object, figure_dir){
 
     check1 <- cinfo %>%
       dplyr::left_join(output2 %>% filter(Variable == "Catch")) %>%
-      dplyr::select(Iteration, Year, Region, RuleNum, RuleType, Constraint, Catch, CPUE) 
+      dplyr::select(Iteration, Year, Region, RuleNum, RuleType, Constraint, Catch, CPUE)
     const <- unique(as.character(check1$Constraint))
     const1 <- const[grepl("CV",const)==FALSE]
     const1_1 <- const1[grepl("catch", const1) == FALSE]
@@ -724,8 +841,8 @@ plot_refpoints <- function(object, figure_dir){
     
     if(length(unique(msy_info2$RuleType == 3))) msy_info2$RuleType <- factor(msy_info2$RuleType, levels = c("FixedCatch", "CPUE-based", "FixedF"))
     p_cpue_all_v2 <- p_cpue_all +
-        geom_vline(data = msy_info2, aes(xintercept = CPUE), lty = 2) +
-        geom_hline(data = msy_info2, aes(yintercept = Catch), lty = 2)
+        geom_vline(data = msy_info2, aes(xintercept = CPUE), lty = 2, lwd = 1.5) +
+        geom_hline(data = msy_info2, aes(yintercept = Catch), lty = 2, lwd = 1.5)
     ggsave(file.path(figure_dir, "CPUE_vs_Catch_v2.png"), p_cpue_all, height = 10, width = 12)
 
     check1 <- cinfo %>%
@@ -758,8 +875,8 @@ plot_refpoints <- function(object, figure_dir){
       ggsave(file.path(figure_dir, "CPUE_vs_Catch_MP_Max.png"), p_cpue_mp, height = 10, width = 12)
 
       p_cpue_mp_v2 <- p_cpue_mp +
-        geom_vline(data = msy_info2 %>% filter(RuleType == "CPUE-based"), aes(xintercept = CPUE), lty = 2) +
-        geom_hline(data = msy_info2 %>% filter(RuleType == "CPUE-based"), aes(yintercept = Catch), lty = 2)
+        geom_vline(data = msy_info2 %>% filter(RuleType == "CPUE-based"), aes(xintercept = CPUE), lty = 2, lwd = 1.5) +
+        geom_hline(data = msy_info2 %>% filter(RuleType == "CPUE-based"), aes(yintercept = Catch), lty = 2, lwd = 1.5)
       ggsave(file.path(figure_dir, "CPUE_vs_Catch_MP_Max_v2.png"), p_cpue_mp_v2, height = 10, width = 12)
     } 
 
@@ -779,8 +896,8 @@ plot_refpoints <- function(object, figure_dir){
     
     if(length(unique(msy_info2$RuleType == 3))) msy_info2$RuleType <- factor(msy_info2$RuleType, levels = c("FixedCatch", "CPUE-based", "FixedF"))
     p_cpue_all_v2 <- p_cpue_all +
-        geom_vline(data = msy_info2, aes(xintercept = CPUE, color = RuleType), lty = 2) +
-        geom_hline(data = msy_info2, aes(yintercept = Catch, color = RuleType), lty = 2)
+        geom_vline(data = msy_info2, aes(xintercept = CPUE, color = RuleType), lty = 2, lwd = 1.5) +
+        geom_hline(data = msy_info2, aes(yintercept = Catch, color = RuleType), lty = 2, lwd = 1.5)
     ggsave(file.path(figure_dir, "CPUE_vs_Catch_v2.png"), p_cpue_all_v2, height = 10, width = 12)
 
   

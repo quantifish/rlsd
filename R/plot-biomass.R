@@ -369,7 +369,7 @@ plot_vulnerable_reference_biomass <- function(object,
       stat_summary(data = din, geom = "ribbon", alpha = 0.25, colour = NA, aes(x = Year, y = value, fill = Season), 
                    fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75))
   }
-  p <- p + stat_summary(data = din, aes(x = Year, y = value, color = Season), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1) +
+  p <- p + stat_summary(data = din, aes(x = Year, y = value, color = Season), fun = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1) +
     expand_limits(y = 0) +
     labs(x = xlab, y = "Vulnerable reference biomass (tonnes)") +
     scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1), expand = c(0, 1)) +

@@ -47,30 +47,30 @@ plot_refpoints <- function(object, object1, figure_dir){
   rm(nslcatch)
   gc()
   
-  slrcatch <- mcmc1$resid_catch_sl_jryt
-  dimnames(slrcatch) <- list("Iteration"=1:n_iter1, "RuleNum"=1:dim(slrcatch)[2], "Region"=regions, "Year"=pyears1, "Season"=seasons)
-  slrcatch2 <- reshape2::melt(slrcatch, value.name = "CatchResidual") %>% 
-    dplyr::group_by(Iteration, Year, Region, RuleNum) %>%
-    dplyr::summarise(CatchResidual = sum(CatchResidual)) 
-  slrcatch2$CatchResidual[which(abs(slrcatch2$CatchResidual)<1)] <- 0
-  
-  nslrcatch <- mcmc1$resid_catch_nsl_jryt
-  dimnames(nslrcatch) <- list("Iteration"=1:n_iter1, "RuleNum"=1:dim(nslrcatch)[2], "Region"=regions, "Year"=pyears1, "Season"=seasons)
-  nslrcatch2 <- reshape2::melt(nslrcatch, value.name = "CatchResidual") %>% 
-    dplyr::group_by(Iteration, Year, Region, RuleNum) %>%
-    dplyr::summarise(CatchResidual = sum(CatchResidual)) 
-  nslrcatch2$CatchResidual[which(abs(nslrcatch2$CatchResidual)<1)] <- 0
-  
-  rcatch <- rbind.data.frame(slrcatch2, nslrcatch2)
-  rcatch2 <- rcatch %>% 
-    dplyr::group_by(Iteration, Year, Region, RuleNum) %>%
-    dplyr::summarise("CatchResidual" = sum(CatchResidual))
-
-  rm(slrcatch)
-  rm(nslrcatch)
+  # slrcatch <- mcmc1$resid_catch_sl_jryt
+  # dimnames(slrcatch) <- list("Iteration"=1:n_iter1, "RuleNum"=1:dim(slrcatch)[2], "Region"=regions, "Year"=pyears1, "Season"=seasons)
+  # slrcatch2 <- reshape2::melt(slrcatch, value.name = "CatchResidual") %>% 
+  #   dplyr::group_by(Iteration, Year, Region, RuleNum) %>%
+  #   dplyr::summarise(CatchResidual = sum(CatchResidual)) 
+  # slrcatch2$CatchResidual[which(abs(slrcatch2$CatchResidual)<1)] <- 0
+  # 
+  # nslrcatch <- mcmc1$resid_catch_nsl_jryt
+  # dimnames(nslrcatch) <- list("Iteration"=1:n_iter1, "RuleNum"=1:dim(nslrcatch)[2], "Region"=regions, "Year"=pyears1, "Season"=seasons)
+  # nslrcatch2 <- reshape2::melt(nslrcatch, value.name = "CatchResidual") %>% 
+  #   dplyr::group_by(Iteration, Year, Region, RuleNum) %>%
+  #   dplyr::summarise(CatchResidual = sum(CatchResidual)) 
+  # nslrcatch2$CatchResidual[which(abs(nslrcatch2$CatchResidual)<1)] <- 0
+  # 
+  # rcatch <- rbind.data.frame(slrcatch2, nslrcatch2)
+  # rcatch2 <- rcatch %>% 
+  #   dplyr::group_by(Iteration, Year, Region, RuleNum) %>%
+  #   dplyr::summarise("CatchResidual" = sum(CatchResidual))
+  # 
+  # rm(slrcatch)
+  # rm(nslrcatch)
   gc()
   
-  catch <- full_join(pcatch2, rcatch2)
+  catch <- pcatch2 #full_join(pcatch2, rcatch2)
   catch$Region <- factor(catch$Region)
 
   vb <- mcmc1$biomass_vulnref_AW_jyr
@@ -120,7 +120,7 @@ plot_refpoints <- function(object, object1, figure_dir){
     tinfo1 <- info1 %>%
       dplyr::group_by(Iteration,  Year, RuleNum) %>%
       dplyr::summarise(Catch = sum(Catch),
-                       CatchResidual = sum(CatchResidual),
+                       # CatchResidual = sum(CatchResidual),
                        SSB = sum(SSB),
                        VB = sum(VB),
                        Recruitment = sum(Recruitment)) %>%
@@ -171,6 +171,8 @@ plot_refpoints <- function(object, object1, figure_dir){
   cpue2 <- reshape2::melt(cpue, value.name = "CPUE")
   cpue2 <- tibble(cpue2)
   
+  gc()
+  
   slcatch <- mcmc$pred_catch_sl_jryt
   dimnames(slcatch) <- list("Iteration"=1:n_iter, "RuleNum"=1:dim(slcatch)[2], "Region"=regions, "Year"=pyears, "Season"=seasons)
   slcatch2 <- reshape2::melt(slcatch, value.name = "Catch") %>% 
@@ -206,34 +208,34 @@ plot_refpoints <- function(object, object1, figure_dir){
   rm(slcatch)
   rm(nslcatch)
   gc()
+  # 
+  # slrcatch <- mcmc$resid_catch_sl_jryt
+  # dimnames(slrcatch) <- list("Iteration"=1:n_iter, "RuleNum"=1:dim(slrcatch)[2], "Region"=regions, "Year"=pyears, "Season"=seasons)
+  # slrcatch2 <- reshape2::melt(slrcatch, value.name = "CatchResidual") %>% 
+  #   dplyr::group_by(Iteration, Year, Region, RuleNum) %>%
+  #   dplyr::summarise(CatchResidual = sum(CatchResidual)) 
+  # slrcatch2$CatchResidual[which(abs(slrcatch2$CatchResidual)<1)] <- 0
+  # 
+  # nslrcatch <- mcmc$resid_catch_nsl_jryt
+  # dimnames(nslrcatch) <- list("Iteration"=1:n_iter, "RuleNum"=1:dim(nslrcatch)[2], "Region"=regions, "Year"=pyears, "Season"=seasons)
+  # nslrcatch2 <- reshape2::melt(nslrcatch, value.name = "CatchResidual") %>% 
+  #   dplyr::group_by(Iteration, Year, Region, RuleNum) %>%
+  #   dplyr::summarise(CatchResidual = sum(CatchResidual)) 
+  # nslrcatch2$CatchResidual[which(abs(nslrcatch2$CatchResidual)<1)] <- 0
+  # 
+  # rcatch <- rbind.data.frame(slrcatch2, nslrcatch2)
+  # rcatch2 <- rcatch %>% 
+  #   dplyr::group_by(Iteration, Year, Region, RuleNum) %>%
+  #   dplyr::summarise("CatchResidual" = sum(CatchResidual))
+  # 
+  # rm(slrcatch)
+  # rm(nslrcatch)
+  # gc()
   
-  slrcatch <- mcmc$resid_catch_sl_jryt
-  dimnames(slrcatch) <- list("Iteration"=1:n_iter, "RuleNum"=1:dim(slrcatch)[2], "Region"=regions, "Year"=pyears, "Season"=seasons)
-  slrcatch2 <- reshape2::melt(slrcatch, value.name = "CatchResidual") %>% 
-    dplyr::group_by(Iteration, Year, Region, RuleNum) %>%
-    dplyr::summarise(CatchResidual = sum(CatchResidual)) 
-  slrcatch2$CatchResidual[which(abs(slrcatch2$CatchResidual)<1)] <- 0
+  catch <- pcatch2 #full_join(pcatch2, rcatch2)
   
-  nslrcatch <- mcmc$resid_catch_nsl_jryt
-  dimnames(nslrcatch) <- list("Iteration"=1:n_iter, "RuleNum"=1:dim(nslrcatch)[2], "Region"=regions, "Year"=pyears, "Season"=seasons)
-  nslrcatch2 <- reshape2::melt(nslrcatch, value.name = "CatchResidual") %>% 
-    dplyr::group_by(Iteration, Year, Region, RuleNum) %>%
-    dplyr::summarise(CatchResidual = sum(CatchResidual)) 
-  nslrcatch2$CatchResidual[which(abs(nslrcatch2$CatchResidual)<1)] <- 0
-  
-  rcatch <- rbind.data.frame(slrcatch2, nslrcatch2)
-  rcatch2 <- rcatch %>% 
-    dplyr::group_by(Iteration, Year, Region, RuleNum) %>%
-    dplyr::summarise("CatchResidual" = sum(CatchResidual))
-
-  rm(slrcatch)
-  rm(nslrcatch)
-  gc()
-  
-  catch <- full_join(pcatch2, rcatch2)
-  
-  rm(pcatch2)
-  rm(rcatch2)
+  # rm(pcatch2)
+  # rm(rcatch2)
   gc()
   
 
@@ -305,7 +307,7 @@ plot_refpoints <- function(object, object1, figure_dir){
     tinfo <- info %>%
       dplyr::group_by(Iteration, Year, RuleNum) %>%
       dplyr::summarise(Catch = sum(Catch),
-                       CatchResidual = sum(CatchResidual),
+                       # CatchResidual = sum(CatchResidual),
                        SSB = sum(SSB),
                        SSB0now = sum(SSB0now),
                        VB = sum(VB),
@@ -1141,7 +1143,6 @@ plot_refpoints <- function(object, object1, figure_dir){
     msy <- unique(msy_info %>% filter(RuleType == "CPUE-based") %>% dplyr::select(par1:par10)) %>% mutate(Constraint = "Pass")
     msy$Constraint <- factor(msy$Constraint, levels = const)
     p_rule <- ggplot(sub) +
-      facet_grid(Constraint~par5) +
       geom_segment(aes(x = par2, xend = par3, y = 0, yend = par5, color = Constraint), lwd = 1.5) +
       geom_segment(aes(x = par3, xend = par4, y = par5, yend = par5, color = Constraint ), lwd = 1.5) +
       geom_segment(aes(x = par4, xend = par4, y = par5, yend = par5 + (par5 * par7), color = Constraint), lwd = 1.5) +
@@ -1166,6 +1167,11 @@ plot_refpoints <- function(object, object1, figure_dir){
       coord_cartesian(xlim = c(0,4)) +
       xlab("Offset-year CPUE") + ylab("Catch") +
       theme_bw(base_size = 14)
+    if(length(regions) > 1){
+      p_rule <- p_rule + facet_wrap(Region+Constraint~par5)
+    } else {
+      p_rule <- p_rule + facet_wrap(Constraint~par5)
+    }
     ggsave(file.path(figure_dir, "CPUE_rules.png"), p_rule, height = 15, width = 17)
     
   

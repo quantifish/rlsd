@@ -12,9 +12,7 @@ plot_refpoints <- function(object, figure_dir){
   ##############################
   ## read model output
   ##############################
-  
 
-  
   mcmc <- object@mcmc
   data <- object@data
   years <- data$first_yr:data$last_yr
@@ -33,6 +31,13 @@ plot_refpoints <- function(object, figure_dir){
   projF <- mcmc$proj_F_jytrf
   dimnames(projF) <- list("Iteration"=1:n_iter, "RuleNum"=1:n_rules, "Year"=pyears, "Season"=seasons, "Region"=regions, "Fleet" = fleets)
   projF2 <- reshape2::melt(projF, value.name = "F")
+
+  sub <- projF2 %>% filter(RuleNum == 20)
+
+  p <- ggplot(sub %>% filter(Iteration == 1)) +
+  geom_line(aes(x = Year, y = F, color = Season)) +
+  facet_wrap(~Fleet) +
+  theme_bw()
   
   cpue <- mcmc$mp_offset_cpue_jry
   dimnames(cpue) <- list("Iteration" = 1:n_iter, "RuleNum" = 1:n_rules, "Region" = regions, "Year" = pyears)
@@ -64,7 +69,6 @@ plot_refpoints <- function(object, figure_dir){
   rm(nslcatch)
   gc()
 
-  
   catch <- pcatch2
   gc()
   
@@ -75,38 +79,84 @@ plot_refpoints <- function(object, figure_dir){
     dplyr::rename(VB = value)
   vb2$Region <- factor(vb2$Region)
   
-  vb0 <- mcmc$B0now_r
-  dimnames(vb0) <- list("Iteration" = 1:n_iter, "Region" = regions2)
-  vb0 <- reshape2::melt(vb0) %>%
+  vb0now <- mcmc$B0now_r
+  dimnames(vb0now) <- list("Iteration" = 1:n_iter, "Region" = regions2)
+  vb0now <- reshape2::melt(vb0now) %>%
     dplyr::rename(VB0now = value)
-  vb0$Region <- factor(vb0$Region)
+  vb0now$Region <- factor(vb0now$Region)
+
+  VB0 <- mcmc$B0_r
+  dimnames(VB0) <- list("Iteration" = 1:n_iter, "Region" = regions2)
+  VB0 <- reshape2::melt(VB0) %>%
+    dplyr::rename(VB0 = value)
+  VB0$Region <- factor(VB0$Region)
   
   ssb <- mcmc$biomass_ssb_jyr
   dimnames(ssb) <- list("Iteration" = 1:n_iter, "RuleNum" = 1:dim(ssb)[2], "Year" = pyears, "Region" = regions)
   ssb2 <- reshape2::melt(ssb) %>% dplyr::rename("SSB"=value) 
   ssb2$Region <- factor(ssb2$Region)
   
-  ssb0 <- mcmc$SSB0now_r
-  dimnames(ssb0) <- list("Iteration" = 1:n_iter, "Region" = regions2)
-  ssb0 <- reshape2::melt(ssb0) %>%
+  ssb0now <- mcmc$SSB0now_r
+  dimnames(ssb0now) <- list("Iteration" = 1:n_iter, "Region" = regions2)
+  ssb0now <- reshape2::melt(ssb0now) %>%
     dplyr::rename(SSB0now=value) 
-  ssb0$Region <- factor(ssb0$Region)
+  ssb0now$Region <- factor(ssb0now$Region)
   
+  SSB0 <- mcmc$SSB0_r
+  dimnames(SSB0) <- list("Iteration" = 1:n_iter, "Region" = regions2)
+  SSB0 <- reshape2::melt(SSB0) %>%
+    dplyr::rename(SSB0=value) 
+  SSB0$Region <- factor(SSB0$Region)
+
+  tb <- mcmc$biomass_total_jytrs
+  dimnames(tb) <- list("Iteration" = 1:n_iter, "RuleNum" = 1:dim(ssb)[2], "Year" = pyears, "Season" = seasons, "Region" = regions, "Sex" = c(sex, "Total"))
+  tb2 <- reshape2::melt(tb) %>% 
+    dplyr::rename("TB"=value) %>% 
+    dplyr::filter(Sex == "Total") %>%
+    dplyr::select(-Sex) %>% 
+    dplyr::filter(Season == "AW") %>%
+    dplyr::select(-Season) %>%
+    dplyr::group_by(Iteration, RuleNum, Year, Region) %>%
+    dplyr::summarise(TB = sum(TB))
+  tb2$Region <- factor(tb2$Region)
+
+  tb0now <- mcmc$Btot0now_r
+  dimnames(tb0now) <- list("Iteration" = 1:n_iter, "Region" = regions2)
+  tb0now <- reshape2::melt(tb0now) %>%
+    dplyr::rename(TB0now=value) 
+  tb0now$Region <- factor(tb0now$Region)
+
+  TB0 <- mcmc$Btot0_r
+  dimnames(TB0) <- list("Iteration" = 1:n_iter, "Region" = regions2)
+  TB0 <- reshape2::melt(TB0) %>%
+    dplyr::rename(TB0=value) 
+  TB0$Region <- factor(TB0$Region)
+
   rec <- mcmc$recruits_ry
   dimnames(rec) <- list("Iteration" = 1:n_iter, "Region" = regions, "Year" = pyears)
   rec2 <- reshape2::melt(rec) %>%
     dplyr::rename(Recruitment = value)
   rec2$Region <- factor(rec2$Region)
   
-  relssb <- inner_join(ssb2, ssb0) %>%
-    dplyr::mutate(RelSSB = SSB/SSB0now)
+  relssb <- inner_join(ssb2, ssb0now) %>%
+    dplyr::full_join(SSB0) %>%
+    dplyr::mutate(RelSSBnow = SSB/SSB0now,
+                  RelSSB = SSB/SSB0)
 
-  relvb <- inner_join(vb2, vb0) %>%
-    dplyr::mutate(RelVB = VB/VB0now)
+  relvb <- inner_join(vb2, vb0now) %>%
+    dplyr::full_join(VB0) %>%
+    dplyr::mutate(RelVBnow = VB/VB0now,
+                  RelVB = VB/VB0)
+
+  reltb <- inner_join(tb2, tb0now) %>%
+    dplyr::full_join(TB0) %>%
+    dplyr::mutate(RelTBnow = TB/TB0now,
+                  RelTB = TB/TB0)
 
 
   relb <- full_join(relssb, relvb)
-  relb2 <- full_join(relb, rec2)
+  relb1 <- full_join(relb, reltb)
+  relb2 <- full_join(relb1, rec2)
 
   catch$Region <- factor(catch$Region)
   info <- full_join(catch, relb2)
@@ -122,8 +172,13 @@ plot_refpoints <- function(object, figure_dir){
                        # CatchResidual = sum(CatchResidual),
                        SSB = sum(SSB),
                        SSB0now = sum(SSB0now),
+                       SSB0 = sum(SSB0),
                        VB = sum(VB),
                        VB0now = sum(VB0now),
+                       VB0 = sum(VB0),
+                       TB = sum(TB),
+                       TB0now = sum(TB0now),
+                       TB0 = sum(TB0),
                        Recruitment = sum(Recruitment), 
                        CPUE = sum(CPUE)) %>%
       dplyr::mutate(RelVB = VB / VB0now) %>%
@@ -135,8 +190,8 @@ plot_refpoints <- function(object, figure_dir){
   }
 
   status <- info %>%
-    dplyr::filter(Year == max(years1)+1) %>%
-    tidyr::pivot_longer(cols=c(SSB,SSB0now,RelSSB,VB,VB0now,RelVB), names_to = "Variable", values_to = "Value") %>%
+    dplyr::filter(Year == max(years)+1) %>%
+    tidyr::pivot_longer(cols=c(SSB,SSB0now,SSB0,RelSSB,RelSSBnow,VB,VB0now,VB0,RelVB,RelVBnow,TB,TB0now,TB0,RelTB, RelTBnow), names_to = "Variable", values_to = "Value") %>%
     dplyr::group_by(Region, Variable) %>%
     dplyr::summarise(P5 = quantile(Value, 0.05),
                      P50 = quantile(Value, 0.5),
@@ -162,20 +217,20 @@ plot_refpoints <- function(object, figure_dir){
     cutyears <- (projyears[1]+10):(data$last_proj_yr)
     pinfo <- info %>% filter(Year %in% (max(years)+1):(min(cutyears)-1))
     cinfo <- info %>% dplyr::filter(Year %in% cutyears)
-    dinfo <- info1 %>% ungroup() %>% dplyr::filter(Year %in% years1) %>% dplyr::select(-c(RuleNum))
+    dinfo <- info %>% ungroup() %>% dplyr::filter(Year %in% years) %>% dplyr::filter(RuleNum == 1) %>% dplyr::select(-c(RuleNum))
 
   #######################################
   ## risk constraints + flags for catch
   #######################################
     constraints <- cinfo %>%
+      dplyr::left_join(ruledf) %>%
       dplyr::filter(Region != "Total") %>%
       dplyr::group_by(Region, RuleNum) %>%
       dplyr::summarise(AvgTotalCatch = sum(Catch)/max(Iteration),
                 CV = sd(Catch)/mean(Catch),
-                CatchConstraint = ifelse(quantile(Catch, prob = 0.95) - quantile(Catch, prob = 0.05) > 2, 1, 0),
+                CatchConstraint =  0, #ifelse(quantile(Catch, prob = 0.95) - quantile(Catch, prob = 0.05) > 2, 1, 0),
                 Prisk = length(which(RelSSB <= 0.2))/length(RelSSB),
-                RiskConstraint_5 = ifelse(Prisk >= 0.05, 1, 0),
-                RiskConstraint_10 = ifelse(Prisk >= 0.1, 1, 0)) 
+                RiskConstraint = ifelse(Prisk >= 0.05, 1, 0))
     
   #####################
   ## start summarising
@@ -196,15 +251,13 @@ plot_refpoints <- function(object, figure_dir){
       mutate(CatchConstraint = replace(CatchConstraint, which(RuleType != "FixedCatch"), 0))  
 
     output2$Constraint <- sapply(1:nrow(output2), function(x){
-      if(output2$CatchConstraint[x] == 1 & output2$RiskConstraint_10[x] == 1) out <- ">10% below soft limit\n+ catch"
-      if(output2$CatchConstraint[x] == 1 & output2$RiskConstraint_5[x] == 1 & output2$RiskConstraint_10[x] == 0) out <- ">5% below soft limit\n+ catch"
-      if(output2$CatchConstraint[x] == 1 & output2$RiskConstraint_5[x] == 0 & output2$RiskConstraint_10[x] == 0) out <- "Catch"
-      if(output2$CatchConstraint[x] == 0 & output2$RiskConstraint_10[x] == 1) out <- ">10% below soft limit" #output2$CatchConstraint[x] == 0 & 
-      if(output2$CatchConstraint[x] == 0 & output2$RiskConstraint_5[x] == 1 & output2$RiskConstraint_10[x] == 0) out <- ">5% below soft limit"
-      if(output2$CatchConstraint[x] == 0 & output2$RiskConstraint_5[x] == 0 & output2$RiskConstraint_10[x] == 0) out <- "Pass"
+      if(output2$CatchConstraint[x] == 1 & output2$RiskConstraint[x] == 1) out <- "Risk + Catch"
+      if(output2$CatchConstraint[x] == 1 & output2$RiskConstraint[x] == 0) out <- "Catch"
+      if(output2$CatchConstraint[x] == 0 & output2$RiskConstraint[x] == 1) out <- "Risk" #output2$CatchConstraint[x] == 0 & 
+      if(output2$CatchConstraint[x] == 0 & output2$RiskConstraint[x] == 0) out <- "Pass"
       return(out)
     })
-    output2$Constraint <- factor(output2$Constraint, levels = c("Pass", "Catch", ">5% below soft limit",">10% below soft limit", ">5% below soft limit\n+ catch",">10% below soft limit\n+ catch"))
+    output2$Constraint <- factor(output2$Constraint, levels = c("Pass", "Catch", "Risk", "Risk + Catch"))
       
     find_max1 <- output2 %>%
       dplyr::filter(Variable == "Catch") %>%
@@ -226,18 +279,14 @@ plot_refpoints <- function(object, figure_dir){
     mutate(CVConstraint = replace(CVConstraint, which(RuleType != "CPUE-based"), 0))
 
   output2$Constraint <- sapply(1:nrow(output2), function(x){
-      if(output2$CatchConstraint[x] == 1 & output2$RiskConstraint_10[x] == 1 & output2$CVConstraint[x] == 1) out <- ">10% below soft limit\n+ catch + CV"
-      if(output2$CatchConstraint[x] == 1 & output2$RiskConstraint_10[x] == 1 & output2$CVConstraint[x] == 0) out <- ">10% below soft limit\n+ catch"
-      if(output2$CatchConstraint[x] == 1 & output2$RiskConstraint_5[x] == 1 & output2$RiskConstraint_10[x] == 0 & output2$CVConstraint[x] == 1) out <- ">5% below soft limit\n+ catch + CV"
-      if(output2$CatchConstraint[x] == 1 & output2$RiskConstraint_5[x] == 1 & output2$RiskConstraint_10[x] == 0 & output2$CVConstraint[x] == 0) out <- ">5% below soft limit\n+ catch + CV"
-      if(output2$CatchConstraint[x] == 1 & output2$RiskConstraint_5[x] == 0 & output2$RiskConstraint_10[x] == 0 & output2$CVConstraint[x] == 1) out <- "Catch + CV"
-      if(output2$CatchConstraint[x] == 1 & output2$RiskConstraint_5[x] == 0 & output2$RiskConstraint_10[x] == 0 & output2$CVConstraint[x] == 0) out <- "Catch"
-      if(output2$CatchConstraint[x] == 0 & output2$RiskConstraint_10[x] == 1 & output2$CVConstraint[x] == 0) out <- ">10% below soft limit" #output2$CatchConstraint[x] == 0 & 
-      if(output2$CatchConstraint[x] == 0 & output2$RiskConstraint_10[x] == 1 & output2$CVConstraint[x] == 1) out <- ">10% below soft limit + CV" #output2$CatchConstraint[x] == 0 & 
-      if(output2$CatchConstraint[x] == 0 & output2$RiskConstraint_5[x] == 1 & output2$RiskConstraint_10[x] == 0  & output2$CVConstraint[x] == 1) out <- ">5% below soft limit + CV"
-      if(output2$CatchConstraint[x] == 0 & output2$RiskConstraint_5[x] == 1 & output2$RiskConstraint_10[x] == 0 & output2$CVConstraint[x] == 0) out <- ">5% below soft limit"
-      if(output2$CatchConstraint[x] == 0 & output2$RiskConstraint_5[x] == 0 & output2$RiskConstraint_10[x] == 0 & output2$CVConstraint[x] == 1) out <- "CV"
-      if(output2$CatchConstraint[x] == 0 & output2$RiskConstraint_5[x] == 0 & output2$RiskConstraint_10[x] == 0 & output2$CVConstraint[x] == 0) out <- "Pass"
+      if(output2$CatchConstraint[x] == 1 & output2$RiskConstraint[x] == 1 & output2$CVConstraint[x] == 1) out <- "Risk + Catch + CV"
+      if(output2$CatchConstraint[x] == 1 & output2$RiskConstraint[x] == 1 & output2$CVConstraint[x] == 0) out <- "Risk + Catch"
+      if(output2$CatchConstraint[x] == 1 & output2$RiskConstraint[x] == 0 & output2$CVConstraint[x] == 1) out <- "Catch + CV"
+      if(output2$CatchConstraint[x] == 1 & output2$RiskConstraint[x] == 0 & output2$CVConstraint[x] == 0) out <- "Catch"
+      if(output2$CatchConstraint[x] == 0 & output2$RiskConstraint[x] == 1 & output2$CVConstraint[x] == 0) out <- "Risk" #output2$CatchConstraint[x] == 0 & 
+      if(output2$CatchConstraint[x] == 0 & output2$RiskConstraint[x] == 1 & output2$CVConstraint[x] == 1) out <- "Risk + CV" #output2$CatchConstraint[x] == 0 & 
+      if(output2$CatchConstraint[x] == 0 & output2$RiskConstraint[x] == 0 & output2$CVConstraint[x] == 1) out <- "CV"
+      if(output2$CatchConstraint[x] == 0 & output2$RiskConstraint[x] == 0 & output2$CVConstraint[x] == 0) out <- "Pass"
     return(out)
   })
   write.csv(output2, file.path(figure_dir, "Summary_byVariable.csv"))

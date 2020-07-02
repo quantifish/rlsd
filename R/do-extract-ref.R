@@ -16,7 +16,7 @@ do_extract_ref <- function(dir = ".", model = "ref_lsd")
     # pars we want for diagnostics
     do_extract_items <- c("pred_catch_sl_jryt", 
                           "pred_catch_nsl_jryt",
-                          "pred_catch_commercial_jryt",
+                          "proj_catch_commercial_jryt",
                           "recruits_ry", 
                           "mp_offset_cpue_jry",
                           "biomass_vulnref_AW_jyr", 
@@ -30,7 +30,7 @@ do_extract_ref <- function(dir = ".", model = "ref_lsd")
                           "SSB0now_r",
                           "MSY_r",
                           "Bmsy_r",
-                          "proj_F_jytrf",
+                          "proj_F_jytrf"
                           )
 
     # "proj_catch_commercial_jryt", 

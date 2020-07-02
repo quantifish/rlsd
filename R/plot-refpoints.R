@@ -1,151 +1,19 @@
 #' Calculate reference points and create relevant figures
 #'
 #' @param object the ref-lsd object
-#' @param object1 the lsd object
 #' @param figure_dir the directory to save figures to
 #' @import dplyr
 #' @import ggplot2
 #' @import ggthemes
 #' @export
 #'
-plot_refpoints <- function(object, object1, figure_dir){
+plot_refpoints <- function(object, figure_dir){
   
   ##############################
   ## read model output
   ##############################
-  ### Bring in assessment object
-  mcmc1 <- object1@mcmc
-  data1 <- object1@data
-  years1 <- data1$first_yr:data1$last_yr
-  pyears1 <- data1$first_yr:data1$last_proj_yr
-  n_iter1 <- nrow(mcmc1[[1]])
-  seasons <- c("AW","SS")
-  regions <- 1:data1$n_area
-  if(length(regions) > 1) regions2 <- c(regions, "Total")
-  if(length(regions) == 1) regions2 <- regions
+  
 
-  slcatch <- mcmc1$pred_catch_sl_jryt
-  dimnames(slcatch) <- list("Iteration"=1:n_iter1, "RuleNum"=1:dim(slcatch)[2], "Region"=regions, "Year"=pyears1, "Season"=seasons)
-  slcatch2 <- reshape2::melt(slcatch, value.name = "Catch") %>% 
-    dplyr::group_by(Iteration, Year, Region, RuleNum) %>%
-    dplyr::summarise(Catch = sum(Catch)) %>%
-    dplyr::mutate("CatchType" = "SL")
-
-  nslcatch <- mcmc1$pred_catch_nsl_jryt
-  dimnames(nslcatch) <- list("Iteration"=1:n_iter1, "RuleNum"=1:dim(nslcatch)[2], "Region"=regions, "Year"=pyears1, "Season"=seasons)
-  nslcatch2 <- reshape2::melt(nslcatch, value.name = "Catch") %>% 
-    dplyr::group_by(Iteration, Year, Region, RuleNum) %>%
-    dplyr::summarise(Catch = sum(Catch)) %>%
-    dplyr::mutate("CatchType" = "NSL")    
-  
-  pcatch <- rbind.data.frame(slcatch2, nslcatch2)
-  pcatch2 <- pcatch %>% 
-    dplyr::group_by(Iteration, Year, Region, RuleNum) %>%
-    dplyr::summarise("Catch" = sum(Catch))
-  
-  rm(slcatch)
-  rm(nslcatch)
-  gc()
-  
-  # slrcatch <- mcmc1$resid_catch_sl_jryt
-  # dimnames(slrcatch) <- list("Iteration"=1:n_iter1, "RuleNum"=1:dim(slrcatch)[2], "Region"=regions, "Year"=pyears1, "Season"=seasons)
-  # slrcatch2 <- reshape2::melt(slrcatch, value.name = "CatchResidual") %>% 
-  #   dplyr::group_by(Iteration, Year, Region, RuleNum) %>%
-  #   dplyr::summarise(CatchResidual = sum(CatchResidual)) 
-  # slrcatch2$CatchResidual[which(abs(slrcatch2$CatchResidual)<1)] <- 0
-  # 
-  # nslrcatch <- mcmc1$resid_catch_nsl_jryt
-  # dimnames(nslrcatch) <- list("Iteration"=1:n_iter1, "RuleNum"=1:dim(nslrcatch)[2], "Region"=regions, "Year"=pyears1, "Season"=seasons)
-  # nslrcatch2 <- reshape2::melt(nslrcatch, value.name = "CatchResidual") %>% 
-  #   dplyr::group_by(Iteration, Year, Region, RuleNum) %>%
-  #   dplyr::summarise(CatchResidual = sum(CatchResidual)) 
-  # nslrcatch2$CatchResidual[which(abs(nslrcatch2$CatchResidual)<1)] <- 0
-  # 
-  # rcatch <- rbind.data.frame(slrcatch2, nslrcatch2)
-  # rcatch2 <- rcatch %>% 
-  #   dplyr::group_by(Iteration, Year, Region, RuleNum) %>%
-  #   dplyr::summarise("CatchResidual" = sum(CatchResidual))
-  # 
-  # rm(slrcatch)
-  # rm(nslrcatch)
-  gc()
-  
-  catch <- pcatch2 #full_join(pcatch2, rcatch2)
-  catch$Region <- factor(catch$Region)
-
-  vb <- mcmc1$biomass_vulnref_AW_jyr
-  dimnames(vb) <- list("Iteration" = 1:n_iter1, "RuleNum" = 1:dim(vb)[2], "Year" = pyears1, "Region" = regions)
-  vb2 <- reshape2::melt(vb) %>% 
-    dplyr::rename(VB = value)
-  vb2$Region <- factor(vb2$Region)
-  
-  vb0 <- mcmc1$B0now_r
-  dimnames(vb0) <- list("Iteration" = 1:n_iter1, "Region" = regions2)
-  vb0 <- reshape2::melt(vb0) %>%
-    dplyr::rename(VB0now = value)
-  vb0$Region <- factor(vb0$Region)
-  
-  ssb <- mcmc1$biomass_ssb_jyr
-  dimnames(ssb) <- list("Iteration" = 1:n_iter1, "RuleNum" = 1:dim(ssb)[2], "Year" = pyears1, "Region" = regions)
-  ssb2 <- reshape2::melt(ssb) %>% dplyr::rename("SSB"=value) 
-  ssb2$Region <- factor(ssb2$Region)
-  
-  ssb0 <- mcmc1$SSB0now_r
-  dimnames(ssb0) <- list("Iteration" = 1:n_iter1, "Region" = regions2)
-  ssb0 <- reshape2::melt(ssb0) %>%
-    dplyr::rename(SSB0now=value) 
-  ssb0$Region <- factor(ssb0$Region)
-  
-  rec <- mcmc1$recruits_ry
-  dimnames(rec) <- list("Iteration" = 1:n_iter1, "Region" = regions, "Year" = pyears1)
-  rec2 <- reshape2::melt(rec) %>%
-    dplyr::rename(Recruitment = value)
-  rec2$Region <- factor(rec2$Region)
-  
-  relssb <- inner_join(ssb2, ssb0) %>%
-    dplyr::mutate(RelSSB = SSB/SSB0now)
-  
-  relvb <- inner_join(vb2, vb0) %>%
-    dplyr::mutate(RelVB = VB/VB0now)
-
-  
-  relb <- full_join(relssb, relvb)
-  relb2 <- full_join(relb, rec2)
-
-  info1 <- full_join(catch, relb2)
-  info1 <- info1 %>%
-      mutate(Region = paste0("Region ", Region))
-
-  if(length(regions) > 1){
-    tinfo1 <- info1 %>%
-      dplyr::group_by(Iteration,  Year, RuleNum) %>%
-      dplyr::summarise(Catch = sum(Catch),
-                       # CatchResidual = sum(CatchResidual),
-                       SSB = sum(SSB),
-                       VB = sum(VB),
-                       Recruitment = sum(Recruitment)) %>%
-      dplyr::mutate(Region = "Total") %>%
-      dplyr::left_join(vb0) %>%
-      dplyr::left_join(ssb0) %>%
-      dplyr::mutate(RelVB = VB / VB0now) %>%
-      dplyr::mutate(RelSSB = SSB / SSB0now) %>%
-      ungroup()
-
-
-    info1 <- rbind.data.frame(info1, tinfo1)
-    info1 <- data.frame(info1)
-  }
-
-    status <- info1 %>%
-    dplyr::filter(Year == max(years1)+1) %>%
-    tidyr::pivot_longer(cols=c(SSB,SSB0now,RelSSB,VB,VB0now,RelVB), names_to = "Variable", values_to = "Value") %>%
-    dplyr::group_by(Region, Variable) %>%
-    dplyr::summarise(P5 = quantile(Value, 0.05),
-                     P50 = quantile(Value, 0.5),
-                     P95 = quantile(Value, 0.95))
-
-  write.csv(status, file.path(figure_dir, "Current_status.csv"))
-  
   
   mcmc <- object@mcmc
   data <- object@data
@@ -192,50 +60,12 @@ plot_refpoints <- function(object, object1, figure_dir){
     dplyr::group_by(Iteration, Year, Region, RuleNum) %>%
     dplyr::summarise("Catch" = sum(Catch))
   
-  ### TESTING
-  # slcatch1 <- mcmc1$pred_catch_sl_jryt
-  # dimnames(slcatch1) <- list("Iteration"=1:n_iter1, "RuleNum"=1:dim(slcatch1)[2], "Region"=regions, "Year"=pyears1, "Season"=seasons)
-  # slcatch3 <- reshape2::melt(slcatch1, value.name = "Catch") %>%
-  #   dplyr::group_by(Iteration, Year, Region, RuleNum) %>%
-  #   summarise(Catch = sum(Catch)) %>%
-  #   dplyr::mutate("CatchType" = "SL")
-
-  # check1 <- slcatch2 %>% filter(RuleNum == 1) %>% filter(Year %in% years) %>% group_by(RuleNum, Year, Region, CatchType) %>% summarise(Catch = median(Catch)) %>% mutate(Model = "Ref")
-  # check2 <- slcatch3 %>% filter(Year %in% years) %>% group_by(RuleNum, Year, Region, CatchType) %>% summarise(Catch = median(Catch)) %>% mutate(Model = "Base")
-  # check <- rbind.data.frame(check1, check2)
-  # p <- ggplot(check) + geom_line(aes(x = Year, y = Catch, color = Model, linetype = Model)) + facet_wrap(~Region) +theme_bw()
-
   rm(slcatch)
   rm(nslcatch)
   gc()
-  # 
-  # slrcatch <- mcmc$resid_catch_sl_jryt
-  # dimnames(slrcatch) <- list("Iteration"=1:n_iter, "RuleNum"=1:dim(slrcatch)[2], "Region"=regions, "Year"=pyears, "Season"=seasons)
-  # slrcatch2 <- reshape2::melt(slrcatch, value.name = "CatchResidual") %>% 
-  #   dplyr::group_by(Iteration, Year, Region, RuleNum) %>%
-  #   dplyr::summarise(CatchResidual = sum(CatchResidual)) 
-  # slrcatch2$CatchResidual[which(abs(slrcatch2$CatchResidual)<1)] <- 0
-  # 
-  # nslrcatch <- mcmc$resid_catch_nsl_jryt
-  # dimnames(nslrcatch) <- list("Iteration"=1:n_iter, "RuleNum"=1:dim(nslrcatch)[2], "Region"=regions, "Year"=pyears, "Season"=seasons)
-  # nslrcatch2 <- reshape2::melt(nslrcatch, value.name = "CatchResidual") %>% 
-  #   dplyr::group_by(Iteration, Year, Region, RuleNum) %>%
-  #   dplyr::summarise(CatchResidual = sum(CatchResidual)) 
-  # nslrcatch2$CatchResidual[which(abs(nslrcatch2$CatchResidual)<1)] <- 0
-  # 
-  # rcatch <- rbind.data.frame(slrcatch2, nslrcatch2)
-  # rcatch2 <- rcatch %>% 
-  #   dplyr::group_by(Iteration, Year, Region, RuleNum) %>%
-  #   dplyr::summarise("CatchResidual" = sum(CatchResidual))
-  # 
-  # rm(slrcatch)
-  # rm(nslrcatch)
-  # gc()
+
   
-  catch <- pcatch2 #full_join(pcatch2, rcatch2)
-  
-  # rm(pcatch2)
-  # rm(rcatch2)
+  catch <- pcatch2
   gc()
   
 
@@ -244,24 +74,6 @@ plot_refpoints <- function(object, object1, figure_dir){
   vb2 <- reshape2::melt(vb) %>% 
     dplyr::rename(VB = value)
   vb2$Region <- factor(vb2$Region)
-  
-  # # ### TESTING
-  # vb1 <- mcmc1$biomass_vulnref_AW_jyr
-  # dimnames(vb1) <- list("Iteration" = 1:n_iter1, "RuleNum" = 1:dim(vb1)[2], "Year" = pyears1, "Region" = regions)
-  # vb3 <- reshape2::melt(vb1) %>%
-  #   dplyr::rename(VB = value)
-  # vb3$Region <- factor(vb3$Region)
-
-  # check1 <- vb2 %>% filter(RuleNum == 1) %>% filter(Year %in% years) %>% group_by(RuleNum, Year, Region) %>% summarise(VB = median(VB)) %>% mutate(Model = "Ref")
-  # check2 <- vb3 %>% 
-  #   filter(Year %in% years) %>% 
-  #   ungroup() %>%
-  #   group_by(Year, Region) %>%
-  #   summarise(VB = median(VB)) %>%
-  #   mutate(RuleNum = 1) %>%
-  #   mutate(Model = "Base")
-  # check <- rbind.data.frame(check1, check2)
-  # p <- ggplot(check) + geom_line(aes(x = Year, y = VB, color = Model, linetype = Model)) + facet_wrap(~Region) + theme_bw()
   
   vb0 <- mcmc$B0now_r
   dimnames(vb0) <- list("Iteration" = 1:n_iter, "Region" = regions2)
@@ -321,6 +133,17 @@ plot_refpoints <- function(object, object1, figure_dir){
     info <- rbind.data.frame(info, tinfo)
     info <- data.frame(info)
   }
+
+  status <- info %>%
+    dplyr::filter(Year == max(years1)+1) %>%
+    tidyr::pivot_longer(cols=c(SSB,SSB0now,RelSSB,VB,VB0now,RelVB), names_to = "Variable", values_to = "Value") %>%
+    dplyr::group_by(Region, Variable) %>%
+    dplyr::summarise(P5 = quantile(Value, 0.05),
+                     P50 = quantile(Value, 0.5),
+                     P95 = quantile(Value, 0.95))
+
+  write.csv(status, file.path(figure_dir, "Current_status.csv"))
+  
   
   rm(relb)
   rm(relb2)

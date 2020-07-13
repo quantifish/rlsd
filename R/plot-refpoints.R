@@ -216,7 +216,7 @@ plot_refpoints <- function(object, object1, figure_dir){
     dplyr::group_by(Iteration, RuleNum, Year, Region, Fleet) %>%
     dplyr::summarise(F = sum(F))
 
-  # sub <- projF2 %>% filter(RuleNum == 1)
+  # sub <- projF2 %>% filter(RuleNum == 6)
 
   # p <- ggplot(sub %>% filter(Iteration == 1)) +
   # geom_line(aes(x = Year, y = F)) +
@@ -406,26 +406,28 @@ plot_refpoints <- function(object, object1, figure_dir){
   #######################################
   ## risk constraints + flags for catch
   #######################################
-    catch_con <- cinfo %>% 
+    constraints <- cinfo %>%
       dplyr::left_join(ruledf) %>%
-      dplyr::mutate(CatchConstraint = ifelse(RuleType != "FixedCatch", 0,
-                                        ifelse(SL < 0.99 * par2, 1, 0)))
-
-    constraints <- catch_con %>%
       dplyr::filter(Region != "Total") %>%
-      dplyr::group_by(Region, RuleNum, RuleType) %>%
-      dplyr::summarise(AvgTotalCatch = sum(Catch)/max(Iteration),
-                CV = sd(Catch)/mean(Catch),
-                CatchConstraint =  ifelse(SL < 0.99 * par2, 1, 0),
-                Prisk = length(which(RelSSB <= 0.2))/length(RelSSB),
-                RiskConstraint = ifelse(Prisk >= 0.05, 1, 0))
+      dplyr::group_by(Region, RuleNum) %>%
+      dplyr::summarise(CV = sd(Catch)/mean(Catch),
+                      Prisk = length(which(RelSSB <= 0.2))/length(RelSSB),
+                      RiskConstraint = ifelse(Prisk >= 0.05, 1, 0),
+                      ExpectedCatchSL = sum(par2),
+                      ObsCatchSL = sum(SL),
+                      AvgTotalCatch = sum(Catch)/max(Iteration)) %>%
+      dplyr::left_join(ruledf) %>%
+      dplyr::mutate(ExpectedCatchSL = replace(ExpectedCatchSL, RuleType != "FixedCatch", 0)) %>%
+      dplyr::mutate(CatchConstraint = ifelse(RuleType == "FixedCatch" && ObsCatchSL < 0.99 * ExpectedCatchSL, 1, 0))
+    # constraints <- unique(constraints)
+
     
   #####################
   ## start summarising
   #####################
     summary <- cinfo %>%
       dplyr::filter(Region != "Total") %>%
-      tidyr::pivot_longer(cols=c(SL, NSL, Catch,SSB,SSB0now,RelSSB,VB,VB0now,RelVB,Recruitment,CPUE), names_to = "Variable", values_to = "Value") %>%
+      tidyr::pivot_longer(cols=c(SL, NSL, Catch,SSB,SSB0now,RelSSB,VB,VB0now,RelVB,TB,TB0now, RelTB, Recruitment,CPUE), names_to = "Variable", values_to = "Value") %>%
       dplyr::group_by(Region, RuleNum, Variable) %>%
       dplyr::summarise(P5 = quantile(Value, 0.05),
                        P50 = quantile(Value, 0.5),
@@ -547,10 +549,10 @@ plot_refpoints <- function(object, object1, figure_dir){
     dplyr::select(-c(P5,P95)) %>%
     tidyr::pivot_wider(names_from = Variable, values_from = P50)
 
-  if(length(regions) > 1){  
     msy_info3 <- cinfo %>%
       dplyr::right_join(msy_info %>% dplyr::select(Region, RuleNum, Constraint)) %>%
       dplyr::left_join(ruledf)
+  if(length(regions) > 1){  
     msy_info4 <- data.frame(unique(msy_info3)) %>%
       dplyr::group_by(Iteration, Year, RuleType, Constraint) %>%
       dplyr::summarise(Catch = sum(Catch),
@@ -586,11 +588,10 @@ plot_refpoints <- function(object, object1, figure_dir){
   if(length(unique(output4$RuleType))==3) output4$RuleType <- factor(output4$RuleType, levels = c("FixedCatch","CPUE-based","FixedF"))
   const <- unique(as.character(output4$Constraint))
   const1 <- const[grepl("CV",const)==FALSE]
-  const1_1 <- const1[grepl("catch", const1) == FALSE]
-  const1_2 <- const1[grepl("catch", const1)]
+  const1_1 <- const1[grepl("Catch", const1) == FALSE]
+  const1_2 <- const1[grepl("Catch", const1)]
   const1 <- c(const1_1, const1_2)
   const2 <- const[grepl("CV", const)]
-  const2 <- c(const2_1, const2_2, const2_3)
   constx <- c(const1,const2)
   const <- c(constx, const[which(const %in% constx == FALSE)])
   output4$Constraint <- factor(output4$Constraint, levels = const)
@@ -602,20 +603,22 @@ plot_refpoints <- function(object, object1, figure_dir){
   ###############################
     require(ggthemes)
 # 
-#   ## plots of rules over time
-  # info2 <- info %>%
-  #   dplyr::select(Iteration, Region, RuleNum, Year, Catch, RelSSB, RelVB, Recruitment) %>%
-  #   tidyr::pivot_longer(-c(Iteration, Region, RuleNum, Year), names_to = "Variable", values_to = "Value") %>%
-  #   dplyr::group_by(Year, Region, RuleNum, Variable) %>%
-  #   dplyr::summarise(P5 = quantile(Value, 0.05),
-  #                    P50 = quantile(Value, 0.50),
-  #                    P95 = quantile(Value, 0.95))
+# #   ## plots of rules over time
+#   info2 <- info %>%
+#     dplyr::select(Iteration, Region, RuleNum, Year, Catch, RelSSB, RelVB, Recruitment) %>%
+#     tidyr::pivot_longer(-c(Iteration, Region, RuleNum, Year), names_to = "Variable", values_to = "Value") %>%
+#     dplyr::group_by(Year, Region, RuleNum, Variable) %>%
+#     dplyr::summarise(P5 = quantile(Value, 0.05),
+#                      P50 = quantile(Value, 0.50),
+#                      P95 = quantile(Value, 0.95))
 
-# 
+# # 
 #   check <- info2 %>% filter(Variable %in% c("Catch","RelSSB", "RelVB")) %>%
 #     left_join(ruledf)
+#   plot_msy <- check %>% filter(RuleNum %in% find_msy$RuleNum)
 #   p_time <- ggplot(check) +
 #     geom_line(aes(x = Year, y = P50, col = factor(RuleNum)), alpha = 0.5) +
+#     geom_line(data = plot_msy, aes(x = Year, y = P50), lwd = 2) +
 #     guides(color = FALSE) +
 #     ylab("Median value by rule across iterations") +
 #     theme_bw(base_size = 20)
@@ -772,9 +775,6 @@ plot_refpoints <- function(object, object1, figure_dir){
   } 
   ggsave(file.path(figure_dir, "VB_vs_Catch_CatchConstraint.png"), p_vbcatch, height = 8, width = 20)
   
-  output4$RiskConstraint <- sapply(1:nrow(output4), function(x) ifelse(output4$RiskConstraint_10[x] == 1, ">10% below soft limit", 
-                                                                      ifelse(output4$RiskConstraint_5[x] == 1, ">5% below soft limit", "Pass")))
-  output4$RiskConstraint <- factor(output4$RiskConstraint, levels = c("Pass", ">5% below soft limit", ">10% below soft limit"))
   p_vbrisk <- ggplot(output4) +
     geom_segment(aes(x = VB_P5, xend = VB_P95, y = Catch_P50, yend = Catch_P50, color = RiskConstraint), lwd = 1.2, alpha = 0.8) +
     geom_segment(aes(x = VB_P50, xend = VB_P50, y = Catch_P5, yend = Catch_P95, color = RiskConstraint), lwd = 1.2, alpha = 0.8) +
@@ -896,17 +896,15 @@ plot_refpoints <- function(object, object1, figure_dir){
                        P95 = quantile(Value, 0.95))
     if(length(unique(check2$RuleType))==3) check2$RuleType <- factor(check2$RuleType, levels = c("FixedCatch", "CPUE-based", "FixedF"))
     if(length(unique(check1$RuleType))==3) check1$RuleType <- factor(check1$RuleType, levels = c("FixedCatch", "CPUE-based", "FixedF"))
-    const <- unique(as.character(check1$Constraint))
-    const1 <- const[grepl("CV",const)==FALSE]
-    const1_1 <- const1[grepl("catch", const1) == FALSE]
-    const1_2 <- const1[grepl("catch", const1)]
-    const1 <- c(const1_1, const1_2)
-    const2 <- const[grepl("CV", const)]
-    const2_1 <- const2[grepl("%", const2) == FALSE]
-    const2_2 <- const2[grepl("5%", const2)]
-    const2_3 <- const2[grepl("10%", const2)]
-    const2 <- c(const2_1, const2_2, const2_3)
-    constx <- c(const1,const2)
+      const <- unique(as.character(output4$Constraint))
+  const1 <- const[grepl("CV",const)==FALSE]
+  const1_1 <- const1[grepl("Catch", const1) == FALSE]
+  const1_2 <- const1[grepl("Catch", const1)]
+  const1 <- c(const1_1, const1_2)
+  const2 <- const[grepl("CV", const)]
+  constx <- c(const1,const2)
+  const <- c(constx, const[which(const %in% constx == FALSE)])
+  check1$Constraint <- factor(check1$Constraint, levels = const)
     const <- rev(c(constx, const[which(const %in% constx == FALSE)]))
     check1$Constraint <- factor(check1$Constraint, levels = const)
     check2$Constraint <- factor(check2$Constraint, levels = const)
@@ -946,16 +944,15 @@ plot_refpoints <- function(object, object1, figure_dir){
     if(length(unique(check2$RuleType))==3) check2$RuleType <- factor(check2$RuleType, levels = c("FixedCatch", "CPUE-based", "FixedF"))
     if(length(unique(check1$RuleType))==3) check1$RuleType <- factor(check1$RuleType, levels = c("FixedCatch", "CPUE-based", "FixedF"))
     const <- unique(as.character(check1$Constraint))
-    const1 <- const[grepl("CV",const)==FALSE]
-    const1_1 <- const1[grepl("catch", const1) == FALSE]
-    const1_2 <- const1[grepl("catch", const1)]
-    const1 <- c(const1_1, const1_2)
-    const2 <- const[grepl("CV", const)]
-    const2_1 <- const2[grepl("%", const2) == FALSE]
-    const2_2 <- const2[grepl("5%", const2)]
-    const2_3 <- const2[grepl("10%", const2)]
-    const2 <- c(const2_1, const2_2, const2_3)
-    constx <- c(const1,const2)
+  const <- unique(as.character(check1$Constraint))
+  const1 <- const[grepl("CV",const)==FALSE]
+  const1_1 <- const1[grepl("Catch", const1) == FALSE]
+  const1_2 <- const1[grepl("Catch", const1)]
+  const1 <- c(const1_1, const1_2)
+  const2 <- const[grepl("CV", const)]
+  constx <- c(const1,const2)
+  const <- c(constx, const[which(const %in% constx == FALSE)])
+  check1$Constraint <- factor(check1$Constraint, levels = const)
     const <- rev(c(constx, const[which(const %in% constx == FALSE)]))
     check1$Constraint <- factor(check1$Constraint, levels = const)
     check2$Constraint <- factor(check2$Constraint, levels = const)
@@ -992,17 +989,15 @@ plot_refpoints <- function(object, object1, figure_dir){
     if(length(unique(check2$RuleType))==3) check2$RuleType <- factor(check2$RuleType, levels = c("FixedCatch", "CPUE-based", "FixedF"))
     if(length(unique(check1$RuleType))==3) check1$RuleType <- factor(check1$RuleType, levels = c("FixedCatch", "CPUE-based", "FixedF"))
     const <- unique(as.character(check1$Constraint))
-    const1 <- const[grepl("CV",const)==FALSE]
-    const1_1 <- const1[grepl("catch", const1) == FALSE]
-    const1_1_2 <- c(const1_1[which(const1_1 == "Pass")], const1_1[which(const1_1 != "Pass")])
-    const1_2 <- const1[grepl("catch", const1)]
-    const1 <- c(const1_1_2, const1_2)
-    const2 <- const[grepl("CV", const)]
-    const2_1 <- const2[grepl("%", const2) == FALSE]
-    const2_2 <- const2[grepl("5%", const2)]
-    const2_3 <- const2[grepl("10%", const2)]
-    const2 <- c(const2_1, const2_2, const2_3)
-    constx <- c(const1, const2)
+  const <- unique(as.character(check1$Constraint))
+  const1 <- const[grepl("CV",const)==FALSE]
+  const1_1 <- const1[grepl("Catch", const1) == FALSE]
+  const1_2 <- const1[grepl("Catch", const1)]
+  const1 <- c(const1_1, const1_2)
+  const2 <- const[grepl("CV", const)]
+  constx <- c(const1,const2)
+  const <- c(constx, const[which(const %in% constx == FALSE)])
+  check1$Constraint <- factor(check1$Constraint, levels = const)
     const <- rev(c(constx, const[which(const %in% constx == FALSE)]))
     check1$Constraint <- factor(check1$Constraint, levels = const)
     check2$Constraint <- factor(check2$Constraint, levels = const)
@@ -1039,17 +1034,15 @@ plot_refpoints <- function(object, object1, figure_dir){
     if(length(unique(check2$RuleType))==3) check2$RuleType <- factor(check2$RuleType, levels = c("FixedCatch", "CPUE-based", "FixedF"))
     if(length(unique(check1$RuleType))==3) check1$RuleType <- factor(check1$RuleType, levels = c("FixedCatch", "CPUE-based", "FixedF"))
     const <- unique(as.character(check1$Constraint))
-    const1 <- const[grepl("CV",const)==FALSE]
-    const1_1 <- const1[grepl("catch", const1) == FALSE]
-    const1_1_2 <- c(const1_1[which(const1_1 == "Pass")], const1_1[which(const1_1 != "Pass")])
-    const1_2 <- const1[grepl("catch", const1)]
-    const1 <- c(const1_1_2, const1_2)
-    const2 <- const[grepl("CV", const)]
-    const2_1 <- const2[grepl("%", const2) == FALSE]
-    const2_2 <- const2[grepl("5%", const2)]
-    const2_3 <- const2[grepl("10%", const2)]
-    const2 <- c(const2_1, const2_2, const2_3)
-    constx <- c(const1, const2)
+  const <- unique(as.character(check1$Constraint))
+  const1 <- const[grepl("CV",const)==FALSE]
+  const1_1 <- const1[grepl("Catch", const1) == FALSE]
+  const1_2 <- const1[grepl("Catch", const1)]
+  const1 <- c(const1_1, const1_2)
+  const2 <- const[grepl("CV", const)]
+  constx <- c(const1,const2)
+  const <- c(constx, const[which(const %in% constx == FALSE)])
+  check1$Constraint <- factor(check1$Constraint, levels = const)
     const <- rev(c(constx, const[which(const %in% constx == FALSE)]))
     check1$Constraint <- factor(check1$Constraint, levels = const)
     check2$Constraint <- factor(check2$Constraint, levels = const)
@@ -1107,16 +1100,14 @@ plot_refpoints <- function(object, object1, figure_dir){
       dplyr::filter(RuleType == "CPUE-based")
     if(nrow(check1) > 0){
     const <- unique(as.character(check1$Constraint))
-    const1 <- const[grepl("CV",const)==FALSE]
-    const1_1 <- const1[grepl("catch", const1) == FALSE]
-    const1_2 <- const1[grepl("catch", const1)]
-    const1 <- c(const1_1, const1_2)
-    const2 <- const[grepl("CV", const)]
-    const2_1 <- const2[grepl("%", const2) == FALSE]
-    const2_2 <- const2[grepl("5%", const2)]
-    const2_3 <- const2[grepl("10%", const2)]
-    const2 <- c(const2_1, const2_2, const2_3)
-    constx <- c(const1,const2)
+  const <- unique(as.character(check1$Constraint))
+  const1 <- const[grepl("CV",const)==FALSE]
+  const1_1 <- const1[grepl("Catch", const1) == FALSE]
+  const1_2 <- const1[grepl("Catch", const1)]
+  const1 <- c(const1_1, const1_2)
+  const2 <- const[grepl("CV", const)]
+  constx <- c(const1,const2)
+  const <- c(constx, const[which(const %in% constx == FALSE)])
     const <- rev(c(constx, const[which(const %in% constx == FALSE)]))
     check1$Constraint <- factor(check1$Constraint, levels = const)
       p_cpue_mp <- ggplot(check1) +
@@ -1140,17 +1131,14 @@ plot_refpoints <- function(object, object1, figure_dir){
       dplyr::left_join(output2 %>% filter(Variable == "Catch")) %>%
       dplyr::select(Iteration, Year, Region, RuleNum, RuleType, Constraint, Catch, CPUE)
     const <- unique(as.character(check1$Constraint))
-    const1 <- const[grepl("CV",const)==FALSE]
-    const1_1 <- const1[grepl("catch", const1) == FALSE]
-    const1_2 <- const1[grepl("catch", const1)]
-    const1 <- c(const1_1, const1_2)
-    const2 <- const[grepl("CV", const)]
-    const2_1 <- const2[grepl("%", const2) == FALSE]
-    const2_2 <- const2[grepl("5%", const2)]
-    const2_3 <- const2[grepl("10%", const2)]
-    const2 <- c(const2_1, const2_2, const2_3)
-    constx <- c(const1,const2)
-    const <- rev(c(constx, const[which(const %in% constx == FALSE)]))
+  const <- unique(as.character(check1$Constraint))
+  const1 <- const[grepl("CV",const)==FALSE]
+  const1_1 <- const1[grepl("Catch", const1) == FALSE]
+  const1_2 <- const1[grepl("Catch", const1)]
+  const1 <- c(const1_1, const1_2)
+  const2 <- const[grepl("CV", const)]
+  constx <- c(const1,const2)
+  const <- c(constx, const[which(const %in% constx == FALSE)])
     check1$Constraint <- factor(check1$Constraint, levels = const)    
     if(length(unique(check1$RuleType))==3) check1$RuleType <- factor(check1$RuleType, levels = c("FixedCatch", "CPUE-based", "FixedF"))
     p_cpue_all <- ggplot(check1) +
@@ -1178,16 +1166,14 @@ plot_refpoints <- function(object, object1, figure_dir){
       dplyr::filter(RuleType == "CPUE-based")
     if(nrow(check1) > 0){
     const <- unique(as.character(check1$Constraint))
-    const1 <- const[grepl("CV",const)==FALSE]
-    const1_1 <- const1[grepl("catch", const1) == FALSE]
-    const1_2 <- const1[grepl("catch", const1)]
-    const1 <- c(const1_1, const1_2)
-    const2 <- const[grepl("CV", const)]
-    const2_1 <- const2[grepl("%", const2) == FALSE]
-    const2_2 <- const2[grepl("5%", const2)]
-    const2_3 <- const2[grepl("10%", const2)]
-    const2 <- c(const2_1, const2_2, const2_3)
-    constx <- c(const1,const2)
+  const <- unique(as.character(check1$Constraint))
+  const1 <- const[grepl("CV",const)==FALSE]
+  const1_1 <- const1[grepl("Catch", const1) == FALSE]
+  const1_2 <- const1[grepl("Catch", const1)]
+  const1 <- c(const1_1, const1_2)
+  const2 <- const[grepl("CV", const)]
+  constx <- c(const1,const2)
+  const <- c(constx, const[which(const %in% constx == FALSE)])
     const <- rev(c(constx, const[which(const %in% constx == FALSE)]))
     check1$Constraint <- factor(check1$Constraint, levels = const)
       p_cpue_mp <- ggplot(check1) +
@@ -1230,17 +1216,13 @@ plot_refpoints <- function(object, object1, figure_dir){
     
     sub <- output4 %>% filter(RuleType == "CPUE-based")
     const <- unique(as.character(sub$Constraint))
-    const1 <- const[grepl("CV",const)==FALSE]
-    const1_1 <- const1[grepl("catch", const1) == FALSE]
-    const1_2 <- const1[grepl("catch", const1)]
-    const1 <- c(const1_1, const1_2)
-    const2 <- const[grepl("CV", const)]
-    const2_1 <- const2[grepl("%", const2) == FALSE]
-    const2_2 <- const2[grepl("5%", const2)]
-    const2_3 <- const2[grepl("10%", const2)]
-    const2 <- c(const2_1, const2_2, const2_3)
-    constx <- c(const1,const2)
-    const <- c(constx, const[which(const %in% constx == FALSE)])
+  const1 <- const[grepl("CV",const)==FALSE]
+  const1_1 <- const1[grepl("Catch", const1) == FALSE]
+  const1_2 <- const1[grepl("Catch", const1)]
+  const1 <- c(const1_1, const1_2)
+  const2 <- const[grepl("CV", const)]
+  constx <- c(const1,const2)
+  const <- c(constx, const[which(const %in% constx == FALSE)])
     sub$Constraint <- factor(sub$Constraint, levels = const)
     msy <- unique(msy_info %>% filter(RuleType == "CPUE-based") %>% dplyr::select(par1:par10)) %>% mutate(Constraint = "Pass")
     msy$Constraint <- factor(msy$Constraint, levels = const)

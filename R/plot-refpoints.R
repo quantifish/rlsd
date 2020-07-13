@@ -1,43 +1,237 @@
 #' Calculate reference points and create relevant figures
 #'
 #' @param object the ref-lsd object
+#' @param object1 the lsd object with stock assessment MCMC posterior draws
 #' @param figure_dir the directory to save figures to
 #' @import dplyr
 #' @import ggplot2
 #' @import ggthemes
 #' @export
 #'
-plot_refpoints <- function(object, figure_dir){
+plot_refpoints <- function(object, object1, figure_dir){
   
   ##############################
   ## read model output
   ##############################
 
+  ## from stock assessment
+  mcmc1 <- object1@mcmc
+  data1 <- object1@data
+  years1 <- data1$first_yr:data1$last_yr
+  pyears1 <- data1$first_yr:data1$last_proj_yr
+  n_iter1 <- nrow(mcmc1[[1]])
+  regions <- 1:data1$n_area
+  seasons <- c("AW","SS")
+  if(length(regions) > 1) regions2 <- c(regions, "Total")
+  if(length(regions) == 1) regions2 <- regions
+  sex <- c("Male","Immature female","Mature female")
+  fleets <- c("SL","NSL")
+
+
+  slcatch <- mcmc1$pred_catch_sl_jryt
+  dimnames(slcatch) <- list("Iteration"=1:n_iter1, "RuleNum"=1:dim(slcatch)[2], "Region"=regions, "Year"=pyears1, "Season"=seasons)
+  slcatch2 <- reshape2::melt(slcatch, value.name = "Catch") %>% 
+    dplyr::group_by(Iteration, Year, Region, RuleNum) %>%
+    dplyr::summarise(Catch = sum(Catch)) %>%
+    dplyr::mutate("CatchType" = "SL")
+
+  nslcatch <- mcmc1$pred_catch_nsl_jryt
+  dimnames(nslcatch) <- list("Iteration"=1:n_iter1, "RuleNum"=1:dim(nslcatch)[2], "Region"=regions, "Year"=pyears1, "Season"=seasons)
+  nslcatch2 <- reshape2::melt(nslcatch, value.name = "Catch") %>% 
+    dplyr::group_by(Iteration, Year, Region, RuleNum) %>%
+    dplyr::summarise(Catch = sum(Catch)) %>%
+    dplyr::mutate("CatchType" = "NSL")    
+  
+  pcatch <- rbind.data.frame(slcatch2, nslcatch2) %>%
+    tidyr::pivot_wider(names_from = CatchType, values_from = Catch) %>%
+    dplyr::mutate(Catch = SL + NSL)
+
+  rm(slcatch)
+  rm(nslcatch)
+  gc()
+
+  catch <- pcatch
+  gc()
+  
+
+  vb <- mcmc1$biomass_vulnref_AW_jyr
+  dimnames(vb) <- list("Iteration" = 1:n_iter1, "RuleNum" = 1:dim(vb)[2], "Year" = pyears1, "Region" = regions)
+  vb2 <- reshape2::melt(vb) %>% 
+    dplyr::rename(VB = value)
+  vb2$Region <- factor(vb2$Region)
+  
+  vb0now <- mcmc1$B0now_r
+  dimnames(vb0now) <- list("Iteration" = 1:n_iter1, "Region" = regions2)
+  vb0now <- reshape2::melt(vb0now) %>%
+    dplyr::rename(VB0now = value)
+  vb0now$Region <- factor(vb0now$Region)
+
+  VB0 <- mcmc1$B0_r
+  dimnames(VB0) <- list("Iteration" = 1:n_iter1, "Region" = regions2)
+  VB0 <- reshape2::melt(VB0) %>%
+    dplyr::rename(VB0 = value)
+  VB0$Region <- factor(VB0$Region)
+  
+  ssb <- mcmc1$biomass_ssb_jyr
+  dimnames(ssb) <- list("Iteration" = 1:n_iter1, "RuleNum" = 1:dim(ssb)[2], "Year" = pyears1, "Region" = regions)
+  ssb2 <- reshape2::melt(ssb) %>% dplyr::rename("SSB"=value) 
+  ssb2$Region <- factor(ssb2$Region)
+  
+  ssb0now <- mcmc1$SSB0now_r
+  dimnames(ssb0now) <- list("Iteration" = 1:n_iter1, "Region" = regions2)
+  ssb0now <- reshape2::melt(ssb0now) %>%
+    dplyr::rename(SSB0now=value) 
+  ssb0now$Region <- factor(ssb0now$Region)
+  
+  SSB0 <- mcmc1$SSB0_r
+  dimnames(SSB0) <- list("Iteration" = 1:n_iter1, "Region" = regions2)
+  SSB0 <- reshape2::melt(SSB0) %>%
+    dplyr::rename(SSB0=value) 
+  SSB0$Region <- factor(SSB0$Region)
+
+  if(any(grepl("biomass_total_ytrs", names(mcmc1)))){
+    tb <- mcmc1$biomass_total_ytrs
+    dimnames(tb) <- list("Iteration" = 1:n_iter1, "Year" = pyears1, "Season" = seasons, "Region" = regions, "Sex" = c(sex, "Total"))
+    tb2 <- reshape2::melt(tb) %>% 
+      dplyr::rename("TB"=value) %>% 
+      dplyr::filter(Sex == "Total") %>%
+      dplyr::select(-Sex) %>% 
+      dplyr::filter(Season == "AW") %>%
+      dplyr::select(-Season) %>%
+      dplyr::group_by(Iteration, Year, Region) %>%
+      dplyr::summarise(TB = sum(TB))
+  }
+  if(any(grepl("biomass_total_jytrs", names(mcmc1)))){
+    tb <- mcmc1$biomass_total_jytrs
+    dimnames(tb) <- list("Iteration" = 1:n_iter1, "RuleNum" = 1:dim(ssb)[2], "Year" = pyears1, "Season" = seasons, "Region" = regions, "Sex" = c(sex, "Total"))
+    tb2 <- reshape2::melt(tb) %>% 
+      dplyr::rename("TB"=value) %>% 
+      dplyr::filter(Sex == "Total") %>%
+      dplyr::select(-Sex) %>% 
+      dplyr::filter(Season == "AW") %>%
+      dplyr::select(-Season) %>%
+      dplyr::group_by(Iteration, RuleNum, Year, Region) %>%
+      dplyr::summarise(TB = sum(TB))
+  }
+  tb2$Region <- factor(tb2$Region)
+
+  tb0now <- mcmc1$Btot0now_r
+  dimnames(tb0now) <- list("Iteration" = 1:n_iter1, "Region" = regions2)
+  tb0now <- reshape2::melt(tb0now) %>%
+    dplyr::rename(TB0now=value) 
+  tb0now$Region <- factor(tb0now$Region)
+
+  TB0 <- mcmc1$Btot0_r
+  dimnames(TB0) <- list("Iteration" = 1:n_iter1, "Region" = regions2)
+  TB0 <- reshape2::melt(TB0) %>%
+    dplyr::rename(TB0=value) 
+  TB0$Region <- factor(TB0$Region)
+
+  rec <- mcmc1$recruits_ry
+  dimnames(rec) <- list("Iteration" = 1:n_iter1, "Region" = regions, "Year" = pyears1)
+  rec2 <- reshape2::melt(rec) %>%
+    dplyr::rename(Recruitment = value)
+  rec2$Region <- factor(rec2$Region)
+  
+  relssb <- inner_join(ssb2, ssb0now) %>%
+    dplyr::full_join(SSB0) %>%
+    dplyr::mutate(RelSSBnow = SSB/SSB0now,
+                  RelSSB = SSB/SSB0)
+
+  relvb <- inner_join(vb2, vb0now) %>%
+    dplyr::full_join(VB0) %>%
+    dplyr::mutate(RelVBnow = VB/VB0now,
+                  RelVB = VB/VB0)
+
+  reltb <- inner_join(tb2, tb0now) %>%
+    dplyr::full_join(TB0) %>%
+    dplyr::mutate(RelTBnow = TB/TB0now,
+                  RelTB = TB/TB0)
+
+
+  relb <- full_join(relssb, relvb)
+  relb1 <- full_join(relb, reltb)
+  relb2 <- full_join(relb1, rec2)
+
+  catch$Region <- factor(catch$Region)
+  info1 <- full_join(catch, relb2)
+  info1 <- info1 %>%
+      mutate(Region = paste0("Region ", Region))
+
+  if(length(regions) > 1){
+    tinfo1 <- info1 %>%
+      dplyr::group_by(Iteration, Year, RuleNum) %>%
+      dplyr::summarise(Catch = sum(Catch),
+                       # CatchResidual = sum(CatchResidual),
+                       SSB = sum(SSB),
+                       SSB0now = sum(SSB0now),
+                       SSB0 = sum(SSB0),
+                       VB = sum(VB),
+                       VB0now = sum(VB0now),
+                       VB0 = sum(VB0),
+                       TB = sum(TB),
+                       TB0now = sum(TB0now),
+                       TB0 = sum(TB0),
+                       Recruitment = sum(Recruitment), 
+                       CPUE = sum(CPUE)) %>%
+      dplyr::mutate(RelVB = VB / VB0now) %>%
+      dplyr::mutate(RelSSB = SSB / SSB0now) %>%
+      dplyr::mutate(Region = "Total")
+
+    info1 <- rbind.data.frame(info1, tinfo1)
+    info1 <- data.frame(info1)
+  }
+
+  status <- info1 %>%
+    dplyr::filter(Year == max(years1)+1) %>%
+    tidyr::pivot_longer(cols=c(SSB,SSB0now,SSB0,RelSSB,RelSSBnow,VB,VB0now,VB0,RelVB,RelVBnow,TB,TB0now,TB0,RelTB, RelTBnow), names_to = "Variable", values_to = "Value") %>%
+    dplyr::group_by(Region, Variable) %>%
+    dplyr::summarise(P5 = quantile(Value, 0.05),
+                     P50 = quantile(Value, 0.5),
+                     P95 = quantile(Value, 0.95))
+
+  write.csv(status, file.path(figure_dir, "Current_status.csv"))
+  
+
+
+  ## from refpoints
   mcmc <- object@mcmc
   data <- object@data
   years <- data$first_yr:data$last_yr
   pyears <- data$first_yr:data$last_proj_yr
   projyears <- (data$first_proj_yr):data$last_proj_yr
-  seasons <- c("AW","SS")
+  n_iter <- nrow(mcmc[[1]])
   regions <- 1:data$n_area
+  seasons <- c("AW","SS")
   if(length(regions) > 1) regions2 <- c(regions, "Total")
   if(length(regions) == 1) regions2 <- regions
   sex <- c("Male","Immature female","Mature female")
-  n_iter <- nrow(mcmc[[1]])
   rules <- data$mp_rule_parameters
   n_rules <- nrow(rules)
   fleets <- c("SL","NSL")
   
   projF <- mcmc$proj_F_jytrf
   dimnames(projF) <- list("Iteration"=1:n_iter, "RuleNum"=1:n_rules, "Year"=pyears, "Season"=seasons, "Region"=regions, "Fleet" = fleets)
-  projF2 <- reshape2::melt(projF, value.name = "F")
+  projF2 <- reshape2::melt(projF, value.name = "F") %>%
+    dplyr::group_by(Iteration, RuleNum, Year, Region, Fleet) %>%
+    dplyr::summarise(F = sum(F))
 
-  sub <- projF2 %>% filter(RuleNum == 20)
+  # sub <- projF2 %>% filter(RuleNum == 1)
 
-  p <- ggplot(sub %>% filter(Iteration == 1)) +
-  geom_line(aes(x = Year, y = F, color = Season)) +
-  facet_wrap(~Fleet) +
-  theme_bw()
+  # p <- ggplot(sub %>% filter(Iteration == 1)) +
+  # geom_line(aes(x = Year, y = F)) +
+  # facet_wrap(~Fleet) +
+  # theme_bw()
+
+
+  qpar <- mcmc$par_q_cpue_qy
+  dimnames(qpar) <- list("Iteration" = 1:n_iter, "qtype" = 1:3, "Year" = pyears)
+  qpar2 <- reshape2::melt(qpar, value.name = "q")
+
+  # p <- ggplot(qpar2) +
+  # geom_line(aes(x = Year, y = q)) +
+  # facet_wrap(~qtype) +
+  # theme_bw()
   
   cpue <- mcmc$mp_offset_cpue_jry
   dimnames(cpue) <- list("Iteration" = 1:n_iter, "RuleNum" = 1:n_rules, "Region" = regions, "Year" = pyears)
@@ -60,16 +254,15 @@ plot_refpoints <- function(object, figure_dir){
     dplyr::summarise(Catch = sum(Catch)) %>%
     dplyr::mutate("CatchType" = "NSL")    
   
-  pcatch <- rbind.data.frame(slcatch2, nslcatch2)
-  pcatch2 <- pcatch %>% 
-    dplyr::group_by(Iteration, Year, Region, RuleNum) %>%
-    dplyr::summarise("Catch" = sum(Catch))
+  pcatch <- rbind.data.frame(slcatch2, nslcatch2) %>%
+    tidyr::pivot_wider(names_from = CatchType, values_from = Catch) %>%
+    dplyr::mutate(Catch = SL + NSL)
   
   rm(slcatch)
   rm(nslcatch)
   gc()
 
-  catch <- pcatch2
+  catch <- pcatch
   gc()
   
 
@@ -168,7 +361,9 @@ plot_refpoints <- function(object, figure_dir){
   if(length(regions) > 1){
     tinfo <- info %>%
       dplyr::group_by(Iteration, Year, RuleNum) %>%
-      dplyr::summarise(Catch = sum(Catch),
+      dplyr::summarise(SL = sum(SL),
+                       NSL = sum(NSL),
+                       Catch = sum(Catch),
                        # CatchResidual = sum(CatchResidual),
                        SSB = sum(SSB),
                        SSB0now = sum(SSB0now),
@@ -188,17 +383,6 @@ plot_refpoints <- function(object, figure_dir){
     info <- rbind.data.frame(info, tinfo)
     info <- data.frame(info)
   }
-
-  status <- info %>%
-    dplyr::filter(Year == max(years)+1) %>%
-    tidyr::pivot_longer(cols=c(SSB,SSB0now,SSB0,RelSSB,RelSSBnow,VB,VB0now,VB0,RelVB,RelVBnow,TB,TB0now,TB0,RelTB, RelTBnow), names_to = "Variable", values_to = "Value") %>%
-    dplyr::group_by(Region, Variable) %>%
-    dplyr::summarise(P5 = quantile(Value, 0.05),
-                     P50 = quantile(Value, 0.5),
-                     P95 = quantile(Value, 0.95))
-
-  write.csv(status, file.path(figure_dir, "Current_status.csv"))
-  
   
   rm(relb)
   rm(relb2)
@@ -217,18 +401,22 @@ plot_refpoints <- function(object, figure_dir){
     cutyears <- (projyears[1]+10):(data$last_proj_yr)
     pinfo <- info %>% filter(Year %in% (max(years)+1):(min(cutyears)-1))
     cinfo <- info %>% dplyr::filter(Year %in% cutyears)
-    dinfo <- info %>% ungroup() %>% dplyr::filter(Year %in% years) %>% dplyr::filter(RuleNum == 1) %>% dplyr::select(-c(RuleNum))
+    dinfo <- info1 %>% ungroup() %>% dplyr::filter(Year %in% years) %>% dplyr::filter(RuleNum == 1) %>% dplyr::select(-c(RuleNum))
 
   #######################################
   ## risk constraints + flags for catch
   #######################################
-    constraints <- cinfo %>%
+    catch_con <- cinfo %>% 
       dplyr::left_join(ruledf) %>%
+      dplyr::mutate(CatchConstraint = ifelse(RuleType != "FixedCatch", 0,
+                                        ifelse(SL < 0.99 * par2, 1, 0)))
+
+    constraints <- catch_con %>%
       dplyr::filter(Region != "Total") %>%
-      dplyr::group_by(Region, RuleNum) %>%
+      dplyr::group_by(Region, RuleNum, RuleType) %>%
       dplyr::summarise(AvgTotalCatch = sum(Catch)/max(Iteration),
                 CV = sd(Catch)/mean(Catch),
-                CatchConstraint =  0, #ifelse(quantile(Catch, prob = 0.95) - quantile(Catch, prob = 0.05) > 2, 1, 0),
+                CatchConstraint =  ifelse(SL < 0.99 * par2, 1, 0),
                 Prisk = length(which(RelSSB <= 0.2))/length(RelSSB),
                 RiskConstraint = ifelse(Prisk >= 0.05, 1, 0))
     
@@ -237,7 +425,7 @@ plot_refpoints <- function(object, figure_dir){
   #####################
     summary <- cinfo %>%
       dplyr::filter(Region != "Total") %>%
-      tidyr::pivot_longer(cols=c(Catch,SSB,SSB0now,RelSSB,VB,VB0now,RelVB,Recruitment,CPUE), names_to = "Variable", values_to = "Value") %>%
+      tidyr::pivot_longer(cols=c(SL, NSL, Catch,SSB,SSB0now,RelSSB,VB,VB0now,RelVB,Recruitment,CPUE), names_to = "Variable", values_to = "Value") %>%
       dplyr::group_by(Region, RuleNum, Variable) %>%
       dplyr::summarise(P5 = quantile(Value, 0.05),
                        P50 = quantile(Value, 0.5),
@@ -247,8 +435,8 @@ plot_refpoints <- function(object, figure_dir){
     
     ## identify and label fixed catch rules
     output2 <- output %>% 
-      left_join(ruledf) %>%  
-      mutate(CatchConstraint = replace(CatchConstraint, which(RuleType != "FixedCatch"), 0))  
+      left_join(ruledf) #%>%  
+      # mutate(CatchConstraint = replace(CatchConstraint, which(RuleType != "FixedCatch"), 0))  
 
     output2$Constraint <- sapply(1:nrow(output2), function(x){
       if(output2$CatchConstraint[x] == 1 & output2$RiskConstraint[x] == 1) out <- "Risk + Catch"
@@ -402,9 +590,6 @@ plot_refpoints <- function(object, figure_dir){
   const1_2 <- const1[grepl("catch", const1)]
   const1 <- c(const1_1, const1_2)
   const2 <- const[grepl("CV", const)]
-  const2_1 <- const2[grepl("%", const2) == FALSE]
-  const2_2 <- const2[grepl("5%", const2)]
-  const2_3 <- const2[grepl("10%", const2)]
   const2 <- c(const2_1, const2_2, const2_3)
   constx <- c(const1,const2)
   const <- c(constx, const[which(const %in% constx == FALSE)])
@@ -524,6 +709,51 @@ plot_refpoints <- function(object, figure_dir){
     geom_vline(data = output5, aes(xintercept = VB_P50), linetype = 2) +
     geom_hline(data = output5, aes(yintercept = Catch_P50), linetype = 2)
   ggsave(file.path(figure_dir, "VB_vs_Catch_byConstraint_wTarget.png"), p_vb_v2, height = 8, width = 20)
+  
+
+  p_reltb <- ggplot(output4) +
+    geom_segment(aes(x = RelTB_P5, xend = RelTB_P95, y = Catch_P50, yend = Catch_P50, color = Constraint), lwd = 1.2, alpha = 0.8) +
+    geom_segment(aes(x = RelTB_P50, xend = RelTB_P50, y = Catch_P5, yend = Catch_P95, color = Constraint), lwd = 1.2, alpha = 0.8) +
+    geom_point(aes(x = RelTB_P50, y = Catch_P50, fill = Constraint), pch = 21, cex = 3) +
+    expand_limits(y = 0, x = 0) +
+    xlab("Relative total biomass (TB/TB0now)") + ylab("Average annual catch") +
+    scale_fill_tableau() +
+    scale_color_tableau() +
+    theme_bw(base_size = 20)
+  if(length(regions) > 1){
+    p_reltb <- p_reltb + facet_grid(Region~RuleType) 
+  } else {
+    p_reltb <- p_reltb + facet_grid(~RuleType)
+  }
+  ggsave(file.path(figure_dir, "RelTB_vs_Catch_byConstraint.png"), p_reltb, height = 8, width = 20)
+  
+  output5$RuleType <- factor(output5$RuleType, levels = levels(output4$RuleType))
+  p_reltb_v2 <- p_reltb +
+    geom_vline(data = output5, aes(xintercept = RelTB_P50), linetype = 2) +
+    geom_hline(data = output5, aes(yintercept = Catch_P50), linetype = 2)
+  ggsave(file.path(figure_dir, "RelTB_vs_Catch_byConstraint_wTarget.png"), p_reltb_v2, height = 8, width = 20)
+  
+  p_tb <- ggplot(output4) +
+    geom_segment(aes(x = TB_P5, xend = TB_P95, y = Catch_P50, yend = Catch_P50, color = Constraint), lwd = 1.2, alpha = 0.8) +
+    geom_segment(aes(x = TB_P50, xend = TB_P50, y = Catch_P5, yend = Catch_P95, color = Constraint), lwd = 1.2, alpha = 0.8) +
+    geom_point(aes(x = TB_P50, y = Catch_P50, fill = Constraint), pch = 21, cex = 3) +
+    expand_limits(y = 0, x = 0) +
+    xlab("Total biomass") + ylab("Average annual catch") +
+    scale_fill_tableau() +
+    scale_color_tableau() +
+    theme_bw(base_size = 20) 
+  if(length(regions) > 1){
+    p_tb <- p_tb + facet_wrap(Region~RuleType, scales = "free_x", nrow = length(regions)) 
+  } else {
+    p_tb <- p_tb + facet_wrap(~RuleType, scales = "free_x", nrow = length(regions))
+  } 
+  ggsave(file.path(figure_dir, "TB_vs_Catch_byConstraint.png"), p_tb, height = 8, width = 20)
+  
+  output5$RuleType <- factor(output5$RuleType, levels = levels(output4$RuleType))
+  p_tb_v2 <- p_tb +
+    geom_vline(data = output5, aes(xintercept = TB_P50), linetype = 2) +
+    geom_hline(data = output5, aes(yintercept = Catch_P50), linetype = 2)
+  ggsave(file.path(figure_dir, "TB_vs_Catch_byConstraint_wTarget.png"), p_tb_v2, height = 8, width = 20)
   
   p_vbcatch <- ggplot(output4) +
     geom_segment(aes(x = VB_P5, xend = VB_P95, y = Catch_P50, yend = Catch_P50, color = factor(CatchConstraint)), lwd = 1.2, alpha = 0.8) +

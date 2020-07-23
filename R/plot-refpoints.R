@@ -620,8 +620,11 @@ plot_refpoints <- function(object, object1, figure_dir){
     p_f_cpue <- ggplot(check %>% filter(Iteration == 1)) +
       geom_line(aes(x = Year, Value, color = RuleType), lwd = 1.2) +
       facet_wrap(~Variable, scales = "free_y") +
+      scale_color_colorblind() +
       expand_limits(y = 0) +
       theme_bw(base_size = 20)
+    ggsave(file.path(figure_dir, "F_CPUE_Catch_VB_iter1.png"), p_f_cpue, height = 8, width = 15)
+
 
     check2 <- output2 %>%
       dplyr::right_join(msy_info %>% dplyr::select(-P50)) %>%
@@ -633,12 +636,13 @@ plot_refpoints <- function(object, object1, figure_dir){
       stat_summary(aes(x = Year, y = Value, color = RuleType), fun = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1.5) +
       geom_hline(data = check2, aes(yintercept = P50), lty = 2, lwd = 1.2) +
       facet_grid(Variable~RuleType, scales = "free_y") +
-      scale_color_tableau() +
-      scale_fill_tableau() +
+      scale_color_colorblind() +
+      scale_fill_colorblind() +
       guides(color = FALSE, fill = FALSE) +
       expand_limits(y = 0) +
       theme_bw(base_size = 20)
-# 
+  ggsave(file.path(figure_dir, "F_CPUE_Catch_VB_intervals.png"), p_f_cpue_v2, height = 8, width = 20)
+
 # #   ## plots of rules over time
 #   info2 <- info %>%
 #     dplyr::select(Iteration, Region, RuleNum, Year, Catch, RelSSB, RelVB, Recruitment) %>%

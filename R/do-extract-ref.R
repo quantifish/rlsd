@@ -31,7 +31,7 @@ do_extract_ref <- function(dir = ".", model = "ref_lsd")
                           "MSY_r",
                           "Bmsy_r",
                           "proj_F_jytrf",
-                          "par_q_cpue_qy",
+                          "par_q_cpue_qy"
                           )
 
     # "proj_catch_commercial_jryt", 

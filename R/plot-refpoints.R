@@ -161,7 +161,9 @@ plot_refpoints <- function(object, object1, figure_dir){
   if(length(regions) > 1){
     tinfo1 <- info1 %>%
       dplyr::group_by(Iteration, Year, RuleNum) %>%
-      dplyr::summarise(Catch = sum(Catch),
+      dplyr::summarise(SL = sum(SL),
+                       NSL = sum(NSL),
+                       Catch = sum(Catch),
                        # CatchResidual = sum(CatchResidual),
                        SSB = sum(SSB),
                        SSB0now = sum(SSB0now),
@@ -173,8 +175,12 @@ plot_refpoints <- function(object, object1, figure_dir){
                        TB0now = sum(TB0now),
                        TB0 = sum(TB0),
                        Recruitment = sum(Recruitment)) %>%
-      dplyr::mutate(RelVB = VB / VB0now) %>%
-      dplyr::mutate(RelSSB = SSB / SSB0now) %>%
+      dplyr::mutate(RelVBnow = VB / VB0now) %>%
+      dplyr::mutate(RelSSBnow = SSB / SSB0now) %>%
+      dplyr::mutate(RelTBnow = TB / TB0now) %>%
+      dplyr::mutate(RelVB = VB / VB0) %>%
+      dplyr::mutate(RelSSB = SSB / SSB0) %>%
+      dplyr::mutate(RelTB = TB / TB0) %>%
       dplyr::mutate(Region = "Total")
 
     info1 <- rbind.data.frame(info1, tinfo1)

@@ -654,7 +654,7 @@ plot_refpoints <- function(object, object1, figure_dir){
       expand_limits(y = 0) +
       theme_bw(base_size = 20)
     if(length(regions) > 1){
-      p_f_cpue_v2 <- p_f_cpue_v2 + facet_grid(Variable~RuleType+Region, scales = "free_y", ncol = 4)
+      p_f_cpue_v2 <- p_f_cpue_v2 + facet_grid(Variable~RuleType+Region, scales = "free_y")
     } else {
       p_f_cpue_v2 <- p_f_cpue_v2 + facet_grid(Variable~RuleType, scales = "free_y")
     }

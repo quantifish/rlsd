@@ -389,8 +389,12 @@ plot_refpoints <- function(object, object1, figure_dir){
                        Recruitment = sum(Recruitment), 
                        CPUE = mean(CPUE),
                        F = sum(F)) %>%
-      dplyr::mutate(RelVB = VB / VB0now) %>%
-      dplyr::mutate(RelSSB = SSB / SSB0now) %>%
+      dplyr::mutate(RelVB = VB / VB0) %>%
+      dplyr::mutate(RelSSB = SSB / SSB0) %>%
+      dplyr::mutate(RelTB = TB / TB0) %>%
+      dplyr::mutate(RelVBnow = VB / VB0now) %>%
+      dplyr::mutate(RelSSBnow = SSB / SSB0now) %>%
+      dplyr::mutate(RelTBnow = TB / TB0now) %>%
       dplyr::mutate(Region = "Total")
 
     info <- rbind.data.frame(info, tinfo)
@@ -431,7 +435,7 @@ plot_refpoints <- function(object, object1, figure_dir){
                       AvgTotalCatch = sum(Catch)/max(Iteration)) %>%
       dplyr::left_join(ruledf) %>%
       # dplyr::mutate(ExpectedCatchSL = replace(ExpectedCatchSL, RuleType != "FixedCatch", 0)) %>%
-      dplyr::mutate(CatchConstraint = ifelse(RuleType == "FixedCatch" & ObsCatchSL < 0.99 * ExpectedCatchSL, 1, 0))
+      dplyr::mutate(CatchConstraint = ifelse(RuleType == "FixedCatch" & ObsCatchSL < 0.999 * ExpectedCatchSL, 1, 0))
     # constraints <- unique(constraints)
 
     
@@ -517,8 +521,8 @@ plot_refpoints <- function(object, object1, figure_dir){
       dplyr::summarise(Catch = sum(Catch),
                        VB = sum(VB),
                        SSB = sum(SSB)) %>%
-      dplyr::left_join(vb0 %>% dplyr::filter(Region == "Total")) %>%
-      dplyr::left_join(ssb0 %>% dplyr::filter(Region == "Total")) %>%
+      dplyr::left_join(vb0now %>% dplyr::filter(Region == "Total")) %>%
+      dplyr::left_join(ssb0now %>% dplyr::filter(Region == "Total")) %>%
       dplyr::mutate(RelVB = VB / VB0now) %>%
       dplyr::mutate(RelSSB = SSB / SSB0now) %>%
       tidyr::drop_na()  %>%
@@ -571,8 +575,8 @@ plot_refpoints <- function(object, object1, figure_dir){
       dplyr::summarise(Catch = sum(Catch),
                        VB = sum(VB),
                        SSB = sum(SSB)) %>%
-      dplyr::left_join(vb0 %>% dplyr::filter(Region == "Total")) %>%
-      dplyr::left_join(ssb0 %>% dplyr::filter(Region == "Total")) %>%
+      dplyr::left_join(vb0now %>% dplyr::filter(Region == "Total")) %>%
+      dplyr::left_join(ssb0now %>% dplyr::filter(Region == "Total")) %>%
       dplyr::mutate(RelVB = VB / VB0now) %>%
       dplyr::mutate(RelSSB = SSB / SSB0now) %>%
       tidyr::drop_na()  %>%
@@ -624,10 +628,14 @@ plot_refpoints <- function(object, object1, figure_dir){
     if(length(unique(check$RuleType))==3) check$RuleType <- factor(check$RuleType, levels = c("FixedCatch", "CPUE-based", "FixedF"))
     p_f_cpue <- ggplot(check %>% filter(Iteration == 1)) +
       geom_line(aes(x = Year, Value, color = RuleType), lwd = 1.2) +
-      facet_wrap(~Variable, scales = "free_y") +
       scale_color_colorblind() +
       expand_limits(y = 0) +
       theme_bw(base_size = 20)
+    if(length(regions) > 1){
+      p_f_cpue <- p_f_cpue + facet_wrap(Region~Variable, scales = "free_y", ncol = 4) 
+    } else {
+      p_f_cpue <- p_f_cpue + facet_wrap(~Variable, scales = "free_y")
+    }
     ggsave(file.path(figure_dir, "F_CPUE_Catch_VB_iter1.png"), p_f_cpue, height = 8, width = 15)
 
 
@@ -640,12 +648,16 @@ plot_refpoints <- function(object, object1, figure_dir){
       stat_summary(aes(x = Year, y = Value, fill = RuleType), fun.min = function(x) stats::quantile(x, 0.25), fun.max = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5) +
       stat_summary(aes(x = Year, y = Value, color = RuleType), fun = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1.5) +
       geom_hline(data = check2, aes(yintercept = P50), lty = 2, lwd = 1.2) +
-      facet_grid(Variable~RuleType, scales = "free_y") +
       scale_color_colorblind() +
       scale_fill_colorblind() +
       guides(color = FALSE, fill = FALSE) +
       expand_limits(y = 0) +
       theme_bw(base_size = 20)
+    if(length(regions) > 1){
+      p_f_cpue_v2 <- p_f_cpue_v2 + facet_grid(Variable~RuleType+Region, scales = "free_y", ncol = 4)
+    } else {
+      p_f_cpue_v2 <- p_f_cpue_v2 + facet_grid(Variable~RuleType, scales = "free_y")
+    }
   ggsave(file.path(figure_dir, "F_CPUE_Catch_VB_intervals.png"), p_f_cpue_v2, height = 8, width = 20)
 
 # #   ## plots of rules over time

@@ -172,8 +172,7 @@ plot_refpoints <- function(object, object1, figure_dir){
                        TB = sum(TB),
                        TB0now = sum(TB0now),
                        TB0 = sum(TB0),
-                       Recruitment = sum(Recruitment), 
-                       CPUE = sum(CPUE)) %>%
+                       Recruitment = sum(Recruitment)) %>%
       dplyr::mutate(RelVB = VB / VB0now) %>%
       dplyr::mutate(RelSSB = SSB / SSB0now) %>%
       dplyr::mutate(Region = "Total")
@@ -471,23 +470,23 @@ plot_refpoints <- function(object, object1, figure_dir){
 
   ## filter MP rules where CV < CV(MSY Fixed F)
   CVmax <- min(as.numeric(unlist(msy_info1[which(msy_info1$RuleType == "FixedF"),"CV"])))
-  # output2$CVConstraint = 0
-  # output2 <- output2 %>% 
-  #   mutate(CVConstraint = replace(CVConstraint, which(CV > CVmax), 1)) %>%
-  #   mutate(CVConstraint = replace(CVConstraint, which(RuleType != "CPUE-based"), 0))
+  output2$CVConstraint = 0
+  output2 <- output2 %>% 
+    mutate(CVConstraint = replace(CVConstraint, which(CV > CVmax), 1)) %>%
+    mutate(CVConstraint = replace(CVConstraint, which(RuleType != "CPUE-based"), 0))
 
-  # output2$Constraint <- sapply(1:nrow(output2), function(x){
-  #     if(output2$CatchConstraint[x] == 1 & output2$RiskConstraint[x] == 1 & output2$CVConstraint[x] == 1) out <- "Risk + Catch + CV"
-  #     if(output2$CatchConstraint[x] == 1 & output2$RiskConstraint[x] == 1 & output2$CVConstraint[x] == 0) out <- "Risk + Catch"
-  #     if(output2$CatchConstraint[x] == 1 & output2$RiskConstraint[x] == 0 & output2$CVConstraint[x] == 1) out <- "Catch + CV"
-  #     if(output2$CatchConstraint[x] == 1 & output2$RiskConstraint[x] == 0 & output2$CVConstraint[x] == 0) out <- "Catch"
-  #     if(output2$CatchConstraint[x] == 0 & output2$RiskConstraint[x] == 1 & output2$CVConstraint[x] == 0) out <- "Risk" #output2$CatchConstraint[x] == 0 & 
-  #     if(output2$CatchConstraint[x] == 0 & output2$RiskConstraint[x] == 1 & output2$CVConstraint[x] == 1) out <- "Risk + CV" #output2$CatchConstraint[x] == 0 & 
-  #     if(output2$CatchConstraint[x] == 0 & output2$RiskConstraint[x] == 0 & output2$CVConstraint[x] == 1) out <- "CV"
-  #     if(output2$CatchConstraint[x] == 0 & output2$RiskConstraint[x] == 0 & output2$CVConstraint[x] == 0) out <- "Pass"
-  #   return(out)
-  # })
-  # write.csv(output2, file.path(figure_dir, "Summary_byVariable.csv"))
+  output2$Constraint <- sapply(1:nrow(output2), function(x){
+      if(output2$CatchConstraint[x] == 1 & output2$RiskConstraint[x] == 1 & output2$CVConstraint[x] == 1) out <- "Risk + Catch + CV"
+      if(output2$CatchConstraint[x] == 1 & output2$RiskConstraint[x] == 1 & output2$CVConstraint[x] == 0) out <- "Risk + Catch"
+      if(output2$CatchConstraint[x] == 1 & output2$RiskConstraint[x] == 0 & output2$CVConstraint[x] == 1) out <- "Catch + CV"
+      if(output2$CatchConstraint[x] == 1 & output2$RiskConstraint[x] == 0 & output2$CVConstraint[x] == 0) out <- "Catch"
+      if(output2$CatchConstraint[x] == 0 & output2$RiskConstraint[x] == 1 & output2$CVConstraint[x] == 0) out <- "Risk" #output2$CatchConstraint[x] == 0 & 
+      if(output2$CatchConstraint[x] == 0 & output2$RiskConstraint[x] == 1 & output2$CVConstraint[x] == 1) out <- "Risk + CV" #output2$CatchConstraint[x] == 0 & 
+      if(output2$CatchConstraint[x] == 0 & output2$RiskConstraint[x] == 0 & output2$CVConstraint[x] == 1) out <- "CV"
+      if(output2$CatchConstraint[x] == 0 & output2$RiskConstraint[x] == 0 & output2$CVConstraint[x] == 0) out <- "Pass"
+    return(out)
+  })
+  write.csv(output2, file.path(figure_dir, "Summary_byVariable.csv"))
   
   find_max <- output2 %>%
     dplyr::filter(Variable == "Catch") %>%

@@ -428,7 +428,7 @@ plot_refpoints <- function(object, object1, figure_dir){
       dplyr::filter(Region != "Total") %>%
       dplyr::group_by(Region, RuleNum) %>%
       dplyr::summarise(CV = sd(Catch)/mean(Catch),
-                      Prisk = length(which(RelSSB <= 0.2))/length(RelSSB),
+                      Prisk = length(which(RelSSBnow <= 0.2))/length(RelSSBnow),
                       RiskConstraint = ifelse(Prisk >= 0.05, 1, 0),
                       ExpectedCatchSL = sum(par2),
                       ObsCatchSL = sum(SL),
@@ -444,7 +444,7 @@ plot_refpoints <- function(object, object1, figure_dir){
   #####################
     summary <- cinfo %>%
       dplyr::filter(Region != "Total") %>%
-      tidyr::pivot_longer(cols=c(SL, NSL, Catch,SSB,SSB0now,RelSSB,VB,VB0now,RelVB,TB,TB0now, RelTB, Recruitment,CPUE,F), names_to = "Variable", values_to = "Value") %>%
+      tidyr::pivot_longer(cols=c(SL, NSL, Catch,SSB,SSB0now,SSB0,RelSSB,RelSSBnow,VB,VB0now,VB0,RelVB,RelVBnow,TB,TB0,TB0now, RelTB, RelTBnow,Recruitment,CPUE,F), names_to = "Variable", values_to = "Value") %>%
       dplyr::group_by(Region, RuleNum, Variable) %>%
       dplyr::summarise(P5 = quantile(Value, 0.05),
                        P50 = quantile(Value, 0.5),
@@ -479,30 +479,34 @@ plot_refpoints <- function(object, object1, figure_dir){
     msy_info1 <- output2 %>% right_join(find_msy1 %>% dplyr::select(-P50))
 
   ## filter MP rules where CV < CV(MSY Fixed F)
-  CVmax <- min(as.numeric(unlist(msy_info1[which(msy_info1$RuleType == "FixedF"),"CV"])))
+  CVmaxF <- min(as.numeric(unlist(msy_info1[which(msy_info1$RuleType == "FixedF"),"CV"])))
+  # CVx <- unique(as.numeric(unlist(msy_info1[which(msy_info1$RuleType == "CPUE-based"), "CV"])))
+  output_mp <- output2 %>% filter(RuleType == "CPUE-based") %>% filter(RiskConstraint == 0)
+  CVquants <- quantile(output_mp$CV)
+
   output2$CVConstraint = 0
   output2 <- output2 %>% 
-    mutate(CVConstraint = replace(CVConstraint, which(CV > CVmax), 1)) %>%
+    mutate(CVConstraint = replace(CVConstraint, which(CV <= CVquants["100%"]), "Max")) %>%
+    mutate(CVConstraint = replace(CVConstraint, which(CV <= CVquants["75%"]), "75%")) %>%
+    mutate(CVConstraint = replace(CVConstraint, which(CV <= CVquants["50%"]), "Median")) %>%
+    mutate(CVConstraint = replace(CVConstraint, which(CV <= CVquants["25%"]), "25%")) %>%
+    mutate(CVConstraint = replace(CVConstraint, which(CV <= CVquants["0%"]), "Min")) %>%
     mutate(CVConstraint = replace(CVConstraint, which(RuleType != "CPUE-based"), 0))
 
   output2$Constraint <- sapply(1:nrow(output2), function(x){
-      if(output2$CatchConstraint[x] == 1 & output2$RiskConstraint[x] == 1 & output2$CVConstraint[x] == 1) out <- "Risk + Catch + CV"
-      if(output2$CatchConstraint[x] == 1 & output2$RiskConstraint[x] == 1 & output2$CVConstraint[x] == 0) out <- "Risk + Catch"
-      if(output2$CatchConstraint[x] == 1 & output2$RiskConstraint[x] == 0 & output2$CVConstraint[x] == 1) out <- "Catch + CV"
-      if(output2$CatchConstraint[x] == 1 & output2$RiskConstraint[x] == 0 & output2$CVConstraint[x] == 0) out <- "Catch"
-      if(output2$CatchConstraint[x] == 0 & output2$RiskConstraint[x] == 1 & output2$CVConstraint[x] == 0) out <- "Risk" #output2$CatchConstraint[x] == 0 & 
-      if(output2$CatchConstraint[x] == 0 & output2$RiskConstraint[x] == 1 & output2$CVConstraint[x] == 1) out <- "Risk + CV" #output2$CatchConstraint[x] == 0 & 
-      if(output2$CatchConstraint[x] == 0 & output2$RiskConstraint[x] == 0 & output2$CVConstraint[x] == 1) out <- "CV"
-      if(output2$CatchConstraint[x] == 0 & output2$RiskConstraint[x] == 0 & output2$CVConstraint[x] == 0) out <- "Pass"
+      if(output2$CatchConstraint[x] == 1 & output2$RiskConstraint[x] == 1) out <- "Risk + Catch"
+      if(output2$CatchConstraint[x] == 1 & output2$RiskConstraint[x] == 0) out <- "Catch"
+      if(output2$CatchConstraint[x] == 0 & output2$RiskConstraint[x] == 1) out <- "Risk" #output2$CatchConstraint[x] == 0 & 
+      if(output2$CatchConstraint[x] == 0 & output2$RiskConstraint[x] == 0) out <- "Pass"
     return(out)
   })
   write.csv(output2, file.path(figure_dir, "Summary_byVariable.csv"))
   
   find_max <- output2 %>%
     dplyr::filter(Variable == "Catch") %>%
-    dplyr::group_by(Region, RuleType, RuleNum, Constraint) %>%
+    dplyr::group_by(Region, RuleType, RuleNum, Constraint, CVConstraint) %>%
     dplyr::summarise(P50 = sum(P50)) %>%
-    dplyr::group_by(Region, RuleType, Constraint) %>%
+    dplyr::group_by(Region, RuleType, Constraint, CVConstraint) %>%
     dplyr::filter(P50 == max(P50))
 
 
@@ -542,6 +546,12 @@ plot_refpoints <- function(object, object1, figure_dir){
   check <- lapply(1:length(regions), function(x){
     check2 <- lapply(1:length(ruletypes), function(y){
       sub <- find_msy %>% filter(Region == paste0("Region ", regions[x])) %>% filter(RuleType == ruletypes[y])
+      if(ruletypes[y] == "CPUE-based"){
+        if(nrow(sub) == 5) return(sub)
+        if(nrow(sub) > 5){
+          stop("Multiple rules are associated with the max catch by CV constraint. Need to write code to find the max average total catch by CV constraint.")
+        }
+      }
       if(nrow(sub) == 1) return(sub)
       if(nrow(sub) > 1){
         nums <- unique(sub$RuleNum)
@@ -625,11 +635,18 @@ plot_refpoints <- function(object, object1, figure_dir){
       tidyr::pivot_longer(cols = c(Catch, CPUE, F, VB), names_to = "Variable", values_to = "Value") %>%
       dplyr::right_join(msy_info %>% dplyr::select(-P50)) %>%
       dplyr::filter(Variable %in% c("Catch", "CPUE", "F", "VB")) %>%
-      dplyr::filter(Region != "Total")
+      dplyr::filter(Region != "Total")  %>%
+      dplyr::mutate(CVConstraint = replace(CVConstraint, RuleType == "FixedF", "FixedF")) %>%
+      dplyr::mutate(CVConstraint = replace(CVConstraint, RuleType == "FixedCatch", "FixedCatch")) %>%
+      dplyr::filter(CVConstraint != "Min")
+      # dplyr::mutate(CVConstraint = replace(CVConstraint, RuleType == "FixedF", "FixedF")) %>%
+      # dplyr::mutate(CVConstraint = replace(CVConstraint, RuleType == "FixedCatch", "FixedCatch"))
     if(length(unique(check$RuleType))==3) check$RuleType <- factor(check$RuleType, levels = c("FixedCatch", "CPUE-based", "FixedF"))
+    check$CVConstraint <- factor(check$CVConstraint, levels = rev(c("FixedF", "Max", "75%", "Median", "25%", "FixedCatch")))
     p_f_cpue <- ggplot(check %>% filter(Iteration == 1)) +
-      geom_line(aes(x = Year, Value, color = RuleType), lwd = 1.2) +
-      scale_color_colorblind() +
+      geom_line(aes(x = Year, Value, color = CVConstraint), lwd = 1.2) +
+      scale_color_brewer(palette = "Spectral") +
+      guides(color = guide_legend(title="Rule type\nor CV constraint")) +
       expand_limits(y = 0) +
       theme_bw(base_size = 20)
     if(length(regions) > 1){
@@ -639,26 +656,39 @@ plot_refpoints <- function(object, object1, figure_dir){
     }
     ggsave(file.path(figure_dir, "F_CPUE_Catch_VB_iter1.png"), p_f_cpue, height = 8, width = 15)
 
-
+    check <- cinfo %>%
+      dplyr::select(Iteration, Year, Region, RuleNum, Catch, CPUE, F, VB) %>%
+      tidyr::pivot_longer(cols = c(Catch, CPUE, F, VB), names_to = "Variable", values_to = "Value") %>%
+      dplyr::right_join(msy_info %>% dplyr::select(-P50)) %>%
+      dplyr::filter(Variable %in% c("Catch", "CPUE", "F", "VB")) %>%
+      dplyr::filter(Region != "Total") %>%
+      dplyr::mutate(CVConstraint = replace(CVConstraint, RuleType == "FixedF", "FixedF")) %>%
+      dplyr::mutate(CVConstraint = replace(CVConstraint, RuleType == "FixedCatch", "FixedCatch")) %>%
+      dplyr::filter(CVConstraint != "Min")
     check2 <- output2 %>%
       dplyr::right_join(msy_info %>% dplyr::select(-P50)) %>%
       dplyr::filter(Variable %in% c("Catch", "CPUE", "F", "VB")) %>%
-      dplyr::filter(Region != "Total")
-    if(length(unique(check2$RuleType))==3) check2$RuleType <- factor(check2$RuleType, levels = c("FixedCatch", "CPUE-based", "FixedF"))
+      dplyr::filter(Region != "Total") %>%
+      dplyr::mutate(CVConstraint = replace(CVConstraint, RuleType == "FixedF", "FixedF")) %>%
+      dplyr::mutate(CVConstraint = replace(CVConstraint, RuleType == "FixedCatch", "FixedCatch")) %>%
+      dplyr::filter(CVConstraint != "Min")
+    # if(length(unique(check2$RuleType))==3) check2$RuleType <- factor(check2$RuleType, levels = c("FixedCatch", "CPUE-based", "FixedF"))
+    check$CVConstraint <- factor(check$CVConstraint, levels = c("FixedCatch", "25%", "Median", "75%", "Max", "FixedF"))
+    check2$CVConstraint <- factor(check2$CVConstraint, levels = c("FixedCatch", "25%", "Median", "75%", "Max", "FixedF"))
     p_f_cpue_v2 <- ggplot(check) +
-      stat_summary(aes(x = Year, y = Value, fill = RuleType), fun.min = function(x) stats::quantile(x, 0.05), fun.max = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25) +
-      stat_summary(aes(x = Year, y = Value, fill = RuleType), fun.min = function(x) stats::quantile(x, 0.25), fun.max = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5) +
-      stat_summary(aes(x = Year, y = Value, color = RuleType), fun = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1.5) +
+      stat_summary(aes(x = Year, y = Value, fill = CVConstraint), fun.min = function(x) stats::quantile(x, 0.05), fun.max = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25) +
+      stat_summary(aes(x = Year, y = Value, fill = CVConstraint), fun.min = function(x) stats::quantile(x, 0.25), fun.max = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5) +
+      stat_summary(aes(x = Year, y = Value, color = CVConstraint), fun = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1.5) +
       geom_hline(data = check2, aes(yintercept = P50), lty = 2, lwd = 1.2) +
-      scale_color_colorblind() +
-      scale_fill_colorblind() +
+      scale_color_viridis_d() +
+      scale_fill_viridis_d() +
       guides(color = FALSE, fill = FALSE) +
       expand_limits(y = 0) +
       theme_bw(base_size = 20)
     if(length(regions) > 1){
       p_f_cpue_v2 <- p_f_cpue_v2 + facet_grid(Variable~RuleType+Region, scales = "free_y")
     } else {
-      p_f_cpue_v2 <- p_f_cpue_v2 + facet_grid(Variable~RuleType, scales = "free_y")
+      p_f_cpue_v2 <- p_f_cpue_v2 + facet_grid(Variable~CVConstraint, scales = "free_y")
     }
   ggsave(file.path(figure_dir, "F_CPUE_Catch_VB_intervals.png"), p_f_cpue_v2, height = 8, width = 20)
 

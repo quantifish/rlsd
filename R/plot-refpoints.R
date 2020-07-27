@@ -1288,7 +1288,7 @@ plot_refpoints <- function(object, object1, figure_dir){
         p_cpue_mp <- p_cpue_mp + facet_grid(Region~., scales = "free_x")
       }
       ggsave(file.path(figure_dir, "CPUE_vs_Catch_MP_Pass.png"), p_cpue_mp, height = 10, width = 12)
-      
+    }
 
   #     p_cpue_mp_v2 <- p_cpue_mp +
   #       geom_vline(data = msy_info2 %>% filter(RuleType == "CPUE-based"), aes(xintercept = CPUE), lty = 2) +

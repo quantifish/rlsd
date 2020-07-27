@@ -624,7 +624,8 @@ plot_refpoints <- function(object, object1, figure_dir){
       dplyr::select(Iteration, Year, Region, RuleNum, Catch, CPUE, F, VB) %>%
       tidyr::pivot_longer(cols = c(Catch, CPUE, F, VB), names_to = "Variable", values_to = "Value") %>%
       dplyr::right_join(msy_info %>% dplyr::select(-P50)) %>%
-      dplyr::filter(Variable %in% c("Catch", "CPUE", "F", "VB"))
+      dplyr::filter(Variable %in% c("Catch", "CPUE", "F", "VB")) %>%
+      dplyr::filter(Region != "Total")
     if(length(unique(check$RuleType))==3) check$RuleType <- factor(check$RuleType, levels = c("FixedCatch", "CPUE-based", "FixedF"))
     p_f_cpue <- ggplot(check %>% filter(Iteration == 1)) +
       geom_line(aes(x = Year, Value, color = RuleType), lwd = 1.2) +
@@ -641,7 +642,8 @@ plot_refpoints <- function(object, object1, figure_dir){
 
     check2 <- output2 %>%
       dplyr::right_join(msy_info %>% dplyr::select(-P50)) %>%
-      dplyr::filter(Variable %in% c("Catch", "CPUE", "F", "VB")) 
+      dplyr::filter(Variable %in% c("Catch", "CPUE", "F", "VB")) %>%
+      dplyr::filter(Region != "Total")
     if(length(unique(check2$RuleType))==3) check2$RuleType <- factor(check2$RuleType, levels = c("FixedCatch", "CPUE-based", "FixedF"))
     p_f_cpue_v2 <- ggplot(check) +
       stat_summary(aes(x = Year, y = Value, fill = RuleType), fun.min = function(x) stats::quantile(x, 0.05), fun.max = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25) +
@@ -933,6 +935,20 @@ plot_refpoints <- function(object, object1, figure_dir){
   #######################################
   ## examine variability across filters
   #######################################
+  ## maximum F that passes risk constraints
+  maxF <- output4 %>% 
+    dplyr::filter(RuleType == "FixedF") %>%
+    dplyr::right_join(max_info %>% filter(RuleType == "FixedF") %>% select(-c(Variable, P5, P50, P95)))
+  maxF2 <- unique(maxF)
+
+  mp_options <- output4 %>%
+    dplyr::filter(RuleType == "CPUE-based") %>%
+    dplyr::filter(Constraint %in% c("Pass", "CV"))
+  mp_options2 <- unique(mp_options)
+
+  options <- rbind.data.frame(maxF2, mp_options2)
+  write.csv(options, file.path(figure_dir, "Options_summary.csv"))
+
   ## examples from find_max
   reg <- unique(find_max$Region)
   find_max_sub <- lapply(1:length(reg), function(x){
@@ -1230,8 +1246,8 @@ plot_refpoints <- function(object, object1, figure_dir){
     
     if(length(unique(msy_info2$RuleType == 3))) msy_info2$RuleType <- factor(msy_info2$RuleType, levels = c("FixedCatch", "CPUE-based", "FixedF"))
     p_cpue_all_v2 <- p_cpue_all +
-        geom_vline(data = msy_info2, aes(xintercept = CPUE), lty = 2, lwd = 1.5) +
-        geom_hline(data = msy_info2, aes(yintercept = Catch), lty = 2, lwd = 1.5)
+        geom_vline(data = msy_info2, aes(xintercept = CPUE), lty = 2, lwd = 2) +
+        geom_hline(data = msy_info2, aes(yintercept = Catch), lty = 2, lwd = 2)
     ggsave(file.path(figure_dir, "CPUE_vs_Catch_v2.png"), p_cpue_all, height = 10, width = 12)
 
     check1 <- cinfo %>%
@@ -1288,7 +1304,7 @@ plot_refpoints <- function(object, object1, figure_dir){
         geom_hline(data = msy_info2, aes(yintercept = Catch, color = RuleType), lty = 2, lwd = 1.5)
     ggsave(file.path(figure_dir, "CPUE_vs_Catch_v2.png"), p_cpue_all_v2, height = 10, width = 12)
     
-    sub <- output4 %>% filter(RuleType == "CPUE-based")
+    sub <- output4 %>% filter(RuleType == "CPUE-based") %>% filter(Region != "Total")
     const <- unique(as.character(sub$Constraint))
   const1 <- const[grepl("CV",const)==FALSE]
   const1_1 <- const1[grepl("Catch", const1) == FALSE]
@@ -1300,6 +1316,7 @@ plot_refpoints <- function(object, object1, figure_dir){
     sub$Constraint <- factor(sub$Constraint, levels = const)
     msy <- unique(msy_info %>% filter(RuleType == "CPUE-based") %>% dplyr::select(par1:par10)) %>% mutate(Constraint = "Pass")
     msy$Constraint <- factor(msy$Constraint, levels = const)
+    msy <- msy %>% filter(Region != "Total")
     p_rule <- ggplot(sub) +
       geom_segment(aes(x = par2, xend = par3, y = 0, yend = par5, color = Constraint), lwd = 1.5) +
       geom_segment(aes(x = par3, xend = par4, y = par5, yend = par5, color = Constraint ), lwd = 1.5) +

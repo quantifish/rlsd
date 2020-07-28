@@ -388,7 +388,7 @@ plot_refpoints <- function(object, object1, figure_dir){
   infox <- full_join(info, projF2)
   gc()
   
-  info1 <- info1x %>%
+  info <- infox %>%
     filter(Region %in% regions) %>%
     mutate(Region = paste0("Region ", Region))
   gc()

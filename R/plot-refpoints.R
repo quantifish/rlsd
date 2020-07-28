@@ -133,17 +133,17 @@ plot_refpoints <- function(object, object1, figure_dir){
     dplyr::rename(Recruitment = value)
   rec2$Region <- factor(rec2$Region)
   
-  relssb <- inner_join(ssb2, ssb0now) %>%
+  relssb <- full_join(ssb2, ssb0now) %>%
     dplyr::full_join(SSB0) %>%
     dplyr::mutate(RelSSBnow = SSB/SSB0now,
                   RelSSB = SSB/SSB0)
 
-  relvb <- inner_join(vb2, vb0now) %>%
+  relvb <- full_join(vb2, vb0now) %>%
     dplyr::full_join(VB0) %>%
     dplyr::mutate(RelVBnow = VB/VB0now,
                   RelVB = VB/VB0)
 
-  reltb <- inner_join(tb2, tb0now) %>%
+  reltb <- full_join(tb2, tb0now) %>%
     dplyr::full_join(TB0) %>%
     dplyr::mutate(RelTBnow = TB/TB0now,
                   RelTB = TB/TB0)
@@ -154,11 +154,16 @@ plot_refpoints <- function(object, object1, figure_dir){
   relb2 <- full_join(relb1, rec2)
 
   catch$Region <- factor(catch$Region)
-  info1 <- full_join(catch, relb2)
-  info1 <- info1 %>%
+  info1x <- full_join(catch, relb2)
+  info1 <- info1x %>%
+      filter(Region %in% regions) %>%
       mutate(Region = paste0("Region ", Region))
 
   if(length(regions) > 1){
+    b0_total <- info1x %>%
+      filter(Region == "Total") %>%
+      ungroup() %>%
+      dplyr::select(Iteration, Region, SSB0now, SSB0, VB0now, VB0, TB0now, TB0)
     tinfo1 <- info1 %>%
       dplyr::group_by(Iteration, Year, RuleNum) %>%
       dplyr::summarise(SL = sum(SL),
@@ -166,23 +171,18 @@ plot_refpoints <- function(object, object1, figure_dir){
                        Catch = sum(Catch),
                        # CatchResidual = sum(CatchResidual),
                        SSB = sum(SSB),
-                       SSB0now = sum(SSB0now),
-                       SSB0 = sum(SSB0),
                        VB = sum(VB),
-                       VB0now = sum(VB0now),
-                       VB0 = sum(VB0),
                        TB = sum(TB),
-                       TB0now = sum(TB0now),
-                       TB0 = sum(TB0),
                        Recruitment = sum(Recruitment)) %>%
+      dplyr::mutate(Region = "Total") %>%
+      dplyr::full_join(b0_total) %>%
       dplyr::mutate(RelVBnow = VB / VB0now) %>%
       dplyr::mutate(RelSSBnow = SSB / SSB0now) %>%
       dplyr::mutate(RelTBnow = TB / TB0now) %>%
       dplyr::mutate(RelVB = VB / VB0) %>%
       dplyr::mutate(RelSSB = SSB / SSB0) %>%
-      dplyr::mutate(RelTB = TB / TB0) %>%
-      dplyr::mutate(Region = "Total")
-
+      dplyr::mutate(RelTB = TB / TB0)
+    
     info1 <- rbind.data.frame(info1, tinfo1)
     info1 <- data.frame(info1)
   }
@@ -194,6 +194,8 @@ plot_refpoints <- function(object, object1, figure_dir){
     dplyr::summarise(P5 = quantile(Value, 0.05),
                      P50 = quantile(Value, 0.5),
                      P95 = quantile(Value, 0.95))
+  
+  
 
   write.csv(status, file.path(figure_dir, "Current_status.csv"))
   
@@ -383,14 +385,19 @@ plot_refpoints <- function(object, object1, figure_dir){
   info$Region <- factor(info$Region)
   gc()
   
-  info <- full_join(info, projF2)
+  infox <- full_join(info, projF2)
   gc()
   
-  info <- info %>%
-      mutate(Region = paste0("Region ", Region))
+  info1 <- info1x %>%
+    filter(Region %in% regions) %>%
+    mutate(Region = paste0("Region ", Region))
   gc()
 
   if(length(regions) > 1){
+    b0_total <- infox %>%
+      filter(Region == "Total") %>%
+      ungroup() %>%
+      dplyr::select(Iteration, Region, SSB0now, SSB0, VB0now, VB0, TB0now, TB0)
     tinfo <- info %>%
       dplyr::group_by(Iteration, Year, RuleNum) %>%
       dplyr::summarise(SL = sum(SL),
@@ -398,24 +405,19 @@ plot_refpoints <- function(object, object1, figure_dir){
                        Catch = sum(Catch),
                        # CatchResidual = sum(CatchResidual),
                        SSB = sum(SSB),
-                       SSB0now = sum(SSB0now),
-                       SSB0 = sum(SSB0),
                        VB = sum(VB),
-                       VB0now = sum(VB0now),
-                       VB0 = sum(VB0),
                        TB = sum(TB),
-                       TB0now = sum(TB0now),
-                       TB0 = sum(TB0),
-                       Recruitment = sum(Recruitment), 
+                       Recruitment = sum(Recruitment),
                        CPUE = mean(CPUE),
                        F = sum(F)) %>%
-      dplyr::mutate(RelVB = VB / VB0) %>%
-      dplyr::mutate(RelSSB = SSB / SSB0) %>%
-      dplyr::mutate(RelTB = TB / TB0) %>%
+      dplyr::mutate(Region = "Total") %>%
+      dplyr::full_join(b0_total) %>%
       dplyr::mutate(RelVBnow = VB / VB0now) %>%
       dplyr::mutate(RelSSBnow = SSB / SSB0now) %>%
       dplyr::mutate(RelTBnow = TB / TB0now) %>%
-      dplyr::mutate(Region = "Total")
+      dplyr::mutate(RelVB = VB / VB0) %>%
+      dplyr::mutate(RelSSB = SSB / SSB0) %>%
+      dplyr::mutate(RelTB = TB / TB0)
     gc()
 
     info <- rbind.data.frame(info, tinfo)
@@ -594,11 +596,17 @@ plot_refpoints <- function(object, object1, figure_dir){
       dplyr::left_join(vb0now %>% dplyr::filter(Region == "Total")) %>%
       dplyr::left_join(ssb0now %>% dplyr::filter(Region == "Total")) %>%
       dplyr::left_join(tb0now %>% dplyr::filter(Region == "Total")) %>%
+      dplyr::left_join(VB0 %>% dplyr::filter(Region == "Total")) %>%
+      dplyr::left_join(SSB0 %>% dplyr::filter(Region == "Total")) %>%
+      dplyr::left_join(TB0 %>% dplyr::filter(Region == "Total")) %>%
       dplyr::mutate(RelVBnow = VB / VB0now) %>%
       dplyr::mutate(RelSSBnow = SSB / SSB0now) %>%
       dplyr::mutate(RelTBnow = TB / TB0now) %>%
+      dplyr::mutate(RelVB = VB / VB0) %>%
+      dplyr::mutate(RelSSB = SSB / SSB0) %>%
+      dplyr::mutate(RelTB = TB / TB0) %>%
       tidyr::drop_na()  %>%
-      tidyr::pivot_longer(cols = c(Catch, VB, SSB, VB0now, SSB0now, RelVBnow, RelSSBnow, RelTBnow), names_to = "Variable", values_to = "Value") %>%
+      tidyr::pivot_longer(cols = c(Catch, VB, SSB, TB, VB0now, SSB0now, TB0now, VB0, SSB0, TB0, RelVBnow, RelSSBnow, RelTBnow), names_to = "Variable", values_to = "Value") %>%
       dplyr::group_by(RuleType, Constraint, CVConstraint, Variable) %>%
       dplyr::summarise(P5 = quantile(Value, 0.05),
                        P50 = quantile(Value, 0.5),

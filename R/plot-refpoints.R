@@ -221,6 +221,7 @@ plot_refpoints <- function(object, object1, figure_dir){
     dplyr::group_by(Iteration, RuleNum, Year, Region) %>%
     dplyr::summarise(F = sum(F))
 
+  gc()
   # sub <- projF2 %>% filter(RuleNum %in% c(6,37))
   # p <- ggplot(sub %>% filter(Iteration == 1)) +
   # geom_line(aes(x = Year, y = F, color = factor(RuleNum))) +
@@ -294,6 +295,8 @@ plot_refpoints <- function(object, object1, figure_dir){
     dplyr::rename(VB0 = value)
   VB0$Region <- factor(VB0$Region)
   
+  gc()
+  
   ssb <- mcmc$biomass_ssb_jyr
   dimnames(ssb) <- list("Iteration" = 1:n_iter, "RuleNum" = 1:dim(ssb)[2], "Year" = pyears, "Region" = regions)
   ssb2 <- reshape2::melt(ssb) %>% dplyr::rename("SSB"=value) 
@@ -310,6 +313,8 @@ plot_refpoints <- function(object, object1, figure_dir){
   SSB0 <- reshape2::melt(SSB0) %>%
     dplyr::rename(SSB0=value) 
   SSB0$Region <- factor(SSB0$Region)
+  
+  gc()
 
   tb <- mcmc$biomass_total_jytrs
   dimnames(tb) <- list("Iteration" = 1:n_iter, "RuleNum" = 1:dim(ssb)[2], "Year" = pyears, "Season" = seasons, "Region" = regions, "Sex" = c(sex, "Total"))
@@ -334,41 +339,56 @@ plot_refpoints <- function(object, object1, figure_dir){
   TB0 <- reshape2::melt(TB0) %>%
     dplyr::rename(TB0=value) 
   TB0$Region <- factor(TB0$Region)
+  
+  gc()
 
   rec <- mcmc$recruits_ry
   dimnames(rec) <- list("Iteration" = 1:n_iter, "Region" = regions, "Year" = pyears)
   rec2 <- reshape2::melt(rec) %>%
     dplyr::rename(Recruitment = value)
   rec2$Region <- factor(rec2$Region)
+  gc()
   
   relssb <- inner_join(ssb2, ssb0now) %>%
-    dplyr::full_join(SSB0) %>%
+    dplyr::left_join(SSB0) %>%
     dplyr::mutate(RelSSBnow = SSB/SSB0now,
                   RelSSB = SSB/SSB0)
-
+  gc()
+  
   relvb <- inner_join(vb2, vb0now) %>%
-    dplyr::full_join(VB0) %>%
+    dplyr::left_join(VB0) %>%
     dplyr::mutate(RelVBnow = VB/VB0now,
                   RelVB = VB/VB0)
+  gc()
 
   reltb <- inner_join(tb2, tb0now) %>%
-    dplyr::full_join(TB0) %>%
+    dplyr::left_join(TB0) %>%
     dplyr::mutate(RelTBnow = TB/TB0now,
                   RelTB = TB/TB0)
+  gc()
 
 
   relb <- full_join(relssb, relvb)
   relb1 <- full_join(relb, reltb)
   relb2 <- full_join(relb1, rec2)
+  
+  gc()
 
   catch$Region <- factor(catch$Region)
   info <- full_join(catch, relb2)
+  gc()
   cpue2$Region <- factor(cpue2$Region)
   projF2$Region <- factor(projF2$Region)
   info <- full_join(info, cpue2)
+  info$Region <- factor(info$Region)
+  gc()
+  
   info <- full_join(info, projF2)
+  gc()
+  
   info <- info %>%
       mutate(Region = paste0("Region ", Region))
+  gc()
 
   if(length(regions) > 1){
     tinfo <- info %>%
@@ -396,9 +416,12 @@ plot_refpoints <- function(object, object1, figure_dir){
       dplyr::mutate(RelSSBnow = SSB / SSB0now) %>%
       dplyr::mutate(RelTBnow = TB / TB0now) %>%
       dplyr::mutate(Region = "Total")
+    gc()
 
     info <- rbind.data.frame(info, tinfo)
+    gc()
     info <- data.frame(info)
+    gc()
   }
   
   rm(relb)
@@ -472,7 +495,6 @@ plot_refpoints <- function(object, object1, figure_dir){
       dplyr::summarise(P50 = sum(P50)) %>%
       dplyr::group_by(Region, RuleType, Constraint) %>%
       dplyr::filter(P50 == max(P50))  
-
     
     find_msy1 <- find_max1 %>% filter(Constraint == "Pass")
 
@@ -482,6 +504,13 @@ plot_refpoints <- function(object, object1, figure_dir){
   CVmaxF <- min(as.numeric(unlist(msy_info1[which(msy_info1$RuleType == "FixedF"),"CV"])))
   # CVx <- unique(as.numeric(unlist(msy_info1[which(msy_info1$RuleType == "CPUE-based"), "CV"])))
   output_mp <- output2 %>% filter(RuleType == "CPUE-based") %>% filter(RiskConstraint == 0)
+  # CVquants <- output_mp %>%
+  #     group_by(Region) %>%
+  #     summarise("Min" = min(CV),
+  #               "25%" = quantile(CV, 0.25),
+  #               "Median" = quantile(CV, 0.5),
+  #               "75%" = quantile(CV, 0.75),
+  #               "Max" = max(CV))
   CVquants <- quantile(output_mp$CV)
 
   output2$CVConstraint = 0
@@ -509,29 +538,68 @@ plot_refpoints <- function(object, object1, figure_dir){
     dplyr::group_by(Region, RuleType, Constraint, CVConstraint) %>%
     dplyr::filter(P50 == max(P50))
 
-
+  ## examples from find_max
+  reg <- unique(find_max$Region)
+  find_max_sub <- lapply(1:length(reg), function(x){
+    sub <- find_max %>% filter(Region == reg[x])
+    types <- unique(sub$RuleType)
+    byType <- lapply(1:length(types), function(y){
+      sub2 <- sub %>% filter(RuleType == types[y])
+      con <- unique(sub2$Constraint)
+      con2 <- unique(sub2$CVConstraint)
+      byCon <- lapply(1:length(con), function(z){
+        sub3 <- sub2 %>% filter(Constraint == con[z])
+        if(types[y] == "CPUE-based"){
+          byCon2 <- lapply(1:length(con2), function(zz){
+            sub4 <- sub3 %>% filter(CVConstraint == con2[zz])
+            if(nrow(sub4) == 1) out <- sub4
+            if(nrow(sub4) > 1){
+              subinfo <- output2 %>% dplyr::right_join(sub4)
+              out <- sub4[which(subinfo$AvgTotalCatch == max(subinfo$AvgTotalCatch)),]
+            }
+            return(out)
+          })
+          out <- do.call(rbind,byCon2)
+        } else {
+          if(nrow(sub3) == 1) out <- sub3
+          if(nrow(sub3) > 1){
+            subinfo <- output2 %>% dplyr::right_join(sub3)
+            out <- sub3[which(subinfo$AvgTotalCatch == max(subinfo$AvgTotalCatch)),]
+          }
+        }
+        return(out)
+      })
+      byCon <- do.call(rbind, byCon)
+      return(byCon)
+    })
+    byType <- do.call(rbind, byType)
+    return(byType)
+  })
+  find_max <- do.call(rbind, find_max_sub)
+  
   ## remove duplicates of MSY --- choose rule with higher average total catch
   max_info <- output2 %>% right_join(find_max %>% dplyr::select(-P50))
   write.csv(max_info, file.path(figure_dir, "MAX_info.csv"))
 
-
-
   if(length(regions) > 1){
     max_info2 <- cinfo %>%
-      dplyr::right_join(max_info %>% dplyr::select(Region, RuleNum, Constraint)) %>%
+      dplyr::right_join(max_info %>% dplyr::select(Region, RuleNum, Constraint, CVConstraint)) %>%
       dplyr::left_join(ruledf)
     max_info3 <- data.frame(unique(max_info2)) %>%
-      dplyr::group_by(Iteration, Year, RuleType, Constraint) %>%
+      dplyr::group_by(Iteration, Year, RuleType, Constraint, CVConstraint) %>%
       dplyr::summarise(Catch = sum(Catch),
                        VB = sum(VB),
-                       SSB = sum(SSB)) %>%
+                       SSB = sum(SSB),
+                       TB = sum(TB)) %>%
       dplyr::left_join(vb0now %>% dplyr::filter(Region == "Total")) %>%
       dplyr::left_join(ssb0now %>% dplyr::filter(Region == "Total")) %>%
-      dplyr::mutate(RelVB = VB / VB0now) %>%
-      dplyr::mutate(RelSSB = SSB / SSB0now) %>%
+      dplyr::left_join(tb0now %>% dplyr::filter(Region == "Total")) %>%
+      dplyr::mutate(RelVBnow = VB / VB0now) %>%
+      dplyr::mutate(RelSSBnow = SSB / SSB0now) %>%
+      dplyr::mutate(RelTBnow = TB / TB0now) %>%
       tidyr::drop_na()  %>%
-      tidyr::pivot_longer(cols = c(Catch, VB, SSB, VB0now, SSB0now, RelVB, RelSSB), names_to = "Variable", values_to = "Value") %>%
-      dplyr::group_by(RuleType, Constraint, Variable) %>%
+      tidyr::pivot_longer(cols = c(Catch, VB, SSB, VB0now, SSB0now, RelVBnow, RelSSBnow, RelTBnow), names_to = "Variable", values_to = "Value") %>%
+      dplyr::group_by(RuleType, Constraint, CVConstraint, Variable) %>%
       dplyr::summarise(P5 = quantile(Value, 0.05),
                        P50 = quantile(Value, 0.5),
                        P95 = quantile(Value, 0.95)) %>%
@@ -547,8 +615,9 @@ plot_refpoints <- function(object, object1, figure_dir){
     check2 <- lapply(1:length(ruletypes), function(y){
       sub <- find_msy %>% filter(Region == paste0("Region ", regions[x])) %>% filter(RuleType == ruletypes[y])
       if(ruletypes[y] == "CPUE-based"){
-        if(nrow(sub) == 5) return(sub)
-        if(nrow(sub) > 5){
+        ncon <- unique(sub$CVConstraint)
+        if(nrow(sub) == length(ncon)) return(sub)
+        if(nrow(sub) > length(ncon)){
           stop("Multiple rules are associated with the max catch by CV constraint. Need to write code to find the max average total catch by CV constraint.")
         }
       }
@@ -576,31 +645,30 @@ plot_refpoints <- function(object, object1, figure_dir){
     dplyr::select(-c(P5,P95)) %>%
     tidyr::pivot_wider(names_from = Variable, values_from = P50)
 
-    msy_info3 <- cinfo %>%
-      dplyr::right_join(msy_info %>% dplyr::select(Region, RuleNum, Constraint)) %>%
-      dplyr::left_join(ruledf)
-  if(length(regions) > 1){  
-    msy_info4 <- data.frame(unique(msy_info3)) %>%
-      dplyr::group_by(Iteration, Year, RuleType, Constraint) %>%
-      dplyr::summarise(Catch = sum(Catch),
-                       VB = sum(VB),
-                       SSB = sum(SSB)) %>%
-      dplyr::left_join(vb0now %>% dplyr::filter(Region == "Total")) %>%
-      dplyr::left_join(ssb0now %>% dplyr::filter(Region == "Total")) %>%
-      dplyr::mutate(RelVB = VB / VB0now) %>%
-      dplyr::mutate(RelSSB = SSB / SSB0now) %>%
-      tidyr::drop_na()  %>%
-      tidyr::pivot_longer(cols = c(Catch, VB, SSB, VB0now, SSB0now, RelVB, RelSSB), names_to = "Variable", values_to = "Value") %>%
-      dplyr::group_by(RuleType, Constraint, Variable) %>%
-      dplyr::summarise(P5 = quantile(Value, 0.05),
-                       P50 = quantile(Value, 0.5),
-                       P95 = quantile(Value, 0.95)) %>%
-      dplyr::mutate(Region = "Total")
-    write.csv(msy_info4, file.path(figure_dir, "MSY_info_total.csv"))
-    msy_info <- full_join(msy_info, msy_info4)
-  }
+  #   msy_info3 <- cinfo %>%
+  #     dplyr::right_join(msy_info %>% dplyr::select(Region, RuleNum, Constraint)) %>%
+  #     dplyr::left_join(ruledf)
+  # if(length(regions) > 1){  
+  #   msy_info4 <- data.frame(unique(msy_info3)) %>%
+  #     dplyr::group_by(Iteration, Year, RuleType, Constraint) %>%
+  #     dplyr::summarise(Catch = sum(Catch),
+  #                      VB = sum(VB),
+  #                      SSB = sum(SSB)) %>%
+  #     dplyr::left_join(vb0now %>% dplyr::filter(Region == "Total")) %>%
+  #     dplyr::left_join(ssb0now %>% dplyr::filter(Region == "Total")) %>%
+  #     dplyr::mutate(RelVB = VB / VB0now) %>%
+  #     dplyr::mutate(RelSSB = SSB / SSB0now) %>%
+  #     tidyr::drop_na()  %>%
+  #     tidyr::pivot_longer(cols = c(Catch, VB, SSB, VB0now, SSB0now, RelVB, RelSSB), names_to = "Variable", values_to = "Value") %>%
+  #     dplyr::group_by(RuleType, Constraint, Variable) %>%
+  #     dplyr::summarise(P5 = quantile(Value, 0.05),
+  #                      P50 = quantile(Value, 0.5),
+  #                      P95 = quantile(Value, 0.95)) %>%
+  #     dplyr::mutate(Region = "Total")
+  #   write.csv(msy_info4, file.path(figure_dir, "MSY_info_total.csv"))
+  #   msy_info <- full_join(msy_info, msy_info4)
+  # }
 
-  
   #################################
   ## summaries for plotting
   ################################
@@ -633,7 +701,7 @@ plot_refpoints <- function(object, object1, figure_dir){
     check <- cinfo %>%
       dplyr::select(Iteration, Year, Region, RuleNum, Catch, CPUE, F, VB) %>%
       tidyr::pivot_longer(cols = c(Catch, CPUE, F, VB), names_to = "Variable", values_to = "Value") %>%
-      dplyr::right_join(msy_info %>% dplyr::select(-P50)) %>%
+      dplyr::right_join(max_info %>% filter(Constraint == "Pass") %>% dplyr::select(-P50)) %>%
       dplyr::filter(Variable %in% c("Catch", "CPUE", "F", "VB")) %>%
       dplyr::filter(Region != "Total")  %>%
       dplyr::mutate(CVConstraint = replace(CVConstraint, RuleType == "FixedF", "FixedF")) %>%
@@ -649,7 +717,8 @@ plot_refpoints <- function(object, object1, figure_dir){
       scale_color_tableau() +
       guides(color = guide_legend(title="Rule type\nor CV constraint")) +
       expand_limits(y = 0) +
-      theme_bw(base_size = 20)
+      theme_bw(base_size = 20) +
+      theme(axis.text.x = element_blank())
     if(length(regions) > 1){
       p_f_cpue <- p_f_cpue + facet_wrap(Region~Variable, scales = "free_y", ncol = 4) 
     } else {
@@ -687,9 +756,10 @@ plot_refpoints <- function(object, object1, figure_dir){
       scale_fill_tableau() +
       guides(color = FALSE, fill = FALSE) +
       expand_limits(y = 0) +
-      theme_bw(base_size = 20)
+      theme_bw(base_size = 20) +
+      theme(axis.text.x = element_blank())
     if(length(regions) > 1){
-      p_f_cpue_v2 <- p_f_cpue_v2 + facet_grid(Variable~RuleType+Region, scales = "free_y")
+      p_f_cpue_v2 <- p_f_cpue_v2 + facet_grid(Variable~CVConstraint+Region, scales = "free_y")
     } else {
       p_f_cpue_v2 <- p_f_cpue_v2 + facet_grid(Variable~CVConstraint, scales = "free_y")
     }
@@ -922,7 +992,12 @@ plot_refpoints <- function(object, object1, figure_dir){
   ###################################################
   ## Status relative to reference level by rule type
   ###################################################
-  check <- dinfo %>% left_join(msy_info %>% filter(Variable == "VB")) %>%
+  msy_toUse <- max_info %>% select(RuleType, Constraint, CVConstraint, Variable, P5, P50, P95, Region)
+  if(length(regions) > 1){
+    msy_toUse <- rbind.data.frame(msy_toUse, max_info3)
+  }
+  max_all <- data.frame(msy_toUse) %>% dplyr::filter(Constraint == "Pass")
+  check <- dinfo %>% left_join(max_all %>% dplyr::filter(Variable == "VB")) %>%
     dplyr::mutate(CVConstraint = replace(CVConstraint, RuleType == "FixedCatch", "FixedCatch")) %>%
     dplyr::mutate(CVConstraint = replace(CVConstraint, RuleType == "FixedF", "FixedF")) %>%
     dplyr::filter(CVConstraint != "Min")
@@ -950,7 +1025,7 @@ plot_refpoints <- function(object, object1, figure_dir){
   }
   ggsave(file.path(figure_dir, "VBcurrent.png"), p_vbcurr, height = 10, width = 20)
   
-  check <- dinfo %>% left_join(msy_info %>% filter(Variable == "RelVBnow")) %>%
+  check <- dinfo %>% left_join(max_all %>% filter(Variable == "RelVBnow")) %>%
     dplyr::mutate(CVConstraint = replace(CVConstraint, RuleType == "FixedCatch", "FixedCatch")) %>%
     dplyr::mutate(CVConstraint = replace(CVConstraint, RuleType == "FixedF", "FixedF")) %>%
     dplyr::filter(CVConstraint != "Min")
@@ -977,7 +1052,7 @@ plot_refpoints <- function(object, object1, figure_dir){
   }
   ggsave(file.path(figure_dir, "RelVBcurrent.png"), p_relvbcurr, height = 10, width = 20)
 
-  check <- dinfo %>% left_join(msy_info %>% filter(Variable == "RelTBnow")) %>%
+  check <- dinfo %>% left_join(max_all %>% filter(Variable == "RelTBnow")) %>%
     dplyr::mutate(CVConstraint = replace(CVConstraint, RuleType == "FixedCatch", "FixedCatch")) %>%
     dplyr::mutate(CVConstraint = replace(CVConstraint, RuleType == "FixedF", "FixedF")) %>%
     dplyr::filter(CVConstraint != "Min")
@@ -1008,41 +1083,41 @@ plot_refpoints <- function(object, object1, figure_dir){
   # ## examine variability across filters
   # #######################################
   ## examples from find_max
-  reg <- unique(find_max$Region)
-  find_max_sub <- lapply(1:length(reg), function(x){
-    sub <- find_max %>% filter(Region == reg[x])
-    types <- unique(sub$RuleType)
-    byType <- lapply(1:length(types), function(y){
-      sub2 <- sub %>% filter(RuleType == types[y])
-      if(types[y] != "CPUE-based") con <- unique(sub2$Constraint)
-      if(types[y] == "CPUE-based"){
-        con <- unique(sub2$Constraint)
-        con2 <- unique(sub2$CVConstraint)
-      }
-      byCon <- lapply(1:length(con), function(z){
-        sub3 <- sub2 %>% filter(Constraint == con[z])
-        if(types[y] == "CPUE-based"){
-          byCon2 <- lapply(1:length(con2), function(zz){
-            sub4 <- sub3 %>% filter(CVConstraint == con2[zz])
-            out <- sub4[nrow(sub4),]
-            return(out)
-          })
-            out <- do.call(rbind,byCon2)
-        } else {
-          out <- sub3[nrow(sub3),]
-        }
-        return(out)
-      })
-      byCon <- do.call(rbind, byCon)
-      return(byCon)
-    })
-    byType <- do.call(rbind, byType)
-    return(byType)
-  })
-  find_max_sub <- do.call(rbind, find_max_sub)
+  # reg <- unique(find_max$Region)
+  # find_max_sub <- lapply(1:length(reg), function(x){
+  #   sub <- find_max %>% filter(Region == reg[x])
+  #   types <- unique(sub$RuleType)
+  #   byType <- lapply(1:length(types), function(y){
+  #     sub2 <- sub %>% filter(RuleType == types[y])
+  #     if(types[y] != "CPUE-based") con <- unique(sub2$Constraint)
+  #     if(types[y] == "CPUE-based"){
+  #       con <- unique(sub2$Constraint)
+  #       con2 <- unique(sub2$CVConstraint)
+  #     }
+  #     byCon <- lapply(1:length(con), function(z){
+  #       sub3 <- sub2 %>% filter(Constraint == con[z])
+  #       if(types[y] == "CPUE-based"){
+  #         byCon2 <- lapply(1:length(con2), function(zz){
+  #           sub4 <- sub3 %>% filter(CVConstraint == con2[zz])
+  #           out <- sub4[nrow(sub4),]
+  #           return(out)
+  #         })
+  #           out <- do.call(rbind,byCon2)
+  #       } else {
+  #         out <- sub3[nrow(sub3),]
+  #       }
+  #       return(out)
+  #     })
+  #     byCon <- do.call(rbind, byCon)
+  #     return(byCon)
+  #   })
+  #   byType <- do.call(rbind, byType)
+  #   return(byType)
+  # })
+  # find_max_sub <- do.call(rbind, find_max_sub)
 
   check1 <- cinfo %>%
-    dplyr::right_join(find_max_sub %>% dplyr::select(-P50)) %>%
+    dplyr::right_join(find_max %>% dplyr::select(-P50)) %>%
     dplyr::left_join(max_info %>% filter(Variable == "Catch")) %>%
     dplyr::mutate(RelVB = VB / VB0now) %>%
     dplyr::mutate(RelSSB = SSB / SSB0now) %>%
@@ -1093,7 +1168,7 @@ plot_refpoints <- function(object, object1, figure_dir){
   check1 <- cinfo %>%
     dplyr::mutate(RelVB = VB / VB0now) %>%
     dplyr::mutate(RelSSB = SSB / SSB0now) %>%
-    dplyr::right_join(find_max_sub %>% dplyr::select(-P50)) %>%
+    dplyr::right_join(find_max %>% dplyr::select(-P50)) %>%
     dplyr::left_join(max_info %>% filter(Variable == "Catch")) %>%
     dplyr::select(Iteration, Year, Region, RuleNum, RuleType, Constraint, Catch, RelVB, RelSSB) %>%
     tidyr::pivot_longer(cols = c(Catch,RelVB,RelSSB), names_to = "Variable", values_to = "Value") %>%
@@ -1140,7 +1215,7 @@ plot_refpoints <- function(object, object1, figure_dir){
   }
 
   check1 <- cinfo %>%
-    dplyr::right_join(find_max_sub %>% dplyr::select(-P50)) %>%
+    dplyr::right_join(find_max %>% dplyr::select(-P50)) %>%
     dplyr::left_join(max_info %>% filter(Variable == "Catch")) %>%
     dplyr::select(Iteration, Year, Region, RuleNum, RuleType, Constraint, CVConstraint, Catch, RelVB, RelSSB) %>%
     tidyr::pivot_longer(cols = c(Catch,RelVB,RelSSB), names_to = "Variable", values_to = "Value") %>%

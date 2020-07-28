@@ -606,7 +606,7 @@ plot_refpoints <- function(object, object1, figure_dir){
       dplyr::mutate(RelSSB = SSB / SSB0) %>%
       dplyr::mutate(RelTB = TB / TB0) %>%
       tidyr::drop_na()  %>%
-      tidyr::pivot_longer(cols = c(Catch, VB, SSB, TB, VB0now, SSB0now, TB0now, VB0, SSB0, TB0, RelVBnow, RelSSBnow, RelTBnow), names_to = "Variable", values_to = "Value") %>%
+      tidyr::pivot_longer(cols = c(Catch, VB, SSB, TB, VB0now, SSB0now, TB0now, VB0, SSB0, TB0, RelVBnow, RelSSBnow, RelTBnow, RelVB, RelSSB, RelTB), names_to = "Variable", values_to = "Value") %>%
       dplyr::group_by(RuleType, Constraint, CVConstraint, Variable) %>%
       dplyr::summarise(P5 = quantile(Value, 0.05),
                        P50 = quantile(Value, 0.5),

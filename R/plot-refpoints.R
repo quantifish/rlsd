@@ -662,6 +662,12 @@ plot_refpoints <- function(object, object1, figure_dir){
     dplyr::summarise(P_below_ref = length(which(Current >= Mean))/length(Current))
   write.csv(curr, file.path(figure_dir, "P_above_ref.csv"))
 
+  msy_toUse <- max_info %>% select(RuleType, Constraint, CVConstraint, Variable, P5, P50, P95, Region)
+  if(length(regions) > 1){
+    msy_toUse <- rbind.data.frame(msy_toUse, max_info3)
+  }
+  max_all <- data.frame(msy_toUse) %>% dplyr::filter(Constraint == "Pass")
+  
   
   # msy_info2 <- msy_info %>% 
   #   dplyr::select(-c(P5,P95)) %>%
@@ -718,8 +724,8 @@ plot_refpoints <- function(object, object1, figure_dir){
       scale_color_tableau() +
       guides(color = guide_legend(title="Rule type")) +
       expand_limits(y = 0) +
-      theme_bw(base_size = 20) +
-      theme(axis.text.x = element_blank())
+      theme_bw(base_size = 20) #+
+      # theme(axis.text.x = element_blank())
     if(length(regions) > 1){
       p_f_cpue <- p_f_cpue + facet_wrap(Region~Variable, scales = "free_y", ncol = 4) 
     } else {
@@ -757,14 +763,14 @@ plot_refpoints <- function(object, object1, figure_dir){
       scale_fill_tableau() +
       guides(color = FALSE, fill = FALSE) +
       expand_limits(y = 0) +
-      theme_bw(base_size = 20) +
-      theme(axis.text.x = element_blank())
+      theme_bw(base_size = 20) #+
+      # theme(axis.text.x = element_blank())
     if(length(regions) > 1){
       p_f_cpue_v2 <- p_f_cpue_v2 + facet_grid(Variable~CVConstraint+Region, scales = "free_y")
     } else {
       p_f_cpue_v2 <- p_f_cpue_v2 + facet_grid(Variable~CVConstraint, scales = "free_y")
     }
-  ggsave(file.path(figure_dir, "F_CPUE_Catch_VB_intervals.png"), p_f_cpue_v2, height = 8, width = 20)
+  ggsave(file.path(figure_dir, "F_CPUE_Catch_VB_intervals.png"), p_f_cpue_v2, height = 8, width = 15)
   
 # #   ## plots of rules over time
 #   info2 <- info %>%
@@ -864,7 +870,7 @@ plot_refpoints <- function(object, object1, figure_dir){
   }
   ggsave(file.path(figure_dir, "RelVB_vs_Catch_byConstraint.png"), p_relvb, height = 8, width = 20)
   
-  output5$RuleType <- factor(output5$RuleType, levels = levels(output4$RuleType))
+  # output5$RuleType <- factor(output5$RuleType, levels = levels(output5$RuleType))
   p_relvb_v2 <- p_relvb +
     geom_vline(data = output5, aes(xintercept = RelVB_P50), linetype = 2, lwd = 1.5) +
     geom_hline(data = output5, aes(yintercept = Catch_P50), linetype = 2, lwd = 1.5)
@@ -886,7 +892,7 @@ plot_refpoints <- function(object, object1, figure_dir){
   } 
   ggsave(file.path(figure_dir, "VB_vs_Catch_byConstraint.png"), p_vb, height = 8, width = 20)
   
-  output5$RuleType <- factor(output5$RuleType, levels = levels(output4$RuleType))
+  # output5$RuleType <- factor(output5$RuleType, levels = levels(output4$RuleType))
   p_vb_v2 <- p_vb +
     geom_vline(data = output5, aes(xintercept = VB_P50), linetype = 2, lwd = 1.5) +
     geom_hline(data = output5, aes(yintercept = Catch_P50), linetype = 2, lwd = 1.5)
@@ -909,7 +915,7 @@ plot_refpoints <- function(object, object1, figure_dir){
   }
   ggsave(file.path(figure_dir, "RelTB_vs_Catch_byConstraint.png"), p_reltb, height = 8, width = 20)
   
-  output5$RuleType <- factor(output5$RuleType, levels = levels(output4$RuleType))
+  # output5$RuleType <- factor(output5$RuleType, levels = levels(output5$RuleType))
   p_reltb_v2 <- p_reltb +
     geom_vline(data = output5, aes(xintercept = RelTB_P50), linetype = 2, lwd = 1.5) +
     geom_hline(data = output5, aes(yintercept = Catch_P50), linetype = 2, lwd = 1.5)
@@ -931,7 +937,7 @@ plot_refpoints <- function(object, object1, figure_dir){
   } 
   ggsave(file.path(figure_dir, "TB_vs_Catch_byConstraint.png"), p_tb, height = 8, width = 20)
   
-  output5$RuleType <- factor(output5$RuleType, levels = levels(output4$RuleType))
+  # output5$RuleType <- factor(output5$RuleType, levels = levels(output4$RuleType))
   p_tb_v2 <- p_tb +
     geom_vline(data = output5, aes(xintercept = TB_P50), linetype = 2, lwd = 1.5) +
     geom_hline(data = output5, aes(yintercept = Catch_P50), linetype = 2, lwd = 1.5)
@@ -993,11 +999,8 @@ plot_refpoints <- function(object, object1, figure_dir){
   ###################################################
   ## Status relative to reference level by rule type
   ###################################################
-  msy_toUse <- max_info %>% select(RuleType, Constraint, CVConstraint, Variable, P5, P50, P95, Region)
-  if(length(regions) > 1){
-    msy_toUse <- rbind.data.frame(msy_toUse, max_info3)
-  }
-  max_all <- data.frame(msy_toUse) %>% dplyr::filter(Constraint == "Pass")
+
+  
   check <- dinfo %>% left_join(max_all %>% dplyr::filter(Variable == "VB")) %>%
     dplyr::mutate(CVConstraint = replace(CVConstraint, RuleType == "FixedCatch", "FixedCatch")) %>%
     dplyr::mutate(CVConstraint = replace(CVConstraint, RuleType == "FixedF", "FixedF")) %>%
@@ -1034,11 +1037,11 @@ plot_refpoints <- function(object, object1, figure_dir){
     dplyr::mutate(RuleType = "Average") %>% 
     dplyr::mutate(CVConstraint = 0)
   check_avg$CVConstraint <- factor(check_avg$CVConstraint)
-  max_all <- data.frame(msy_toUse) %>% dplyr::filter(Constraint == "Pass") %>%
+  max_sub <- max_all %>%
     dplyr::select(-Constraint) %>%
     dplyr::filter(Variable == "VB") %>%
     dplyr::full_join(check_avg)
-  check <- dinfo %>% left_join(max_all %>% dplyr::filter(Variable == "VB")) %>%
+  check <- dinfo %>% left_join(max_sub) %>%
     dplyr::filter(RuleType %in% c("FixedCatch", "FixedF", "Average"))
   check$RuleType <- factor(check$RuleType, levels = c("FixedCatch", "Average", "FixedF"))
   p_vbcurr <- ggplot(check) +
@@ -1063,8 +1066,9 @@ plot_refpoints <- function(object, object1, figure_dir){
   }
   ggsave(file.path(figure_dir, "VBcurrent_AVG.png"), p_vbcurr, height = 10, width = 20)
   
+  gc()
   
-  check <- dinfo %>% left_join(max_all %>% filter(Variable == "RelVBnow")) %>%
+  check <- dinfo %>% left_join(max_all %>% dplyr::filter(Variable == "RelVBnow")) %>%
     dplyr::mutate(CVConstraint = replace(CVConstraint, RuleType == "FixedCatch", "FixedCatch")) %>%
     dplyr::mutate(CVConstraint = replace(CVConstraint, RuleType == "FixedF", "FixedF")) %>%
     dplyr::filter(CVConstraint != "Min")
@@ -1091,13 +1095,51 @@ plot_refpoints <- function(object, object1, figure_dir){
   }
   ggsave(file.path(figure_dir, "RelVBcurrent.png"), p_relvbcurr, height = 10, width = 20)
 
-  check <- dinfo %>% left_join(max_all %>% filter(Variable == "RelTBnow")) %>%
+  check_avg <- average_sum %>%
+    dplyr::select(Region, Variable, P5, Mean, P95) %>%
+    dplyr::filter(Variable == "RelVBnow") %>%
+    dplyr::rename(P50 = Mean) %>%
+    dplyr::mutate(RuleType = "Average") %>% 
+    dplyr::mutate(CVConstraint = 0)
+  check_avg$CVConstraint <- factor(check_avg$CVConstraint)
+  max_sub <- max_all %>%
+    dplyr::select(-Constraint) %>%
+    dplyr::filter(Variable == "RelVBnow") %>%
+    dplyr::full_join(check_avg)
+  check <- dinfo %>% left_join(max_sub) %>%
+    dplyr::filter(RuleType %in% c("FixedCatch", "FixedF", "Average"))
+  check$RuleType <- factor(check$RuleType, levels = c("FixedCatch", "Average", "FixedF"))
+  p_relvbcurr <- ggplot(check) +
+    geom_ribbon(aes(x = Year, ymin = P5, ymax = P95, fill = RuleType), alpha = 0.5) +
+    geom_hline(aes(yintercept = P50, color =RuleType), lwd = 1.2) +
+    # geom_line(aes(x = Year, y = VB), lwd = 1.2) +
+    stat_summary(aes(x = Year, y = RelVBnow), fun.min = function(x) stats::quantile(x, 0.05), fun.max = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25) +
+    stat_summary(aes(x = Year, y = RelVBnow), fun = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1.2) +
+    expand_limits(y = 0) +
+    # scale_fill_brewer(palette = "Spectral") +
+    # scale_color_brewer(palette = "Spectral") +
+    scale_fill_tableau() +
+    scale_color_tableau() +
+    ylab("Relative vulnerable biomass (VB/VB0now)") +
+    guides(color = FALSE, fill = FALSE) +
+    coord_cartesian(xlim = c(min(check$Year),max(check$Year)), expand = FALSE) +
+    theme_bw(base_size = 20)
+  if(length(regions) > 1){
+    p_relvbcurr <- p_relvbcurr + facet_grid(Region~RuleType, scales = "free_y")
+  } else {
+    p_relvbcurr <- p_relvbcurr + facet_grid(~RuleType, scales = "free_y")
+  }
+  ggsave(file.path(figure_dir, "RelVBcurrent_AVG.png"), p_relvbcurr, height = 10, width = 20)
+  
+  gc()
+  
+  check <- dinfo %>% left_join(max_all %>% dplyr::filter(Variable == "RelTBnow")) %>%
     dplyr::mutate(CVConstraint = replace(CVConstraint, RuleType == "FixedCatch", "FixedCatch")) %>%
     dplyr::mutate(CVConstraint = replace(CVConstraint, RuleType == "FixedF", "FixedF")) %>%
     dplyr::filter(CVConstraint != "Min")
   if(length(unique(check$RuleType))==3) check$RuleType <- factor(check$RuleType, levels = c("FixedCatch", "CPUE-based", "FixedF"))
   check$CVConstraint <- factor(check$CVConstraint, levels = c("FixedCatch", "25%", "Median", "75%", "Max", "FixedF"))
-  p_relvbcurr <- ggplot(check) +
+  p_reltbcurr <- ggplot(check) +
     geom_ribbon(aes(x = Year, ymin = P5, ymax = P95, fill = CVConstraint), alpha = 0.5) +
     geom_hline(aes(yintercept = P50, color = CVConstraint), lwd = 1.2) +
     stat_summary(aes(x = Year, y = RelTBnow), fun.min = function(x) stats::quantile(x, 0.05), fun.max = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25) +
@@ -1112,11 +1154,47 @@ plot_refpoints <- function(object, object1, figure_dir){
     coord_cartesian(xlim = c(min(check$Year),max(check$Year)), expand = FALSE) +
     theme_bw(base_size = 20)
   if(length(regions) > 1){
-    p_relvbcurr <- p_relvbcurr + facet_grid(Region~CVConstraint)
+    p_reltbcurr <- p_reltbcurr + facet_grid(Region~CVConstraint)
   } else {
-    p_relvbcurr <- p_relvbcurr + facet_grid(~CVConstraint)
+    p_reltbcurr <- p_reltbcurr + facet_grid(~CVConstraint)
   }
-  ggsave(file.path(figure_dir, "RelTBcurrent.png"), p_relvbcurr, height = 10, width = 20)
+  ggsave(file.path(figure_dir, "RelTBcurrent.png"), p_reltbcurr, height = 10, width = 20)
+  
+  check_avg <- average_sum %>%
+    dplyr::select(Region, Variable, P5, Mean, P95) %>%
+    dplyr::filter(Variable == "RelTBnow") %>%
+    dplyr::rename(P50 = Mean) %>%
+    dplyr::mutate(RuleType = "Average") %>% 
+    dplyr::mutate(CVConstraint = 0)
+  check_avg$CVConstraint <- factor(check_avg$CVConstraint)
+  max_sub <- max_all %>%
+    dplyr::select(-Constraint) %>%
+    dplyr::filter(Variable == "RelTBnow") %>%
+    dplyr::full_join(check_avg)
+  check <- dinfo %>% left_join(max_sub) %>%
+    dplyr::filter(RuleType %in% c("FixedCatch", "FixedF", "Average"))
+  check$RuleType <- factor(check$RuleType, levels = c("FixedCatch", "Average", "FixedF"))
+  p_reltbcurr <- ggplot(check) +
+    geom_ribbon(aes(x = Year, ymin = P5, ymax = P95, fill = RuleType), alpha = 0.5) +
+    geom_hline(aes(yintercept = P50, color =RuleType), lwd = 1.2) +
+    # geom_line(aes(x = Year, y = VB), lwd = 1.2) +
+    stat_summary(aes(x = Year, y = RelTBnow), fun.min = function(x) stats::quantile(x, 0.05), fun.max = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25) +
+    stat_summary(aes(x = Year, y = RelTBnow), fun = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1.2) +
+    expand_limits(y = 0) +
+    # scale_fill_brewer(palette = "Spectral") +
+    # scale_color_brewer(palette = "Spectral") +
+    scale_fill_tableau() +
+    scale_color_tableau() +
+    ylab("Relative total biomass (TB/TB0now)") +
+    guides(color = FALSE, fill = FALSE) +
+    coord_cartesian(xlim = c(min(check$Year),max(check$Year)), expand = FALSE) +
+    theme_bw(base_size = 20)
+  if(length(regions) > 1){
+    p_reltbcurr <- p_reltbcurr + facet_grid(Region~RuleType, scales = "free_y")
+  } else {
+    p_reltbcurr <- p_reltbcurr + facet_grid(~RuleType, scales = "free_y")
+  }
+  ggsave(file.path(figure_dir, "RelTBcurrent_AVG.png"), p_reltbcurr, height = 10, width = 20)
   
   # #######################################
   # ## examine variability across filters
@@ -1507,6 +1585,7 @@ plot_refpoints <- function(object, object1, figure_dir){
   # constx <- c(const1,const2)
   # const <- c(constx, const[which(const %in% constx == FALSE)])
   #   sub$Constraint <- factor(sub$Constraint, levels = const)
+  if(nrow(sub)>0){
     msy <- unique(msy_info %>% filter(RuleType == "CPUE-based") %>% dplyr::select(par1:par10,CVConstraint)) %>% mutate(Constraint = "Pass")
     msy <- msy %>% filter(Region != "Total")
     msy$CVConstraint <- factor(msy$CVConstraint, levels = c("Max", "75%", "Median", "25%", "Min"))
@@ -1542,6 +1621,6 @@ plot_refpoints <- function(object, object1, figure_dir){
       p_rule <- p_rule + facet_wrap(Constraint~par5)
     }
     ggsave(file.path(figure_dir, "CPUE_rules.png"), p_rule, height = 15, width = 17)
-    
+  }
   
 }

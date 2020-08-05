@@ -193,6 +193,7 @@ plot_refpoints <- function(object, object1, figure_dir){
     dplyr::group_by(Region, Variable) %>%
     dplyr::summarise(P5 = quantile(Value, 0.05),
                      P50 = quantile(Value, 0.5),
+                     Mean = mean(Value),
                      P95 = quantile(Value, 0.95))
 
   write.csv(status_check, file.path(figure_dir, "Current_status_check.csv"))
@@ -473,6 +474,7 @@ plot_refpoints <- function(object, object1, figure_dir){
       dplyr::group_by(Region, RuleNum, Variable) %>%
       dplyr::summarise(P5 = quantile(Value, 0.05),
                        P50 = quantile(Value, 0.5),
+                       Mean = mean(Value),
                        P95 = quantile(Value, 0.95))
     
     output <- full_join(constraints, summary)
@@ -494,9 +496,11 @@ plot_refpoints <- function(object, object1, figure_dir){
     find_max1 <- output2 %>%
       dplyr::filter(Variable == "Catch") %>%
       dplyr::group_by(Region, RuleType, RuleNum, Constraint) %>%
-      dplyr::summarise(P50 = sum(P50)) %>%
+      dplyr::summarise(P50 = sum(P50),
+                       Mean = sum(Mean)) %>%
       dplyr::group_by(Region, RuleType, Constraint) %>%
-      dplyr::filter(P50 == max(P50))  
+      # dplyr::filter(P50 == max(P50))  
+      dplyr::filter(Mean == max(Mean))
     
     find_msy1 <- find_max1 %>% filter(Constraint == "Pass")
 
@@ -528,9 +532,11 @@ plot_refpoints <- function(object, object1, figure_dir){
   find_max <- output2 %>%
     dplyr::filter(Variable == "Catch") %>%
     dplyr::group_by(Region, RuleType, RuleNum, Constraint, CVConstraint) %>%
-    dplyr::summarise(P50 = sum(P50)) %>%
+    dplyr::summarise(P50 = sum(P50),
+                     Mean = sum(Mean)) %>%
     dplyr::group_by(Region, RuleType, Constraint, CVConstraint) %>%
-    dplyr::filter(P50 == max(P50))
+    # dplyr::filter(P50 == max(P50))
+    dplyr::filter(Mean == max(Mean))
 
   ## examples from find_max
   reg <- unique(find_max$Region)
@@ -572,7 +578,7 @@ plot_refpoints <- function(object, object1, figure_dir){
   find_max <- do.call(rbind, find_max_sub)
   
   ## remove duplicates of MSY --- choose rule with higher average total catch
-  max_info <- output2 %>% right_join(find_max %>% dplyr::select(-P50))
+  max_info <- output2 %>% right_join(find_max %>% dplyr::select(-c(P50,Mean)))
   write.csv(max_info, file.path(figure_dir, "MAX_info.csv"))
 
   if(length(regions) > 1){
@@ -603,6 +609,7 @@ plot_refpoints <- function(object, object1, figure_dir){
       dplyr::group_by(RuleType, Constraint, CVConstraint, Variable) %>%
       dplyr::summarise(P5 = quantile(Value, 0.05),
                        P50 = quantile(Value, 0.5),
+                       Mean = mean(Value),
                        P95 = quantile(Value, 0.95)) %>%
       dplyr::mutate(Region = "Total")
     write.csv(max_info3, file.path(figure_dir, "MAX_info_total.csv"))
@@ -639,11 +646,11 @@ plot_refpoints <- function(object, object1, figure_dir){
   })
   find_msy <- do.call(rbind, check)
   
-  msy_info <- output2 %>% right_join(find_msy %>% dplyr::select(-P50))
+  msy_info <- output2 %>% right_join(find_msy %>% dplyr::select(-c(P50,Mean)))
   write.csv(msy_info, file.path(figure_dir, "MSY_info.csv"))
 
   average_info <- cinfo %>%
-    dplyr::right_join(find_msy %>% dplyr::select(-P50)) %>%
+    dplyr::right_join(find_msy %>% dplyr::select(-c(P50,Mean))) %>%
     dplyr::filter(RuleType %in% c("FixedCatch", "FixedF")) %>%
     # tidyr::pivot_longer(cols = c(Catch,VB,TB,SSB,SSB0now, TB0now, VB0now, RelSSBnow, RelTBnow, RelVBnow), names_to = "Variable", values_to = "Value") %>%
     dplyr::select(Iteration, Year, Region, RuleType, Catch, SSB, VB, TB, RelSSBnow, RelTBnow, RelVBnow)
@@ -700,7 +707,7 @@ plot_refpoints <- function(object, object1, figure_dir){
                      P_below_med = length(which(Current >= P50))/length(Current))
   write.csv(curr, file.path(figure_dir, "P_above_ref.csv"))
 
-  msy_toUse <- max_info %>% select(RuleType, Constraint, CVConstraint, Variable, P5, P50, P95, Region)
+  msy_toUse <- max_info %>% select(RuleType, Constraint, CVConstraint, Variable, P5, P50, Mean, P95, Region)
   if(length(regions) > 1){
     msy_toUse <- rbind.data.frame(msy_toUse, max_info3)
   }
@@ -735,7 +742,7 @@ plot_refpoints <- function(object, object1, figure_dir){
   const <- c(constx, const[which(const %in% constx == FALSE)])
   output4$Constraint <- factor(output4$Constraint, levels = const)
 
-  output5 <- output4 %>% right_join(find_msy %>% dplyr::select(-P50))
+  output5 <- output4 %>% right_join(find_msy %>% dplyr::select(-c(P50,Mean)))
   
   ###############################
   ## all rules tested, compared
@@ -745,7 +752,7 @@ plot_refpoints <- function(object, object1, figure_dir){
     check <- cinfo %>%
       dplyr::select(Iteration, Year, Region, RuleNum, Catch, CPUE, F, VB) %>%
       tidyr::pivot_longer(cols = c(Catch, CPUE, F, VB), names_to = "Variable", values_to = "Value") %>%
-      dplyr::right_join(max_info %>% filter(Constraint == "Pass") %>% dplyr::select(-P50)) %>%
+      dplyr::right_join(max_info %>% filter(Constraint == "Pass") %>% dplyr::select(-c(P50,Mean))) %>%
       dplyr::filter(Variable %in% c("Catch", "CPUE", "F", "VB")) %>%
       dplyr::filter(Region != "Total")  %>%
       dplyr::mutate(CVConstraint = replace(CVConstraint, RuleType == "FixedF", "FixedF")) %>%
@@ -774,14 +781,14 @@ plot_refpoints <- function(object, object1, figure_dir){
     check <- cinfo %>%
       dplyr::select(Iteration, Year, Region, RuleNum, Catch, CPUE, F, VB) %>%
       tidyr::pivot_longer(cols = c(Catch, CPUE, F, VB), names_to = "Variable", values_to = "Value") %>%
-      dplyr::right_join(msy_info %>% dplyr::select(-P50)) %>%
+      dplyr::right_join(msy_info %>% dplyr::select(-c(P50,Mean))) %>%
       dplyr::filter(Variable %in% c("Catch", "CPUE", "F", "VB")) %>%
       dplyr::filter(Region != "Total") %>%
       dplyr::mutate(CVConstraint = replace(CVConstraint, RuleType == "FixedF", "FixedF")) %>%
       dplyr::mutate(CVConstraint = replace(CVConstraint, RuleType == "FixedCatch", "FixedCatch")) %>%
       dplyr::filter(CVConstraint != "Min")
     check2 <- output2 %>%
-      dplyr::right_join(msy_info %>% dplyr::select(-P50)) %>%
+      dplyr::right_join(msy_info %>% dplyr::select(-c(P50,Mean))) %>%
       dplyr::filter(Variable %in% c("Catch", "CPUE", "F", "VB")) %>%
       dplyr::filter(Region != "Total") %>%
       dplyr::mutate(CVConstraint = replace(CVConstraint, RuleType == "FixedF", "FixedF")) %>%
@@ -794,7 +801,8 @@ plot_refpoints <- function(object, object1, figure_dir){
       stat_summary(aes(x = Year, y = Value, fill = CVConstraint), fun.min = function(x) stats::quantile(x, 0.05), fun.max = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25) +
       stat_summary(aes(x = Year, y = Value, fill = CVConstraint), fun.min = function(x) stats::quantile(x, 0.25), fun.max = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5) +
       stat_summary(aes(x = Year, y = Value, color = CVConstraint), fun = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1.5) +
-      geom_hline(data = check2, aes(yintercept = P50), lty = 2, lwd = 1.2) +
+      # geom_hline(data = check2, aes(yintercept = P50), lty = 2, lwd = 1.2) +
+      geom_hline(data = check2, aes(yintercept = Mean), lty = 2, lwd = 1.2) +
       # scale_color_brewer(palette = "Spectral") +
       # scale_fill_brewer(palette = "Spectral") +
       scale_color_tableau() +
@@ -863,7 +871,8 @@ plot_refpoints <- function(object, object1, figure_dir){
 
   p_cv <- ggplot(output4) +
     geom_segment(aes(x = CV, xend = CV, y = Catch_P5, yend = Catch_P95, color = Constraint), lwd = 1.2, alpha = 0.8) +
-    geom_point(aes(x = CV, y = Catch_P50, fill = Constraint), pch = 21, cex = 4) +
+    # geom_point(aes(x = CV, y = Catch_P50, fill = Constraint), pch = 21, cex = 4) +
+    geom_point(aes(x = CV, y = Catch_Mean, fill = Constraint), pch = 21, cex = 4) +
     expand_limits(y = 0, x = 0) +
     xlab("CV of catch over time and iteration") + ylab("Average annual catch") +
     scale_fill_colorblind() +
@@ -877,9 +886,12 @@ plot_refpoints <- function(object, object1, figure_dir){
   ggsave(file.path(figure_dir, "CV_vs_Catch.png"), p_cv, height = 8, width = 20)
 
   p_relssb <- ggplot(output4) +
-    geom_segment(aes(x = RelSSB_P5, xend = RelSSB_P95, y = Catch_P50, yend = Catch_P50, color = Constraint), lwd = 1.2, alpha = 0.8) +
-    geom_segment(aes(x = RelSSB_P50, xend = RelSSB_P50, y = Catch_P5, yend = Catch_P95, color = Constraint), lwd = 1.2, alpha = 0.8) +
-    geom_point(aes(x = RelSSB_P50, y = Catch_P50, fill = Constraint), pch = 21, cex = 4) +
+    # geom_segment(aes(x = RelSSB_P5, xend = RelSSB_P95, y = Catch_P50, yend = Catch_P50, color = Constraint), lwd = 1.2, alpha = 0.8) +
+    # geom_segment(aes(x = RelSSB_P50, xend = RelSSB_P50, y = Catch_P5, yend = Catch_P95, color = Constraint), lwd = 1.2, alpha = 0.8) +
+    # geom_point(aes(x = RelSSB_P50, y = Catch_P50, fill = Constraint), pch = 21, cex = 4) +
+    geom_segment(aes(x = RelSSB_P5, xend = RelSSB_P95, y = Catch_Mean, yend = Catch_Mean, color = Constraint), lwd = 1.2, alpha = 0.8) +
+    geom_segment(aes(x = RelSSB_Mean, xend = RelSSB_Mean, y = Catch_P5, yend = Catch_P95, color = Constraint), lwd = 1.2, alpha = 0.8) +
+    geom_point(aes(x = RelSSB_Mean, y = Catch_Mean, fill = Constraint), pch = 21, cex = 4) +
     expand_limits(y = 0, x = 0) +
     xlab("Relative spawning biomass (SSB/SSB0now)") + ylab("Average annual catch") +
     scale_fill_colorblind() +
@@ -893,9 +905,12 @@ plot_refpoints <- function(object, object1, figure_dir){
   ggsave(file.path(figure_dir, "RelSSB_vs_Catch_byConstraint.png"), p_relssb, height = 8, width = 20)
   
   p_relvb <- ggplot(output4) +
-    geom_segment(aes(x = RelVB_P5, xend = RelVB_P95, y = Catch_P50, yend = Catch_P50, color = Constraint), lwd = 1.2, alpha = 0.8) +
-    geom_segment(aes(x = RelVB_P50, xend = RelVB_P50, y = Catch_P5, yend = Catch_P95, color = Constraint), lwd = 1.2, alpha = 0.8) +
-    geom_point(aes(x = RelVB_P50, y = Catch_P50, fill = Constraint), pch = 21, cex = 3) +
+    # geom_segment(aes(x = RelVB_P5, xend = RelVB_P95, y = Catch_P50, yend = Catch_P50, color = Constraint), lwd = 1.2, alpha = 0.8) +
+    # geom_segment(aes(x = RelVB_P50, xend = RelVB_P50, y = Catch_P5, yend = Catch_P95, color = Constraint), lwd = 1.2, alpha = 0.8) +
+    # geom_point(aes(x = RelVB_P50, y = Catch_P50, fill = Constraint), pch = 21, cex = 3) +
+    geom_segment(aes(x = RelVB_P5, xend = RelVB_P95, y = Catch_Mean, yend = Catch_Mean, color = Constraint), lwd = 1.2, alpha = 0.8) +
+    geom_segment(aes(x = RelVB_Mean, xend = RelVB_Mean, y = Catch_P5, yend = Catch_P95, color = Constraint), lwd = 1.2, alpha = 0.8) +
+    geom_point(aes(x = RelVB_Mean, y = Catch_Mean, fill = Constraint), pch = 21, cex = 3) +
     expand_limits(y = 0, x = 0) +
     xlab("Relative vulnerable biomass (VB/VB0now)") + ylab("Average annual catch") +
     scale_fill_colorblind() +
@@ -910,14 +925,19 @@ plot_refpoints <- function(object, object1, figure_dir){
   
   # output5$RuleType <- factor(output5$RuleType, levels = levels(output5$RuleType))
   p_relvb_v2 <- p_relvb +
-    geom_vline(data = output5, aes(xintercept = RelVB_P50), linetype = 2, lwd = 1.5) +
-    geom_hline(data = output5, aes(yintercept = Catch_P50), linetype = 2, lwd = 1.5)
+    # geom_vline(data = output5, aes(xintercept = RelVB_P50), linetype = 2, lwd = 1.5) +
+    # geom_hline(data = output5, aes(yintercept = Catch_P50), linetype = 2, lwd = 1.5)
+    geom_vline(data = output5, aes(xintercept = RelVB_Mean), linetype = 2, lwd = 1.5) +
+    geom_hline(data = output5, aes(yintercept = Catch_Mean), linetype = 2, lwd = 1.5)
   ggsave(file.path(figure_dir, "RelVB_vs_Catch_byConstraint_wTarget.png"), p_relvb_v2, height = 8, width = 20)
   
   p_vb <- ggplot(output4) +
-    geom_segment(aes(x = VB_P5, xend = VB_P95, y = Catch_P50, yend = Catch_P50, color = Constraint), lwd = 1.2, alpha = 0.8) +
-    geom_segment(aes(x = VB_P50, xend = VB_P50, y = Catch_P5, yend = Catch_P95, color = Constraint), lwd = 1.2, alpha = 0.8) +
-    geom_point(aes(x = VB_P50, y = Catch_P50, fill = Constraint), pch = 21, cex = 3) +
+    # geom_segment(aes(x = VB_P5, xend = VB_P95, y = Catch_P50, yend = Catch_P50, color = Constraint), lwd = 1.2, alpha = 0.8) +
+    # geom_segment(aes(x = VB_P50, xend = VB_P50, y = Catch_P5, yend = Catch_P95, color = Constraint), lwd = 1.2, alpha = 0.8) +
+    # geom_point(aes(x = VB_P50, y = Catch_P50, fill = Constraint), pch = 21, cex = 3) +
+    geom_segment(aes(x = VB_P5, xend = VB_P95, y = Catch_Mean, yend = Catch_Mean, color = Constraint), lwd = 1.2, alpha = 0.8) +
+    geom_segment(aes(x = VB_Mean, xend = VB_Mean, y = Catch_P5, yend = Catch_P95, color = Constraint), lwd = 1.2, alpha = 0.8) +
+    geom_point(aes(x = VB_Mean, y = Catch_Mean, fill = Constraint), pch = 21, cex = 3) +
     expand_limits(y = 0, x = 0) +
     xlab("Vulnerable biomass") + ylab("Average annual catch") +
     scale_fill_colorblind() +
@@ -932,15 +952,20 @@ plot_refpoints <- function(object, object1, figure_dir){
   
   # output5$RuleType <- factor(output5$RuleType, levels = levels(output4$RuleType))
   p_vb_v2 <- p_vb +
-    geom_vline(data = output5, aes(xintercept = VB_P50), linetype = 2, lwd = 1.5) +
-    geom_hline(data = output5, aes(yintercept = Catch_P50), linetype = 2, lwd = 1.5)
+    # geom_vline(data = output5, aes(xintercept = VB_P50), linetype = 2, lwd = 1.5) +
+    # geom_hline(data = output5, aes(yintercept = Catch_P50), linetype = 2, lwd = 1.5)
+    geom_vline(data = output5, aes(xintercept = VB_Mean), linetype = 2, lwd = 1.5) +
+    geom_hline(data = output5, aes(yintercept = Catch_Mean), linetype = 2, lwd = 1.5)
   ggsave(file.path(figure_dir, "VB_vs_Catch_byConstraint_wTarget.png"), p_vb_v2, height = 8, width = 20)
   
 
   p_reltb <- ggplot(output4) +
-    geom_segment(aes(x = RelTB_P5, xend = RelTB_P95, y = Catch_P50, yend = Catch_P50, color = Constraint), lwd = 1.2, alpha = 0.8) +
-    geom_segment(aes(x = RelTB_P50, xend = RelTB_P50, y = Catch_P5, yend = Catch_P95, color = Constraint), lwd = 1.2, alpha = 0.8) +
-    geom_point(aes(x = RelTB_P50, y = Catch_P50, fill = Constraint), pch = 21, cex = 3) +
+    # geom_segment(aes(x = RelTB_P5, xend = RelTB_P95, y = Catch_P50, yend = Catch_P50, color = Constraint), lwd = 1.2, alpha = 0.8) +
+    # geom_segment(aes(x = RelTB_P50, xend = RelTB_P50, y = Catch_P5, yend = Catch_P95, color = Constraint), lwd = 1.2, alpha = 0.8) +
+    # geom_point(aes(x = RelTB_P50, y = Catch_P50, fill = Constraint), pch = 21, cex = 3) +
+    geom_segment(aes(x = RelTB_P5, xend = RelTB_P95, y = Catch_Mean, yend = Catch_Mean, color = Constraint), lwd = 1.2, alpha = 0.8) +
+    geom_segment(aes(x = RelTB_Mean, xend = RelTB_Mean, y = Catch_P5, yend = Catch_P95, color = Constraint), lwd = 1.2, alpha = 0.8) +
+    geom_point(aes(x = RelTB_Mean, y = Catch_Mean, fill = Constraint), pch = 21, cex = 3) +
     expand_limits(y = 0, x = 0) +
     xlab("Relative total biomass (TB/TB0now)") + ylab("Average annual catch") +
     scale_fill_colorblind() +
@@ -955,14 +980,19 @@ plot_refpoints <- function(object, object1, figure_dir){
   
   # output5$RuleType <- factor(output5$RuleType, levels = levels(output5$RuleType))
   p_reltb_v2 <- p_reltb +
-    geom_vline(data = output5, aes(xintercept = RelTB_P50), linetype = 2, lwd = 1.5) +
-    geom_hline(data = output5, aes(yintercept = Catch_P50), linetype = 2, lwd = 1.5)
+    # geom_vline(data = output5, aes(xintercept = RelTB_P50), linetype = 2, lwd = 1.5) +
+    # geom_hline(data = output5, aes(yintercept = Catch_P50), linetype = 2, lwd = 1.5)
+    geom_vline(data = output5, aes(xintercept = RelTB_Mean), linetype = 2, lwd = 1.5) +
+    geom_hline(data = output5, aes(yintercept = Catch_Mean), linetype = 2, lwd = 1.5)
   ggsave(file.path(figure_dir, "RelTB_vs_Catch_byConstraint_wTarget.png"), p_reltb_v2, height = 8, width = 20)
   
   p_tb <- ggplot(output4) +
-    geom_segment(aes(x = TB_P5, xend = TB_P95, y = Catch_P50, yend = Catch_P50, color = Constraint), lwd = 1.2, alpha = 0.8) +
-    geom_segment(aes(x = TB_P50, xend = TB_P50, y = Catch_P5, yend = Catch_P95, color = Constraint), lwd = 1.2, alpha = 0.8) +
-    geom_point(aes(x = TB_P50, y = Catch_P50, fill = Constraint), pch = 21, cex = 3) +
+    # geom_segment(aes(x = TB_P5, xend = TB_P95, y = Catch_P50, yend = Catch_P50, color = Constraint), lwd = 1.2, alpha = 0.8) +
+    # geom_segment(aes(x = TB_P50, xend = TB_P50, y = Catch_P5, yend = Catch_P95, color = Constraint), lwd = 1.2, alpha = 0.8) +
+    # geom_point(aes(x = TB_P50, y = Catch_P50, fill = Constraint), pch = 21, cex = 3) +
+    geom_segment(aes(x = TB_P5, xend = TB_P95, y = Catch_Mean, yend = Catch_Mean, color = Constraint), lwd = 1.2, alpha = 0.8) +
+    geom_segment(aes(x = TB_Mean, xend = TB_Mean, y = Catch_P5, yend = Catch_P95, color = Constraint), lwd = 1.2, alpha = 0.8) +
+    geom_point(aes(x = TB_Mean, y = Catch_Mean, fill = Constraint), pch = 21, cex = 3) +
     expand_limits(y = 0, x = 0) +
     xlab("Total biomass") + ylab("Average annual catch") +
     scale_fill_colorblind() +
@@ -977,8 +1007,10 @@ plot_refpoints <- function(object, object1, figure_dir){
   
   # output5$RuleType <- factor(output5$RuleType, levels = levels(output4$RuleType))
   p_tb_v2 <- p_tb +
-    geom_vline(data = output5, aes(xintercept = TB_P50), linetype = 2, lwd = 1.5) +
-    geom_hline(data = output5, aes(yintercept = Catch_P50), linetype = 2, lwd = 1.5)
+    # geom_vline(data = output5, aes(xintercept = TB_P50), linetype = 2, lwd = 1.5) +
+    # geom_hline(data = output5, aes(yintercept = Catch_P50), linetype = 2, lwd = 1.5)
+    geom_vline(data = output5, aes(xintercept = TB_Mean), linetype = 2, lwd = 1.5) +
+    geom_hline(data = output5, aes(yintercept = Catch_Mean), linetype = 2, lwd = 1.5)
   ggsave(file.path(figure_dir, "TB_vs_Catch_byConstraint_wTarget.png"), p_tb_v2, height = 8, width = 20)
   
 
@@ -1047,7 +1079,8 @@ plot_refpoints <- function(object, object1, figure_dir){
   check$CVConstraint <- factor(check$CVConstraint, levels = c("FixedCatch", "25%", "Median", "75%", "Max", "FixedF"))
   p_vbcurr <- ggplot(check) +
     geom_ribbon(aes(x = Year, ymin = P5, ymax = P95, fill = CVConstraint), alpha = 0.5) +
-    geom_hline(aes(yintercept = P50, color =CVConstraint), lwd = 1.2) +
+    # geom_hline(aes(yintercept = P50, color = CVConstraint), lwd = 1.2) +
+    geom_hline(aes(yintercept = Mean, color = CVConstraint), lwd = 1.2) +
     # geom_line(aes(x = Year, y = VB), lwd = 1.2) +
     stat_summary(aes(x = Year, y = VB), fun.min = function(x) stats::quantile(x, 0.05), fun.max = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25) +
     stat_summary(aes(x = Year, y = VB), fun = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1.2) +
@@ -1071,7 +1104,7 @@ plot_refpoints <- function(object, object1, figure_dir){
   check_avg <- average_sum %>%
     dplyr::select(Region, Variable, P5, Mean, P95) %>%
     dplyr::filter(Variable == "VB") %>%
-    dplyr::rename(P50 = Mean) %>%
+    # dplyr::rename(P50 = Mean) %>%
     dplyr::mutate(RuleType = "Average") %>% 
     dplyr::mutate(CVConstraint = 0)
   check_avg$CVConstraint <- factor(check_avg$CVConstraint)
@@ -1084,7 +1117,8 @@ plot_refpoints <- function(object, object1, figure_dir){
   check$RuleType <- factor(check$RuleType, levels = c("FixedCatch", "Average", "FixedF"))
   p_vbcurr <- ggplot(check) +
     geom_ribbon(aes(x = Year, ymin = P5, ymax = P95, fill = RuleType), alpha = 0.5) +
-    geom_hline(aes(yintercept = P50, color =RuleType), lwd = 1.2) +
+    # geom_hline(aes(yintercept = P50, color =RuleType), lwd = 1.2) +
+    geom_hline(aes(yintercept = Mean, color =RuleType), lwd = 1.2) +
     # geom_line(aes(x = Year, y = VB), lwd = 1.2) +
     stat_summary(aes(x = Year, y = VB), fun.min = function(x) stats::quantile(x, 0.05), fun.max = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25) +
     stat_summary(aes(x = Year, y = VB), fun = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1.2) +
@@ -1114,7 +1148,8 @@ plot_refpoints <- function(object, object1, figure_dir){
   check$CVConstraint <- factor(check$CVConstraint, levels = c("FixedCatch", "25%", "Median", "75%", "Max", "FixedF"))
   p_relvbcurr <- ggplot(check) +
     geom_ribbon(aes(x = Year, ymin = P5, ymax = P95, fill = CVConstraint), alpha = 0.5) +
-    geom_hline(aes(yintercept = P50, color = CVConstraint), lwd = 1.2) +
+    # geom_hline(aes(yintercept = P50, color = CVConstraint), lwd = 1.2) +
+    geom_hline(aes(yintercept = Mean, color = CVConstraint), lwd = 1.2) +
     stat_summary(aes(x = Year, y = RelVBnow), fun.min = function(x) stats::quantile(x,0.05), fun.max = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25) +
     stat_summary(aes(x = Year, y = RelVBnow), fun = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1.2) +
     expand_limits(y = 0) +
@@ -1136,7 +1171,7 @@ plot_refpoints <- function(object, object1, figure_dir){
   check_avg <- average_sum %>%
     dplyr::select(Region, Variable, P5, Mean, P95) %>%
     dplyr::filter(Variable == "RelVBnow") %>%
-    dplyr::rename(P50 = Mean) %>%
+    # dplyr::rename(P50 = Mean) %>%
     dplyr::mutate(RuleType = "Average") %>% 
     dplyr::mutate(CVConstraint = 0)
   check_avg$CVConstraint <- factor(check_avg$CVConstraint)
@@ -1149,7 +1184,8 @@ plot_refpoints <- function(object, object1, figure_dir){
   check$RuleType <- factor(check$RuleType, levels = c("FixedCatch", "Average", "FixedF"))
   p_relvbcurr <- ggplot(check) +
     geom_ribbon(aes(x = Year, ymin = P5, ymax = P95, fill = RuleType), alpha = 0.5) +
-    geom_hline(aes(yintercept = P50, color =RuleType), lwd = 1.2) +
+    # geom_hline(aes(yintercept = P50, color =RuleType), lwd = 1.2) +
+    geom_hline(aes(yintercept = Mean, color =RuleType), lwd = 1.2) +
     # geom_line(aes(x = Year, y = VB), lwd = 1.2) +
     stat_summary(aes(x = Year, y = RelVBnow), fun.min = function(x) stats::quantile(x, 0.05), fun.max = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25) +
     stat_summary(aes(x = Year, y = RelVBnow), fun = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1.2) +
@@ -1179,7 +1215,8 @@ plot_refpoints <- function(object, object1, figure_dir){
   check$CVConstraint <- factor(check$CVConstraint, levels = c("FixedCatch", "25%", "Median", "75%", "Max", "FixedF"))
   p_reltbcurr <- ggplot(check) +
     geom_ribbon(aes(x = Year, ymin = P5, ymax = P95, fill = CVConstraint), alpha = 0.5) +
-    geom_hline(aes(yintercept = P50, color = CVConstraint), lwd = 1.2) +
+    # geom_hline(aes(yintercept = P50, color = CVConstraint), lwd = 1.2) +
+    geom_hline(aes(yintercept = Mean, color = CVConstraint), lwd = 1.2) +
     stat_summary(aes(x = Year, y = RelTBnow), fun.min = function(x) stats::quantile(x, 0.05), fun.max = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25) +
     stat_summary(aes(x = Year, y = RelTBnow), fun = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1.2) +
     expand_limits(y = 0) +
@@ -1201,7 +1238,7 @@ plot_refpoints <- function(object, object1, figure_dir){
   check_avg <- average_sum %>%
     dplyr::select(Region, Variable, P5, Mean, P95) %>%
     dplyr::filter(Variable == "RelTBnow") %>%
-    dplyr::rename(P50 = Mean) %>%
+    # dplyr::rename(P50 = Mean) %>%
     dplyr::mutate(RuleType = "Average") %>% 
     dplyr::mutate(CVConstraint = 0)
   check_avg$CVConstraint <- factor(check_avg$CVConstraint)
@@ -1214,7 +1251,8 @@ plot_refpoints <- function(object, object1, figure_dir){
   check$RuleType <- factor(check$RuleType, levels = c("FixedCatch", "Average", "FixedF"))
   p_reltbcurr <- ggplot(check) +
     geom_ribbon(aes(x = Year, ymin = P5, ymax = P95, fill = RuleType), alpha = 0.5) +
-    geom_hline(aes(yintercept = P50, color =RuleType), lwd = 1.2) +
+    # geom_hline(aes(yintercept = P50, color =RuleType), lwd = 1.2) +
+    geom_hline(aes(yintercept = Mean, color =RuleType), lwd = 1.2) +
     # geom_line(aes(x = Year, y = VB), lwd = 1.2) +
     stat_summary(aes(x = Year, y = RelTBnow), fun.min = function(x) stats::quantile(x, 0.05), fun.max = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25) +
     stat_summary(aes(x = Year, y = RelTBnow), fun = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1.2) +
@@ -1272,7 +1310,7 @@ plot_refpoints <- function(object, object1, figure_dir){
   # find_max_sub <- do.call(rbind, find_max_sub)
 
   check1 <- cinfo %>%
-    dplyr::right_join(find_max %>% dplyr::select(-P50)) %>%
+    dplyr::right_join(find_max %>% dplyr::select(-c(P50,Mean))) %>%
     dplyr::left_join(max_info %>% filter(Variable == "Catch")) %>%
     dplyr::mutate(RelVB = VB / VB0now) %>%
     dplyr::mutate(RelSSB = SSB / SSB0now) %>%
@@ -1284,6 +1322,7 @@ plot_refpoints <- function(object, object1, figure_dir){
       dplyr::group_by(Year, Region, RuleType, Constraint, Variable) %>%
       dplyr::summarise(P5 = quantile(Value, 0.05),
                        P50 = quantile(Value, 0.50),
+                       Mean = mean(Value),
                        P95 = quantile(Value, 0.95))
     if(length(unique(check2$RuleType))==3) check2$RuleType <- factor(check2$RuleType, levels = c("FixedCatch", "CPUE-based", "FixedF"))
     if(length(unique(check1$RuleType))==3) check1$RuleType <- factor(check1$RuleType, levels = c("FixedCatch", "CPUE-based", "FixedF"))
@@ -1301,7 +1340,8 @@ plot_refpoints <- function(object, object1, figure_dir){
     check2$Constraint <- factor(check2$Constraint, levels = const)
     p_constr1 <- ggplot() +
       geom_ribbon(data = check2 %>% filter(Variable %in% c("Catch","RelSSB","RelVB")), aes(x = Year, ymin = P5, ymax = P95, fill = Constraint), color = NA, alpha = 0.5) +
-      geom_line(data = check2 %>% filter(Variable %in% c("Catch","RelSSB","RelVB")), aes(x = Year, y = P50, color = Constraint), lwd = 1.5) +
+      # geom_line(data = check2 %>% filter(Variable %in% c("Catch","RelSSB","RelVB")), aes(x = Year, y = P50, color = Constraint), lwd = 1.5) +
+      geom_line(data = check2 %>% filter(Variable %in% c("Catch","RelSSB","RelVB")), aes(x = Year, y = Mean, color = Constraint), lwd = 1.5) +
       geom_line(data = check1 %>% filter(Iteration == 1) %>% filter(Variable %in% c("Catch","RelSSB","RelVB")), aes(x = Year, y = Value)) +
       # scale_color_brewer(palette = "Spectral") +
       # scale_fill_brewer(palette = "Spectral") +
@@ -1323,7 +1363,7 @@ plot_refpoints <- function(object, object1, figure_dir){
   check1 <- cinfo %>%
     dplyr::mutate(RelVB = VB / VB0now) %>%
     dplyr::mutate(RelSSB = SSB / SSB0now) %>%
-    dplyr::right_join(find_max %>% dplyr::select(-P50)) %>%
+    dplyr::right_join(find_max %>% dplyr::select(-c(P50,Mean))) %>%
     dplyr::left_join(max_info %>% filter(Variable == "Catch")) %>%
     dplyr::select(Iteration, Year, Region, RuleNum, RuleType, Constraint, Catch, RelVB, RelSSB) %>%
     tidyr::pivot_longer(cols = c(Catch,RelVB,RelSSB), names_to = "Variable", values_to = "Value") %>%
@@ -1333,6 +1373,7 @@ plot_refpoints <- function(object, object1, figure_dir){
       dplyr::group_by(Year, Region, RuleType, Constraint, Variable) %>%
       dplyr::summarise(P5 = quantile(Value, 0.05),
                        P50 = quantile(Value, 0.50),
+                       Mean = mean(Value),
                        P95 = quantile(Value, 0.95))
     if(length(unique(check2$RuleType))==3) check2$RuleType <- factor(check2$RuleType, levels = c("FixedCatch", "CPUE-based", "FixedF"))
     if(length(unique(check1$RuleType))==3) check1$RuleType <- factor(check1$RuleType, levels = c("FixedCatch", "CPUE-based", "FixedF"))
@@ -1351,7 +1392,8 @@ plot_refpoints <- function(object, object1, figure_dir){
     check2$Constraint <- factor(check2$Constraint, levels = const)
     p_constr2 <- ggplot() +
       geom_ribbon(data = check2 %>% filter(Variable %in% c("Catch","RelSSB","RelVB")), aes(x = Year, ymin = P5, ymax = P95, fill = Constraint), color = NA, alpha = 0.5) +
-      geom_line(data = check2 %>% filter(Variable %in% c("Catch","RelSSB","RelVB")), aes(x = Year, y = P50, color = Constraint), lwd = 1.5) +
+      # geom_line(data = check2 %>% filter(Variable %in% c("Catch","RelSSB","RelVB")), aes(x = Year, y = P50, color = Constraint), lwd = 1.5) +
+      geom_line(data = check2 %>% filter(Variable %in% c("Catch","RelSSB","RelVB")), aes(x = Year, y = Mean, color = Constraint), lwd = 1.5) +
       geom_line(data = check1 %>% filter(Iteration == 1) %>% filter(Variable %in% c("Catch","RelSSB","RelVB")), aes(x = Year, y = Value)) +
       # scale_color_brewer(palette = "Spectral") +
       # scale_fill_brewer(palette = "Spectral") +
@@ -1370,7 +1412,7 @@ plot_refpoints <- function(object, object1, figure_dir){
   }
 
   check1 <- cinfo %>%
-    dplyr::right_join(find_max %>% dplyr::select(-P50)) %>%
+    dplyr::right_join(find_max %>% dplyr::select(-c(P50,Mean))) %>%
     dplyr::left_join(max_info %>% filter(Variable == "Catch")) %>%
     dplyr::select(Iteration, Year, Region, RuleNum, RuleType, Constraint, CVConstraint, Catch, RelVB, RelSSB) %>%
     tidyr::pivot_longer(cols = c(Catch,RelVB,RelSSB), names_to = "Variable", values_to = "Value") %>%
@@ -1386,6 +1428,7 @@ plot_refpoints <- function(object, object1, figure_dir){
       dplyr::group_by(Year, Region, RuleType, Constraint, CVConstraint, Variable) %>%
       dplyr::summarise(P5 = quantile(Value, 0.05),
                        P50 = quantile(Value, 0.50),
+                       Mean = mean(Value),
                        P95 = quantile(Value, 0.95))
     if(any(grepl("Risk", check2$Constraint))) check2$CVConstraint <- factor(check2$CVConstraint, levels = c("Risk","Max","75%","Median","25%"))
     if(any(grepl("Risk", check2$Constraint)) == FALSE) check2$CVConstraint <- factor(check2$CVConstraint, levels = c("Max","75%","Median","25%"))
@@ -1394,7 +1437,8 @@ plot_refpoints <- function(object, object1, figure_dir){
     # 
     p_constr3 <- ggplot() +
       geom_ribbon(data = check2 %>% filter(Variable %in% c("Catch","RelSSB","RelVB")), aes(x = Year, ymin = P5, ymax = P95, fill = CVConstraint), color = NA, alpha = 0.5) +
-      geom_line(data = check2 %>% filter(Variable %in% c("Catch","RelSSB","RelVB")), aes(x = Year, y = P50, color = CVConstraint), lwd = 1.5) +
+      # geom_line(data = check2 %>% filter(Variable %in% c("Catch","RelSSB","RelVB")), aes(x = Year, y = P50, color = CVConstraint), lwd = 1.5) +
+      geom_line(data = check2 %>% filter(Variable %in% c("Catch","RelSSB","RelVB")), aes(x = Year, y = Mean, color = CVConstraint), lwd = 1.5) +
       geom_line(data = check1 %>% filter(Iteration == 1) %>% filter(Variable %in% c("Catch","RelSSB","RelVB")), aes(x = Year, y = Value)) +
       # scale_color_brewer(palette = "Spectral") +
       # scale_fill_brewer(palette = "Spectral") +
@@ -1457,68 +1501,68 @@ plot_refpoints <- function(object, object1, figure_dir){
   #   ggsave(file.path(figure_dir, "CompareRuleTypes_Pass.png"), p_constr3, height = 10, width = 15)
   # }
   # 
-  check <- output4 %>%
-    filter(RuleType == "CPUE-based") %>%
-    filter(Constraint == "Pass")
-  if(nrow(check) > 0) {
-    check$CVConstraint <- factor(check$CVConstraint, levels = c("Max","75%", "Median","25%","Min"))
-    p_cv <- ggplot(check) +
-      geom_segment(aes(x = CV, xend = CV, y = Catch_P5, yend = Catch_P95, color = CVConstraint), lwd = 1.2, alpha = 0.8) +
-      geom_point(aes(x = CV, y = Catch_P50, fill = CVConstraint), pch = 21, cex = 4) +
-      expand_limits(y = 0, x = 0) +
-      xlab("CV of catch over time and iteration") + ylab("Average annual catch") +
-      # scale_fill_brewer(palette = "Spectral") +
-      # scale_color_brewer(palette = "Spectral") +
-      scale_fill_tableau() +
-      scale_color_tableau() +
-      theme_bw(base_size = 20)
-    if(length(regions) > 1){
-      p_cv <- p_cv + facet_grid(Region~., scales = "free_x")
-    }
-    ggsave(file.path(figure_dir, "CV_vs_Catch_Pass.png"), p_cv, height = 8, width = 12)
-  }
+  # check <- output4 %>%
+  #   filter(RuleType == "CPUE-based") %>%
+  #   filter(Constraint == "Pass")
+  # if(nrow(check) > 0) {
+  #   check$CVConstraint <- factor(check$CVConstraint, levels = c("Max","75%", "Median","25%","Min"))
+  #   p_cv <- ggplot(check) +
+  #     geom_segment(aes(x = CV, xend = CV, y = Catch_P5, yend = Catch_P95, color = CVConstraint), lwd = 1.2, alpha = 0.8) +
+  #     geom_point(aes(x = CV, y = Catch_P50, fill = CVConstraint), pch = 21, cex = 4) +
+  #     expand_limits(y = 0, x = 0) +
+  #     xlab("CV of catch over time and iteration") + ylab("Average annual catch") +
+  #     # scale_fill_brewer(palette = "Spectral") +
+  #     # scale_color_brewer(palette = "Spectral") +
+  #     scale_fill_tableau() +
+  #     scale_color_tableau() +
+  #     theme_bw(base_size = 20)
+  #   if(length(regions) > 1){
+  #     p_cv <- p_cv + facet_grid(Region~., scales = "free_x")
+  #   }
+  #   ggsave(file.path(figure_dir, "CV_vs_Catch_Pass.png"), p_cv, height = 8, width = 12)
+  # }
 
-    check1 <- cinfo %>%
-      dplyr::left_join(output2 %>% filter(Variable == "Catch")) %>%
-      dplyr::select(Iteration, Year, Region, RuleNum, RuleType, Constraint, CVConstraint, Catch, CPUE) %>%
-      dplyr::filter(RuleType == "CPUE-based")
-    if(nrow(check1) > 0){
-    const <- unique(as.character(check1$Constraint))
-  const <- unique(as.character(check1$Constraint))
-  const1 <- const[grepl("CV",const)==FALSE]
-  const1_1 <- const1[grepl("Catch", const1) == FALSE]
-  const1_2 <- const1[grepl("Catch", const1)]
-  const1 <- c(const1_1, const1_2)
-  const2 <- const[grepl("CV", const)]
-  constx <- c(const1,const2)
-  const <- c(constx, const[which(const %in% constx == FALSE)])
-    const <- rev(c(constx, const[which(const %in% constx == FALSE)]))
-    check1$Constraint <- factor(check1$Constraint, levels = const)
-      p_cpue_mp <- ggplot(check1) +
-        geom_point(data = check1 %>% filter(Constraint != "Pass"), aes(x = CPUE, y = Catch, color = Constraint), cex = 2, alpha = 0.5) +
-        geom_point(data = check1 %>% filter(Constraint == "Pass"), aes(x = CPUE, y = Catch, color = Constraint), cex = 2, alpha = 0.5) +
-       # scale_color_brewer(palette = "Spectral") +
-        scale_color_tableau() +
-        xlab("Offset-year CPUE") +
-        theme_bw(base_size = 20)
-      if(length(regions) > 1){
-        p_cpue_mp <- p_cpue_mp + facet_grid(Region~., scales = "free_x")
-      }
-      ggsave(file.path(figure_dir, "CPUE_vs_Catch_MP.png"), p_cpue_mp, height = 10, width = 12)
-      
-      check2 <- check1 %>% filter(Constraint == "Pass")
-      check2$CVConstraint <- factor(check2$CVConstraint, levels = c("Max", "75%", "Median", "25%", "Min"))
-      p_cpue_mp <- ggplot(check2) +
-        geom_point(aes(x = CPUE, y = Catch, color = CVConstraint), cex = 2, alpha = 0.5) +
-        # scale_color_brewer(palette = "Spectral") +
-        scale_color_tableau() +
-        xlab("Offset-year CPUE") +
-        theme_bw(base_size = 20)
-      if(length(regions) > 1){
-        p_cpue_mp <- p_cpue_mp + facet_grid(Region~., scales = "free_x")
-      }
-      ggsave(file.path(figure_dir, "CPUE_vs_Catch_MP_Pass.png"), p_cpue_mp, height = 10, width = 12)
-    }
+  #   check1 <- cinfo %>%
+  #     dplyr::left_join(output2 %>% filter(Variable == "Catch")) %>%
+  #     dplyr::select(Iteration, Year, Region, RuleNum, RuleType, Constraint, CVConstraint, Catch, CPUE) %>%
+  #     dplyr::filter(RuleType == "CPUE-based")
+  #   if(nrow(check1) > 0){
+  #   const <- unique(as.character(check1$Constraint))
+  # const <- unique(as.character(check1$Constraint))
+  # const1 <- const[grepl("CV",const)==FALSE]
+  # const1_1 <- const1[grepl("Catch", const1) == FALSE]
+  # const1_2 <- const1[grepl("Catch", const1)]
+  # const1 <- c(const1_1, const1_2)
+  # const2 <- const[grepl("CV", const)]
+  # constx <- c(const1,const2)
+  # const <- c(constx, const[which(const %in% constx == FALSE)])
+  #   const <- rev(c(constx, const[which(const %in% constx == FALSE)]))
+  #   check1$Constraint <- factor(check1$Constraint, levels = const)
+  #     p_cpue_mp <- ggplot(check1) +
+  #       geom_point(data = check1 %>% filter(Constraint != "Pass"), aes(x = CPUE, y = Catch, color = Constraint), cex = 2, alpha = 0.5) +
+  #       geom_point(data = check1 %>% filter(Constraint == "Pass"), aes(x = CPUE, y = Catch, color = Constraint), cex = 2, alpha = 0.5) +
+  #      # scale_color_brewer(palette = "Spectral") +
+  #       scale_color_tableau() +
+  #       xlab("Offset-year CPUE") +
+  #       theme_bw(base_size = 20)
+  #     if(length(regions) > 1){
+  #       p_cpue_mp <- p_cpue_mp + facet_grid(Region~., scales = "free_x")
+  #     }
+  #     ggsave(file.path(figure_dir, "CPUE_vs_Catch_MP.png"), p_cpue_mp, height = 10, width = 12)
+  #     
+  #     check2 <- check1 %>% filter(Constraint == "Pass")
+  #     check2$CVConstraint <- factor(check2$CVConstraint, levels = c("Max", "75%", "Median", "25%", "Min"))
+  #     p_cpue_mp <- ggplot(check2) +
+  #       geom_point(aes(x = CPUE, y = Catch, color = CVConstraint), cex = 2, alpha = 0.5) +
+  #       # scale_color_brewer(palette = "Spectral") +
+  #       scale_color_tableau() +
+  #       xlab("Offset-year CPUE") +
+  #       theme_bw(base_size = 20)
+  #     if(length(regions) > 1){
+  #       p_cpue_mp <- p_cpue_mp + facet_grid(Region~., scales = "free_x")
+  #     }
+  #     ggsave(file.path(figure_dir, "CPUE_vs_Catch_MP_Pass.png"), p_cpue_mp, height = 10, width = 12)
+  #   }
 
   #     p_cpue_mp_v2 <- p_cpue_mp +
   #       geom_vline(data = msy_info2 %>% filter(RuleType == "CPUE-based"), aes(xintercept = CPUE), lty = 2) +

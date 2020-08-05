@@ -674,8 +674,19 @@ plot_refpoints <- function(object, object1, figure_dir){
     dplyr::summarise(P5 = quantile(Value, 0.05),
                      P50 = quantile(Value, 0.5),
                      Mean = mean(Value),
+                     P95 = quantile(Value, 0.95)) %>%
+    dplyr::mutate(RuleType = "Average")
+  
+  rule_sum <- average_info %>%
+    tidyr::pivot_longer(cols = c("Catch", "SSB","TB","VB","RelSSBnow", "RelTBnow","RelVBnow"), names_to = "Variable", values_to = "Value") %>%
+    dplyr::group_by(Region, Variable, RuleType) %>%
+    dplyr::summarise(P5 = quantile(Value, 0.05),
+                     P50 = quantile(Value, 0.5),
+                     Mean = mean(Value),
                      P95 = quantile(Value, 0.95))
-  write.csv(average_sum, file.path(figure_dir, "Average_fixed_F_catch.csv"))
+  
+  sum <- full_join(average_sum, rule_sum)
+  write.csv(sum, file.path(figure_dir, "Summary_reference_average.csv"))
   
   curr <- info1 %>%
     dplyr::filter(Year == max(years)+1) %>%
@@ -683,9 +694,10 @@ plot_refpoints <- function(object, object1, figure_dir){
     ungroup() %>%
     dplyr::select(Region, Variable, Value)  %>%
     dplyr::rename(Current = Value) %>%
-    dplyr::left_join(average_sum %>% dplyr::select(Region, Variable, Mean)) %>%
-    dplyr::group_by(Region, Variable) %>%
-    dplyr::summarise(P_below_ref = length(which(Current >= Mean))/length(Current))
+    dplyr::left_join(sum %>% dplyr::select(Region, RuleType, Variable, Mean, P50)) %>%
+    dplyr::group_by(Region, Variable, RuleType) %>%
+    dplyr::summarise(P_below_mean = length(which(Current >= Mean))/length(Current),
+                     P_below_med = length(which(Current >= P50))/length(Current))
   write.csv(curr, file.path(figure_dir, "P_above_ref.csv"))
 
   msy_toUse <- max_info %>% select(RuleType, Constraint, CVConstraint, Variable, P5, P50, P95, Region)

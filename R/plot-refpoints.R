@@ -884,6 +884,14 @@ plot_refpoints <- function(object, object1, figure_dir){
     p_cv <- p_cv + facet_grid(~RuleType, scales = "free_x")
   }
   ggsave(file.path(figure_dir, "CV_vs_Catch.png"), p_cv, height = 8, width = 20)
+  
+  p_cv_v2 <- p_cv +
+    # geom_vline(data = output5, aes(xintercept = RelVB_P50), linetype = 2, lwd = 1.5) +
+    # geom_hline(data = output5, aes(yintercept = Catch_P50), linetype = 2, lwd = 1.5)
+    geom_vline(data = output5, aes(xintercept = CV), linetype = 2, lwd = 1.5) +
+    geom_hline(data = output5, aes(yintercept = Catch_Mean), linetype = 2, lwd = 1.5)
+  ggsave(file.path(figure_dir, "CV_vs_Catch_wTarget.png"), p_cv_v2, height = 8, width = 20)
+  
 
   p_relssb <- ggplot(output4) +
     # geom_segment(aes(x = RelSSB_P5, xend = RelSSB_P95, y = Catch_P50, yend = Catch_P50, color = Constraint), lwd = 1.2, alpha = 0.8) +

@@ -390,38 +390,42 @@ plot_refpoints <- function(object, object1, figure_dir){
     mutate(Region = paste0("Region ", Region))
   gc()
 
-  if(length(regions) > 1){
-    b0_total <- infox %>%
-      filter(Region == "Total") %>%
-      ungroup() %>%
-      dplyr::select(Iteration, Region, SSB0now, SSB0, VB0now, VB0, TB0now, TB0)
-    tinfo <- info %>%
-      dplyr::group_by(Iteration, Year, RuleNum) %>%
-      dplyr::summarise(SL = sum(SL),
-                       NSL = sum(NSL),
-                       Catch = sum(Catch),
-                       # CatchResidual = sum(CatchResidual),
-                       SSB = sum(SSB),
-                       VB = sum(VB),
-                       TB = sum(TB),
-                       Recruitment = sum(Recruitment),
-                       CPUE = mean(CPUE),
-                       F = sum(F)) %>%
-      dplyr::mutate(Region = "Total") %>%
-      dplyr::full_join(b0_total) %>%
-      dplyr::mutate(RelVBnow = VB / VB0now) %>%
-      dplyr::mutate(RelSSBnow = SSB / SSB0now) %>%
-      dplyr::mutate(RelTBnow = TB / TB0now) %>%
-      dplyr::mutate(RelVB = VB / VB0) %>%
-      dplyr::mutate(RelSSB = SSB / SSB0) %>%
-      dplyr::mutate(RelTB = TB / TB0)
-    gc()
-
-    info <- rbind.data.frame(info, tinfo)
-    gc()
-    info <- data.frame(info)
-    gc()
-  }
+  ### doesn't make sense to calculate total by rule, since not using total by rule
+  ### must calculate totals after identifying msy
+  # if(length(regions) > 1){
+  #   b0_total <- full_join(VB0, vb0now) %>%
+  #     dplyr::full_join(TB0) %>%
+  #     dplyr::full_join(tb0now) %>%
+  #     dplyr::full_join(SSB0) %>%
+  #     dplyr::full_join(ssb0now) %>%
+  #     dplyr::filter(Region == "Total")
+  #   tinfo <- info %>%
+  #     dplyr::group_by(Iteration, Year, RuleNum) %>%
+  #     dplyr::summarise(SL = sum(SL),
+  #                      NSL = sum(NSL),
+  #                      Catch = sum(Catch),
+  #                      # CatchResidual = sum(CatchResidual),
+  #                      SSB = sum(SSB),
+  #                      VB = sum(VB),
+  #                      TB = sum(TB),
+  #                      Recruitment = sum(Recruitment),
+  #                      CPUE = mean(CPUE),
+  #                      F = sum(F)) %>%
+  #     dplyr::mutate(Region = "Total") %>%
+  #     dplyr::full_join(b0_total) %>%
+  #     dplyr::mutate(RelVBnow = VB / VB0now) %>%
+  #     dplyr::mutate(RelSSBnow = SSB / SSB0now) %>%
+  #     dplyr::mutate(RelTBnow = TB / TB0now) %>%
+  #     dplyr::mutate(RelVB = VB / VB0) %>%
+  #     dplyr::mutate(RelSSB = SSB / SSB0) %>%
+  #     dplyr::mutate(RelTB = TB / TB0)
+  #   gc()
+  # 
+  #   info <- rbind.data.frame(info, tinfo)
+  #   gc()
+  #   info <- data.frame(info)
+  #   gc()
+  # }
   
   rm(relb)
   rm(relb2)
@@ -573,9 +577,10 @@ plot_refpoints <- function(object, object1, figure_dir){
 
   if(length(regions) > 1){
     max_info2 <- cinfo %>%
-      dplyr::right_join(max_info %>% dplyr::select(Region, RuleNum, Constraint, CVConstraint)) %>%
+      dplyr::right_join(unique(max_info %>% dplyr::select(Region, RuleNum, Constraint, CVConstraint))) %>%
       dplyr::left_join(ruledf)
-    max_info3 <- data.frame(unique(max_info2)) %>%
+    gc()
+    max_info3 <- data.frame(max_info2) %>%
       dplyr::group_by(Iteration, Year, RuleType, Constraint, CVConstraint) %>%
       dplyr::summarise(Catch = sum(Catch),
                        VB = sum(VB),
@@ -640,10 +645,31 @@ plot_refpoints <- function(object, object1, figure_dir){
   average_info <- cinfo %>%
     dplyr::right_join(find_msy %>% dplyr::select(-P50)) %>%
     dplyr::filter(RuleType %in% c("FixedCatch", "FixedF")) %>%
-    tidyr::pivot_longer(cols = c(Catch,VB,TB,SSB,RelSSBnow, RelTBnow, RelVBnow), names_to = "Variable", values_to = "Value") %>%
-    dplyr::select(Iteration, Year, Region, Variable, Value)
+    # tidyr::pivot_longer(cols = c(Catch,VB,TB,SSB,SSB0now, TB0now, VB0now, RelSSBnow, RelTBnow, RelVBnow), names_to = "Variable", values_to = "Value") %>%
+    dplyr::select(Iteration, Year, Region, RuleType, Catch, SSB, VB, TB, RelSSBnow, RelTBnow, RelVBnow)
+  
+
+  
+  if(length(regions) > 1){
+    average_info_t <- average_info %>%
+      dplyr::group_by(Iteration, Year, RuleType) %>%
+      dplyr::summarise(Catch = sum(Catch), 
+                       VB = sum(VB),
+                       SSB = sum(SSB),
+                       TB = sum(TB)) %>%
+      dplyr::left_join(vb0now %>% dplyr::filter(Region == "Total")) %>%
+      dplyr::left_join(ssb0now %>% dplyr::filter(Region == "Total")) %>%
+      dplyr::left_join(tb0now %>% dplyr::filter(Region == "Total")) %>%
+      dplyr::mutate(RelSSBnow = SSB / SSB0now) %>%
+      dplyr::mutate(RelTBnow = TB / TB0now) %>%
+      dplyr::mutate(RelVBnow = VB / VB0now) %>%
+      dplyr::select(-c("SSB0now","VB0now","TB0now"))
+    
+    average_info <- full_join(average_info, average_info_t)
+  }
   
   average_sum <- average_info %>%
+    tidyr::pivot_longer(cols = c("Catch", "SSB","TB","VB","RelSSBnow", "RelTBnow","RelVBnow"), names_to = "Variable", values_to = "Value") %>%
     dplyr::group_by(Region, Variable) %>%
     dplyr::summarise(P5 = quantile(Value, 0.05),
                      P50 = quantile(Value, 0.5),

@@ -1077,12 +1077,11 @@ plot_refpoints <- function(object, object1, figure_dir){
   ###################################################
   ## Status relative to reference level by rule type
   ###################################################
-  check <- output5 %>% 
-    dplyr::select(Region, RuleType, SSB_Mean, SSB0_Mean, VB_Mean) %>%
-    dplyr::rename(SSB = SSB_Mean, SSB0 = SSB0_Mean, VB = VB_Mean) %>%
-    tidyr::pivot_longer(cols = c(SSB, SSB0, VB), names_to = "Variable", values_to = "Mean")
+  check <- max_all %>% 
+    dplyr::filter(Variable %in% c("TB","SSB","SSB0","VB")) %>%
+    dplyr::select(Region, RuleType, Variable, Mean)
   check2 <- average_sum %>% 
-    dplyr::filter(Variable %in% c("SSB","VB","SSB0")) %>%
+    dplyr::filter(Variable %in% c("TB","SSB","VB","SSB0")) %>%
     dplyr::select(Region, Variable, Mean, RuleType)
   limits <- check %>%
     dplyr::select(-RuleType) %>%
@@ -1096,26 +1095,29 @@ plot_refpoints <- function(object, object1, figure_dir){
     dplyr::left_join(limits) %>%
     dplyr::filter(Variable != "SSB0") 
   checkt <- dinfo %>%
-    dplyr::select(Iteration, Year, Region, SSB, VB) %>%
-    tidyr::pivot_longer(cols = c(SSB,VB), names_to = "Variable", values_to = "Value")
+    dplyr::select(Iteration, Year, Region, SSB, VB, TB) %>%
+    tidyr::pivot_longer(cols = c(SSB,VB,TB), names_to = "Variable", values_to = "Value")
   check3$RuleType <- factor(check3$RuleType, levels = c("FixedCatch", "Average", "FixedF"))
   pb <- ggplot(check3) +
     stat_summary(data = checkt, aes(x = Year, y = Value), fun.min = function(x) stats::quantile(x, 0.05), fun.max = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25) +
     stat_summary(data = checkt, aes(x = Year, y = Value), fun = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1.2) +
     geom_hline(aes(yintercept = HardLimit), color = "red", lwd = 1.4) +
     geom_hline(aes(yintercept = SoftLimit), color = "darkorange2", lwd = 1.4) +
-    geom_label(label = "Soft limit", x = min(dinfo$Year)+10, y = check3$SoftLimit, color = "darkorange2", size = 8) +
-    geom_label(label = "Hard limit", x = min(dinfo$Year)+10, y = check3$HardLimit, color = "red", size = 8) +
+    geom_label(label = "Soft limit", x = min(dinfo$Year)+10, y = check3$SoftLimit, color = "darkorange2", size = 6) +
+    geom_label(label = "Hard limit", x = min(dinfo$Year)+10, y = check3$HardLimit, color = "red", size = 6) +
     geom_hline(aes(yintercept = Mean, color = RuleType), lwd = 1.4) +
     scale_color_manual(values = rev(c("goldenrod", "forestgreen","steelblue")))+
     guides(color = guide_legend(title="Reference level")) +
+    expand_limits(y = 0) + 
     theme_bw(base_size = 20)
   if(length(regions) > 1){
-    pb <- pb + facet_wrap(Region~Variable, scales = "free_y", ncol = 2) 
+    pb <- pb + facet_wrap(Region~Variable, scales = "free_y", ncol = 3) 
+    ggsave(file.path(figure_dir, "SSB_VB_Ref.png"), pb, height = 20, width = 20)
   } else {
-    pb <- pb + facet_wrap(~Variable, scales = "free_y", ncol = 2)
+    pb <- pb + facet_wrap(~Variable, scales = "free_y", ncol = 3)
+    ggsave(file.path(figure_dir, "SSB_VB_Ref.png"), pb, height = 8, width = 20)
   }
-  ggsave(file.path(figure_dir, "SSB_VB_Ref.png"), pb, height = 10, width = 20)
+  
   
   check <- dinfo %>% left_join(max_all %>% dplyr::filter(Variable == "VB")) %>%
     dplyr::mutate(CVConstraint = replace(CVConstraint, RuleType == "FixedCatch", "FixedCatch")) %>%

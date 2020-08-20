@@ -1104,8 +1104,8 @@ plot_refpoints <- function(object, object1, figure_dir){
     stat_summary(data = checkt, aes(x = Year, y = Value), fun = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1.2) +
     geom_hline(aes(yintercept = HardLimit), color = "red", lwd = 1.4) +
     geom_hline(aes(yintercept = SoftLimit), color = "darkorange2", lwd = 1.4) +
-    geom_label(label = "Soft limit", x = min(dinfo$Year)+10, y = check3$SoftLimit, color = "darkorange2") +
-    geom_label(label = "Hard limit", x = min(dinfo$Year)+10, y = check3$HardLimit, color = "red") +
+    geom_label(label = "Soft limit", x = min(dinfo$Year)+10, y = check3$SoftLimit, color = "darkorange2", size = 8) +
+    geom_label(label = "Hard limit", x = min(dinfo$Year)+10, y = check3$HardLimit, color = "red", size = 8) +
     geom_hline(aes(yintercept = Mean, color = RuleType), lwd = 1.4) +
     scale_color_manual(values = rev(c("goldenrod", "forestgreen","steelblue")))+
     guides(color = guide_legend(title="Reference level")) +

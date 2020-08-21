@@ -1103,8 +1103,8 @@ plot_refpoints <- function(object, object1, figure_dir){
     stat_summary(data = checkt, aes(x = Year, y = Value), fun = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1.2) +
     geom_hline(aes(yintercept = HardLimit), color = "red", lwd = 1.4) +
     geom_hline(aes(yintercept = SoftLimit), color = "darkorange2", lwd = 1.4) +
-    geom_label(label = "Soft limit", x = min(dinfo$Year)+10, y = check3$SoftLimit, color = "darkorange2", size = 6) +
-    geom_label(label = "Hard limit", x = min(dinfo$Year)+10, y = check3$HardLimit, color = "red", size = 6) +
+    geom_label(label = "Soft limit", x = min(dinfo$Year)+10, y = check3$SoftLimit, color = "darkorange2", size = 5) +
+    geom_label(label = "Hard limit", x = min(dinfo$Year)+10, y = check3$HardLimit, color = "red", size = 5) +
     geom_hline(aes(yintercept = Mean, color = RuleType), lwd = 1.4) +
     scale_color_manual(values = rev(c("goldenrod", "forestgreen","steelblue")))+
     guides(color = guide_legend(title="Reference level")) +
@@ -1112,7 +1112,7 @@ plot_refpoints <- function(object, object1, figure_dir){
     theme_bw(base_size = 20)
   if(length(regions) > 1){
     pb <- pb + facet_wrap(Region~Variable, scales = "free_y", ncol = 3) 
-    ggsave(file.path(figure_dir, "SSB_VB_Ref.png"), pb, height = 20, width = 20)
+    ggsave(file.path(figure_dir, "SSB_VB_Ref.png"), pb, height = 15, width = 15)
   } else {
     pb <- pb + facet_wrap(~Variable, scales = "free_y", ncol = 3)
     ggsave(file.path(figure_dir, "SSB_VB_Ref.png"), pb, height = 8, width = 20)

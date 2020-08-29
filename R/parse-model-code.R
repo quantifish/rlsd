@@ -40,6 +40,7 @@ parse_model_code <- function(base = "base_lsd", ctl = "lsd.ctl", save = FALSE) {
     code_base <- readLines(base)
     funcs <- readLines("functions.stan")
     code_param <- readLines("parameters.stan")
+    code_param <- code_param[2:(length(code_param) - 1)]
 
     # Get the positions where the functions, fixed parameters and estimated parameters should be inserted
     i <- grep("__FUN__", code_base)
@@ -51,7 +52,11 @@ parse_model_code <- function(base = "base_lsd", ctl = "lsd.ctl", save = FALSE) {
                    code_base[(i + 1):(j - 1)],
                    code_param[!pars],
                    code_base[(j + 1):(k - 1)],
+                   "parameters {",
+                   "",
                    code_param[pars],
+                   "",
+                   "}",
                    code_base[(k + 1):length(code_base)])
 
     if (save) {

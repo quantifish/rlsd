@@ -4,8 +4,11 @@
 \alias{table_compare_residuals}
 \title{Table comparing residuals for various data types across models}
 \usage{
-table_compare_residuals(object_list, object_names,
-  figure_dir = "compare_figure/")
+table_compare_residuals(
+  object_list,
+  object_names,
+  figure_dir = "compare_figure/"
+)
 }
 \arguments{
 \item{object_list}{list of 'lsd.rds' files from multiple models}

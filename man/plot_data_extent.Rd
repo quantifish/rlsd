@@ -4,8 +4,12 @@
 \alias{plot_data_extent}
 \title{Plot data extent}
 \usage{
-plot_data_extent(object, xlab = "Fishing year (1 April - 31 March)",
-  figure_dir = "figure/", save_plot = TRUE)
+plot_data_extent(
+  object,
+  xlab = "Fishing year (1 April - 31 March)",
+  figure_dir = "figure/",
+  save_plot = TRUE
+)
 }
 \arguments{
 \item{object}{and LSD object}

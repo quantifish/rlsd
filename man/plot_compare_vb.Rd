@@ -4,8 +4,12 @@
 \alias{plot_compare_vb}
 \title{Compare vulnerable biomass from multiple models}
 \usage{
-plot_compare_vb(object_list, object_names,
-  figure_dir = "compare_figure/", save_plot = TRUE)
+plot_compare_vb(
+  object_list,
+  object_names,
+  figure_dir = "compare_figure/",
+  save_plot = TRUE
+)
 }
 \arguments{
 \item{object_list}{list of 'lsd.rds' files from multiple models}

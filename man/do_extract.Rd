@@ -4,8 +4,14 @@
 \alias{do_extract}
 \title{Extract model fits and load into lsdOutput object class for plotting}
 \usage{
-do_extract(dir = ".", data = TRUE, map = FALSE, mcmc = FALSE,
-  variational = FALSE, model = "lsd")
+do_extract(
+  dir = ".",
+  data = TRUE,
+  map = FALSE,
+  mcmc = FALSE,
+  variational = FALSE,
+  model = "lsd"
+)
 }
 \arguments{
 \item{dir}{the directory to extract from}

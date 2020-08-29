@@ -4,8 +4,12 @@
 \alias{plot_mp_rules}
 \title{Plot control rules}
 \usage{
-plot_mp_rules(mp.pars, cpue.values = numeric(),
-  tacc.values = numeric(), cpue = seq(0, 2, 0.01))
+plot_mp_rules(
+  mp.pars,
+  cpue.values = numeric(),
+  tacc.values = numeric(),
+  cpue = seq(0, 2, 0.01)
+)
 }
 \arguments{
 \item{mp.pars}{a matrix of control parameters with columns as parameters and rows as different rules}

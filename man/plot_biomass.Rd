@@ -4,9 +4,15 @@
 \alias{plot_biomass}
 \title{Plot biomass measures}
 \usage{
-plot_biomass(object, scales = "free_x", show_map = TRUE,
-  show_mcmc = TRUE, xlab = "Fishing year", figure_dir = "figure/",
-  ref = c("Bmsy", "Bref"))
+plot_biomass(
+  object,
+  scales = "free_x",
+  show_map = TRUE,
+  show_mcmc = TRUE,
+  xlab = "Fishing year",
+  figure_dir = "figure/",
+  ref = c("Bmsy", "Bref")
+)
 }
 \arguments{
 \item{object}{and LSD object}

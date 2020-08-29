@@ -4,9 +4,15 @@
 \alias{plot_ssb}
 \title{Plot spawning stock biomass (SSB)}
 \usage{
-plot_ssb(object, scales = "free_x", show_map = TRUE,
-  show_mcmc = TRUE, show_proj = FALSE, show_target = FALSE,
-  xlab = "Fishing year (1 April - 31 March)")
+plot_ssb(
+  object,
+  scales = "free_x",
+  show_map = TRUE,
+  show_mcmc = TRUE,
+  show_proj = FALSE,
+  show_target = FALSE,
+  xlab = "Fishing year (1 April - 31 March)"
+)
 }
 \arguments{
 \item{object}{and LSD object}

@@ -4,8 +4,12 @@
 \alias{plot_recruitment_size}
 \title{Plot recruitment size}
 \usage{
-plot_recruitment_size(object, xlab = "Size at recruitment (mm)",
-  ylab = "Proportion", figure_dir = "figure/")
+plot_recruitment_size(
+  object,
+  xlab = "Size at recruitment (mm)",
+  ylab = "Proportion",
+  figure_dir = "figure/"
+)
 }
 \arguments{
 \item{object}{an lsd object}

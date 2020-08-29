@@ -4,8 +4,12 @@
 \alias{plot_numbers}
 \title{Plot nubers}
 \usage{
-plot_numbers(object, xlab = "Size (mm)",
-  ylab = "Number of individuals (thousands)", figure_dir = "figure/")
+plot_numbers(
+  object,
+  xlab = "Size (mm)",
+  ylab = "Number of individuals (thousands)",
+  figure_dir = "figure/"
+)
 }
 \arguments{
 \item{object}{and LSD object}

@@ -4,8 +4,7 @@
 \alias{plot_retro}
 \title{Plot retrospective analysis}
 \usage{
-plot_retro(object, scales = "free_x", show_map = TRUE,
-  figure_dir = "figure/")
+plot_retro(object, scales = "free_x", show_map = TRUE, figure_dir = "figure/")
 }
 \arguments{
 \item{object}{an LSD object}

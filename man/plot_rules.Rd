@@ -4,8 +4,14 @@
 \alias{plot_rules}
 \title{Plot rules}
 \usage{
-plot_rules(rules, rule_labels = NULL, fig_name = NULL,
-  figure_dir = "compare_figure/", width = 8, height = 6)
+plot_rules(
+  rules,
+  rule_labels = NULL,
+  fig_name = NULL,
+  figure_dir = "compare_figure/",
+  width = 8,
+  height = 6
+)
 }
 \arguments{
 \item{rules}{data frame with rule numbers and parameter values}

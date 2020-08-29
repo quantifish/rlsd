@@ -4,10 +4,16 @@
 \alias{plot_vulnerable_biomass}
 \title{Plot vulnerable reference biomass}
 \usage{
-plot_vulnerable_biomass(object, scales = "free_x", show_map = TRUE,
-  show_mcmc = TRUE, show_proj = FALSE,
-  xlab = "Fishing year (1 April - 31 March)", show_quants = c(0.05,
-  0.25), ref = c("Bmsy", "Bref"))
+plot_vulnerable_biomass(
+  object,
+  scales = "free_x",
+  show_map = TRUE,
+  show_mcmc = TRUE,
+  show_proj = FALSE,
+  xlab = "Fishing year (1 April - 31 March)",
+  show_quants = c(0.05, 0.25),
+  ref = c("Bmsy", "Bref")
+)
 }
 \arguments{
 \item{object}{and LSD object}

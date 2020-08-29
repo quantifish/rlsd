@@ -4,8 +4,13 @@
 \alias{plot_lfs}
 \title{Length-frequency plots}
 \usage{
-plot_lfs(object, n_panel = 10, xlab = "Midpoint of size-class (mm)",
-  ylab = "Proportion at size (mm)", figure_dir = "figure/")
+plot_lfs(
+  object,
+  n_panel = 10,
+  xlab = "Midpoint of size-class (mm)",
+  ylab = "Proportion at size (mm)",
+  figure_dir = "figure/"
+)
 }
 \arguments{
 \item{object}{and LSD object}

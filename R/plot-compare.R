@@ -235,10 +235,7 @@ plot_compare_ssb <- function(object_list, object_names, figure_dir = "compare_fi
     }
 
     p <- ggplot(relssb %>% filter(Year %in% years)) +
-         theme_lsd(base_size=14) + mods <- unique(ssb$Model)
-    mod_num <- sapply(1:length(mods), function(m) as.numeric(strsplit(as.character(mods[m]),"_")[[1]][1]))
-    ssb$Model <- factor(ssb$Model, levels = unique(mods)[order(mod_num)])
-    ssb0$Model <- factor(ssb0$Model, levels = unique(mods)[order(mod_num)])
+         theme_lsd(base_size=14) + 
          expand_limits(y = 0) +
          geom_hline(aes(yintercept = 0.2), col="gray") +
          geom_hline(aes(yintercept = 0.1), col="gray") +

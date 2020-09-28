@@ -41,6 +41,7 @@ do_plot <- function(object,
         sq <- seq(1, length(unique(posteriors$par)), n_panel)
 
         # MCMC trace plot
+        print("plotting traces")
         for (i in 1:length(sq)) {
             pq <- sq[i]:(sq[i] + n_panel - 1)
             d <- dplyr::filter(posteriors, par %in% unique(posteriors$par)[pq])
@@ -54,6 +55,7 @@ do_plot <- function(object,
         }
 
         # MCMC histogram
+        print("plotting histograms")
         for (i in 1:length(sq)) {
             pq <- sq[i]:(sq[i] + n_panel - 1)
             d <- dplyr::filter(posteriors, par %in% unique(posteriors$par)[pq])
@@ -67,6 +69,7 @@ do_plot <- function(object,
         }
         
         # MCMC density
+        print("plotting density")
         for (i in 1:length(sq)) {
             pq <- sq[i]:(sq[i] + n_panel - 1)
             d <- rbind(posteriors, priors) %>%
@@ -86,6 +89,7 @@ do_plot <- function(object,
         }
         
         # MCMC cumulative density
+        print("plotting cumulative density")
         for (i in 1:length(sq)) {
             pq <- sq[i]:(sq[i] + n_panel - 1)
             d <- dplyr::filter(posteriors, par %in% unique(posteriors$par)[pq])
@@ -98,7 +102,8 @@ do_plot <- function(object,
             ggsave(paste0(figure_dir, "par_cdf_", i, ".png"), p, width = ifelse(npar > 1, 7, 3.5), height = npar + (npar %% 2))
         }
 
-        plot_snail(object, figure_dir = figure_dir)
+        print("plotting snail")
+        #plot_snail(object, figure_dir = figure_dir)
     }
     
     # tres <- table_residuals(object, figure_dir = figure_dir)

@@ -87,6 +87,10 @@ plot_compare_ssb <- function(object_list, object_names, figure_dir = "compare_fi
     years <- unique(unlist(years_list))
     pyears <- unique(unlist(pyears_list))
 
+    mods <- unique(ssb$Model)
+    mod_num <- sapply(1:length(mods), function(m) as.numeric(strsplit(as.character(mods[m]),"_")[[1]][1]))
+    ssb$Model <- factor(ssb$Model, levels = unique(mods)[order(mod_num)])
+    ssb0$Model <- factor(ssb0$Model, levels = unique(mods)[order(mod_num)])
     p1 <- ggplot(ssb %>% filter(Year %in% years), aes(x = Year, y = value)) +
         stat_summary(data = ssb0 %>% filter(Year %in% years) %>% filter(type == "Soft limit"), fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
         stat_summary(data = ssb0 %>% filter(Year %in% years) %>% filter(type == "Soft limit"), fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model)) +
@@ -168,7 +172,7 @@ plot_compare_ssb <- function(object_list, object_names, figure_dir = "compare_fi
          expand_limits(y = 0) +
          geom_hline(aes(yintercept = 0.2), col="gray") +
          geom_hline(aes(yintercept = 0.1), col="gray") +
-         geom_text(data = labs_rel, aes(x = "base", y = value, label = type), nudge_x = nmod-1) +
+         geom_text(data = labs_rel, aes(x = "base", y = value, label = type)) +
          ylab("Terminal year relative spawning biomass") +
          xlab("Model") #+
          # scale_y_continuous(expand = c(0,0), limits = c(0, 1))
@@ -203,7 +207,7 @@ plot_compare_ssb <- function(object_list, object_names, figure_dir = "compare_fi
          expand_limits(y = 0) +
          geom_hline(aes(yintercept = 0.2), col="gray") +
          geom_hline(aes(yintercept = 0.1), col="gray") +
-         geom_text(data = labs_rel, aes(x = "base", y = value, label = type), nudge_x = nmod-1) +
+         geom_text(data = labs_rel, aes(x = "base", y = value, label = type)) +
          ylab("Terminal year relative spawning biomass") +
          xlab("Model") +
          # scale_y_continuous(expand = c(0,0), limits = c(0, 1)) +
@@ -231,11 +235,11 @@ plot_compare_ssb <- function(object_list, object_names, figure_dir = "compare_fi
     }
 
     p <- ggplot(relssb %>% filter(Year %in% years)) +
-         theme_lsd(base_size=14) +
+         theme_lsd(base_size=14) + 
          expand_limits(y = 0) +
          geom_hline(aes(yintercept = 0.2), col="gray") +
          geom_hline(aes(yintercept = 0.1), col="gray") +
-         geom_text(data = labs_rel, aes(x = min(Year), y = value, label = type), nudge_x=-5) +
+         geom_text(data = labs_rel, aes(x = (min(Year) - 10), y = value, label = type)) +
          stat_summary(fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(x = Year, y = RelSSB, fill = Model)) +
          stat_summary(fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(x = Year, y = RelSSB, color = Model)) +
          xlab("Year") +
@@ -260,7 +264,7 @@ plot_compare_ssb <- function(object_list, object_names, figure_dir = "compare_fi
          expand_limits(y = 0) +
          geom_hline(aes(yintercept = 0.2), col = "gray") +
          geom_hline(aes(yintercept = 0.1), col = "gray") +
-         geom_text(data = labs_rel, aes(x = min(Year), y = value, label = type), nudge_x=-5) +
+         geom_text(data = labs_rel, aes(x = min(Year)-10, y = value, label = type)) +
          stat_summary(fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(x = Year, y = RelSSB, fill = Model)) +
          stat_summary(fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(x = Year, y = RelSSB, color = Model)) +
          xlab("Year") +
@@ -342,6 +346,10 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
     vb <- data.frame(do.call(rbind, vb_list))
     vb$Model <- factor(vb$Model)
     vb$qconstant <- factor(vb$qconstant)
+
+    mods <- unique(vb$Model)
+    mod_num <- sapply(1:length(mods), function(m) as.numeric(strsplit(as.character(mods[m]),"_")[[1]][1]))
+    vb$Model <- factor(vb$Model, levels = unique(mods)[order(mod_num)])
 
     # n1 <- sapply(1:length(object_names), function(x) strsplit(object_names[x], "_")[[1]][1])
     # # n2 <- sapply(1:length(object_names), function(x) strsplit(object_names[x], paste0(n1[x],"_"))[[1]][2])
@@ -465,6 +473,10 @@ plot_compare_recruitment <- function(object_list, object_names, figure_dir = "co
     recruits$Model <- factor(recruits$Model)
     recruits$qconstant <- factor(recruits$qconstant)
     recruits$value <- recruits$value/1e6
+
+    mods <- unique(recruits$Model)
+    mod_num <- sapply(1:length(mods), function(m) as.numeric(strsplit(as.character(mods[m]),"_")[[1]][1]))
+    recruits$Model <- factor(recruits$Model, levels = unique(mods)[order(mod_num)])
 
     # plot recruitment
     xmin <- min(recruits$Year)
@@ -602,6 +614,10 @@ plot_compare_selectivity <- function(object_list, object_names, figure_dir = "co
     nmod <- length(unique(sel$Model))
     sel$Season <- factor(sel$Season)
 
+    mods <- unique(sel$Model)
+    mod_num <- sapply(1:length(mods), function(m) as.numeric(strsplit(as.character(mods[m]),"_")[[1]][1]))
+    sel$Model <- factor(sel$Model, levels = unique(mods)[order(mod_num)])
+    
     ## if multiple seasons, regardless of year
     if(length(unique(sel$Season)) > 1){
       p <- ggplot(data = sel, aes(x = Size, y = Selectivity, col = Model, fill = Model, linetype = Season)) +

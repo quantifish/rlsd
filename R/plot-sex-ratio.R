@@ -115,8 +115,8 @@ plot_sex_ratio <- function(object, scales = "free", xlab = "Fishing year", ylab 
     }
     
     if (length(mcmc) > 0) {
-        p <- p + stat_summary(data = psexr2, aes(x = Year, y = value), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
-          stat_summary(data = psexr2, aes(x = Year, y = value), fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
+        p <- p + stat_summary(data = psexr2, aes(x = Year, y = value), fun.min = function(x) stats::quantile(x, 0.05), fun.max = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
+          stat_summary(data = psexr2, aes(x = Year, y = value), fun.min = function(x) stats::quantile(x, 0.25), fun.max = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
           stat_summary(data = psexr2, aes(x = Year, y = value), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1)
     }
     

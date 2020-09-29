@@ -122,8 +122,8 @@ plot_lfs <- function(object,
         p <- ggplot() +
             geom_vline(data = filter(elf, LF %in% pq), aes(xintercept = MLS), linetype = "dashed") +
             geom_label(data = filter(elf, LF %in% pq), aes(x = Inf, y = Inf, label = paste(rawN, "\n", effN)), hjust = 1, vjust = 1) +
-            stat_summary(data = filter(plf, LF %in% pq, Size >= lower & Size <= upper), aes(x = as.numeric(as.character(Size)), y = value), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
-            stat_summary(data = filter(plf, LF %in% pq, Size >= lower & Size <= upper), aes(x = as.numeric(as.character(Size)), y = value), fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
+            stat_summary(data = filter(plf, LF %in% pq, Size >= lower & Size <= upper), aes(x = as.numeric(as.character(Size)), y = value), fun.min = function(x) stats::quantile(x, 0.05), fun.max = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
+            stat_summary(data = filter(plf, LF %in% pq, Size >= lower & Size <= upper), aes(x = as.numeric(as.character(Size)), y = value), fun.min = function(x) stats::quantile(x, 0.25), fun.max = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
             stat_summary(data = filter(plf, LF %in% pq, Size >= lower & Size <= upper), aes(x = as.numeric(as.character(Size)), y = value), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1) +
             geom_point(data = filter(dlf, LF %in% pq, Size >= lower & Size <= upper), aes(x = as.numeric(as.character(Size)), y = value, shape = Source, colour = Season)) +
             xlab(xlab) + ylab(ylab) +
@@ -203,8 +203,8 @@ plot_lfs_resid2 <- function(object, n_panel = 10, figure_dir = "figure/")
       p <- ggplot(data = df, aes(x = as.numeric(as.character(Size)), y = value, colour = Source, fill = Source)) +
         geom_vline(aes(xintercept = MLS), linetype = "dashed") +
         geom_hline(yintercept = 0, linetype = "dashed") +
-        stat_summary(fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
-        stat_summary(fun.ymin = function(x) quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
+        stat_summary(fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
+        stat_summary(fun.min = function(x) quantile(x, 0.25), fun.max = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
         stat_summary(fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1) +
         scale_x_continuous(minor_breaks = seq(0, 1e6, 2), limits = c(min(lim$lower), max(lim$upper))) +
         xlab("Midpoint of size-class (mm)") + ylab("Standardised residuals") +

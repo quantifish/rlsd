@@ -309,6 +309,11 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
     years_list <- lapply(1:length(object_list), function(x) data_list[[x]]$first_yr:data_list[[x]]$last_yr)
     pyears_list <- lapply(1:length(object_list), function(x) data_list[[x]]$first_yr:data_list[[x]]$last_proj_yr)
     regions_list <- lapply(1:length(object_list), function(x) 1:data_list[[x]]$n_area)
+    regions_list2 <- lapply(1:length(object_list), function(x) {
+      if (length(regions_list[[x]]) == 1) out <- regions_list[[x]]
+      if (length(regions_list[[x]]) > 1) out <- c(regions_list[[x]], "Total")
+      return(out)
+    })
     rules_list <- lapply(1:length(object_list), function(x) 1:data_list[[x]]$n_rules)
     sex <- c("Male", "Immature female", "Mature female")
     seasons <- c("AW", "SS")
@@ -346,6 +351,32 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
     vb <- data.frame(do.call(rbind, vb_list))
     vb$Model <- factor(vb$Model)
     vb$qconstant <- factor(vb$qconstant)
+    
+    vb0_list <- lapply(1:length(object_list), function(x) {
+      n_iter <- nrow(mcmc_list[[x]][[1]])
+      bio <- mcmc_list[[x]]$B0_r
+      dimnames(bio) <- list("Iteration" = 1:n_iter, "Region" = regions_list2[[x]])
+      vb0 <- reshape2::melt(bio) %>%
+        left_join(expand.grid(Iteration = 1:n_iter, Year = pyears_list[[x]]), by = "Iteration") %>%
+        filter(Region != "Total") %>%
+        group_by(Iteration, Year) %>%
+        summarise(value = sum(value)) %>%
+        ungroup() %>%
+        mutate(Rule = 1, type = "VB0")
+      # bio <- mcmc_list[[x]]$SSBref_jr
+      # dimnames(bio) <- list("Iteration" = 1:n_iter, "Rule" = 1, "Region" = regions_list[[x]])
+      # ref <- reshape2::melt(bio) %>%
+      #     left_join(expand.grid(Iteration = 1:n_iter, Year = pyears_list[[x]]), by = "Iteration") %>%
+      #     group_by(Iteration, Region, Rule, value, Year) %>%
+      #     ungroup() #%>%
+      # mutate(type = "Target")
+      bio2 <- vb0
+      # filter(Year <= max(years_list[[x]]))
+      bio2$Model <- object_names[x]
+      return(bio2)
+    })
+    vb0 <- data.frame(do.call(rbind, vb0_list))
+    vb0$Model <- factor(vb0$Model)
 
     mods <- unique(vb$Model)
     mod_num <- sapply(1:length(mods), function(m) as.numeric(strsplit(as.character(mods[m]),"_")[[1]][1]))
@@ -397,6 +428,35 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
       ggsave(paste0(figure_dir, "biomass_vulnref_compare.png"), p, width = 10)
     }
 
+    relvb <- full_join(vb %>% rename(VB = value), vb0 %>% rename(VB0 = value)) %>%
+      mutate(RelVB = VB/VB0)
+    
+    # Relative Vulnerable biomass
+    p <- ggplot(data = relvb %>% filter(Year %in% years), aes(x = Year, y = RelVB, color = Model, fill = Model)) +
+      stat_summary(data = relvb %>% filter(Year %in% years), fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
+      #stat_summary(data=vb, fun.ymin = function(x) quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75), geom = "ribbon", alpha=0.45, colour = NA) +
+      stat_summary(data = relvb %>% filter(Year %in% years), fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha=0.75) +
+      # scale_fill_manual(values = cols_all, labels = object_names) +
+      # scale_colour_manual(values = cols_all, labels = object_names) +
+      # guides(colour = guide_legend(override.aes = list(colour = cols_all, linetype = lty_all))) +
+      # scale_linetype(guide=FALSE) +
+      expand_limits(y = 0) +
+      xlab("Fishing year") + ylab("Relative vulnerable reference biomass (tonnes)") +
+      scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
+      theme_lsd(base_size=14) #+
+    # scale_y_continuous(expand = c(0,0), limits = c(0, max(vb$value)*1.05))
+    if (nmod > 5) {
+      p <- p +
+        scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
+        scale_color_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod)))
+    } else {
+      p <- p +
+        scale_fill_brewer(palette = "Set1") +
+        scale_color_brewer(palette = "Set1")
+    }
+    if (save_plot) {
+      ggsave(paste0(figure_dir, "biomass_relvulnref_compare.png"), p, width = 10)
+    }
 
     # Vulnerable biomass
     p <- ggplot(data = vb, aes(x = Year, y = value, color = Model, fill = Model)) +

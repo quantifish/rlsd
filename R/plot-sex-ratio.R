@@ -37,7 +37,7 @@ plot_sex_ratio <- function(object, scales = "free", xlab = "Fishing year", ylab 
         osexr <- reshape2::melt(osexr) %>%
             dplyr::left_join(w, by = "LF") %>%
             dplyr::mutate(EffN = 1 / Sigma, SD = sqrt(value * (1 - value) / EffN)) %>%
-            dplyr::mutate(Source = factor(Source), Source = sources[Source], Season = seasons[Season]) %>%
+            dplyr::mutate(Source = sources[Source], Source = factor(Source), Season = seasons[Season]) %>%
             dplyr::filter(Iteration == 1) %>%
             dplyr::select(-Iteration)
 
@@ -66,7 +66,7 @@ plot_sex_ratio <- function(object, scales = "free", xlab = "Fishing year", ylab 
         osexr <- reshape2::melt(osexr) %>%
             dplyr::left_join(w, by = "LF") %>%
             dplyr::mutate(EffN = 1 / Sigma, SD = sqrt(value * (1 - value) / EffN)) %>%
-            dplyr::mutate(Source = factor(Source), Source = sources[Source], Season = seasons[Season]) %>%
+            dplyr::mutate(Source = sources[Source], Source = factor(Source), Season = seasons[Season]) %>%
             dplyr::filter(Iteration == 1) %>%
             dplyr::select(-Iteration)
         
@@ -88,8 +88,9 @@ plot_sex_ratio <- function(object, scales = "free", xlab = "Fishing year", ylab 
         geom_hline(yintercept = 0, alpha = 0.2) +
         # expand_limits(y = 0) +
         xlab(xlab) + ylab("Standardised residual") +
-        theme_lsd() +
-        theme(legend.position = "none")
+        theme_lsd()  +
+        guides(alpha = FALSE) 
+               # theme(legend.position = "none")
     if (n_iter > 10) {
         p <- p + geom_violin(aes(x = as.factor(Year), y = value, colour = Source, fill = Source, alpha = Sigma)) +
             scale_x_discrete(breaks = seq(0, 1e6, 5)) + 

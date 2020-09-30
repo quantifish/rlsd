@@ -653,7 +653,7 @@ plot_compare_selectivity <- function(object_list, object_names, figure_dir = "co
         pyears <- pyears_list[[x]]
 
         w <- data_list[[x]]$which_sel_rsyt
-        dimnames(w) <- list("Region" = regions, "Sex" = sex, "Year" = pyears, "Season" = 1:n_season)
+        dimnames(w) <- list("Region" = paste0("Region ", regions), "Sex" = sex, "Year" = pyears, "Season" = 1:n_season)
         w <- reshape2::melt(w, value.name = "Selex")
 
 
@@ -669,7 +669,8 @@ plot_compare_selectivity <- function(object_list, object_names, figure_dir = "co
 
         return(sel2)
     })
-    sel <- do.call(rbind, slist)
+    sel <- do.call(rbind, slist) %>%
+      dplyr::rename(Epoch = Year)
 
     nmod <- length(unique(sel$Model))
     sel$Season <- factor(sel$Season)
@@ -686,10 +687,10 @@ plot_compare_selectivity <- function(object_list, object_names, figure_dir = "co
         stat_summary(data = sel, aes(x = Size, y = Selectivity, col = Model, linetype = Season), fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha=0.8) #+
         # scale_y_continuous(expand = c(0,0), limits = c(0, 1.05))
     } else {
-      p <- ggplot(data = sel, aes(x = Size, y = Selectivity, col = Model, fill = Model, linetype = Year)) +
-        stat_summary(data = sel, aes(x = Size, y = Selectivity, col = Model, linetype = Year), fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
-        stat_summary(data = sel, aes(x = Size, y = Selectivity, col = Model, linetype = Year), fun.ymin = function(x) quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
-        stat_summary(data = sel, aes(x = Size, y = Selectivity, col = Model, linetype = Year), fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha=0.8) #+
+      p <- ggplot(data = sel, aes(x = Size, y = Selectivity, col = Model, fill = Model)) +
+        stat_summary(data = sel, aes(x = Size, y = Selectivity, col = Model), fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
+        stat_summary(data = sel, aes(x = Size, y = Selectivity, col = Model), fun.ymin = function(x) quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
+        stat_summary(data = sel, aes(x = Size, y = Selectivity, col = Model), fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha=0.8) #+
         # scale_y_continuous(expand = c(0,0), limits = c(0, 1.05))
     }
     if(nmod > 5){
@@ -706,17 +707,17 @@ plot_compare_selectivity <- function(object_list, object_names, figure_dir = "co
         if(length(unique(sel$Year))==1 & length(unique(sel$Season))==1) p <- p + guides(linetype = FALSE)
 
         areas <- unique(sapply(1:length(data_list), function(x) data_list[[x]]$n_area))
-        if (length(areas) > 1) {
+        if (areas > 1) {
           if(length(unique(sel$Season))>1 & length(unique(sel$Year))>1){
-            p <- p + facet_grid(Region + Year ~ Sex)
+            p <- p + facet_grid(Region + Year ~ Epoch + Sex)
           } else {
-            p <- p + facet_grid(Region ~ Sex)
+            p <- p + facet_grid(Region ~ Epoch + Sex)
           }
         } else {
           if(length(unique(sel$Season))>1 & length(unique(sel$Year))>1){
-            p <- p + facet_grid(Year ~ Sex)
+            p <- p + facet_grid(Year ~ Epoch + Sex)
           } else {
-            p <- p + facet_grid( ~ Sex)
+            p <- p + facet_grid( ~ Epoch + Sex)
           }
         }
 
@@ -724,6 +725,7 @@ plot_compare_selectivity <- function(object_list, object_names, figure_dir = "co
             expand_limits(y = c(0, 1)) +
             xlab("Length bin") +
             theme_lsd(base_size=14)
+      
 
    if (save_plot) {
       ggsave(paste0(figure_dir, "selectivity_compare.png"), p, width = 10)

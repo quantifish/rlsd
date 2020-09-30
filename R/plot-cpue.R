@@ -419,7 +419,7 @@ plot_cpue <- function(object,
     } else {
         p <- p + facet_wrap( ~ Season, scales = "free", ncol = data$n_area)
     }
-    ggsave(paste0(figure_dir, "cpue_resid_FSU.png"), p, height = 9, width=9)
+    ggsave(paste0(figure_dir, "cpue_resid_CELR.png"), p, height = 9, width=9)
     
 }
 

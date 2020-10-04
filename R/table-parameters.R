@@ -14,17 +14,21 @@ table_parameters <- function(object,
   mcmc <- object@mcmc
   
   pars <- reshape2::melt(mcmc) %>%
-    dplyr::select(L1 , Var2 , value ) 
+    dplyr::select(L1 , Var2 , value, iterations) 
   
   pars <- dplyr::filter(pars, grepl("par_", L1) & !grepl("par_rec", L1) & !grepl("par_q_cpue_qy", L1))
   
-  names(pars) <- c("Parameter", "Subscript", "Estimate")
+  names(pars) <- c("Parameter", "Subscript", "Estimate", "Iteration")
   
   pars$Parameter <- gsub(patter = "par_", replacement = "", x = pars$Parameter) 
   pars$Parameter <- gsub(patter = "_i", replacement = "", x = pars$Parameter) 
   pars$Parameter <- gsub(patter = "_r", replacement = "", x = pars$Parameter) 
   pars$Parameter <- paste(pars$Parameter," [",pars$Subscript,"]",sep="")
   pars <- pars[,-2]
+
+  pars <- pars %>%
+    dplyr::group_by(Parameter) %>%
+    dplyr::summarise(Estimate = median(Estimate))
   
   if(save_table == TRUE){
     write.csv(pars, file.path(figure_dir, "Parameters_summary.csv"), row.names=FALSE)

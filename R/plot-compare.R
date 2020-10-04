@@ -906,9 +906,8 @@ table_compare_parameters <- function(object_list, object_names, figure_dir = "co
   })
   pdf <- do.call(rbind, plist)
   pdf2 <- pdf %>%
-    tidyr::pivot_longer(-c(model,Parameter), names_to = "Type", values_to = "value") %>%
-    tidyr::pivot_wider(names_from = model)
-  # 
+    # tidyr::pivot_longer(-c(model,Parameter), names_to = "Type", values_to = "value") %>%
+    tidyr::pivot_wider(names_from = model, values_from = Estimate)
   write.csv(pdf2, file = file.path(figure_dir, "parameter_summaries.csv"), row.names = FALSE)
 }
 

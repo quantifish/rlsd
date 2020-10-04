@@ -888,6 +888,29 @@ table_compare_residuals <- function(object_list, object_names, figure_dir = "com
   write.csv(rdf2, file = file.path(figure_dir, "Residual_summaries.csv"), row.names = FALSE)
 }
 
+#' Table comparing estimated parameters across models
+#'
+#' @param object_list list of 'lsd.rds' files from multiple models
+#' @param object_names vector of model names associated with each of the output files in object_list
+#' @param figure_dir the directory to save to
+#' @import dplyr
+#' @importFrom reshape2 melt
+#' @importFrom tidyr pivot_longer pivot_wider
+#' @export
+#'
+table_compare_parameters <- function(object_list, object_names, figure_dir = "compare_figure/") {
+  plist <- lapply(1:length(object_list), function(x){ #apply fun to each object
+    pars <- table_parameters(object = object_list[[x]], figure_dir = figure_dir, save_table = FALSE)
+    pars <- pars %>% mutate("model"=object_names[[x]])
+    return(pars)
+  })
+  pdf <- do.call(rbind, plist)
+  pdf2 <- pdf %>%
+    tidyr::pivot_longer(-c(model,Parameter), names_to = "Type", values_to = "value") %>%
+    tidyr::pivot_wider(names_from = model)
+  # 
+  write.csv(pdf2, file = file.path(figure_dir, "parameter_summaries.csv"), row.names = FALSE)
+}
 
 #' Table computing leave-one-out information criterion for various datasets
 #'

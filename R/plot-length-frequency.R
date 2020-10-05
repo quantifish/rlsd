@@ -51,7 +51,12 @@ plot_lfs <- function(object,
     dimnames(rawN) <- list("LF" = 1:data$n_lf, "Sex" = sex)
     rawN <- reshape2::melt(rawN, value.name = "rawN") %>%
         mutate(Iteration = 1)
-
+    
+    rawW <- data$data_lf_weight_is
+    dimnames(rawW) <- list("LF" = 1:data$n_lf, "Sex" = sex)
+    rawW <- reshape2::melt(rawW, value.name = "rawW") %>%
+      mutate(Iteration = 1)
+    
     effN <- mcmc$pred_lf_effN_is
     dimnames(effN) <- list("Iteration" = 1:n_iter, "LF" = 1:data$n_lf, "Sex" = sex)
     effN <- reshape2::melt(effN, value.name = "effN")
@@ -116,7 +121,28 @@ plot_lfs <- function(object,
     }
     ggsave(paste0(figure_dir, "lf_observed.png"), p, width = 12)
 
-
+  # observed by sex, year, source and area
+    for (i in 1:length(sq)) {
+      pq <- sq[i]:(sq[i] + n_panel - 1)
+      p <- ggplot() +
+        #geom_vline(data = filter(elf, LF %in% pq), aes(xintercept = MLS), linetype = "dashed") +
+        geom_label(data = filter(rawW, LF %in% pq), aes(x = Inf, y = Inf, label = paste("w: ", round(rawW, 4)), hjust = 1, vjust = 1) + #stat_summary(data = filter(plf, LF %in% pq, Size >= lower & Size <= upper), aes(x = as.numeric(as.character(Size)), y = value), fun.min = function(x) stats::quantile(x, 0.05), fun.max = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
+        #stat_summary(data = filter(plf, LF %in% pq, Size >= lower & Size <= upper), aes(x = as.numeric(as.character(Size)), y = value), fun.min = function(x) stats::quantile(x, 0.25), fun.max = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
+        #stat_summary(data = filter(plf, LF %in% pq, Size >= lower & Size <= upper), aes(x = as.numeric(as.character(Size)), y = value), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1) +
+        geom_point(data = filter(dlf, LF %in% pq, Size >= lower & Size <= upper), aes(x = as.numeric(as.character(Size)), y = value, shape = Source, colour = Season)) +
+        xlab(xlab) + ylab(ylab) +
+        guides(shape = FALSE, colour = FALSE) +
+        scale_colour_manual(values = rev(ggplotColours(n = length(sources)))) +
+        scale_x_continuous(minor_breaks = seq(0, 1e6, 2), limits = c(min(elf$lower), max(elf$upper))) +
+        theme_lsd()
+      if (data$n_area == 1) {
+        p <- p + facet_grid(Year + Season + Source ~ Sex, scales = "free_y")
+      } else {
+        p <- p + facet_grid(Region + Year + Season + Source ~ Sex, scales = "free_y")
+      }  
+      ggsave(paste0(figure_dir, "lf_obs", i, ".png"), p, height = 12, width = 9)
+    }
+    #
     for (i in 1:length(sq)) {
         pq <- sq[i]:(sq[i] + n_panel - 1)
         p <- ggplot() +

@@ -11,24 +11,18 @@ table_parameters <- function(object,
                             save_table)
 {
   
-  mcmc <- object@mcmc
+  mcmc <- object@mcmc_pars 
   
-  pars <- reshape2::melt(mcmc) %>%
-    dplyr::select(L1 , Var2 , value, iterations) 
+  names(mcmc) <- c("Iteration","Chain", "Parameter", "Estimate")
   
-  pars <- dplyr::filter(pars, grepl("par_", L1) & !grepl("par_rec", L1) & !grepl("par_q_cpue_qy", L1))
-  
-  names(pars) <- c("Parameter", "Subscript", "Estimate", "Iteration")
-  
-  pars$Parameter <- gsub(patter = "par_", replacement = "", x = pars$Parameter) 
-  pars$Parameter <- gsub(patter = "_i", replacement = "", x = pars$Parameter) 
-  pars$Parameter <- gsub(patter = "_r", replacement = "", x = pars$Parameter) 
-  pars$Parameter <- paste(pars$Parameter," [",pars$Subscript,"]",sep="")
-  pars <- pars[,-2]
-
-  pars <- pars %>%
+  pars <- mcmc %>%
     dplyr::group_by(Parameter) %>%
     dplyr::summarise(Estimate = median(Estimate))
+  
+  #remove Fmult and MSY derived quants
+  pars <- dplyr::filter(pars, Parameter != "Bmsy_r[1]" , Parameter != "MSY_r[1]", Parameter != "Fmult_r[1]" , 
+                          Parameter != "Fmsy_r[1]" , Parameter != "n_Bcurr_g_Bmsy_r[1]", Parameter != "SSBmsy_r[1]") 
+  
   
   if(save_table == TRUE){
     write.csv(pars, file.path(figure_dir, "Parameters_summary.csv"), row.names=FALSE)

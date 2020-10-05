@@ -36,6 +36,7 @@ plot_lfs <- function(object,
     # 1. Minimum legal size by region, year and sex. These get plotted as vertical lines on each panel.
     # 2. Bin limits
     # 3. Effective N
+    # 4. Weights 
     mls <- data$cov_mls_ytrs
     dimnames(mls) <- list("Year" = data$first_yr:data$last_proj_yr, "Season" = seasons, "Region" = regions, "Sex" = sex)
     mls <- reshape2::melt(mls, id.var = "Year", variable.name = "Sex", value.name = "MLS")
@@ -73,6 +74,13 @@ plot_lfs <- function(object,
         mutate(effN = paste0("n: ", sprintf("%.2f", effN))) %>%
         mutate(rawN = paste0("N: ", sprintf("%.0f", rawN)))
     head(elf)
+
+    elf2 <- rawW %>%
+        left_join(w, by = "LF") %>%
+        mutate(Source = sources[Source], Season = factor(seasons[Season])) %>%
+        left_join(mls, by = c("Region","Year","Season","Sex")) %>%
+        left_join(lim, by = c("Region","Sex")) %>%
+        select(-Iteration)
 
     # Observed LF
     dlf <- mcmc$data_lf_out_isl
@@ -126,7 +134,7 @@ plot_lfs <- function(object,
       pq <- sq[i]:(sq[i] + n_panel - 1)
       p <- ggplot() +
         #geom_vline(data = filter(elf, LF %in% pq), aes(xintercept = MLS), linetype = "dashed") +
-        geom_label(data = filter(rawW, LF %in% pq), aes(x = Inf, y = Inf, label = paste("w: ", round(rawW, 4)), hjust = 1, vjust = 1) + #stat_summary(data = filter(plf, LF %in% pq, Size >= lower & Size <= upper), aes(x = as.numeric(as.character(Size)), y = value), fun.min = function(x) stats::quantile(x, 0.05), fun.max = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
+        geom_label(data = filter(elf2, LF %in% pq), aes(x = Inf, y = Inf, label = paste("w: ", round(rawW, 4)), hjust = 1, vjust = 1)) + #stat_summary(data = filter(plf, LF %in% pq, Size >= lower & Size <= upper), aes(x = as.numeric(as.character(Size)), y = value), fun.min = function(x) stats::quantile(x, 0.05), fun.max = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
         #stat_summary(data = filter(plf, LF %in% pq, Size >= lower & Size <= upper), aes(x = as.numeric(as.character(Size)), y = value), fun.min = function(x) stats::quantile(x, 0.25), fun.max = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
         #stat_summary(data = filter(plf, LF %in% pq, Size >= lower & Size <= upper), aes(x = as.numeric(as.character(Size)), y = value), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1) +
         geom_point(data = filter(dlf, LF %in% pq, Size >= lower & Size <= upper), aes(x = as.numeric(as.character(Size)), y = value, shape = Source, colour = Season)) +

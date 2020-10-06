@@ -87,7 +87,7 @@ plot_lfs <- function(object,
     dimnames(dlf) <- list("Iteration" = 1:n_iter, "LF" = 1:data$n_lf, "Sex" = sex, "Bin" = 1:length(bins))
     dlf <- reshape2::melt(dlf) %>%
         left_join(w, by = "LF") %>%
-        mutate(Source = factor(Source), Source = sources[Source]) %>%
+        mutate(Source = sources[Source], Source = factor(Source)) %>%
         mutate(Season = seasons[Season], Size = bins[Bin]) %>%
         filter(Iteration == 1, value >= 0) %>%
         select(-Iteration) %>%
@@ -202,7 +202,7 @@ plot_lfs_resid2 <- function(object, n_panel = 10, figure_dir = "figure/")
                     Source = data$data_lf_source_i, Region = data$data_lf_area_i,
                     Weight = data$data_lf_weight_i[,1], N = data$data_lf_N_is)
 
-    resid <- mcmc$resid_lf_isl
+        resid <- mcmc$resid_lf_isl
     dimnames(resid) <- list("Iteration" = 1:n_iter, "LF" = 1:data$n_lf, "Sex" = sex, "Size" = bins)
     resid <- reshape2::melt(resid) %>%
         left_join(w, by = "LF") %>%
@@ -219,7 +219,7 @@ plot_lfs_resid2 <- function(object, n_panel = 10, figure_dir = "figure/")
     dimnames(lim) <- list("Region" = regions, "Sex" = sex, "Limit" = c("lower","upper"))
     lim <- reshape2::melt(lim, variable.name = "Sex") %>%
         mutate(value = bins[value]) %>%
-        spread(Limit, value)
+        tidyr::spread(Limit, value)
 
     resid_lim <- left_join(resid, lim, by = c("Sex", "Region")) %>%
       filter(Size > lower, Size < upper)

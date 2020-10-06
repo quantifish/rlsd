@@ -92,4 +92,16 @@ plot_selectivity <- function(object,
         theme_lsd()
 
     ggsave(paste0(figure_dir, "selectivity.png"), p)
+    
+    if (!is.null(sel1)) {
+        q <- ggplot(sel1, aes(x = Size, y = Year, height = Selectivity, fill = Sex)) + 
+            ggridges::geom_density_ridges(stat = "identity", alpha = .6, color = "white", scale = 0.95) +
+            scale_y_discrete(expand = c(0, 0), name = "Selectivity by year") +
+            scale_x_continuous(expand = c(0, 0)) +
+            theme_lsd() +
+            theme(axis.title.x = element_text(hjust = 0.5), axis.title.y = element_text(hjust = 0.5))  
+        if (data$n_area > 1) {
+           q <- q + facet_wrap(~Region + Season, ncol=1) }
+    ggsave(paste0(figure_dir, "selectivity_ridges.png"), q)
+    }
 }

@@ -1,7 +1,7 @@
 Package: lsd
 Title: LSD Package
-Version: 6.59
-Date: 2020-08-20
+Version: 6.75
+Date: 2020-10-06
 Authors@R: c(
     person("Darcy", "Webber", email = "darcy@quantifish.co.nz", role = c("cre", "aut")),
     person("Merrill", "Rudd", email = "merrillrudd@gmail.com", role = "aut"))
@@ -66,6 +66,7 @@ Collate:
     'read-stan-map.R'
     'read-stan-mcmc.R'
     'read-stan-var.R'
+    'table-parameters.R'
     'table-residuals.R'
     'theme-lsd.R'
     'zzz.R'

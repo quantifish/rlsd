@@ -89,7 +89,8 @@ plot_sex_ratio <- function(object, scales = "free", xlab = "Fishing year", ylab 
         # expand_limits(y = 0) +
         xlab(xlab) + ylab("Standardised residual") +
         theme_lsd()  +
-        guides(alpha = FALSE) 
+        guides(alpha = FALSE) +
+        theme(axis.text.x = element_text(angle = 45,hjust = 1))
                # theme(legend.position = "none")
     if (n_iter > 10) {
         p <- p + geom_violin(aes(x = as.factor(Year), y = value, colour = Source, fill = Source, alpha = Sigma)) +
@@ -130,7 +131,8 @@ plot_sex_ratio <- function(object, scales = "free", xlab = "Fishing year", ylab 
         coord_cartesian(ylim = c(0, 1)) +
         xlab(xlab) + 
         ylab(ylab) +
-        theme_lsd()
+        theme_lsd() +
+        theme(axis.text.x = element_text(angle = 45,hjust = 1))
     
     if (data$n_area == 1) {
         p <- p + facet_grid(Sex ~ Season, scales = "free_x")

@@ -92,7 +92,7 @@ plot_data_extent <- function(object,
         scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
         labs(x = xlab, y = NULL) +
         theme_lsd() +
-        theme(legend.position = "none")
+        theme(legend.position = "none", axis.text.x = element_text(angle = 45,hjust = 1))
     if (d$n_area > 1) {
         p <- p + facet_wrap(~Region)
     }

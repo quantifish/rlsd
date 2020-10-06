@@ -129,13 +129,16 @@ plot_catch <- function(object,
         #expand_limits(y = 0) +
         xlab(xlab) + ylab(ylab) +
         scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
-        theme_lsd()
+        theme_lsd() +
+        theme(axis.text.x = element_text(angle = 45,hjust = 1))
+    
     if (data$n_area > 1) {
-          p <- p + facet_grid(Region + Type ~ Season, scales = "free")
+          p <- p + facet_grid(Region + Type ~ Season, scales = "free")#, 
+                              # labeller = label_wrap_gen(width=5))
     } else {
           p <- p + facet_grid(Type ~ Season, scales = "free")
     }
-    ggsave(paste0(figure_dir, "catch.png"), p, width = 8)
+    ggsave(paste0(figure_dir, "catch.png"), p, width = 8, height = 10)
 
 
     # Plot of catch summed over seasons and drop handling mortality
@@ -156,7 +159,8 @@ plot_catch <- function(object,
         expand_limits(y = 0) +
         xlab(xlab) + ylab(ylab) +
         scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
-        theme_lsd()
+        theme_lsd() + 
+        theme(axis.text.x = element_text(angle = 45,hjust = 1))
     if (data$n_area > 1) {
           p <- p + facet_grid(Region ~ Type, scales = scales)
     } else {
@@ -187,7 +191,8 @@ plot_catch <- function(object,
         #geom_violin() +
         expand_limits(y = 0) +
         xlab(xlab) + ylab("Residual") +
-        theme_lsd()
+        theme_lsd() +
+        theme(axis.text.x = element_text(angle = 45,hjust = 1))
       p <- p + facet_grid(Region + Type ~ Season, scales = "free")
     ggsave(paste0(figure_dir, "catch_resid.png"), p)
 

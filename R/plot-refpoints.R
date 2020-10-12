@@ -215,11 +215,11 @@ plot_refpoints <- function(object, object1, figure_dir){
   n_rules <- nrow(rules)
   fleets <- c("SL","NSL")
   
-  projF <- mcmc$proj_F_jytrf
-  dimnames(projF) <- list("Iteration"=1:n_iter, "RuleNum"=1:n_rules, "Year"=pyears, "Season"=seasons, "Region"=regions, "Fleet" = fleets)
-  projF2 <- reshape2::melt(projF, value.name = "F") %>%
-    dplyr::group_by(Iteration, RuleNum, Year, Region) %>%
-    dplyr::summarise(F = sum(F))
+  # projF <- mcmc$proj_F_jytrf
+  # dimnames(projF) <- list("Iteration"=1:n_iter, "RuleNum"=1:n_rules, "Year"=pyears, "Season"=seasons, "Region"=regions, "Fleet" = fleets)
+  # projF2 <- reshape2::melt(projF, value.name = "F") %>%
+  #   dplyr::group_by(Iteration, RuleNum, Year, Region) %>%
+  #   dplyr::summarise(F = sum(F))
 
   gc()
   # sub <- projF2 %>% filter(RuleNum %in% c(6,37))
@@ -238,12 +238,12 @@ plot_refpoints <- function(object, object1, figure_dir){
   # facet_wrap(~qtype) +
   # theme_bw()
   
-  cpue <- mcmc$mp_offset_cpue_jry
-  dimnames(cpue) <- list("Iteration" = 1:n_iter, "RuleNum" = 1:n_rules, "Region" = regions, "Year" = pyears)
-  cpue2 <- reshape2::melt(cpue, value.name = "CPUE")
-  cpue2 <- tibble(cpue2)
+  # cpue <- mcmc$mp_offset_cpue_jry
+  # dimnames(cpue) <- list("Iteration" = 1:n_iter, "RuleNum" = 1:n_rules, "Region" = regions, "Year" = pyears)
+  # cpue2 <- reshape2::melt(cpue, value.name = "CPUE")
+  # cpue2 <- tibble(cpue2)
   
-  gc()
+  # gc()
   
   slcatch <- mcmc$pred_catch_sl_jryt
   dimnames(slcatch) <- list("Iteration"=1:n_iter, "RuleNum"=1:dim(slcatch)[2], "Region"=regions, "Year"=pyears, "Season"=seasons)
@@ -348,12 +348,12 @@ plot_refpoints <- function(object, object1, figure_dir){
   
   gc()
 
-  rec <- mcmc$recruits_ry
-  dimnames(rec) <- list("Iteration" = 1:n_iter, "Region" = regions, "Year" = pyears)
-  rec2 <- reshape2::melt(rec) %>%
-    dplyr::rename(Recruitment = value)
-  rec2$Region <- factor(rec2$Region)
-  gc()
+  # rec <- mcmc$recruits_ry
+  # dimnames(rec) <- list("Iteration" = 1:n_iter, "Region" = regions, "Year" = pyears)
+  # rec2 <- reshape2::melt(rec) %>%
+  #   dplyr::rename(Recruitment = value)
+  # rec2$Region <- factor(rec2$Region)
+  # gc()
   
   relssb <- inner_join(ssb2, ssb0now) %>%
     dplyr::left_join(SSB0) %>%
@@ -378,11 +378,15 @@ plot_refpoints <- function(object, object1, figure_dir){
   gc()
   relb1 <- full_join(relb, reltb)
   gc()
-  relb2 <- full_join(relb1, rec2)
-  gc()
+  # relb2 <- full_join(relb1, rec2)
+  # gc()
+
+  rm(relssb)
+  rm(relvb)
+  rm(reltb)
 
   catch$Region <- factor(catch$Region)
-  info <- full_join(catch, relb2)
+  info <- full_join(catch, relb1)
   gc()
 
   # cpue2$Region <- factor(cpue2$Region)
@@ -439,7 +443,7 @@ plot_refpoints <- function(object, object1, figure_dir){
   # }
   
   rm(relb)
-  rm(relb2)
+  # rm(relb2)
   rm(catch)
   gc()
   
@@ -484,7 +488,7 @@ plot_refpoints <- function(object, object1, figure_dir){
   #####################
     summary <- cinfo %>%
       dplyr::filter(Region != "Total") %>%
-      tidyr::pivot_longer(cols=c(SL, NSL, Catch,SSB,SSB0now,SSB0,RelSSB,RelSSBnow,VB,VB0now,VB0,RelVB,RelVBnow,TB,TB0,TB0now, RelTB, RelTBnow), names_to = "Variable", values_to = "Value") %>% #CPUE,F)
+      tidyr::pivot_longer(cols=c(Catch,SSB,SSB0now,SSB0,RelSSB,RelSSBnow,VB,VB0now,VB0,RelVB,RelVBnow,TB,TB0,TB0now, RelTB, RelTBnow), names_to = "Variable", values_to = "Value") %>% #CPUE,F)
       dplyr::group_by(Region, RuleNum, Variable) %>%
       dplyr::summarise(P5 = quantile(Value, 0.05),
                        P50 = quantile(Value, 0.5),

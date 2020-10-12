@@ -108,7 +108,7 @@ do_plot <- function(object,
     
     # tres <- table_residuals(object, figure_dir = figure_dir)
     print("plotting biomass")
-    plot_biomass(object, figure_dir = figure_dir, ref = NA)
+    plot_biomass(object, figure_dir = figure_dir, ref = "Bref")
     print("plotting catch and Fs")
     plot_F(object, figure_dir = figure_dir, ref = NULL)
     plot_catch(object, figure_dir = figure_dir, show_proj = FALSE)

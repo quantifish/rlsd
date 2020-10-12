@@ -189,7 +189,7 @@ plot_refpoints <- function(object, object1, figure_dir){
 
   ## status in last year of model estimates
   status_check <- info1 %>%
-    dplyr::filter(Year == max(years1)) %>%
+    dplyr::filter(Year == max(years1)+1) %>%
     tidyr::pivot_longer(cols=c(Catch, SSB,SSB0now,SSB0,RelSSB,RelSSBnow,VB,VB0now,VB0,RelVB,RelVBnow,TB,TB0now,TB0,RelTB, RelTBnow), names_to = "Variable", values_to = "Value") %>%
     dplyr::group_by(Region, Variable) %>%
     dplyr::summarise(P5 = quantile(Value, 0.05),
@@ -730,7 +730,7 @@ plot_refpoints <- function(object, object1, figure_dir){
   
   ## last assessment year
   curr <- info1 %>%
-    dplyr::filter(Year == max(years)) %>%
+    dplyr::filter(Year == max(years)+1) %>%
     tidyr::pivot_longer(cols = c(unique(status_check$Variable)), names_to = "Variable", values_to = "Value") %>%
     ungroup() %>%
     dplyr::select(Region, Variable, Value)  %>%

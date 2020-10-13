@@ -665,7 +665,6 @@ plot_vulnerable_biomass <- function(object,
 #' @param show_mcmc show MCMC or not
 #' @param xlab the x axis label
 #' @param figure_dir the directory to save to
-#' @param ref specify Bmsy, Bref, or both
 #' @import dplyr
 #' @import ggplot2
 #' @importFrom reshape2 melt
@@ -677,8 +676,7 @@ plot_biomass <- function(object,
                          show_map = TRUE,
                          show_mcmc = TRUE,
                          xlab = "Fishing year",
-                         figure_dir = "figure/",
-                         ref = c("Bmsy", "Bref"))
+                         figure_dir = "figure/")
 {
     data <- object@data
     map <- object@map

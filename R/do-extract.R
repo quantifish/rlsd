@@ -34,15 +34,15 @@ do_extract <- function(dir = ".", data = TRUE,
                     "SSB0_r", "SSBmsy_r", "SSBcurr_jr", "SSBproj_jr", "SSB0now_r", "SSBcurr_SSB0_jr", "SSBproj_SSB0_jr", "SSBcurr_SSB0now_jr", "SSBcurr_SSBref_jr", "SSBproj_SSBref_jr", "SSBproj_SSB0now_jr",
                     "Btot0_r", "Btot_curr_jr", "Btot0now_r", "Btot_proj_jr", "Btot_curr_Btot0_jr", "Btot_curr_Btot0now_jr", "Btot_proj_Btot0_jr", "Btot_proj_Btot0now_jr",
                     "Ntot0_r", "Ntot_curr_jr",
-                    "SSBref_jr", "Bref_jr", "n_SSBcurr_g_SSBref_r", "SSBref_SSB0_jr", "SSBref_SSB0now_jr", "Bref_B0_jr", "Bref_B0now_jr", "n_Bproj_g_Bref", "n_Bref_g_Bmsy_r",
+                    "SSBref_jr", "Bref_jr", "n_SSBcurr_g_SSBref_jr", "SSBref_SSB0_jr", "SSBref_SSB0now_jr", "Bref_B0_jr", "Bref_B0now_jr", "n_Bref_g_Bmsy_r",
                     "MSY_r", "Fmsy_r",
                     "Hcurr_r", "Hproj_r",
                     "Rmean_r", "B0male_B0female_r", "Bmale_Bfemale_jr",
                     "CPUEcurr_jr", "CPUEproj_jr",
-                    "n_Bcurr_g_Bref_r", "n_Bproj_g_Bref", "n_Bproj_g_Bcurr", "n_Bcurr_g_Bmin_r", "n_Bcurr_g_Bmsy_r", "n_SSBcurr_g_SSBmsy_r", "n_Btot_proj_g_Btot_curr_jr",
+                    "n_Bcurr_g_Bref_r", "n_Bproj_g_Bref_jr", "n_Bproj_g_Bcurr_jr", "n_Bcurr_g_Bmin_r", "n_Bcurr_g_Bmsy_r", "n_SSBcurr_g_SSBmsy_r", "n_Btot_proj_g_Btot_curr_jr",
                     "n_SSBcurr_g_SSBref_jr", "n_SSBproj_g_SSBref_jr", "n_SSBproj_g_SSBcurr_jr",
                     "n_SSBcurr_l_20SSB0_r", "n_SSBcurr_l_10SSB0_r", "n_SSBcurr_l_20SSB0now_r", "n_SSBcurr_l_10SSB0now_r",
-                    "n_SSBproj_l_20SSB0_r", "n_SSBproj_l_10SSB0_r", "n_SSBproj_l_20SSB0now_r", "n_SSBproj_l_10SSB0now_r")
+                    "n_SSBproj_l_20SSB0_jr", "n_SSBproj_l_10SSB0_jr", "n_SSBproj_l_20SSB0now_jr", "n_SSBproj_l_10SSB0now_jr")
 
     # Priors that we want to compare with posteriors
     do_extract_priors <- c("prior_R0_r","prior_M_i", "prior_q_cpue_drift_i",

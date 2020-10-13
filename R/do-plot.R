@@ -12,16 +12,16 @@
 do_plot <- function(object,
                     map = FALSE, mcmc = FALSE, variational = FALSE,
                     figure_dir = "figure/") {
-    
+
     # Data only plots
     plot_data_extent(object, figure_dir = figure_dir)
 
     # MCMC diagnostic plots
     if (mcmc && nrow(object@mcmc[[1]]) > 10 && dim(object@mcmc$Bcurr_jr)[2] < 10) {
-        
+
         n_panel <- 12
         n_col <- 3
-        
+
         rm_post <- object@mcmc_pars %>%
             dplyr::group_by(par) %>%
             dplyr::summarise(s = sum(value)) %>%
@@ -30,14 +30,14 @@ do_plot <- function(object,
             dplyr::group_by(par) %>%
             dplyr::summarise(s = sum(value)) %>%
             dplyr::filter(s == 0)
-            
+
         posteriors <- object@mcmc_pars %>%
             dplyr::filter(!par %in% rm_post$par) %>%
             dplyr::mutate(par = as.character(par), type = "Posterior")
         priors <- object@mcmc_priors %>%
             dplyr::filter(!par %in% rm_prior$par) %>%
             dplyr::mutate(par = as.character(gsub(pattern = "prior_", replacement = "par_", x = par)), type = "Prior")
-        
+
         sq <- seq(1, length(unique(posteriors$par)), n_panel)
 
         # MCMC trace plot
@@ -67,7 +67,7 @@ do_plot <- function(object,
                 theme_lsd()
             ggsave(paste0(figure_dir, "par_histogram_", i, ".png"), p, width = ifelse(npar > 1, 8, 4), height = 10) #npar + (npar %% 2)
         }
-        
+
         # MCMC density
         print("plotting density")
         for (i in 1:length(sq)) {
@@ -84,10 +84,10 @@ do_plot <- function(object,
                 scale_fill_discrete(drop = TRUE, limits = c("Prior", "Posterior")) +
                 theme_lsd() +
                 theme(legend.position = "top")
-            ggsave(paste0(figure_dir, "par_density_", i, ".png"), p, width = ifelse(npar > 1, 8, 4), height = 10) 
+            ggsave(paste0(figure_dir, "par_density_", i, ".png"), p, width = ifelse(npar > 1, 8, 4), height = 10)
             #ggsave(paste0(figure_dir, "par_density_", i, ".png"), p, width = ifelse(npar > 1, 7, 3.5), height = npar + (npar %% 2))
         }
-        
+
         # MCMC cumulative density
         print("plotting cumulative density")
         for (i in 1:length(sq)) {
@@ -105,13 +105,14 @@ do_plot <- function(object,
         print("plotting snail")
         #plot_snail(object, figure_dir = figure_dir)
     }
-    
+
     # tres <- table_residuals(object, figure_dir = figure_dir)
     print("plotting biomass")
     plot_biomass(object, figure_dir = figure_dir)
     print("plotting catch and Fs")
     plot_F(object, figure_dir = figure_dir, ref = NULL)
-    plot_catch(object, figure_dir = figure_dir, show_proj = FALSE)
+    # plot_catch(object, figure_dir = figure_dir, show_proj = FALSE)
+    plot_catch_save(figure_dir = "figure/")
     plot_selectivity(object, figure_dir = figure_dir)
     print("plotting CPUE")
     plot_cpue(object, figure_dir = figure_dir)

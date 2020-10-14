@@ -19,8 +19,8 @@ plot_catch <- function(object,
                        show_proj = FALSE,
                        scales = "free",
                        xlab = "Fishing year",
-                       ylab = "Catch (tonnes)",
-                       figure_dir = "figure/")
+                       ylab = "Catch (tonnes)") #,
+                       #figure_dir = "figure/")
 {
     data <- object@data
     mcmc <- object@mcmc
@@ -119,13 +119,18 @@ plot_catch <- function(object,
     dcatch1 <- dcatch %>%
         dplyr::group_by(Region, Year, Season, Iteration, Type, Data) %>%
         dplyr::summarise(Catch = sum(Catch))
+    pcatch1 <- pcatch %>%
+      dplyr::group_by(Region, Year, Season, Type, Data) %>%
+      dplyr::summarise(Catch = median(Catch))
 
     p1 <- ggplot(data = pcatch, aes(x = Year, y = Catch))
     if (show_proj) p1 <- p1 + geom_vline(aes(xintercept = data$last_yr), linetype = "dashed")
+
     p1 <- p1 + stat_summary(fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
         stat_summary(fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
         stat_summary(fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1) +
         geom_point(data = dcatch1, color = "red") +
+        geom_point(data = dplyr::filter(pcatch1, Year > data$last_yr, Type != "Handling mortality"), color = "blue") +
         #expand_limits(y = 0) +
         xlab(xlab) + ylab(ylab) +
         scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
@@ -149,6 +154,9 @@ plot_catch <- function(object,
         dplyr::summarise(Catch = sum(Catch)) %>%
         dplyr::filter(Type != "Handling mortality")
     pcatch_sum$Type <- factor(pcatch_sum$Type, levels = c("SL", "NSL"))
+    pcatch_sum1 <- pcatch_sum %>%
+      dplyr::group_by(Region, Year, Type, Data) %>%
+      dplyr::summarise(Catch = median(Catch))
 
     p2 <- ggplot(data = pcatch_sum, aes(x = Year, y = Catch))
     if (show_proj) p2 <- p2 + geom_vline(aes(xintercept = data$last_yr), linetype = "dashed")
@@ -156,6 +164,7 @@ plot_catch <- function(object,
         stat_summary(fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
         stat_summary(fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1) +
         geom_point(data = dcatch_sum, aes(x = Year, y = Catch), color = "red") +
+        geom_point(data = dplyr::filter(pcatch_sum1, Year > data$last_yr, Type != "Handling mortality"), color = "blue") +
         expand_limits(y = 0) +
         xlab(xlab) + ylab(ylab) +
         scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +

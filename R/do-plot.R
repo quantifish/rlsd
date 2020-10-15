@@ -126,6 +126,7 @@ do_plot <- function(object,
     plot_growth_increment(object, figure_dir = figure_dir, empirical = FALSE)
     plot_growth_matrix(object, figure_dir = figure_dir)
     plot_initial_numbers(object, figure_dir = figure_dir)
+    plot_numbers(object, figure_dir = figure_dir)
     print("plotting sex-ratios")
     plot_sex_ratio(object, figure_dir = figure_dir)
     plot_ssb_recruitment(object, figure_dir = figure_dir)
@@ -143,6 +144,5 @@ do_plot <- function(object,
     #plot_offset_cpue_lm(object, figure_dir = figure_dir)
     plot_aw_cpue_lm(object, figure_dir = figure_dir)
     #plot_surplus_production(object, figure_dir = figure_dir)
-    #plot_numbers(object, figure_dir = figure_dir)
     #plot_retro(object, figure_dir = figure_dir)
 }

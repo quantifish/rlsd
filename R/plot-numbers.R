@@ -98,6 +98,8 @@ plot_numbers <- function(object,
     ggsave(paste0(figure_dir, "numbers_AW_finalyear.png"), p)
 
     
+
+    
     # for (r in 1:object@data$n_area)
     # {
     #     for (t in c("AW","SS"))

@@ -42,8 +42,7 @@ do_extract <- function(dir = ".", data = TRUE,
                     "n_Bcurr_g_Bref_r", "n_Bproj_g_Bref_jr", "n_Bproj_g_Bcurr_jr", "n_Bcurr_g_Bmin_r", "n_Bcurr_g_Bmsy_r", "n_SSBcurr_g_SSBmsy_r", "n_Btot_proj_g_Btot_curr_jr",
                     "n_SSBcurr_g_SSBref_jr", "n_SSBproj_g_SSBref_jr", "n_SSBproj_g_SSBcurr_jr",
                     "n_SSBcurr_l_20SSB0_r", "n_SSBcurr_l_10SSB0_r", "n_SSBcurr_l_20SSB0now_r", "n_SSBcurr_l_10SSB0now_r",
-                    "n_SSBproj_l_20SSB0_jr", "n_SSBproj_l_10SSB0_jr", "n_SSBproj_l_20SSB0now_jr", "n_SSBproj_l_10SSB0now_jr",
-                    "weight_rsl")
+                    "n_SSBproj_l_20SSB0_jr", "n_SSBproj_l_10SSB0_jr", "n_SSBproj_l_20SSB0now_jr", "n_SSBproj_l_10SSB0now_jr")
 
     # Priors that we want to compare with posteriors
     do_extract_priors <- c("prior_R0_r","prior_M_i", "prior_q_cpue_drift_i",

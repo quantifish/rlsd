@@ -1071,6 +1071,113 @@ plot_compare_selectivity <- function(object_list, object_names, figure_dir = "co
    }
 }
 
+#' Compare CPUE
+#'
+#' Plot the CPUE data and fit to the data.
+#'
+#' @param object_list 
+#' @param object_names
+#' @param scales free or fixed
+#' @param xlab the x axis label
+#' @param ylab the y axis label
+#' @param figure_dir the directory to save to
+#' @import dplyr
+#' @import ggplot2
+#' @importFrom reshape2 melt
+#' @importFrom stats quantile
+#' @export
+#' 
+#'
+plot_compare_cpue <- function(object_list,
+                      object_names,
+                      scales = "fixed",
+                      xlab = "Fishing year",
+                      ylab = "CPUE",
+                      figure_dir = "compare_figure/")
+{
+    data_list <- lapply(1:length(object_list), function(x) object_list[[x]]@data)
+    mcmc_list <- lapply(1:length(object_list), function(x) object_list[[x]]@mcmc)
+
+    years_list <- lapply(1:length(object_list), function(x) data_list[[x]]$first_yr:data_list[[x]]$last_yr)
+    pyears_list <- lapply(1:length(object_list), function(x) data_list[[x]]$first_yr:data_list[[x]]$last_proj_yr)
+    regions_list <- lapply(1:length(object_list), function(x) 1:data_list[[x]]$n_area)
+    regions_list2 <- lapply(1:length(object_list), function(x) {
+        if (length(regions_list[[x]]) == 1) out <- regions_list[[x]]
+        if (length(regions_list[[x]]) > 1) out <- c(regions_list[[x]], "Total")
+        return(out)
+    })
+    seasons <- c("AW", "SS")
+
+    nmod <- length(object_names)
+
+    pcpue <- lapply(1:length(object_list), function(x){
+      n_iter <- nrow(mcmc_list[[x]][[1]])
+
+      pcpue1 <- mcmc_list[[x]]$pred_cpue_i
+      dimnames(pcpue1) <- list("Iteration" = 1:n_iter, "I" = 1:data_list[[x]]$n_cpue)
+      pcpue1 <- reshape2::melt(pcpue1, value.name = "CPUE") %>%
+          dplyr::select(Iteration, CPUE) %>%
+          dplyr::mutate(Data = "Expected", Type = "CPUE", Region = rep(data_list[[x]]$data_cpue_area_i, each = n_iter), Year = rep(data_list[[x]]$data_cpue_year_i, each = n_iter), Season = seasons[rep(data_list[[x]]$data_cpue_season_i, each = n_iter)])
+        pcpue1$Model <- object_names[[x]]
+        return(pcpue1)
+    })
+    pcpue <- do.call(rbind, pcpue)
+        
+
+    # CPUE
+    ocpue <- lapply(1:length(object_list), function(x){
+      df <-   data.frame(
+                Iteration = NA, 
+                CPUE = data_list[[x]]$data_cpue_i, 
+                Data = "Observed", Type = "CPUE", 
+                Region = data_list[[x]]$data_cpue_area_i, 
+                Year = data_list[[x]]$data_cpue_year_i, 
+                Season = seasons[data_list[[x]]$data_cpue_season_i], 
+                qtype = data_list[[x]]$data_cpue_q_i, 
+                SD = sqrt(data_list[[x]]$cov_cpue_sd_i^2 + data_list[[x]]$cov_cpue_process_error_i^2) * 1.0 / data_list[[x]]$cpue_like_wt[data_list[[x]]$data_cpue_q_i],
+                Model = object_names[x]
+            )
+      return(df)
+    })
+    ocpue <- do.call(rbind, ocpue)
+
+    ### CELR
+    dfilter <- expand.grid("Year" = 1989:max(ocpue$Year), "Season" = c("AW","SS"))
+    dfilter <- dfilter[-which(dfilter$Year==1989 & dfilter$Season == "AW"),]
+    dfilter <- dfilter[-which(dfilter$Year == max(ocpue$Year) & dfilter$Season == "SS"),]
+    ocr_yrs <- ocpue %>% dplyr::right_join(dfilter) %>% dplyr::mutate(Region = paste0("Region ", Region))
+    pcr_yrs <- pcpue %>% dplyr::right_join(dfilter) %>% dplyr::mutate(Region = paste0("Region ", Region))
+    p <- ggplot(data = ocr_yrs) +
+        geom_point(aes(x = Year, y = CPUE, color = Model), alpha = 0.75) +
+        geom_linerange(aes(x = Year, ymin = exp(log(CPUE) - SD), ymax = exp(log(CPUE) + SD), color = Model), alpha = 0.75) +
+        scale_x_continuous(breaks = pretty(c(min(ocr_yrs$Year), max(ocr_yrs$Year)))) +
+        expand_limits(y = 0) +
+        xlab(xlab) + ylab(ylab) +
+        theme_lsd()
+    if (!is.null(pcpue)) {
+        p <- p + stat_summary(data = pcr_yrs, aes(x = Year, y = CPUE, fill = Model), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
+            stat_summary(data = pcr_yrs, aes(x = Year, y = CPUE, fill = Model), fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
+            stat_summary(data = pcr_yrs, aes(x = Year, y = CPUE, color = Model), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1)
+    }
+    if(nmod > 5){
+        p <- p +
+        scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
+        scale_color_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod)))
+    } else{
+        p <- p +
+        scale_fill_brewer(palette = "Set1") +
+        scale_color_brewer(palette = "Set1")
+    }
+    if (length(unique(ocr_yrs$Region)) > 1) {
+        p <- p + facet_wrap(Region~Season, scales = "free", ncol = data_list[[x]]$n_area)
+        ggsave(paste0(figure_dir, "cpue_CELR.png"), p, width = 9, height = 10)
+    } else {
+        p <- p + facet_wrap(~Season, scales = "free", ncol = data_list[[x]]$n_area)
+        ggsave(paste0(figure_dir, "cpue_CELR.png"), p, height = 9)
+    }
+    
+}
+
 #' Compare catchability coefficient q from multiple models
 #'
 #' @param object_list list of 'lsd.rds' files from multiple models

@@ -12,12 +12,13 @@ do_plot_compare <- function(object_list, object_names, single_stock, figure_dir 
 	
 	if (single_stock == TRUE) {
 		table_compare_residuals(object_list = object_list, object_names = object_names, figure_dir = figure_dir)
-	  table_compare_parameters(object_list = object_list, object_names = object_names, figure_dir = figure_dir) 
+	  	table_compare_parameters(object_list = object_list, object_names = object_names, figure_dir = figure_dir) 
 	    plot_compare_vb(object_list = object_list, object_names = object_names, figure_dir = figure_dir)
 	    plot_compare_recruitment(object_list = object_list, object_names = object_names, figure_dir = figure_dir)
 	    # plot_compare_q(object_list = object_list, object_names = object_names, figure_dir = figure_dir)
 	    plot_compare_ssb(object_list = object_list, object_names = object_names, figure_dir = figure_dir)
 		plot_compare_selectivity(object_list = object_list, object_names = object_names, figure_dir = figure_dir)
+		plot_compare_cpue(object_list = object_list, object_names = object_names, figure_dir = figure_dir)
 		## end of figures and tables that should run for all comparisons
 		looic(object_list = object_list, object_names = object_names, figure_dir = figure_dir)
 	}

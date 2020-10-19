@@ -1109,6 +1109,7 @@ plot_compare_cpue <- function(object_list,
     seasons <- c("AW", "SS")
 
     nmod <- length(object_names)
+    n_area <- max(sapply(1:length(object_list), function(x) data_list[[x]]$n_area))
 
     pcpue <- lapply(1:length(object_list), function(x){
       n_iter <- nrow(mcmc_list[[x]][[1]])
@@ -1169,10 +1170,10 @@ plot_compare_cpue <- function(object_list,
         scale_color_brewer(palette = "Set1")
     }
     if (length(unique(ocr_yrs$Region)) > 1) {
-        p <- p + facet_wrap(Region~Season, scales = "free", ncol = data_list[[x]]$n_area)
+        p <- p + facet_wrap(Region~Season, scales = "free", ncol = n_area)
         ggsave(paste0(figure_dir, "cpue_CELR.png"), p, width = 9, height = 10)
     } else {
-        p <- p + facet_wrap(~Season, scales = "free", ncol = data_list[[x]]$n_area)
+        p <- p + facet_wrap(~Season, scales = "free", ncol = n_area)
         ggsave(paste0(figure_dir, "cpue_CELR.png"), p, height = 9)
     }
     

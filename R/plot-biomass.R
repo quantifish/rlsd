@@ -332,7 +332,7 @@ plot_vulnerable_reference_biomass <- function(object,
       dimnames(vbref1) <- list("Iteration" = 1, "Rule" = 1:n_rules, "Year" = pyears, "Season" = seasons, "Region" = regions)
       vbref1 <- melt(vbref1) %>%
         filter(.data$value > 0) %>%
-        mutate(Season = as.character(.data$Season), Season = ifelse(.data$Year >= data$season_change_yr, .data$Season, .data$YR))
+        mutate(Season = as.character(.data$Season), Season = ifelse(.data$Year >= data$season_change_yr, .data$Season, YR))
 
       vbref1 <- vbref1 %>%
         group_by(.data$Iteration, .data$Year, .data$Season, .data$Region) %>%
@@ -342,7 +342,7 @@ plot_vulnerable_reference_biomass <- function(object,
       dimnames(vbref1) <- list("Iteration" = 1,"Year" = pyears, "Season" = seasons, "Region" = regions)
       vbref1 <- melt(vbref1) %>%
         filter(.data$value > 0) %>%
-        mutate(Season = as.character(.data$Season), Season = ifelse(.data$Year >= data$season_change_yr, .data$Season, .data$YR))
+        mutate(Season = as.character(.data$Season), Season = ifelse(.data$Year >= data$season_change_yr, .data$Season, YR))
 
       vbref1 <- vbref1 %>%
         group_by(.data$Iteration, .data$Year, .data$Season, .data$Region) %>%
@@ -370,7 +370,7 @@ plot_vulnerable_reference_biomass <- function(object,
      dimnames(vbref) <- list("Iteration" = 1:n_iter, "Rule" = 1:n_rules, "Year" = pyears, "Season" = seasons, "Region" = regions)
      vbref <- melt(vbref) %>%
        filter(.data$value > 0) %>%
-       mutate(Season = as.character(.data$Season), Season = ifelse(.data$Year >= data$season_change_yr, .data$Season, .data$YR))
+       mutate(Season = as.character(.data$Season), Season = ifelse(.data$Year >= data$season_change_yr, .data$Season, YR))
 
      vbref <- vbref %>%
        group_by(.data$Iteration, .data$Year, .data$Season, .data$Region) %>%
@@ -380,7 +380,7 @@ plot_vulnerable_reference_biomass <- function(object,
       dimnames(vbref) <- list("Iteration" = 1:n_iter, "Year" = pyears, "Season" = seasons, "Region" = regions)
       vbref <- melt(vbref) %>%
         filter(.data$value > 0) %>%
-        mutate(Season = as.character(.data$Season), Season = ifelse(.data$Year >= data$season_change_yr, .data$Season, .data$YR))
+        mutate(Season = as.character(.data$Season), Season = ifelse(.data$Year >= data$season_change_yr, .data$Season, YR))
 
       vbref <- vbref %>%
         group_by(.data$Iteration, .data$Year, .data$Season, .data$Region) %>%
@@ -528,7 +528,7 @@ plot_vulnerable_biomass <- function(object,
       dimnames(vb1) <- list("Iteration" = 1, "Rule"=1:n_rules, "Year" = pyears, "Season" = seasons, "Region" = regions, Sex = sex)
       vb1 <- melt(vb1) %>%
         filter(.data$value > 0) %>%
-        mutate(Season = as.character(.data$Season), Season = ifelse(.data$Year >= data$season_change_yr, .data$Season, .data$YR))
+        mutate(Season = as.character(.data$Season), Season = ifelse(.data$Year >= data$season_change_yr, .data$Season, YR))
 
       vb1 <- vb1 %>%
         group_by(.data$Iteration, .data$Rule, .data$Year, .data$Season, .data$Region) %>%
@@ -555,7 +555,7 @@ plot_vulnerable_biomass <- function(object,
     dimnames(vb2) <- list("Iteration" = 1:n_iter, "Rule"=1:n_rules, "Year" = pyears, "Season" = seasons, "Region" = regions, Sex = sex)
     vb2 <- melt(vb2) %>%
       filter(.data$value > 0) %>%
-      mutate(Season = as.character(.data$Season), Season = ifelse(.data$Year >= data$season_change_yr, .data$Season, .data$YR)) %>%
+      mutate(Season = as.character(.data$Season), Season = ifelse(.data$Year >= data$season_change_yr, .data$Season, YR)) %>%
       group_by(.data$Iteration, .data$Rule, .data$Year, .data$Season, .data$Region) %>%
       summarise(value = sum(.data$value))
 

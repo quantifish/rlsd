@@ -22,8 +22,8 @@ plot_snail <- function(object,
     years <- data$first_yr:data$last_yr
     pyears <- data$first_yr:data$last_proj_yr
     regions <- 1:data$n_area
-    if(length(regions)>1) regions2 <- c(regions, "Total")
-    if(length(regions)==1) regions2 <- regions
+    if (length(regions) > 1) regions2 <- c(regions, "Total")
+    if (length(regions) == 1) regions2 <- regions
     rules <- 1:data$n_rules
     seasons <- c("AW", "SS")
     fleets <- c("SL", "NSL")
@@ -63,7 +63,7 @@ plot_snail <- function(object,
     head(ssbmsy)
     
     dmed <- d %>%
-        group_by(Year, Region, Year) %>%
+        group_by(Year, Region) %>%
         summarise(F_Fmsy = median(F_Fmsy), SSB = median(SSB), SSB0 = median(SSB0), SSB_SSB0 = median(SSB_SSB0)) %>%
         ungroup()
     df_thin <- select(dmed, Year, SSB_SSB0, F_Fmsy) %>%
@@ -74,18 +74,10 @@ plot_snail <- function(object,
         mutate(Year = "")
     head(df_thin)
 
-    top_left <- filter(df_thin,
-                              SSB_SSB0 < median(ssbmsy$SSBmsy_SSB0),
-                              F_Fmsy > 1)
-    top_right <- filter(df_thin,
-                               SSB_SSB0 >= median(ssbmsy$SSBmsy_SSB0),
-                               F_Fmsy > 1)
-    bottom_left <- filter(df_thin,
-                                 SSB_SSB0 < median(ssbmsy$SSBmsy_SSB0),
-                                 F_Fmsy <= 1)
-    bottom_right <- filter(df_thin,
-                                  SSB_SSB0 >= median(ssbmsy$SSBmsy_SSB0),
-                                  F_Fmsy <= 1)
+    top_left <- df_thin %>% filter(SSB_SSB0 < median(ssbmsy$SSBmsy_SSB0), F_Fmsy > 1)
+    top_right <- df_thin %>% filter(SSB_SSB0 >= median(ssbmsy$SSBmsy_SSB0), F_Fmsy > 1)
+    bottom_left <- df_thin %>% filter(SSB_SSB0 < median(ssbmsy$SSBmsy_SSB0), F_Fmsy <= 1)
+    bottom_right <- df_thin %>% filter(SSB_SSB0 >= median(ssbmsy$SSBmsy_SSB0), F_Fmsy <= 1)
     
     p <- ggplot(data = d %>% filter(Region %in% regions)) +
         annotate("rect", xmin = quantile(ssbmsy$SSBmsy_SSB0, 0.05), xmax = quantile(ssbmsy$SSBmsy_SSB0, 0.95), ymin = -Inf, ymax = Inf, alpha = 0.125) +
@@ -161,7 +153,7 @@ plot_snail <- function(object,
         mutate(SSBmsy_SSB0 = SSBmsy / SSB0)
     
     dmed <- d %>%
-        group_by(Year, Region, Year) %>%
+        group_by(Year, Region) %>%
         summarise(F_aw = median(F_aw), SSB = median(SSB), SSB0 = median(SSB0), SSB_SSB0 = median(SSB_SSB0)) %>%
         ungroup()
     df_thin <- select(dmed, Region, Year, SSB_SSB0, F_aw) %>%

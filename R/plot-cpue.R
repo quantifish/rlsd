@@ -246,29 +246,32 @@ plot_cpue <- function(object,
     ## separate by series
     ### CR
     ocr_yrs <- ocpue %>% dplyr::filter(Year < 1979) %>% dplyr::mutate(Region = paste0("Region ", Region))
-    pcr_yrs <- pcpue %>% dplyr::filter(Year < 1979) %>% dplyr::mutate(Region = paste0("Region ", Region))
-    p1cr_yrs <- pcpue1 %>%  dplyr::filter(Year < 1979) %>% dplyr::mutate(Region = paste0("Region ", Region))
-    p <- ggplot(data = ocr_yrs) +
-        geom_point(aes(x = Year, y = CPUE), color = "red", alpha = 0.75) +
-        geom_linerange(aes(x = Year, ymin = exp(log(CPUE) - SD), ymax = exp(log(CPUE) + SD)), color = "red", alpha = 0.75) +
-        scale_x_continuous(breaks = pretty(c(min(ocr_yrs$Year), max(ocr_yrs$Year)))) +
-        expand_limits(y = 0) +
-        xlab(xlab) + ylab(ylab) +
-        theme_lsd()
-    if (!is.null(pcpue)) {
-        p <- p + stat_summary(data = pcr_yrs %>% dplyr::filter(QY %in% ocpue$QY), aes(x = Year, y = CPUE), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
-            stat_summary(data = pcr_yrs %>% dplyr::filter(QY %in% ocpue$QY), aes(x = Year, y = CPUE), fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
-            stat_summary(data = pcr_yrs %>% dplyr::filter(QY %in% ocpue$QY), aes(x = Year, y = CPUE), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1)
+    if(nrow(ocr_yrs) > 0){
+        pcr_yrs <- pcpue %>% dplyr::filter(Year < 1979) %>% dplyr::mutate(Region = paste0("Region ", Region))
+        p1cr_yrs <- pcpue1 %>%  dplyr::filter(Year < 1979) %>% dplyr::mutate(Region = paste0("Region ", Region))
+        p <- ggplot(data = ocr_yrs) +
+            geom_point(aes(x = Year, y = CPUE), color = "red", alpha = 0.75) +
+            geom_linerange(aes(x = Year, ymin = exp(log(CPUE) - SD), ymax = exp(log(CPUE) + SD)), color = "red", alpha = 0.75) +
+            scale_x_continuous(breaks = pretty(c(min(ocr_yrs$Year), max(ocr_yrs$Year)))) +
+            expand_limits(y = 0) +
+            xlab(xlab) + ylab(ylab) +
+            theme_lsd()
+        if (!is.null(pcpue)) {
+            p <- p + stat_summary(data = pcr_yrs %>% dplyr::filter(QY %in% ocpue$QY), aes(x = Year, y = CPUE), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
+                stat_summary(data = pcr_yrs %>% dplyr::filter(QY %in% ocpue$QY), aes(x = Year, y = CPUE), fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
+                stat_summary(data = pcr_yrs %>% dplyr::filter(QY %in% ocpue$QY), aes(x = Year, y = CPUE), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1)
+        }
+        if (!is.null(pcpue1)) {
+            p <- p + geom_line(data = p1cr_yrs, aes(x = Year, y = CPUE), linetype = 2)
+        }
+        if (length(unique(ocr_yrs$Region)) > 1) {
+            p <- p + facet_wrap(~Region, scales = "free", ncol = data$n_area)
+            ggsave(paste0(figure_dir, "cpue_CR.png"), p, width = 9, height = 10)
+        } else {
+            ggsave(paste0(figure_dir, "cpue_CR.png"), p, height = 9)
+        }    
     }
-    if (!is.null(pcpue1)) {
-        p <- p + geom_line(data = p1cr_yrs, aes(x = Year, y = CPUE), linetype = 2)
-    }
-    if (length(unique(ocr_yrs$Region)) > 1) {
-        p <- p + facet_wrap(~Region, scales = "free", ncol = data$n_area)
-        ggsave(paste0(figure_dir, "cpue_CR.png"), p, width = 9, height = 10)
-    } else {
-        ggsave(paste0(figure_dir, "cpue_CR.png"), p, height = 9)
-    }
+    
     ### FSU
     dfilter <- expand.grid("Year" = 1979:1989, "Season" = c("AW","SS"))
     dfilter <- dfilter[-which(dfilter$Year==1989 & dfilter$Season == "SS"),]
@@ -351,25 +354,27 @@ plot_cpue <- function(object,
     ## separate by series
     ### CR
     rcr_yrs <- rcpue %>% dplyr::filter(Year < 1979) %>% dplyr::mutate(Region = paste0("Region ", Region))
-    p <- ggplot(rcr_yrs) +
-        geom_hline(yintercept = 0, alpha = 0.2) +
-        # expand_limits(y = 0) +
-        # scale_x_continuous(breaks = pretty(c(min(rcr_yrs$Year),max(rcr_yrs$Year)))) +
-        xlab(xlab) + ylab("Standardised residual") +
-        theme_lsd() +
-        theme(legend.position = "none")
-    if (n_iter > 10) {
-        p <- p + geom_violin(aes(x = as.factor(Year), y = CPUE, colour = Season, fill = Season)) +
-            scale_x_discrete(breaks = seq(0, 1e6, 5))
-    } else {
-        p <- p + geom_point(aes(x = Year, y = CPUE, color = Season)) +
-            scale_x_continuous(breaks = seq(0, 1e6, 5), minor_breaks = seq(0, 1e6, 1))
+    if(nrow(rcr_yrs) > 0){
+       p <- ggplot(rcr_yrs) +
+            geom_hline(yintercept = 0, alpha = 0.2) +
+            # expand_limits(y = 0) +
+            # scale_x_continuous(breaks = pretty(c(min(rcr_yrs$Year),max(rcr_yrs$Year)))) +
+            xlab(xlab) + ylab("Standardised residual") +
+            theme_lsd() +
+            theme(legend.position = "none")
+        if (n_iter > 10) {
+            p <- p + geom_violin(aes(x = as.factor(Year), y = CPUE, colour = Season, fill = Season)) +
+                scale_x_discrete(breaks = seq(0, 1e6, 5))
+        } else {
+            p <- p + geom_point(aes(x = Year, y = CPUE, color = Season)) +
+                scale_x_continuous(breaks = seq(0, 1e6, 5), minor_breaks = seq(0, 1e6, 1))
+        }
+        if (length(unique(rcr_yrs$Region)) > 1) {
+            p <- p + facet_wrap( ~ Region, scales = "free", ncol = data$n_area)
+        }
+        ggsave(paste0(figure_dir, "cpue_resid_CR.png"), p, height = 9, width=9)       
     }
-    if (length(unique(rcr_yrs$Region)) > 1) {
-        p <- p + facet_wrap( ~ Region, scales = "free", ncol = data$n_area)
-    }
-    ggsave(paste0(figure_dir, "cpue_resid_CR.png"), p, height = 9, width=9)
-    
+
     ### FSU
     dfilter <- expand.grid("Year" = 1979:1989, "Season" = c("AW","SS"))
     dfilter <- dfilter[-which(dfilter$Year==1989 & dfilter$Season == "SS"),]

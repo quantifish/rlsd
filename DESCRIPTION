@@ -1,7 +1,7 @@
 Package: lsd
 Title: LSD Package
-Version: 6.75
-Date: 2020-10-06
+Version: 6.76
+Date: 2020-10-09
 Authors@R: c(
     person("Darcy", "Webber", email = "darcy@quantifish.co.nz", role = c("cre", "aut")),
     person("Merrill", "Rudd", email = "merrillrudd@gmail.com", role = "aut"))

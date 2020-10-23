@@ -18,14 +18,13 @@ do_extract <- function(dir = ".", data = TRUE,
                        model = "lsd")
 {
     # model outputs that we don't want
-    dont_extract <- c("proj_numbers_ytrsl","data_lf_all_isl","resid_lf_i","par_M_r",
+    dont_extract <- c("proj_numbers_ytrsl", "data_lf_all_isl", "resid_lf_i", "par_M_r",
                       "vuln_selectivity_ytrsl",
-                      "pred_catch_lf_ytrsl","F_ytrf",
-                      "par_grow_ip","par_grow_beta_alpha_ip","par_sel_ip","recruits_estimated_ry")
+                      "pred_catch_lf_ytrsl", "F_ytrf",
+                      "par_grow_ip", "par_grow_beta_alpha_ip", "par_sel_ip", "recruits_estimated_ry")
 
     # pars we want for diagnostics
-    do_extract <- c("lp__",
-                    "lp_total","lp_tag","lp_prior","lp_sexr","lp_lf","lp_cpue","lp_puerulus",
+    do_extract <- c("lp__", "lp_total", "lp_tag", "lp_prior", "lp_sexr", "lp_lf", "lp_cpue", "lp_puerulus",
                     "par_R0_r", "par_M_i", "par_mat_50_i", "par_mat_95_i",
                     "par_grow_alpha_i", "par_grow_beta_i", "par_grow_shape_i", "par_grow_cv_i", "par_grow_sd_i", "par_grow_dd",
                     "par_sel_1_i", "par_sel_2_i", "par_sel_3_i", "par_vuln_i",
@@ -123,7 +122,7 @@ do_extract <- function(dir = ".", data = TRUE,
             dS4@mcmc_pars <- mcmc_tmp
 
             # write to csv
-            mcmc_out <- mcmc_tmp %>% tidyr::spread(par, value)
+            mcmc_out <- mcmc_tmp %>% spread(.data$par, .data$value)
             write.table(mcmc_out, file = "key_parameters_mcmc.txt", sep = "\t", row.names = FALSE, col.names = TRUE)
 
             mcmc_tmp <- lsd::extract(mcmc_raw, pars = do_extract_priors, permuted = FALSE, include = TRUE)

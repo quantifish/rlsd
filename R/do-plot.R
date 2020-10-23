@@ -23,20 +23,20 @@ do_plot <- function(object,
         n_col <- 3
 
         rm_post <- object@mcmc_pars %>%
-            dplyr::group_by(par) %>%
-            dplyr::summarise(s = sum(value)) %>%
+            group_by(par) %>%
+            summarise(s = sum(value)) %>%
             dplyr::filter(s == 0)
         rm_prior <- object@mcmc_priors %>%
-            dplyr::group_by(par) %>%
-            dplyr::summarise(s = sum(value)) %>%
+            group_by(par) %>%
+            summarise(s = sum(value)) %>%
             dplyr::filter(s == 0)
 
         posteriors <- object@mcmc_pars %>%
-            dplyr::filter(!par %in% rm_post$par) %>%
-            dplyr::mutate(par = as.character(par), type = "Posterior")
+            filter(!par %in% rm_post$par) %>%
+            mutate(par = as.character(par), type = "Posterior")
         priors <- object@mcmc_priors %>%
             dplyr::filter(!par %in% rm_prior$par) %>%
-            dplyr::mutate(par = as.character(gsub(pattern = "prior_", replacement = "par_", x = par)), type = "Prior")
+            mutate(par = as.character(gsub(pattern = "prior_", replacement = "par_", x = par)), type = "Prior")
 
         sq <- seq(1, length(unique(posteriors$par)), n_panel)
 
@@ -103,7 +103,7 @@ do_plot <- function(object,
         }
 
         print("plotting snail")
-        #plot_snail(object, figure_dir = figure_dir)
+        plot_snail(object, figure_dir = figure_dir)
     }
 
     # tres <- table_residuals(object, figure_dir = figure_dir)

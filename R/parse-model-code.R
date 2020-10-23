@@ -5,7 +5,7 @@
 #' @param base the core model code
 #' @param ctl the .ctl file that will be input to the model. This is needed for switching parameters on/off.
 #' @param save should the full model be written to file or not
-#' @import rstan
+#' @importFrom rstan read_rdump
 #' @export
 #'
 parse_model_code <- function(base = "base_lsd", ctl = "lsd.ctl", save = FALSE) {

@@ -518,14 +518,14 @@ plot_vulnerable_biomass <- function(object,
   sex <- c("Male", "Immature female", "Mature female")
   seasons <- c("AW", "SS")
   regions <- 1:data$n_area
-  if (length(regions) > 1) regions2 <- c(regions, max(regions)+1)
+  if (length(regions) > 1) regions2 <- c(regions, max(regions) + 1)
   if (length(regions) == 1) regions2 <- regions
   YR <- "YR" # label for the season before the season change year
   n_rules <- data$n_rules
 
   if (length(map) > 0 & show_map) {
       vb1 <- map$biomass_vuln_jytrs
-      dimnames(vb1) <- list("Iteration" = 1, "Rule"=1:n_rules, "Year" = pyears, "Season" = seasons, "Region" = regions, Sex = sex)
+      dimnames(vb1) <- list("Iteration" = 1, "Rule" = 1:n_rules, "Year" = pyears, "Season" = seasons, "Region" = regions, Sex = sex)
       vb1 <- melt(vb1) %>%
         filter(.data$value > 0) %>%
         mutate(Season = as.character(.data$Season), Season = ifelse(.data$Year >= data$season_change_yr, .data$Season, YR))
@@ -579,9 +579,9 @@ plot_vulnerable_biomass <- function(object,
     vb_in2 <- vb2
   } else {
     if (length(map) > 0 & show_map) {
-      vb_in1 <- vb1 %>% filter(Year <= data$last_yr)
+      vb_in1 <- vb1 %>% filter(.data$Year <= data$last_yr)
     }
-    vb_in2 <- vb2 %>% filter(Year <= data$last_yr)
+    vb_in2 <- vb2 %>% filter(.data$Year <= data$last_yr)
   }
 
   vb_in <- vb_in2 %>% mutate("Label" = "") %>%
@@ -1074,47 +1074,44 @@ plot_biomass <- function(object,
     din2 <- rbind.data.frame(dinaw2, dinss2) %>%
       ungroup()
 
-    if(length(map)>0){
-      dinx <- bvref_in1 %>% group_by(Iteration, Year, Season, Region, value)
-    } else{
+    if (length(map) > 0){
+      dinx <- bvref_in1 %>% group_by(.data$Iteration, .data$Year, .data$Season, .data$Region, .data$value)
+    } else {
       dinx <- NULL
     }
-    if(length(mcmc)>0){
-      dinx <- bvref_in2 %>% group_by(Iteration, Year, Season, Region, value)
+    if (length(mcmc) > 0) {
+      dinx <- bvref_in2 %>% group_by(.data$Iteration, .data$Year, .data$Season, .data$Region, .data$value)
     } else{
       dinx <- NULL
 
     }
 
 
-    dinawx <- dinx %>% filter(Season == "AW")
-    dinaw1x <- dinawx %>% filter(Year == 1979) %>%
-                        rename("B1" = value)
+    dinawx <- dinx %>% filter(.data$Season == "AW")
+    dinaw1x <- dinawx %>% filter(.data$Year == 1979) %>% rename("B1" = value)
     dinaw2x <- full_join(dinawx, dinaw1x, by = c("Iteration", "Season", "Region")) %>%
                 select(-Year.y) %>%
                 rename("Year" = Year.x) %>%
-                mutate(BB1 = value/B1)
+                mutate(BB1 = value / B1)
 
-    dinssx <- dinx %>% filter(Season == "SS")
-    dinss1x <- dinssx %>% filter(Year == 1979) %>%
-                        rename("B1" = value)
+    dinssx <- dinx %>% filter(.data$Season == "SS")
+    dinss1x <- dinssx %>% filter(.data$Year == 1979) %>% rename("B1" = value)
     dinss2x <- full_join(dinssx, dinss1x, by = c("Iteration", "Season", "Region")) %>%
                 select(-Year.y) %>%
                 rename("Year" = Year.x) %>%
-                mutate(BB1 = value/B1)
+                mutate(BB1 = value / B1)
 
-    din2x <- rbind.data.frame(dinaw2x, dinss2x) %>%
-      ungroup()
+    din2x <- rbind.data.frame(dinaw2x, dinss2x) %>% ungroup()
 
     # din2$Region <- sapply(1:nrow(din2), function(x) paste0("Region ", din2$Region[x]))
     # din2x$Region <- sapply(1:nrow(din2x), function(x) paste0("Region ", din2x$Region[x]))
-    p <- ggplot(data = din2, aes(x = Year, y = BB1, colour = Season, fill = Season)) +
+    p <- ggplot(data = din2, aes(x = .data$Year, y = .data$BB1, colour = .data$Season, fill = .data$Season)) +
         geom_hline(aes(yintercept = 0.5), linetype = "dashed", colour = "purple") +
         geom_hline(aes(yintercept = 0.3), linetype = "dashed", colour = "purple") +
         geom_hline(aes(yintercept = 0.1), linetype = "dashed", colour = "purple")
-    p <- p + stat_summary(data = din2, aes(x = Year, y = BB1, color = Season, fill = Season), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
-        stat_summary(data = din2, aes(x = Year, y = BB1, color = Season, fill = Season), fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
-        stat_summary(data = din2, aes(x = Year, y = BB1, color = Season), fun.y = function(x) stats::quantile(x, 0.5), geom = "path", lwd = 1) +
+    p <- p + stat_summary(data = din2, aes(x = .data$Year, y = .data$BB1, color = .data$Season, fill = .data$Season), fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
+        stat_summary(data = din2, aes(x = .data$Year, y = .data$BB1, color = .data$Season, fill = .data$Season), fun.ymin = function(x) quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
+        stat_summary(data = din2, aes(x = .data$Year, y = .data$BB1, color = .data$Season), fun.y = function(x) quantile(x, 0.5), geom = "path", lwd = 1) +
         expand_limits(y = 0) +
         xlab(xlab) + ylab("Reference biomass (tonnes)") +
         scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
@@ -1131,21 +1128,19 @@ plot_biomass <- function(object,
     bvref_in2 <- biomass_vulnref_jytr2
     din <- bvref_in2 %>% dplyr::group_by(Iteration, Year, Season, Region, value)
 
-    dinaw <- din %>% filter(Season == "AW")
-    dinaw1 <- dinaw %>% filter(Year == 1979) %>%
-                        rename("B1" = value)
+    dinaw <- din %>% filter(.data$Season == "AW")
+    dinaw1 <- dinaw %>% filter(.data$Year == 1979) %>% rename("B1" = value)
     dinaw2 <- full_join(dinaw, dinaw1, by = c("Iteration", "Season", "Region")) %>%
                 select(-Year.y) %>%
                 rename("Year" = Year.x) %>%
-                mutate(BB1 = value/B1)
+                mutate(BB1 = value / B1)
 
-    dinss <- din %>% filter(Season == "SS")
-    dinss1 <- dinss %>% filter(Year == 1979) %>%
-                        rename("B1" = value)
+    dinss <- din %>% filter(.data$Season == "SS")
+    dinss1 <- dinss %>% filter(.data$Year == 1979) %>% rename("B1" = value)
     dinss2 <- full_join(dinss, dinss1, by = c("Iteration", "Season", "Region")) %>%
                 select(-Year.y) %>%
                 rename("Year" = Year.x) %>%
-                mutate(BB1 = value/B1)
+                mutate(BB1 = value / B1)
 
     din2 <- rbind.data.frame(dinaw2, dinss2) %>% ungroup()
 
@@ -1160,27 +1155,23 @@ plot_biomass <- function(object,
       dinx <- NULL
     }
 
-    dinawx <- dinx %>% filter(Season == "AW")
-    dinaw1x <- dinawx %>% filter(Year == 1979) %>%
-                        rename("B1" = value)
+    dinawx <- dinx %>% filter(.data$Season == "AW")
+    dinaw1x <- dinawx %>% filter(.data$Year == 1979) %>% rename("B1" = value)
     dinaw2x <- full_join(dinawx, dinaw1x, by = c("Iteration", "Season", "Region")) %>%
                 select(-Year.y) %>%
                 rename("Year" = Year.x) %>%
-                mutate(BB1 = value/B1)
+                mutate(BB1 = value / B1)
 
-    dinssx <- dinx %>% filter(Season == "SS")
-    dinss1x <- dinssx %>% filter(Year == 1979) %>%
-                        rename("B1" = value)
+    dinssx <- dinx %>% filter(.data$Season == "SS")
+    dinss1x <- dinssx %>% filter(.data$Year == 1979) %>% rename("B1" = value)
     dinss2x <- full_join(dinssx, dinss1x, by = c("Iteration", "Season", "Region")) %>%
                 select(-Year.y) %>%
                 rename("Year" = Year.x) %>%
-                mutate(BB1 = value/B1)
+                mutate(BB1 = value / B1)
 
     din2x <- rbind.data.frame(dinaw2x, dinss2x) %>% ungroup()
 
-    # din2$Region <- sapply(1:nrow(din2), function(x) paste0("Region ", din2$Region[x]))
-    # din2x$Region <- sapply(1:nrow(din2x), function(x) paste0("Region ", din2x$Region[x]))
-    p <- ggplot(data = din2, aes(x = Year, y = BB1, colour = Season, fill = Season)) +
+    p <- ggplot(data = din2, aes(x = .data$Year, y = .data$BB1, colour = .data$Season, fill = .data$Season)) +
         geom_hline(aes(yintercept = 0.5), linetype = "dashed", colour = "purple") +
         geom_hline(aes(yintercept = 0.3), linetype = "dashed", colour = "purple") +
         geom_hline(aes(yintercept = 0.1), linetype = "dashed", colour = "purple")

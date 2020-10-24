@@ -180,7 +180,10 @@ plot_snail <- function(object, figure_dir = "figure/", irule = 1) {
         theme_lsd(base_size = 16) +
         theme(legend.position = "none")
 
-    if (data$n_area > 1) p2 <- p2 + facet_wrap(~ .data$Region)
-
-    ggsave(file.path(figure_dir, "snail_trail_v2.png"), p2, width = 7, height = 7)
+    if (data$n_area > 1) {
+        p2 <- p2 + facet_wrap(~ .data$Region)
+        ggsave(file.path(figure_dir, "snail_trail_v2.png"), p2, width = 14, height = 7)
+    } else {
+        ggsave(file.path(figure_dir, "snail_trail_v2.png"), p2, width = 7, height = 7)
+    }
 }

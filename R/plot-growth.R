@@ -104,7 +104,8 @@ plot_tag_residuals <- function(object,
         geom_hline(yintercept = 0, alpha = 0.8) +
         theme_lsd() +
         guides(alpha=FALSE) +
-        coord_cartesian(ylim = ylim)
+        coord_cartesian(ylim = ylim) +
+       theme(axis.text.x = element_text(angle = 45,hjust = 1))
     ggsave(paste0(figure_dir, "tag_residuals_year.png"), p, width = 12)
 
     resid_cut <- resid %>%

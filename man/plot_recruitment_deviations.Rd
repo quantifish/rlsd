@@ -4,8 +4,12 @@
 \alias{plot_recruitment_deviations}
 \title{Plot recruitment deviations}
 \usage{
-plot_recruitment_deviations(object, xlab = "Year",
-  ylab = "Recruitment deviations", figure_dir = "figure/")
+plot_recruitment_deviations(
+  object,
+  xlab = "Year",
+  ylab = "Recruitment deviations",
+  figure_dir = "figure/"
+)
 }
 \arguments{
 \item{object}{an lsd object}

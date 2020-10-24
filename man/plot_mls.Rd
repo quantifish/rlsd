@@ -4,8 +4,13 @@
 \alias{plot_mls}
 \title{Plot miminum legal size (mm) by sex and season}
 \usage{
-plot_mls(object, xlab = "Year", ylab = "Minimum legal size (mm)",
-  figure_dir = "figure/", do_save = TRUE)
+plot_mls(
+  object,
+  xlab = "Year",
+  ylab = "Minimum legal size (mm)",
+  figure_dir = "figure/",
+  do_save = TRUE
+)
 }
 \arguments{
 \item{object}{and LSD object}

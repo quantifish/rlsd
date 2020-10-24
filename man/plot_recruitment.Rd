@@ -4,9 +4,12 @@
 \alias{plot_recruitment}
 \title{Plot recruitment}
 \usage{
-plot_recruitment(object, xlab = "Year",
+plot_recruitment(
+  object,
+  xlab = "Year",
   ylab = "Recruitment (millions of individuals)",
-  figure_dir = "figure/")
+  figure_dir = "figure/"
+)
 }
 \arguments{
 \item{object}{an lsd object}

@@ -4,9 +4,13 @@
 \alias{plot_offset_cpue}
 \title{Plot Offset CPUE}
 \usage{
-plot_offset_cpue(object, scales = "fixed",
+plot_offset_cpue(
+  object,
+  scales = "fixed",
   xlab = "Offset year (October-September)",
-  ylab = "Offset year CPUE (kg/potlift)", figure_dir = "figure/")
+  ylab = "Offset year CPUE (kg/potlift)",
+  figure_dir = "figure/"
+)
 }
 \arguments{
 \item{object}{and LSD object}

@@ -4,8 +4,13 @@
 \alias{plot_growth_matrix}
 \title{Plot growth matrix}
 \usage{
-plot_growth_matrix(object, xlab = "Size after growth (mm)",
-  ylab = "Probability", scales = "fixed", figure_dir = "figure/")
+plot_growth_matrix(
+  object,
+  xlab = "Size after growth (mm)",
+  ylab = "Probability",
+  scales = "fixed",
+  figure_dir = "figure/"
+)
 }
 \arguments{
 \item{object}{and LSD object}

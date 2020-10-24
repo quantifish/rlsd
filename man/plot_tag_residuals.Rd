@@ -4,8 +4,12 @@
 \alias{plot_tag_residuals}
 \title{Plot tag residuals}
 \usage{
-plot_tag_residuals(object, ylab = "Standardised residual",
-  figure_dir = "figure/", ylim = c(-5, 5))
+plot_tag_residuals(
+  object,
+  ylab = "Standardised residual",
+  figure_dir = "figure/",
+  ylim = c(-5, 5)
+)
 }
 \arguments{
 \item{object}{and LSD object}

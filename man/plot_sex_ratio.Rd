@@ -4,8 +4,13 @@
 \alias{plot_sex_ratio}
 \title{Plot sex-ratio}
 \usage{
-plot_sex_ratio(object, scales = "free", xlab = "Fishing year",
-  ylab = "Proportion", figure_dir = "figure/")
+plot_sex_ratio(
+  object,
+  scales = "free",
+  xlab = "Fishing year",
+  ylab = "Proportion",
+  figure_dir = "figure/"
+)
 }
 \arguments{
 \item{object}{an LSD object}

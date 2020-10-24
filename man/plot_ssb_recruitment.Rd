@@ -4,8 +4,13 @@
 \alias{plot_ssb_recruitment}
 \title{Plot stock recruit relationship}
 \usage{
-plot_ssb_recruitment(object, scales = "free_x", show_map = TRUE,
-  xlab = "Spawning stock biomass (tonnes)", figure_dir = "figure/")
+plot_ssb_recruitment(
+  object,
+  scales = "free_x",
+  show_map = TRUE,
+  xlab = "Spawning stock biomass (tonnes)",
+  figure_dir = "figure/"
+)
 }
 \arguments{
 \item{object}{and LSD object}

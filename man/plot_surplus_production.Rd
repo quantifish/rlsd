@@ -4,8 +4,7 @@
 \alias{plot_surplus_production}
 \title{Plot surplus production}
 \usage{
-plot_surplus_production(object, xlab = "Fishing year",
-  figure_dir = "figure/")
+plot_surplus_production(object, xlab = "Fishing year", figure_dir = "figure/")
 }
 \arguments{
 \item{object}{an LSD object}

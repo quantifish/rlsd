@@ -4,8 +4,13 @@
 \alias{plot_puerulus}
 \title{Plot puerulus}
 \usage{
-plot_puerulus(d, scales = "free_y", xlab = "Fishing year",
-  ylab = "Puerulus index", figure_dir = "figure/")
+plot_puerulus(
+  d,
+  scales = "free_y",
+  xlab = "Fishing year",
+  ylab = "Puerulus index",
+  figure_dir = "figure/"
+)
 }
 \arguments{
 \item{d}{and LSD object}

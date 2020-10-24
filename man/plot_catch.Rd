@@ -4,9 +4,14 @@
 \alias{plot_catch}
 \title{Plot catch}
 \usage{
-plot_catch(object, show_proj = FALSE, scales = "free",
-  xlab = "Fishing year", ylab = "Catch (tonnes)",
-  figure_dir = "figure/")
+plot_catch(
+  object,
+  show_proj = FALSE,
+  scales = "free",
+  xlab = "Fishing year",
+  ylab = "Catch (tonnes)",
+  figure_dir = "figure/"
+)
 }
 \arguments{
 \item{object}{and LSD object}

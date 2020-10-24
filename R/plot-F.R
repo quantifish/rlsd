@@ -106,7 +106,8 @@ plot_F <- function(object, scales = "free_y",
     p <- p + expand_limits(y = 0) +
         xlab(xlab) + ylab(ylab) +
         scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
-        theme_lsd()
+        theme_lsd() +
+        theme(axis.text.x = element_text(angle = 45,hjust = 1))
     
     if (data$n_area > 1) {
         if(data$n_rules==1){

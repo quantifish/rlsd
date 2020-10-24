@@ -14,19 +14,19 @@
 #' @importFrom reshape2 melt
 #' @importFrom stats quantile
 #' @export
-#' 
+#'
 plot_catch <- function(object,
                        show_proj = FALSE,
                        scales = "free",
                        xlab = "Fishing year",
-                       ylab = "Catch (tonnes)",
-                       figure_dir = "figure/")
+                       ylab = "Catch (tonnes)") #,
+                       #figure_dir = "figure/")
 {
     data <- object@data
     mcmc <- object@mcmc
-    
+
     YR <- "YR" # label for the season before the season change year
-    
+
     n_iter <- nrow(mcmc[[1]])
     years <- data$first_yr:data$last_yr
     pyears <- data$first_yr:data$last_proj_yr
@@ -45,7 +45,7 @@ plot_catch <- function(object,
 
     #dcatch <- data.frame(Year = c(1994, 1996, 2011), Catch = c(95, 149, 42))
     # dcatch <- data.frame(Year = c(1994, 1996, 2011), Catch = c(142000, 223000, 60100))
-    
+
     # p <- ggplot(d, aes(x = Year, y = Catch)) +
     #     stat_summary(fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
     #     stat_summary(fun.ymin = function(x) quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
@@ -54,7 +54,7 @@ plot_catch <- function(object,
     #     expand_limits(y = 0) +
     #     theme_lsd()
     # ggsave(paste0(figure_dir, "recreational_catch.png"), p)
-    
+
     # Catch
     comm <- data$data_catch_commercial_ryt
     dimnames(comm) <- list("Region" = regions, "Year" = years, "Season" = seasons)
@@ -68,7 +68,7 @@ plot_catch <- function(object,
 
     dsl <- rbind(comm, rec)
     dsl <- dplyr::mutate(dsl, Iteration = NA, Type = "SL", Data = "Observed")
-    
+
     dnsl <- data$data_catch_nsl_ryt
     dimnames(dnsl) <- list("Region" = regions, "Year" = years, "Season" = seasons)
     dnsl <- reshape2::melt(dnsl, value.name = "Catch") %>%
@@ -78,12 +78,12 @@ plot_catch <- function(object,
     dimnames(psl) <- list("Iteration" = 1:n_iter, "Rule"=rules, "Region" = regions, "Year" = pyears, "Season" = seasons)
     psl <- reshape2::melt(psl, value.name = "Catch") %>%
         dplyr::mutate(Type = "SL", Data = "Expected")
-    
+
     pnsl <- mcmc$pred_catch_nsl_jryt
     dimnames(pnsl) <- list("Iteration" = 1:n_iter, "Rule"=rules, "Region" = regions, "Year" = pyears, "Season" = seasons)
     pnsl <- reshape2::melt(pnsl, value.name = "Catch") %>%
         dplyr::mutate(Type = "NSL", Data = "Expected")
-    
+
     ph <- mcmc$pred_death_handling_ryt
     dimnames(ph) <- list("Iteration" = 1:n_iter, "Region" = regions, "Year" = pyears, "Season" = seasons)
     ph <- reshape2::melt(ph, value.name = "Catch") %>%
@@ -94,7 +94,7 @@ plot_catch <- function(object,
     })
     ph <- do.call(rbind, phlist)
 
-    
+
     # Observed catch
     dcatch <- rbind(dsl, dnsl) %>%
         dplyr::filter(!(Year < data$season_change_yr & Season == "SS")) %>%
@@ -119,23 +119,31 @@ plot_catch <- function(object,
     dcatch1 <- dcatch %>%
         dplyr::group_by(Region, Year, Season, Iteration, Type, Data) %>%
         dplyr::summarise(Catch = sum(Catch))
-    
-    p <- ggplot(data = pcatch, aes(x = Year, y = Catch))
-    if (show_proj) p <- p + geom_vline(aes(xintercept = data$last_yr), linetype = "dashed")
-    p <- p + stat_summary(fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
+    pcatch1 <- pcatch %>%
+      dplyr::group_by(Region, Year, Season, Type, Data) %>%
+      dplyr::summarise(Catch = median(Catch))
+
+    p1 <- ggplot(data = pcatch, aes(x = Year, y = Catch))
+    if (show_proj) p1 <- p1 + geom_vline(aes(xintercept = data$last_yr), linetype = "dashed")
+
+    p1 <- p1 + stat_summary(fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
         stat_summary(fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
         stat_summary(fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1) +
         geom_point(data = dcatch1, color = "red") +
+        geom_point(data = dplyr::filter(pcatch1, Year > data$last_yr, Type != "Handling mortality"), color = "blue") +
         #expand_limits(y = 0) +
         xlab(xlab) + ylab(ylab) +
         scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
-        theme_lsd()
+        theme_lsd() +
+        theme(axis.text.x = element_text(angle = 45,hjust = 1))
+
     if (data$n_area > 1) {
-          p <- p + facet_grid(Region + Type ~ Season, scales = "free")
+          p1 <- p1 + facet_grid(Region + Type ~ Season, scales = "free")#,
+                              # labeller = label_wrap_gen(width=5))
     } else {
-          p <- p + facet_grid(Type ~ Season, scales = "free")
+          p1 <- p1 + facet_grid(Type ~ Season, scales = "free")
     }
-    ggsave(paste0(figure_dir, "catch.png"), p, width = 8)
+    #ggsave(paste0(figure_dir, "catch.png"), p1, width = 8, height = 10)
 
 
     # Plot of catch summed over seasons and drop handling mortality
@@ -146,23 +154,28 @@ plot_catch <- function(object,
         dplyr::summarise(Catch = sum(Catch)) %>%
         dplyr::filter(Type != "Handling mortality")
     pcatch_sum$Type <- factor(pcatch_sum$Type, levels = c("SL", "NSL"))
+    pcatch_sum1 <- pcatch_sum %>%
+      dplyr::group_by(Region, Year, Type, Data) %>%
+      dplyr::summarise(Catch = median(Catch))
 
-    p <- ggplot(data = pcatch_sum, aes(x = Year, y = Catch))
-    if (show_proj) geom_vline(aes(xintercept = data$last_yr), linetype = "dashed")
-    p <- p + stat_summary(fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
+    p2 <- ggplot(data = pcatch_sum, aes(x = Year, y = Catch))
+    if (show_proj) p2 <- p2 + geom_vline(aes(xintercept = data$last_yr), linetype = "dashed")
+    p2 <- p2 + stat_summary(fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
         stat_summary(fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
         stat_summary(fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1) +
         geom_point(data = dcatch_sum, aes(x = Year, y = Catch), color = "red") +
+        geom_point(data = dplyr::filter(pcatch_sum1, Year > data$last_yr, Type != "Handling mortality"), color = "blue") +
         expand_limits(y = 0) +
         xlab(xlab) + ylab(ylab) +
         scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
-        theme_lsd()
+        theme_lsd() +
+        theme(axis.text.x = element_text(angle = 45,hjust = 1))
     if (data$n_area > 1) {
-          p <- p + facet_grid(Region ~ Type, scales = scales)
+          p2 <- p2 + facet_grid(Region ~ Type, scales = scales)
     } else {
-          p <- p + facet_grid(Type ~ ., scales = scales)
+          p2 <- p2 + facet_grid(Type ~ ., scales = scales)
     }
-    ggsave(paste0(figure_dir, "catch_sums.png"), p)
+    #ggsave(paste0(figure_dir, "catch_sums.png"), p)
 
 
     # Catch residuals
@@ -179,17 +192,18 @@ plot_catch <- function(object,
 
     rcatch <- rbind(rsl, rnsl)
     rcatch$Type <- factor(rcatch$Type, levels = c("SL","NSL"))
-    
-    p <- ggplot(data = dplyr::filter(rcatch), aes(x = Year, y = Catch)) +
+
+    p3 <- ggplot(data = dplyr::filter(rcatch), aes(x = Year, y = Catch)) +
         stat_summary(fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
         stat_summary(fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
         stat_summary(fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1) +
         #geom_violin() +
         expand_limits(y = 0) +
         xlab(xlab) + ylab("Residual") +
-        theme_lsd()
-      p <- p + facet_grid(Region + Type ~ Season, scales = "free")
-    ggsave(paste0(figure_dir, "catch_resid.png"), p)
+        theme_lsd() +
+        theme(axis.text.x = element_text(angle = 45,hjust = 1))
+      p3 <- p3 + facet_grid(Region + Type ~ Season, scales = "free")
+    #ggsave(paste0(figure_dir, "catch_resid.png"), p)
 
     ## catch area
     msy <- mcmc$MSY_r
@@ -198,28 +212,42 @@ plot_catch <- function(object,
             dplyr::rename("MSY"=value)
     msy$Region <- factor(msy$Region)
 
-    dcatch2 <- dcatch %>% 
+    dcatch2 <- dcatch %>%
             dplyr::group_by(Region, Year, Sector, Iteration) %>%
             dplyr::summarise(Catch = sum(Catch))
     dcatch2$Region <- factor(dcatch2$Region)
     dcatch2$Iteration <- 1
-    dcatch2 <- dplyr::left_join(dcatch2, msy) %>% 
+    dcatch2 <- dplyr::left_join(dcatch2, msy) %>%
         dplyr::mutate(Label = "") %>%
         dplyr::mutate(Label = ifelse(Iteration == 1 & Year == max(years) & Sector == "Commercial", "MSY", ""))
 
     # dcatch2$Region <- sapply(1:nrow(dcatch2), function(x) paste0("Region ", dcatch2$Region[x]))
-    p <- ggplot(dcatch2) + 
+    p4 <- ggplot(dcatch2) +
             geom_area(data = dcatch2, aes(x = Year, y = Catch, colour = Sector, fill = Sector), position = "stack") +
             xlab(xlab) + ylab(ylab) +
-            theme_lsd() 
+            theme_lsd()
 
     ## add msy
-    p <- p + stat_summary(aes(x = Year, y = MSY), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.125, colour = "black", fill="black" ) +
+    p4 <- p4 + stat_summary(aes(x = Year, y = MSY), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.125, colour = "black", fill="black" ) +
             stat_summary(aes(x = Year, y = MSY), fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.25, colour = NA) +
-            stat_summary(aes(x = Year, y = MSY), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1) + 
+            stat_summary(aes(x = Year, y = MSY), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1) +
             ggrepel::geom_label_repel(data = dcatch2, aes(x = Year, y = MSY, label = Label), fill = "black", size = 5, color = 'white', force = 10, segment.color = '#bbbbbb', min.segment.length = unit(0, "lines"))
 
-        p <- p + facet_grid(Region ~ ., scales = "free")
+        p4 <- p4 + facet_grid(Region ~ ., scales = "free")
 
-    ggsave(paste0(figure_dir, "catch_type.png"), p, width = 10)
+    #ggsave(paste0(figure_dir, "catch_type.png"), p, width = 10)
+        return(list(p1, p2, p3, p4))
 }
+
+plot_catch_save <- function(figure_dir = "figure/") {
+        p <- plot_catch(object,show_proj = FALSE)
+        ggsave(paste0(figure_dir, "catch.png"), p[[1]], width = 10, height = 8)
+        ggsave(paste0(figure_dir, "catch_sums.png"), p[[2]])
+        ggsave(paste0(figure_dir, "catch_resid.png"), p[[3]])
+        ggsave(paste0(figure_dir, "catch_type.png"), p[[4]], width = 10)
+
+        p <- plot_catch (object,show_proj = TRUE)
+        ggsave(paste0(figure_dir, "catch_v2.png"), p[[1]], width = 10, height = 8)
+        ggsave(paste0(figure_dir, "catch_sums_v2.png"), p[[2]])
+}
+

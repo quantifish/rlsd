@@ -46,8 +46,8 @@ plot_recruitment_deviations <- function(object,
     }
     
     if (!is.null(rdevs2)) {
-        p <- p + stat_summary(data = rdevs2, aes(x = Year, y = value), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
-            stat_summary(data = rdevs2, aes(x = Year, y = value), fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
+        p <- p + stat_summary(data = rdevs2, aes(x = Year, y = value), fun.min = function(x) stats::quantile(x, 0.05), fun.max = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
+            stat_summary(data = rdevs2, aes(x = Year, y = value), fun.min = function(x) stats::quantile(x, 0.25), fun.max = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
             stat_summary(data = rdevs2, aes(x = Year, y = value), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1)
     }
     
@@ -60,7 +60,8 @@ plot_recruitment_deviations <- function(object,
     p <- p + expand_limits(y = 0) +
         xlab(xlab) + ylab(ylab) +
         scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
-        theme_lsd()
+        theme_lsd() +
+        theme(axis.text.x = element_text(angle = 45,hjust = 1))
     
     ggsave(paste0(figure_dir, "recruitment_deviations.png"), p)
 }
@@ -135,11 +136,11 @@ plot_recruitment <- function(object,
     p <- p + geom_vline(aes(xintercept = data$last_yr), linetype = "dashed")
     if (!is.null(recruits2)) {
         p <- p +
-            stat_summary(data = R02, aes(x = Year, y = value/1e+6), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, fill = "green") +
-            stat_summary(data = R02, aes(x = Year, y = value/1e+6), fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA, fill = "green") +
+            stat_summary(data = R02, aes(x = Year, y = value/1e+6), fun.min = function(x) stats::quantile(x, 0.05), fun.max = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, fill = "green") +
+            stat_summary(data = R02, aes(x = Year, y = value/1e+6), fun.min = function(x) stats::quantile(x, 0.25), fun.max = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA, fill = "green") +
             stat_summary(data = R02, aes(x = Year, y = value/1e+6), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1, colour = "green") +
-            stat_summary(data = recruits2, aes(x = Year, y = value/1e+6), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
-            stat_summary(data = recruits2, aes(x = Year, y = value/1e+6), fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
+            stat_summary(data = recruits2, aes(x = Year, y = value/1e+6), fun.min = function(x) stats::quantile(x, 0.05), fun.max = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
+            stat_summary(data = recruits2, aes(x = Year, y = value/1e+6), fun.min = function(x) stats::quantile(x, 0.25), fun.max = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
             stat_summary(data = recruits2, aes(x = Year, y = value/1e+6), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1)
     }
     if (!is.null(recruits1)) {
@@ -150,7 +151,8 @@ plot_recruitment <- function(object,
         xlab(xlab) + ylab(ylab) +
         #scale_x_continuous(breaks = seq(xmin, xmax, 10), minor_breaks = seq(xmin, xmax, 1)) +
         scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
-        theme_lsd()
+        theme_lsd() +
+        theme(axis.text.x = element_text(angle = 45,hjust = 1))
     if (data$n_area > 1) p <- p + facet_wrap(~Region)
     
     ggsave(paste0(figure_dir, "recruitment.png"), p)

@@ -4,8 +4,12 @@
 \alias{plot_dens}
 \title{Plot dens}
 \usage{
-plot_dens(object, xlab = "Size (mm)", ylab = "Maturation",
-  figure_dir = "figure/")
+plot_dens(
+  object,
+  xlab = "Size (mm)",
+  ylab = "Maturation",
+  figure_dir = "figure/"
+)
 }
 \arguments{
 \item{object}{and LSD object}

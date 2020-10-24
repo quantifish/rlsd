@@ -4,8 +4,13 @@
 \alias{plot_maturation}
 \title{Plot maturation}
 \usage{
-plot_maturation(object, xlab = "Size (mm)", ylab = "Maturation",
-  figure_dir = "figure/", empirical = FALSE)
+plot_maturation(
+  object,
+  xlab = "Size (mm)",
+  ylab = "Maturation",
+  figure_dir = "figure/",
+  empirical = FALSE
+)
 }
 \arguments{
 \item{object}{and LSD object}

@@ -4,8 +4,12 @@
 \alias{plot_initial_numbers}
 \title{Plot initial nubers}
 \usage{
-plot_initial_numbers(object, xlab = "Size (mm)",
-  ylab = "Number of individuals (thousands)", figure_dir = "figure/")
+plot_initial_numbers(
+  object,
+  xlab = "Size (mm)",
+  ylab = "Number of individuals (thousands)",
+  figure_dir = "figure/"
+)
 }
 \arguments{
 \item{object}{and LSD object}

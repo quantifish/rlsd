@@ -4,10 +4,12 @@
 \alias{plot_refpoints}
 \title{Calculate reference points and create relevant figures}
 \usage{
-plot_refpoints(object, figure_dir)
+plot_refpoints(object, object1, figure_dir)
 }
 \arguments{
 \item{object}{the ref-lsd object}
+
+\item{object1}{the lsd object with stock assessment MCMC posterior draws}
 
 \item{figure_dir}{the directory to save figures to}
 }

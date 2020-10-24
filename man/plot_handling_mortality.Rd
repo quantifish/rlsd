@@ -4,8 +4,12 @@
 \alias{plot_handling_mortality}
 \title{Plot handling mortality by year}
 \usage{
-plot_handling_mortality(object, xlab = "Year",
-  ylab = "Handling mortality", figure_dir = "figure/")
+plot_handling_mortality(
+  object,
+  xlab = "Year",
+  ylab = "Handling mortality",
+  figure_dir = "figure/"
+)
 }
 \arguments{
 \item{object}{and LSD object}

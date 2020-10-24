@@ -37,7 +37,7 @@ plot_sex_ratio <- function(object, scales = "free", xlab = "Fishing year", ylab 
         osexr <- reshape2::melt(osexr) %>%
             dplyr::left_join(w, by = "LF") %>%
             dplyr::mutate(EffN = 1 / Sigma, SD = sqrt(value * (1 - value) / EffN)) %>%
-            dplyr::mutate(Source = factor(Source), Source = sources[Source], Season = seasons[Season]) %>%
+            dplyr::mutate(Source = sources[Source], Source = factor(Source), Season = seasons[Season]) %>%
             dplyr::filter(Iteration == 1) %>%
             dplyr::select(-Iteration)
 
@@ -66,7 +66,7 @@ plot_sex_ratio <- function(object, scales = "free", xlab = "Fishing year", ylab 
         osexr <- reshape2::melt(osexr) %>%
             dplyr::left_join(w, by = "LF") %>%
             dplyr::mutate(EffN = 1 / Sigma, SD = sqrt(value * (1 - value) / EffN)) %>%
-            dplyr::mutate(Source = factor(Source), Source = sources[Source], Season = seasons[Season]) %>%
+            dplyr::mutate(Source = sources[Source], Source = factor(Source), Season = seasons[Season]) %>%
             dplyr::filter(Iteration == 1) %>%
             dplyr::select(-Iteration)
         
@@ -88,8 +88,10 @@ plot_sex_ratio <- function(object, scales = "free", xlab = "Fishing year", ylab 
         geom_hline(yintercept = 0, alpha = 0.2) +
         # expand_limits(y = 0) +
         xlab(xlab) + ylab("Standardised residual") +
-        theme_lsd() +
-        theme(legend.position = "none")
+        theme_lsd()  +
+        guides(alpha = FALSE) +
+        theme(axis.text.x = element_text(angle = 45,hjust = 1))
+               # theme(legend.position = "none")
     if (n_iter > 10) {
         p <- p + geom_violin(aes(x = as.factor(Year), y = value, colour = Source, fill = Source, alpha = Sigma)) +
             scale_x_discrete(breaks = seq(0, 1e6, 5)) + 
@@ -114,8 +116,8 @@ plot_sex_ratio <- function(object, scales = "free", xlab = "Fishing year", ylab 
     }
     
     if (length(mcmc) > 0) {
-        p <- p + stat_summary(data = psexr2, aes(x = Year, y = value), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
-          stat_summary(data = psexr2, aes(x = Year, y = value), fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
+        p <- p + stat_summary(data = psexr2, aes(x = Year, y = value), fun.min = function(x) stats::quantile(x, 0.05), fun.max = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
+          stat_summary(data = psexr2, aes(x = Year, y = value), fun.min = function(x) stats::quantile(x, 0.25), fun.max = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
           stat_summary(data = psexr2, aes(x = Year, y = value), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1)
     }
     
@@ -129,7 +131,8 @@ plot_sex_ratio <- function(object, scales = "free", xlab = "Fishing year", ylab 
         coord_cartesian(ylim = c(0, 1)) +
         xlab(xlab) + 
         ylab(ylab) +
-        theme_lsd()
+        theme_lsd() +
+        theme(axis.text.x = element_text(angle = 45,hjust = 1))
     
     if (data$n_area == 1) {
         p <- p + facet_grid(Sex ~ Season, scales = "free_x")

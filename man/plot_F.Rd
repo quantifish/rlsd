@@ -4,9 +4,15 @@
 \alias{plot_F}
 \title{Plot fishing mortality}
 \usage{
-plot_F(object, scales = "free_y", xlab = "Fishing year",
-  ylab = "Fishing mortality (F)", figure_dir = "figure/",
-  ref = "Fmsy", show_proj = FALSE)
+plot_F(
+  object,
+  scales = "free_y",
+  xlab = "Fishing year",
+  ylab = "Fishing mortality (F)",
+  figure_dir = "figure/",
+  ref = "Fmsy",
+  show_proj = FALSE
+)
 }
 \arguments{
 \item{object}{and LSD object}

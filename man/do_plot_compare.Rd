@@ -4,8 +4,12 @@
 \alias{do_plot_compare}
 \title{Plot model fits}
 \usage{
-do_plot_compare(object_list, object_names, single_stock,
-  figure_dir = "compare_figure/")
+do_plot_compare(
+  object_list,
+  object_names,
+  single_stock,
+  figure_dir = "compare_figure/"
+)
 }
 \arguments{
 \item{object_list}{list of 'lsd.rds' files from multiple models}

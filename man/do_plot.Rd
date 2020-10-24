@@ -4,8 +4,13 @@
 \alias{do_plot}
 \title{Plot model fits}
 \usage{
-do_plot(object, map = FALSE, mcmc = FALSE, variational = FALSE,
-  figure_dir = "figure/")
+do_plot(
+  object,
+  map = FALSE,
+  mcmc = FALSE,
+  variational = FALSE,
+  figure_dir = "figure/"
+)
 }
 \arguments{
 \item{object}{the lsd object}

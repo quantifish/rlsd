@@ -24,12 +24,12 @@ plot_mls <- function(object,
 
     mls_ytrs <- data$cov_mls_ytrs
         dimnames(mls_ytrs) <- list("Year" = pyears, "Season" = seasons, "Region" = regions, "Sex" = sex)
-    mls_ytrs <- reshape2::melt(mls_ytrs) %>%
-      filter(mls_ytrs, Year %in% years, Sex %in% c("Males", "Females"))
+    mls_ytrs2 <- reshape2::melt(mls_ytrs) %>%
+      dplyr::filter(Year %in% years, Sex %in% c("Males", "Females"))
 
-    mls_ytrs$Region <- sapply(1:nrow(mls_ytrs), function(x) paste0("Region ", mls_ytrs$Region[x]))
+    mls_ytrs2$Region <- sapply(1:nrow(mls_ytrs2), function(x) paste0("Region ", mls_ytrs2$Region[x]))
 
-    p <- ggplot(data = mls_ytrs) +
+    p <- ggplot(data = mls_ytrs2) +
         geom_step(aes(x = Year, y = value, color = Sex), linetype = 1, size = 1.5) +
         xlab(xlab) +
         ylab(ylab) +

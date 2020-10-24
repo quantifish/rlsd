@@ -4,8 +4,13 @@
 \alias{plot_growth_increment}
 \title{Plot growth increment}
 \usage{
-plot_growth_increment(object, xlab = "Size (mm)",
-  ylab = "Increment (mm)", figure_dir = "figure/", empirical = FALSE)
+plot_growth_increment(
+  object,
+  xlab = "Size (mm)",
+  ylab = "Increment (mm)",
+  figure_dir = "figure/",
+  empirical = FALSE
+)
 }
 \arguments{
 \item{object}{and LSD object}

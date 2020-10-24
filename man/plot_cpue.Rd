@@ -4,8 +4,13 @@
 \alias{plot_cpue}
 \title{Plot CPUE}
 \usage{
-plot_cpue(object, scales = "fixed", xlab = "Fishing year",
-  ylab = "CPUE", figure_dir = "figure/")
+plot_cpue(
+  object,
+  scales = "fixed",
+  xlab = "Fishing year",
+  ylab = "CPUE",
+  figure_dir = "figure/"
+)
 }
 \arguments{
 \item{object}{and LSD object}

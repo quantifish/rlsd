@@ -1,5 +1,7 @@
 #' Plot selectivity
 #'
+#' Plot selectivity by size class for each sex, region, and year.
+#'
 #' @param object an S4 object
 #' @param xlab the x axis label
 #' @param figure_dir the directory to save the figure to
@@ -93,7 +95,7 @@ plot_selectivity <- function(object, xlab = "Size (mm)", figure_dir = "figure/")
 
     if (!is.null(sel1)) {
         q <- ggplot(sel1, aes(x = .data$Size, y = .data$Year, height = .data$Selectivity, fill = .data$Sex)) +
-            geom_density_ridges(stat = "identity", alpha = .6, color = "white", scale = 0.95) +
+            ggridges::geom_density_ridges(stat = "identity", alpha = .6, color = "white", scale = 0.95) +
             scale_y_discrete(expand = c(0, 0), name = "Selectivity by year") +
             scale_x_continuous(expand = c(0, 0)) +
             theme_lsd() +

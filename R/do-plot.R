@@ -1,5 +1,7 @@
 #' Plot model fits
 #'
+#' This is a wrapper that generates most of the LSD model plots.
+#'
 #' @param object the lsd object
 #' @param map plot MAP if a .map output is available
 #' @param mcmc plot MCMC if a .mcmc output is available
@@ -23,19 +25,19 @@ do_plot <- function(object,
         n_col <- 3
 
         rm_post <- object@mcmc_pars %>%
-            group_by(par) %>%
-            summarise(s = sum(value)) %>%
-            dplyr::filter(s == 0)
+            group_by(.data$par) %>%
+            summarise(s = sum(.data$value)) %>%
+            filter(.data$s == 0)
         rm_prior <- object@mcmc_priors %>%
-            group_by(par) %>%
-            summarise(s = sum(value)) %>%
-            dplyr::filter(s == 0)
+            group_by(.data$par) %>%
+            summarise(s = sum(.data$value)) %>%
+            filter(.data$s == 0)
 
         posteriors <- object@mcmc_pars %>%
-            filter(!par %in% rm_post$par) %>%
-            mutate(par = as.character(par), type = "Posterior")
+            filter(!.data$par %in% rm_post$par) %>%
+            mutate(par = as.character(.data$par), type = "Posterior")
         priors <- object@mcmc_priors %>%
-            dplyr::filter(!par %in% rm_prior$par) %>%
+            filter(!.data$par %in% rm_prior$par) %>%
             mutate(par = as.character(gsub(pattern = "prior_", replacement = "par_", x = par)), type = "Prior")
 
         sq <- seq(1, length(unique(posteriors$par)), n_panel)
@@ -44,11 +46,11 @@ do_plot <- function(object,
         print("plotting traces")
         for (i in 1:length(sq)) {
             pq <- sq[i]:(sq[i] + n_panel - 1)
-            d <- dplyr::filter(posteriors, par %in% unique(posteriors$par)[pq])
+            d <- filter(posteriors, .data$par %in% unique(posteriors$par)[pq])
             npar <- length(unique(d$par))
             p <- ggplot(d) +
-                geom_line(aes(x = as.integer(iteration), y = value, col = chain)) +
-                facet_wrap(~par, scales = "free_y", ncol = n_col) +
+                geom_line(aes(x = as.integer(.data$iteration), y = .data$value, col = .data$chain)) +
+                facet_wrap(~ .data$par, scales = "free_y", ncol = n_col) +
                 labs(x = "Iteration", y = NULL, col = "Chain") +
                 theme_lsd()
             ggsave(paste0(figure_dir, "par_trace_", i, ".png"), p, width = ifelse(npar > 1, 8, 4), height = 10) #npar + (npar %% 2)
@@ -58,11 +60,11 @@ do_plot <- function(object,
         print("plotting histograms")
         for (i in 1:length(sq)) {
             pq <- sq[i]:(sq[i] + n_panel - 1)
-            d <- dplyr::filter(posteriors, par %in% unique(posteriors$par)[pq])
+            d <- filter(posteriors, .data$par %in% unique(posteriors$par)[pq])
             npar <- length(unique(d$par))
-            p <- ggplot(data = d, aes(x = value, fill = chain)) +
+            p <- ggplot(data = d, aes(x = .data$value, fill = .data$chain)) +
                 geom_histogram(aes(x = value), bins = 50) +
-                facet_wrap(~par, scales = "free", ncol = n_col) +
+                facet_wrap(~ .data$par, scales = "free", ncol = n_col) +
                 labs(x = "Value", y = NULL, fill = "Chain") +
                 theme_lsd()
             ggsave(paste0(figure_dir, "par_histogram_", i, ".png"), p, width = ifelse(npar > 1, 8, 4), height = 10) #npar + (npar %% 2)
@@ -73,12 +75,12 @@ do_plot <- function(object,
         for (i in 1:length(sq)) {
             pq <- sq[i]:(sq[i] + n_panel - 1)
             d <- rbind(posteriors, priors) %>%
-                dplyr::filter(par %in% unique(posteriors$par)[pq])
+                filter(.data$par %in% unique(posteriors$par)[pq])
             d$type <- factor(d$type, levels = c("Prior", "Posterior"))
             npar <- length(unique(d$par))
             p <- ggplot(d) +
-                geom_density(aes(x = value, fill = type, colour = type), alpha = 0.5, trim = TRUE) +
-                facet_wrap(~par, scales = "free", ncol = n_col, nrow = 6) +
+                geom_density(aes(x = .data$value, fill = .data$type, colour = .data$type), alpha = 0.5, trim = TRUE) +
+                facet_wrap(~ .data$par, scales = "free", ncol = n_col, nrow = 6) +
                 labs(x = NULL, y = NULL, colour = NULL, fill = NULL) +
                 scale_colour_discrete(drop = TRUE, limits = c("Prior", "Posterior")) +
                 scale_fill_discrete(drop = TRUE, limits = c("Prior", "Posterior")) +
@@ -92,18 +94,20 @@ do_plot <- function(object,
         print("plotting cumulative density")
         for (i in 1:length(sq)) {
             pq <- sq[i]:(sq[i] + n_panel - 1)
-            d <- dplyr::filter(posteriors, par %in% unique(posteriors$par)[pq])
+            d <- filter(posteriors, par %in% unique(posteriors$par)[pq])
             npar <- length(unique(d$par))
-            p <- ggplot(d, aes(x = value, colour = chain)) +
+            p <- ggplot(d, aes(x = .data$value, colour = .data$chain)) +
                 stat_ecdf() +
-                facet_wrap(~par, scales = "free_x", ncol = n_col) +
+                facet_wrap(~ .data$par, scales = "free_x", ncol = n_col) +
                 labs(x = "Value", y = NULL, colour = "Chain") +
                 theme_lsd()
             ggsave(paste0(figure_dir, "par_cdf_", i, ".png"), p, width = ifelse(npar > 1, 7, 3.5), height = npar + (npar %% 2))
         }
 
-        print("plotting snail")
-        plot_snail(object, figure_dir = figure_dir)
+        if (object@data$snail_on == 1) {
+            print("plotting snail")
+            plot_snail(object, figure_dir = figure_dir)
+        }
     }
 
     # tres <- table_residuals(object, figure_dir = figure_dir)

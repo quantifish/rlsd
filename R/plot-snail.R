@@ -1,5 +1,7 @@
 #' Plot snail trial
 #'
+#' Creates snail trail plots for MPI plenary report.
+#'
 #' @param object an LSD object
 #' @param figure_dir the directory to save the figure to
 #' @param irule if multiple rules then which rule
@@ -68,7 +70,6 @@ plot_snail <- function(object, figure_dir = "figure/", irule = 1) {
         filter(.data$F_Fmsy > quantile(.data$F_Fmsy, 0.05)) %>%
         select(.data$Year, .data$SSB_SSB0, .data$F_Fmsy) %>%
         mutate(Year = "")
-    head(df_thin)
 
     top_left <- df_thin %>% filter(.data$SSB_SSB0 < median(ssbmsy$SSBmsy_SSB0), .data$F_Fmsy > 1)
     top_right <- df_thin %>% filter(.data$SSB_SSB0 >= median(ssbmsy$SSBmsy_SSB0), .data$F_Fmsy > 1)
@@ -82,7 +83,7 @@ plot_snail <- function(object, figure_dir = "figure/", irule = 1) {
         geom_vline(data = ssbmsy %>% filter(.data$Region %in% regions), aes(xintercept = median(.data$SSBmsy_SSB0))) +
         geom_density_2d(data = d %>% filter(.data$Year %in% data$last_yr, .data$Region %in% regions), aes(x = .data$SSB_SSB0, y = .data$F_Fmsy, colour = ..level..)) +
         scale_colour_gradient(low = "white", high = "red") +
-        geom_segment(data = dmed %>% filter(.data$Region %in% regions), aes(x = .data$SSB_SSB0, y = F_Fmsy, xend = lead(SSB_SSB0), yend = lead(F_Fmsy)), arrow = arrow(length = unit(0.2,"cm")), colour = "red") +
+        geom_segment(data = dmed %>% filter(.data$Region %in% regions), aes(x = .data$SSB_SSB0, y = F_Fmsy, xend = lead(.data$SSB_SSB0), yend = lead(F_Fmsy)), arrow = arrow(length = unit(0.2,"cm")), colour = "red") +
         #geom_path(data = dmed, aes(x = SSB_SSB0, y = F_Fmsy, colour = Year), colour = "red", arrow = arrow()) +
         #geom_point(data = dmed, aes(x = SSB_SSB0, y = F_Fmsy, colour = Year), colour = "red") +
         expand_limits(y = 0, x = c(0, 1.01)) +
@@ -146,8 +147,7 @@ plot_snail <- function(object, figure_dir = "figure/", irule = 1) {
     dimnames(ssbmsy) <- list(Iteration = 1:n_iter, Region = regions2)
     ssbmsy <- melt(ssbmsy, value.name = "SSBmsy")
     ssbmsy$Region <- factor(ssbmsy$Region)
-    ssbmsy <- left_join(ssbmsy, ssb0) %>%
-        mutate(SSBmsy_SSB0 = .data$SSBmsy / .data$SSB0)
+    ssbmsy <- left_join(ssbmsy, ssb0) %>% mutate(SSBmsy_SSB0 = .data$SSBmsy / .data$SSB0)
 
     dmed <- d %>%
         group_by(.data$Year, .data$Region) %>%

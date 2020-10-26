@@ -242,7 +242,7 @@ plot_vulnref_AW <- function(object,
     Bref <- mcmc$Bref_jr
     dimnames(Bref) <- list("Iteration" = 1:n_iter, "Rule" = 1:n_rules, "Region" = regions2)
     Bref <- melt(Bref)
-    Bref <- unique(Bref %>% select(.data$Region, .data$value))
+    Bref <- unique(Bref %>% select(.data$Region, .data$value)) %>% filter(Region %in% regions)
   }
 
   # spawning stock biomass

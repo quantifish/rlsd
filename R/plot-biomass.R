@@ -265,7 +265,7 @@ plot_vulnref_AW <- function(object,
     stat_summary(fill = cpal[1], fun.ymin = function(x) quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.25) +
     stat_summary(colour = cpal[1], fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1) +
     expand_limits(y = 0) +
-    labs(x = xlab, y = "AW vulnerable reference biomass (tonnes)", colour = NULL, fill = NULL) +
+    labs(x = xlab, y = "AW adjusted vulnerable biomass (tonnes)", colour = NULL, fill = NULL) +
     scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1), expand = c(0, 1)) +
     scale_y_continuous(expand = c(0, 0), limits = c(0, max(vb$VB)*1.05)) +
     # scale_fill_manual(values = cpal) +
@@ -465,7 +465,7 @@ plot_vulnerable_reference_biomass <- function(object,
 
   p <- p + stat_summary(data = din, aes(x = .data$Year, y = .data$value, color = .data$Season), fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1) +
     expand_limits(y = 0) +
-    labs(x = xlab, y = "Vulnerable reference biomass (tonnes)") +
+    labs(x = xlab, y = "Adjusted vulnerable biomass (tonnes)") +
     scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1), expand = c(0, 1)) +
     scale_y_continuous(expand = c(0, 0), limits = c(0, max(din$value) * 1.05)) +
     theme_lsd()

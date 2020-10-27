@@ -10,6 +10,8 @@
 #'
 plot_refpoints <- function(object, object1, figure_dir){
   
+      require(ggthemes)
+
   ##############################
   ## read model output
   ##############################
@@ -707,7 +709,7 @@ plot_refpoints <- function(object, object1, figure_dir){
     
     average_info <- full_join(average_info, average_info_t)
   }
-  
+
   average_sum <- average_info %>%
     tidyr::pivot_longer(cols = c(unique(status_check$Variable)), names_to = "Variable", values_to = "Value") %>%
     dplyr::group_by(Region, Variable) %>%
@@ -716,6 +718,14 @@ plot_refpoints <- function(object, object1, figure_dir){
                      Mean = mean(Value),
                      P95 = quantile(Value, 0.95)) %>%
     dplyr::mutate(RuleType = "Average")
+
+  average_info2 <- average_info %>%
+    dplyr::group_by(Iteration, Year, Region) %>%
+    dplyr::summarise(VB = mean(VB)) %>%
+    dplyr::mutate(RuleType = "Average") %>%
+    full_join(average_info %>% select(Iteration, Year, RuleType, Region, VB))
+  average_info2$RuleType <- factor(average_info2$RuleType, levels = c("Average", "FixedCatch", "FixedF"))
+
   
   rule_sum <- average_info %>%
     tidyr::pivot_longer(cols = c(unique(status_check$Variable)), names_to = "Variable", values_to = "Value") %>%
@@ -728,6 +738,23 @@ plot_refpoints <- function(object, object1, figure_dir){
   sum <- full_join(average_sum, rule_sum)
   # write.csv(sum, file.path(figure_dir, "Summary_reference_average.csv"))
   
+  p <- ggplot(average_info2) +
+    geom_density(aes(x = VB, fill = RuleType), alpha = 0.5) +
+    geom_vline(data = sum %>% filter(RuleType == "Average", Variable == "VB"), aes(xintercept = Mean, color = RuleType), lwd = 1.5) +
+    scale_fill_colorblind() +
+    scale_color_colorblind() +
+    guides(color = FALSE) +
+    xlab("AW adjusted vulnerable biomass") + ylab("Density") +
+    theme_bw(base_size = 20)
+  if(length(regions) > 1){
+    p <- p + facet_grid(~Region, scales = "free_x") 
+    ggsave(file.path(figure_dir, "VB_Distributions.png"), p, height = 8, width = 20)
+
+  } else {
+    ggsave(file.path(figure_dir, "VB_Distributions.png"), p, height = 8, width = 10)
+  }
+
+
   ## last assessment year
   curr <- info1 %>%
     dplyr::filter(Year == max(years)+1) %>%
@@ -819,7 +846,6 @@ plot_refpoints <- function(object, object1, figure_dir){
   ###############################
   ## all rules tested, compared
   ###############################
-    require(ggthemes)
 
     # check <- cinfo %>%
     #   dplyr::select(Iteration, Year, Region, RuleNum, Catch, CPUE, F, VB) %>%
@@ -1214,6 +1240,22 @@ plot_refpoints <- function(object, object1, figure_dir){
   } else {
     pb <- pb + facet_wrap(~Variable, scales = "free_y", ncol = 3)
     ggsave(file.path(figure_dir, "SSB_VB_Ref.png"), pb, height = 8, width = 20)
+  }
+
+  pb <- ggplot(check3 %>% filter(Variable == "VB")) +
+    stat_summary(data = checkt %>% filter(Variable == "VB"), aes(x = Year, y = Value), fun.min = function(x) stats::quantile(x, 0.05), fun.max = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25) +
+    stat_summary(data = checkt %>% filter(Variable == "VB"), aes(x = Year, y = Value), fun = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1.2) +
+    geom_hline(aes(yintercept = Mean, color = RuleType), lwd = 1.4) +
+    scale_color_manual(values = rev(c("goldenrod", "forestgreen","steelblue")))+
+    guides(color = guide_legend(title="Reference level")) +
+    expand_limits(y = 0) + 
+    ylab("AW adjusted vulnerable biomass") +
+    theme_bw(base_size = 20)
+  if(length(regions) > 1){
+    pb <- pb + facet_wrap(Region~, scales = "free_y", ncol = 3) 
+    ggsave(file.path(figure_dir, "VB_Ref.png"), pb, height = 15, width = 10)
+  } else {
+    ggsave(file.path(figure_dir, "VB_Ref.png"), pb, height = 8, width = 10)
   }
   
   

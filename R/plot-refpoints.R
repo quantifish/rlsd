@@ -1253,7 +1253,7 @@ plot_refpoints <- function(object, object1, figure_dir){
     theme_bw(base_size = 20)
   if(length(regions) > 1){
     pb <- pb + facet_wrap(Region~., scales = "free_y", ncol = 3) 
-    ggsave(file.path(figure_dir, "VB_Ref.png"), pb, height = 15, width = 20)
+    ggsave(file.path(figure_dir, "VB_Ref.png"), pb, height = 8, width = 20)
   } else {
     ggsave(file.path(figure_dir, "VB_Ref.png"), pb, height = 8, width = 10)
   }

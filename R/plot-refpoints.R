@@ -744,7 +744,7 @@ plot_refpoints <- function(object, object1, figure_dir){
     scale_fill_colorblind() +
     scale_color_colorblind() +
     guides(color = FALSE) +
-    xlab("AW adjusted vulnerable biomass") + ylab("Density") +
+    xlab("AW adjusted vulnerable biomass (VB)") + ylab("Density") +
     theme_bw(base_size = 20)
   if(length(regions) > 1){
     p <- p + facet_grid(Region~., scales = "free_x") 
@@ -1071,7 +1071,7 @@ plot_refpoints <- function(object, object1, figure_dir){
     geom_segment(aes(x = VB_Mean, xend = VB_Mean, y = Catch_P5, yend = Catch_P95, color = Constraint), lwd = 1.2, alpha = 0.25) +
     geom_point(aes(x = VB_Mean, y = Catch_Mean, fill = Constraint), pch = 21, cex = 3, alpha = 0.5) +
     expand_limits(y = 0, x = 0) +
-    xlab("Vulnerable biomass") + ylab("Average annual catch") +
+    xlab("AW adjusted vulnerable biomass (VB)") + ylab("Average annual catch") +
     scale_fill_colorblind() +
     scale_color_colorblind() +
     theme_bw(base_size = 20) 
@@ -1249,7 +1249,7 @@ plot_refpoints <- function(object, object1, figure_dir){
     scale_color_manual(values = rev(c("goldenrod", "forestgreen","steelblue")))+
     guides(color = guide_legend(title="Reference level")) +
     expand_limits(y = 0) + 
-    ylab("AW adjusted vulnerable biomass") +
+    ylab("AW adjusted vulnerable biomass (VB)") +
     theme_bw(base_size = 20)
   if(length(regions) > 1){
     pb <- pb + facet_wrap(Region~., scales = "free_y", ncol = 3) 
@@ -1277,7 +1277,7 @@ plot_refpoints <- function(object, object1, figure_dir){
     # scale_color_brewer(palette = "Spectral") +
     scale_fill_tableau() +
     scale_color_tableau() +
-    ylab("Vulnerable biomass (VB)") +
+    ylab("AW adjusted vulnerable biomass (VB)") +
     guides(color = FALSE, fill = FALSE) +
     coord_cartesian(xlim = c(min(check$Year),max(check$Year)), expand = FALSE) +
     theme_bw(base_size = 20)
@@ -1316,7 +1316,7 @@ plot_refpoints <- function(object, object1, figure_dir){
     # scale_color_brewer(palette = "Spectral") +
     scale_fill_tableau() +
     scale_color_tableau() +
-    ylab("Vulnerable biomass (VB)") +
+    ylab("AW adjusted vulnerable biomass (VB)") +
     guides(color = FALSE, fill = FALSE) +
     coord_cartesian(xlim = c(min(check$Year),max(check$Year)), expand = FALSE) +
     theme_bw(base_size = 20)

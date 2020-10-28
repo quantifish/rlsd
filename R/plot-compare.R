@@ -644,7 +644,7 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
         # guides(colour = guide_legend(override.aes = list(colour = cols_all, linetype = lty_all))) +
         # scale_linetype(guide=FALSE) +
         expand_limits(y = 0) +
-        xlab("Fishing year") + ylab("Vulnerable reference biomass (tonnes)") +
+        xlab("Fishing year") + ylab("Adjusted vulnerable biomass (tonnes)") +
         scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
         theme_lsd(base_size=14) +
         theme(axis.text.x = element_text(angle = 45,hjust = 1))
@@ -678,7 +678,7 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
          # guides(colour = guide_legend(override.aes = list(colour = cols_all, linetype = lty_all))) +
          # scale_linetype(guide=FALSE) +
          expand_limits(y = 0) +
-         xlab("Fishing year") + ylab("Vulnerable reference biomass (tonnes)") +
+         xlab("Fishing year") + ylab("Adjusted vulnerable biomass (tonnes)") +
          scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
          theme_lsd(base_size=14) +
          theme(axis.text.x = element_text(angle = 45,hjust = 1))
@@ -719,7 +719,7 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
       # guides(colour = guide_legend(override.aes = list(colour = cols_all, linetype = lty_all))) +
       # scale_linetype(guide=FALSE) +
       expand_limits(y = 0) +
-      xlab("Fishing year") + ylab("Relative vulnerable reference biomass (tonnes)") +
+      xlab("Fishing year") + ylab("Relative adjusted vulnerable biomass (tonnes)") +
       scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
       theme_lsd(base_size=14) +
       theme(axis.text.x = element_text(angle = 45,hjust = 1))
@@ -746,7 +746,7 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
         # guides(colour = guide_legend(override.aes = list(colour = cols_all, linetype = lty_all))) +
         # scale_linetype(guide=FALSE) +
         expand_limits(y = 0) +
-        xlab("Fishing year") + ylab("Relative vulnerable reference biomass (tonnes)") +
+        xlab("Fishing year") + ylab("Relative adjusted vulnerable biomass (tonnes)") +
         scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
         theme_lsd(base_size=14) +
         theme(axis.text.x = element_text(angle = 45,hjust = 1)) +
@@ -776,7 +776,7 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
         #stat_summary(data = vb %>% group_by(Iteration, Year, Model) %>% summarise(value = sum(value)), fun.ymin = function(x) quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75), geom = "ribbon", alpha=0.45, colour = NA) +
         stat_summary(data = vb %>% group_by(Iteration, Year, Model) %>% summarise(value = sum(value)), fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75) +
         expand_limits(y = 0) +
-        xlab("Fishing year") + ylab("Vulnerable reference biomass (tonnes)") +
+        xlab("Fishing year") + ylab("Adjusted vulnerable biomass (tonnes)") +
         scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
         theme_lsd(base_size = 14) +
         theme(axis.text.x = element_text(angle = 45,hjust = 1))
@@ -798,7 +798,7 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
       #stat_summary(data = vb, fun.ymin = function(x) quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75), geom = "ribbon", alpha=0.45, colour = NA) +
       stat_summary(data = vb, fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75) +
       expand_limits(y = 0) +
-      xlab("Fishing year") + ylab("Vulnerable reference biomass (tonnes)") +
+      xlab("Fishing year") + ylab("Adjusted vulnerable biomass (tonnes)") +
       scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
       theme_lsd(base_size = 14) +
       theme(axis.text.x = element_text(angle = 45,hjust = 1))+

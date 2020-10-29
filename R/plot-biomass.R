@@ -936,7 +936,6 @@ plot_total_biomass <- function(object,
     # }
 
    # Total biomass
-    if(show_proj == FALSE){
     if (length(map) > 0 & show_map){
       biomass_total_ytrs1_in <- dplyr::filter(biomass_total_jytrs1, Year <= data$last_yr)
       # biomass_total_ytrs1_in$Region <- sapply(1:nrow(biomass_total_ytrs1_in), function(x) paste0("Region ", biomass_total_ytrs1_in$Region[x]))
@@ -944,6 +943,7 @@ plot_total_biomass <- function(object,
     biomass_total_ytrs2_in <- dplyr::filter(biomass_total_jytrs2, Year <= data$last_yr)
     # biomass_total_ytrs2_in$Region <- sapply(1:nrow(biomass_total_ytrs2_in), function(x) paste0("Region ", biomass_total_ytrs2_in$Region[x]))
 
+  if(show_proj == FALSE){
     p <- ggplot(data = biomass_total_ytrs2_in %>% filter(Region %in% regions), aes(x = Year, y = value, color = Sex, fill = Sex))
     p <- p + stat_summary(fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
         stat_summary(fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
@@ -960,7 +960,9 @@ plot_total_biomass <- function(object,
     } else {
         p <- p + facet_wrap( ~ Season)
     }
-  } else {
+  }
+
+  if(show_proj == TRUE){
     p <- ggplot(data = biomass_total_yts2, aes(x = Year, y = value, color = Sex, fill = Sex)) +
         geom_vline(aes(xintercept = data$last_yr), linetype = "dashed") +
         stat_summary(fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
@@ -976,6 +978,7 @@ plot_total_biomass <- function(object,
         p <- p + geom_line(data = biomass_total_yts1, aes(x = Year, y = value, colour = Sex), linetype = 2)
     }
   }
+  return(p)
 }
 
 #' Plot relative adjusted vulnerable biomass
@@ -1413,6 +1416,7 @@ plot_vulnref_rel <- function(object,
         p <- p + facet_wrap(~Region)
     }
   }
+  return(p)
 }
 
 
@@ -1470,7 +1474,7 @@ plot_biomass <- function(object,
     # ggsave(paste0(figure_dir, "biomass_recruited_v2.png"), p, width = 12)
 
 
-    p <- plot_total_biomass(object)
+    p <- plot_total_biomass(object, show_proj = FALSE)
     ggsave(paste0(figure_dir, "biomass_total.png"), p, width = 12)
 
 

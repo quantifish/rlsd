@@ -1372,6 +1372,7 @@ if(any(grepl("B0now_r", names(mcmc1)))){
   
   gc()
   
+ if(any(grepl("B0now_r", names(mcmc1)))){
   check <- dinfo %>% left_join(max_all %>% dplyr::filter(Variable == "RelVBnow")) %>%
     dplyr::mutate(CVConstraint = replace(CVConstraint, RuleType == "FixedCatch", "FixedCatch")) %>%
     dplyr::mutate(CVConstraint = replace(CVConstraint, RuleType == "FixedF", "FixedF")) %>%
@@ -1436,7 +1437,7 @@ if(any(grepl("B0now_r", names(mcmc1)))){
     p_relvbcurr <- p_relvbcurr + facet_grid(~RuleType, scales = "free_y")
   }
   ggsave(file.path(figure_dir, "RelVBcurrent_AVG.png"), p_relvbcurr, height = 10, width = 20)
-  
+
   gc()
   
   check <- dinfo %>% left_join(max_all %>% dplyr::filter(Variable == "RelTBnow")) %>%
@@ -1503,7 +1504,7 @@ if(any(grepl("B0now_r", names(mcmc1)))){
     p_reltbcurr <- p_reltbcurr + facet_grid(~RuleType, scales = "free_y")
   }
   ggsave(file.path(figure_dir, "RelTBcurrent_AVG.png"), p_reltbcurr, height = 10, width = 20)
-  
+ }
   # #######################################
   # ## examine variability across filters
   # #######################################

@@ -12,7 +12,10 @@
 #' @importFrom stats quantidata_list[[1]]$n_areale
 #' @export
 #'
-plot_compare_ssb <- function(object_list, object_names, figure_dir = "compare_figure/", save_plot = TRUE) {
+plot_compare_ssb <- function(object_list, 
+                            object_names, 
+                            figure_dir = "compare_figure/", 
+                            save_plot = TRUE) {
     data_list <- lapply(1:length(object_list), function(x) object_list[[x]]@data)
     mcmc_list <- lapply(1:length(object_list), function(x) object_list[[x]]@mcmc)
     data <- data_list[[1]]
@@ -266,12 +269,12 @@ plot_compare_ssb <- function(object_list, object_names, figure_dir = "compare_fi
         scale_color_brewer(palette = "Set1")
     }
     if (max(relssb_next$Iteration) == 1) {
-      p <- p + geom_point(aes(x = Model, y=RelSSB, fill = Model), cex=4, pch=21) +
-        geom_hline(data = relssb_next %>% filter(Model == "base"), aes(yintercept = unique(RelSSB)), linetype=2)
-      
+      p <- p + geom_point(aes(x = Model, y=RelSSB, fill = Model), cex=4, pch=21)
+      if(any(relssb_next$Model == "base")) p <- p + geom_hline(data = relssb_next %>% filter(Model == "base"), aes(yintercept = unique(RelSSB)), linetype=2)
+        
     } else {
-      p <- p + geom_violin(aes(x = Model, y=RelSSB, fill = Model)) +
-        geom_hline(data = relssb_next %>% filter(Model == "base"), aes(yintercept = median(RelSSB)), linetype=2)
+      p <- p + geom_violin(aes(x = Model, y=RelSSB, fill = Model))
+      if(any(relssb_next$Model == "base")) p <- p + geom_hline(data = relssb_next %>% filter(Model == "base"), aes(yintercept = median(RelSSB)), linetype=2)
       
     }
     if(save_plot) {
@@ -313,12 +316,12 @@ plot_compare_ssb <- function(object_list, object_names, figure_dir = "compare_fi
     }
   
     if (max(relssb_next$Iteration) == 1) {
-      q <- q + geom_point(aes(x = Model, y=RelSSB, fill = Model), cex=4, pch=21) +
-        geom_hline(data = relssb_next %>% filter(Model == "base"), aes(yintercept = unique(RelSSB)), linetype=2)
+      q <- q + geom_point(aes(x = Model, y=RelSSB, fill = Model), cex=4, pch=21)
+      if(any(relssb_next_r$Model == "base")) q <- q + geom_hline(data = relssb_next %>% filter(Model == "base"), aes(yintercept = unique(RelSSB)), linetype=2)
       
     } else {
-      q <- q + geom_violin(aes(x = Model, y=RelSSB, fill = Model)) +
-        geom_hline(data = relssb_next %>% filter(Model == "base"), aes(yintercept = median(RelSSB)), linetype=2)
+      q <- q + geom_violin(aes(x = Model, y=RelSSB, fill = Model))
+      if(any(relssb_next_r$Model == "base")) q <- q + geom_hline(data = relssb_next %>% filter(Model == "base"), aes(yintercept = median(RelSSB)), linetype=2)
     }
     if(save_plot) {
       ggsave(paste0(figure_dir, "relssb_nextyear_compare_byRegion.png"), q, width=10)
@@ -349,12 +352,12 @@ plot_compare_ssb <- function(object_list, object_names, figure_dir = "compare_fi
         scale_color_brewer(palette = "Set1")
     }
     if (max(relssb_next_proj$Iteration) == 1) {
-        p <- p + geom_point(aes(x = Model, y=RelSSB, fill = Model, alpha=Year), cex=4, pch=21) +
-                 geom_hline(data = relssb_next_proj %>% filter(Model == "base") %>% filter(Year==max(years)+1), aes(yintercept = unique(RelSSB)), linetype=2)
+        p <- p + geom_point(aes(x = Model, y=RelSSB, fill = Model, alpha=Year), cex=4, pch=21)
+        if(any(relssb_next_proj$Model == "base")) p <- p + geom_hline(data = relssb_next_proj %>% filter(Model == "base") %>% filter(Year==max(years)+1), aes(yintercept = unique(RelSSB)), linetype=2)
 
     } else {
-        p <- p + geom_violin(aes(x = Model, y=RelSSB, fill = Model, alpha=Year)) +
-                 geom_hline(data = relssb_next_proj %>% filter(Model == "base") %>% filter(Year==max(years)+1), aes(yintercept = median(RelSSB)), linetype=2)
+        p <- p + geom_violin(aes(x = Model, y=RelSSB, fill = Model, alpha=Year))
+        if(any(relssb_next_proj$Model == "base")) p <- p + geom_hline(data = relssb_next_proj %>% filter(Model == "base") %>% filter(Year==max(years)+1), aes(yintercept = median(RelSSB)), linetype=2)
 
     }
     if (save_plot) {
@@ -387,12 +390,12 @@ plot_compare_ssb <- function(object_list, object_names, figure_dir = "compare_fi
         scale_color_brewer(palette = "Set1")
     }
     if (max(relssb_next_proj_r$Iteration) == 1) {
-      q <- q + geom_point(aes(x = Model, y=RelSSB, fill = Model, alpha=Year), cex=4, pch=21) +
-        geom_hline(data = relssb_next_proj_r %>% filter(Model == "base") %>% filter(Year==max(years)+1), aes(yintercept = unique(RelSSB)), linetype=2)
+      q <- q + geom_point(aes(x = Model, y=RelSSB, fill = Model, alpha=Year), cex=4, pch=21)
+      if(any(relssb_next_proj_r$Model == "base")) q <- q + geom_hline(data = relssb_next_proj_r %>% filter(Model == "base") %>% filter(Year==max(years)+1), aes(yintercept = unique(RelSSB)), linetype=2)
       
     } else {
-      q <- q + geom_violin(aes(x = Model, y=RelSSB, fill = Model, alpha=Year)) +
-        geom_hline(data = relssb_next_proj_r %>% filter(Model == "base") %>% filter(Year==max(years)+1), aes(yintercept = median(RelSSB)), linetype=2)
+      q <- q + geom_violin(aes(x = Model, y=RelSSB, fill = Model, alpha=Year))
+      if(any(relssb_next_proj_r$Model == "base")) q <- q + geom_hline(data = relssb_next_proj_r %>% filter(Model == "base") %>% filter(Year==max(years)+1), aes(yintercept = median(RelSSB)), linetype=2)
       
     }
     if (save_plot) {

@@ -787,7 +787,7 @@ if(any(grepl("B0now_r", names(mcmc1)))){
     scale_fill_colorblind() +
     scale_color_colorblind() +
     guides(color = FALSE) +
-    xlab("AW adjusted vulnerable biomass (VB)") + ylab("Density") +
+    xlab("AW adjusted vulnerable biomass (VB; tonnes)") + ylab("Density") +
     theme_bw(base_size = 20)
   if(length(regions) > 1){
     p <- p + facet_grid(Region~., scales = "free_x") 
@@ -1041,7 +1041,7 @@ if(any(grepl("B0now_r", names(mcmc1)))){
     # geom_point(aes(x = CV, y = Catch_P50, fill = Constraint), pch = 21, cex = 4) +
     geom_point(aes(x = CV, y = Catch_Mean, fill = Constraint), pch = 21, cex = 4, alpha = 0.5) +
     expand_limits(y = 0, x = 0) +
-    xlab("CV of catch over time and iteration") + ylab("Average annual catch") +
+    xlab("CV of catch over time and iteration") + ylab("Average annual catch (tonnes)") +
     scale_fill_colorblind() +
     scale_color_colorblind() +
     theme_bw(base_size = 20)
@@ -1068,7 +1068,7 @@ if(any(grepl("B0now_r", names(mcmc1)))){
     geom_segment(aes(x = RelSSB_Mean, xend = RelSSB_Mean, y = Catch_P5, yend = Catch_P95, color = Constraint), lwd = 1.2, alpha = 0.25) +
     geom_point(aes(x = RelSSB_Mean, y = Catch_Mean, fill = Constraint), pch = 21, cex = 4, alpha = 0.5) +
     expand_limits(y = 0, x = 0) +
-    xlab("Relative spawning biomass (SSB/SSB0now)") + ylab("Average annual catch") +
+    xlab("Relative spawning biomass (SSB/SSB0now)") + ylab("Average annual catch (tonnes)") +
     scale_fill_colorblind() +
     scale_color_colorblind() +
     theme_bw(base_size = 20)
@@ -1087,7 +1087,7 @@ if(any(grepl("B0now_r", names(mcmc1)))){
     geom_segment(aes(x = RelVB_Mean, xend = RelVB_Mean, y = Catch_P5, yend = Catch_P95, color = Constraint), lwd = 1.2, alpha = 0.25) +
     geom_point(aes(x = RelVB_Mean, y = Catch_Mean, fill = Constraint), pch = 21, cex = 3, alpha = 0.5) +
     expand_limits(y = 0, x = 0) +
-    xlab("Relative vulnerable biomass (VB/VB0now)") + ylab("Average annual catch") +
+    xlab("Relative AW adjusted vulnerable biomass (VB/VB0now)") + ylab("Average annual catch (tonnes)") +
     scale_fill_colorblind() +
     scale_color_colorblind() +
     theme_bw(base_size = 20)
@@ -1114,7 +1114,7 @@ if(any(grepl("B0now_r", names(mcmc1)))){
     geom_segment(aes(x = VB_Mean, xend = VB_Mean, y = Catch_P5, yend = Catch_P95, color = Constraint), lwd = 1.2, alpha = 0.25) +
     geom_point(aes(x = VB_Mean, y = Catch_Mean, fill = Constraint), pch = 21, cex = 3, alpha = 0.5) +
     expand_limits(y = 0, x = 0) +
-    xlab("AW adjusted vulnerable biomass (VB)") + ylab("Average annual catch") +
+    xlab("AW adjusted vulnerable biomass (VB; tonnes)") + ylab("Average annual catch (tonnes)") +
     scale_fill_colorblind() +
     scale_color_colorblind() +
     theme_bw(base_size = 20) 
@@ -1142,7 +1142,7 @@ if(any(grepl("B0now_r", names(mcmc1)))){
     geom_segment(aes(x = RelTB_Mean, xend = RelTB_Mean, y = Catch_P5, yend = Catch_P95, color = Constraint), lwd = 1.2, alpha = 0.25) +
     geom_point(aes(x = RelTB_Mean, y = Catch_Mean, fill = Constraint), pch = 21, cex = 3, alpha = 0.5) +
     expand_limits(y = 0, x = 0) +
-    xlab("Relative total biomass (TB/TB0now)") + ylab("Average annual catch") +
+    xlab("Relative total biomass (TB/TB0now)") + ylab("Average annual catch (tonnes)") +
     scale_fill_colorblind() +
     scale_color_colorblind() +
     theme_bw(base_size = 20)
@@ -1169,7 +1169,7 @@ if(any(grepl("B0now_r", names(mcmc1)))){
     geom_segment(aes(x = TB_Mean, xend = TB_Mean, y = Catch_P5, yend = Catch_P95, color = Constraint), lwd = 1.2, alpha = 0.25) +
     geom_point(aes(x = TB_Mean, y = Catch_Mean, fill = Constraint), pch = 21, cex = 3, alpha = 0.5) +
     expand_limits(y = 0, x = 0) +
-    xlab("Total biomass") + ylab("Average annual catch") +
+    xlab("Total biomass (TB; tonnes)") + ylab("Average annual catch (tonnes)") +
     scale_fill_colorblind() +
     scale_color_colorblind() +
     theme_bw(base_size = 20) 
@@ -1292,7 +1292,7 @@ if(any(grepl("B0now_r", names(mcmc1)))){
     scale_color_manual(values = rev(c("goldenrod", "forestgreen","steelblue")))+
     guides(color = guide_legend(title="Reference level")) +
     expand_limits(y = 0) + 
-    ylab("AW adjusted vulnerable biomass (VB)") +
+    ylab("AW adjusted vulnerable biomass (VB; tonnes)") +
     theme_bw(base_size = 20)
   if(length(regions) > 1){
     pb <- pb + facet_wrap(Region~., scales = "free_y", ncol = 3) 
@@ -1320,7 +1320,7 @@ if(any(grepl("B0now_r", names(mcmc1)))){
     # scale_color_brewer(palette = "Spectral") +
     scale_fill_tableau() +
     scale_color_tableau() +
-    ylab("AW adjusted vulnerable biomass (VB)") +
+    ylab("AW adjusted vulnerable biomass (VB; tonnes)") +
     guides(color = FALSE, fill = FALSE) +
     coord_cartesian(xlim = c(min(check$Year),max(check$Year)), expand = FALSE) +
     theme_bw(base_size = 20)
@@ -1359,7 +1359,7 @@ if(any(grepl("B0now_r", names(mcmc1)))){
     # scale_color_brewer(palette = "Spectral") +
     scale_fill_tableau() +
     scale_color_tableau() +
-    ylab("AW adjusted vulnerable biomass (VB)") +
+    ylab("AW adjusted vulnerable biomass (VB; tonnes)") +
     guides(color = FALSE, fill = FALSE) +
     coord_cartesian(xlim = c(min(check$Year),max(check$Year)), expand = FALSE) +
     theme_bw(base_size = 20)
@@ -1391,7 +1391,7 @@ if(any(grepl("B0now_r", names(mcmc1)))){
     scale_fill_tableau() +
     scale_color_tableau() +
     guides(color = FALSE, fill = FALSE) +
-    ylab("Relative vulnerable biomass (VB/VB0now)") +
+    ylab("Relative AW adjusted vulnerable biomass (VB/VB0now)") +
     coord_cartesian(xlim = c(min(check$Year),max(check$Year)), expand = FALSE) +
     theme_bw(base_size = 20)
   if(length(regions) > 1){
@@ -1427,7 +1427,7 @@ if(any(grepl("B0now_r", names(mcmc1)))){
     # scale_color_brewer(palette = "Spectral") +
     scale_fill_tableau() +
     scale_color_tableau() +
-    ylab("Relative vulnerable biomass (VB/VB0now)") +
+    ylab("Relative AW adjusted vulnerable biomass (VB/VB0now)") +
     guides(color = FALSE, fill = FALSE) +
     coord_cartesian(xlim = c(min(check$Year),max(check$Year)), expand = FALSE) +
     theme_bw(base_size = 20)

@@ -30,6 +30,7 @@ plot_refpoints <- function(object, object1, figure_dir){
   fleets <- c("SL","NSL")
 
 
+ if("pred_catch_sl_jryt" %in% names(mcmc1)){
   slcatch <- mcmc1$pred_catch_sl_jryt
   dimnames(slcatch) <- list("Iteration"=1:n_iter1, "RuleNum"=1:dim(slcatch)[2], "Region"=regions, "Year"=pyears1, "Season"=seasons)
   slcatch2 <- reshape2::melt(slcatch, value.name = "Catch") %>% 
@@ -43,8 +44,23 @@ plot_refpoints <- function(object, object1, figure_dir){
     dplyr::group_by(Iteration, Year, Region, RuleNum) %>%
     dplyr::summarise(Catch = sum(Catch)) %>%
     dplyr::mutate("CatchType" = "NSL")    
-  
-  pcatch <- rbind.data.frame(slcatch2, nslcatch2) %>%
+ } else {
+  slcatch <- mcmc1$pred_catch_sl_ryt
+  dimnames(slcatch) <- list("Iteration"=1:n_iter1, "Region"=regions, "Year"=pyears1, "Season"=seasons)
+  slcatch2 <- reshape2::melt(slcatch, value.name = "Catch") %>% 
+    dplyr::group_by(Iteration, Year, Region) %>%
+    dplyr::summarise(Catch = sum(Catch)) %>%
+    dplyr::mutate("CatchType" = "SL")
+
+  nslcatch <- mcmc1$pred_catch_nsl_ryt
+  dimnames(nslcatch) <- list("Iteration"=1:n_iter1, "Region"=regions, "Year"=pyears1, "Season"=seasons)
+  nslcatch2 <- reshape2::melt(nslcatch, value.name = "Catch") %>% 
+    dplyr::group_by(Iteration, Year, Region) %>%
+    dplyr::summarise(Catch = sum(Catch)) %>%
+    dplyr::mutate("CatchType" = "NSL")    
+ }
+
+   pcatch <- rbind.data.frame(slcatch2, nslcatch2) %>%
     tidyr::pivot_wider(names_from = CatchType, values_from = Catch) %>%
     dplyr::mutate(Catch = SL + NSL)
 
@@ -62,6 +78,7 @@ plot_refpoints <- function(object, object1, figure_dir){
     dplyr::rename(VB = value)
   vb2$Region <- factor(vb2$Region)
   
+ if(any(grepl("B0now_r", names(mcmc1)))){
   vb0now <- mcmc1$B0now_r
   dimnames(vb0now) <- list("Iteration" = 1:n_iter1, "Region" = regions2)
   vb0now <- reshape2::melt(vb0now) %>%
@@ -73,17 +90,24 @@ plot_refpoints <- function(object, object1, figure_dir){
   VB0 <- reshape2::melt(VB0) %>%
     dplyr::rename(VB0 = value)
   VB0$Region <- factor(VB0$Region)
-  
-  ssb <- mcmc1$biomass_ssb_jyr
-  dimnames(ssb) <- list("Iteration" = 1:n_iter1, "RuleNum" = 1:dim(ssb)[2], "Year" = pyears1, "Region" = regions)
-  ssb2 <- reshape2::melt(ssb) %>% dplyr::rename("SSB"=value) 
-  ssb2$Region <- factor(ssb2$Region)
-  
+
   ssb0now <- mcmc1$SSB0now_r
   dimnames(ssb0now) <- list("Iteration" = 1:n_iter1, "Region" = regions2)
   ssb0now <- reshape2::melt(ssb0now) %>%
     dplyr::rename(SSB0now=value) 
   ssb0now$Region <- factor(ssb0now$Region)
+
+  tb0now <- mcmc1$Btot0now_r
+  dimnames(tb0now) <- list("Iteration" = 1:n_iter1, "Region" = regions2)
+  tb0now <- reshape2::melt(tb0now) %>%
+    dplyr::rename(TB0now=value) 
+  tb0now$Region <- factor(tb0now$Region)
+ }
+  
+  ssb <- mcmc1$biomass_ssb_jyr
+  dimnames(ssb) <- list("Iteration" = 1:n_iter1, "RuleNum" = 1:dim(ssb)[2], "Year" = pyears1, "Region" = regions)
+  ssb2 <- reshape2::melt(ssb) %>% dplyr::rename("SSB"=value) 
+  ssb2$Region <- factor(ssb2$Region)
   
   SSB0 <- mcmc1$SSB0_r
   dimnames(SSB0) <- list("Iteration" = 1:n_iter1, "Region" = regions2)
@@ -117,12 +141,6 @@ plot_refpoints <- function(object, object1, figure_dir){
   }
   tb2$Region <- factor(tb2$Region)
 
-  tb0now <- mcmc1$Btot0now_r
-  dimnames(tb0now) <- list("Iteration" = 1:n_iter1, "Region" = regions2)
-  tb0now <- reshape2::melt(tb0now) %>%
-    dplyr::rename(TB0now=value) 
-  tb0now$Region <- factor(tb0now$Region)
-
   TB0 <- mcmc1$Btot0_r
   dimnames(TB0) <- list("Iteration" = 1:n_iter1, "Region" = regions2)
   TB0 <- reshape2::melt(TB0) %>%
@@ -135,6 +153,7 @@ plot_refpoints <- function(object, object1, figure_dir){
     dplyr::rename(Recruitment = value)
   rec2$Region <- factor(rec2$Region)
   
+if(any(grepl("B0now_r", names(mcmc1)))){
   relssb <- full_join(ssb2, ssb0now) %>%
     dplyr::full_join(SSB0) %>%
     dplyr::mutate(RelSSBnow = SSB/SSB0now,
@@ -150,10 +169,23 @@ plot_refpoints <- function(object, object1, figure_dir){
     dplyr::mutate(RelTBnow = TB/TB0now,
                   RelTB = TB/TB0)
 
-
   relb <- full_join(relssb, relvb)
   relb1 <- full_join(relb, reltb)
   relb2 <- full_join(relb1, rec2)
+
+ } else {
+  relssb <- full_join(ssb2, SSB0) %>%
+    dplyr::mutate(RelSSB = SSB/SSB0)
+
+  reltb <- full_join(tb2, TB0) %>%
+    dplyr::mutate(RelTB = TB/TB0)
+
+  relb1 <- full_join(relssb, reltb)
+  relb2 <- full_join(relb1, rec2)
+  relb2 <- full_join(relb2, vb2)
+ }
+
+
 
   catch$Region <- factor(catch$Region)
   info1x <- full_join(catch, relb2)
@@ -190,6 +222,7 @@ plot_refpoints <- function(object, object1, figure_dir){
   }
 
   ## status in last year of model estimates
+ if(any(grepl("B0now_r", names(mcmc1)))){
   status_check <- info1 %>%
     dplyr::filter(Year == max(years1)+1) %>%
     tidyr::pivot_longer(cols=c(Catch, SSB,SSB0now,SSB0,RelSSB,RelSSBnow,VB,VB0now,VB0,RelVB,RelVBnow,TB,TB0now,TB0,RelTB, RelTBnow), names_to = "Variable", values_to = "Value") %>%
@@ -198,6 +231,16 @@ plot_refpoints <- function(object, object1, figure_dir){
                      P50 = quantile(Value, 0.5),
                      Mean = mean(Value),
                      P95 = quantile(Value, 0.95))
+ } else {
+  status_check <- info1 %>%
+    dplyr::filter(Year == max(years1)+1) %>%
+    tidyr::pivot_longer(cols=c(Catch, SSB,SSB0,RelSSB,VB,TB,TB0,RelTB), names_to = "Variable", values_to = "Value") %>%
+    dplyr::group_by(Region, Variable) %>%
+    dplyr::summarise(P5 = quantile(Value, 0.05),
+                     P50 = quantile(Value, 0.5),
+                     Mean = mean(Value),
+                     P95 = quantile(Value, 0.95)) 
+ }
 
   # write.csv(status_check, file.path(figure_dir, "Current_status_check.csv"))
   

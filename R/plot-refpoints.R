@@ -726,7 +726,7 @@ if(any(grepl("B0now_r", names(mcmc1)))){
     dplyr::right_join(find_msy %>% dplyr::select(-c(P50,Mean))) %>%
     dplyr::filter(RuleType %in% c("FixedCatch", "FixedF")) %>%
     # tidyr::pivot_longer(cols = c(Catch,VB,TB,SSB,SSB0now, TB0now, VB0now, RelSSBnow, RelTBnow, RelVBnow), names_to = "Variable", values_to = "Value") %>%
-    dplyr::select(Iteration, Year, Region, RuleType, unique(status_check$Variable))
+    dplyr::select(Iteration, Year, Region, RuleType, unique(summary$Variable))
   
 
   
@@ -754,7 +754,7 @@ if(any(grepl("B0now_r", names(mcmc1)))){
   }
 
   average_sum <- average_info %>%
-    tidyr::pivot_longer(cols = c(unique(status_check$Variable)), names_to = "Variable", values_to = "Value") %>%
+    tidyr::pivot_longer(cols = c(unique(summary$Variable)), names_to = "Variable", values_to = "Value") %>%
     dplyr::group_by(Region, Variable) %>%
     dplyr::summarise(P5 = quantile(Value, 0.05),
                      P50 = quantile(Value, 0.5),
@@ -771,7 +771,7 @@ if(any(grepl("B0now_r", names(mcmc1)))){
 
   
   rule_sum <- average_info %>%
-    tidyr::pivot_longer(cols = c(unique(status_check$Variable)), names_to = "Variable", values_to = "Value") %>%
+    tidyr::pivot_longer(cols = c(unique(summary$Variable)), names_to = "Variable", values_to = "Value") %>%
     dplyr::group_by(Region, Variable, RuleType) %>%
     dplyr::summarise(P5 = quantile(Value, 0.05),
                      P50 = quantile(Value, 0.5),
@@ -811,6 +811,18 @@ if(any(grepl("B0now_r", names(mcmc1)))){
                      P_above_med = length(which(Current >= P50))/length(Current))
   # write.csv(curr, file.path(figure_dir, "P_above_ref.csv"))
 
+  if(any(grepl("B0now_r", names(mcmc1)))){
+   curr <- pinfo %>%
+    dplyr::filter(Year == max(years)+1) %>%
+    tidyr::pivot_longer(cols = c(unique(summary$Variable)), names_to = "Variable", values_to = "Value") %>%
+    ungroup() %>%
+    dplyr::select(Region, Variable, Value) %>%
+    dplyr::rename(Current = Value) %>%
+    dplyr::left_join(sum %>% dplyr::select(Region, RuleType, Variable, Mean, P50)) %>%
+    dplyr::group_by(Region, Variable, RuleType) %>%
+    dplyr::summarise(P_above_mean = length(which(Current >= Mean))/length(Current),
+                     P_above_med = length(which(Current >= P50))/length(Current))
+  }
     sum_curr <- full_join(sum, curr)
     status_check <- status_check %>%
       dplyr::rename(Current_P5 = P5, Current_P50 = P50, Current_Mean = Mean, Current_P95 = P95)

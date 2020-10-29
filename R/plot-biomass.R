@@ -666,6 +666,7 @@ plot_vulnerable_biomass <- function(object,
 #'
 plot_total_biomass <- function(object,
                          scales = "free_x",
+                         show_proj = TRUE, 
                          show_map = TRUE,
                          show_mcmc = TRUE,
                          xlab = "Fishing year",
@@ -935,6 +936,7 @@ plot_total_biomass <- function(object,
     # }
 
    # Total biomass
+    if(show_proj == FALSE){
     if (length(map) > 0 & show_map){
       biomass_total_ytrs1_in <- dplyr::filter(biomass_total_jytrs1, Year <= data$last_yr)
       # biomass_total_ytrs1_in$Region <- sapply(1:nrow(biomass_total_ytrs1_in), function(x) paste0("Region ", biomass_total_ytrs1_in$Region[x]))
@@ -958,7 +960,7 @@ plot_total_biomass <- function(object,
     } else {
         p <- p + facet_wrap( ~ Season)
     }
-
+  } else {
     p <- ggplot(data = biomass_total_yts2, aes(x = Year, y = value, color = Sex, fill = Sex)) +
         geom_vline(aes(xintercept = data$last_yr), linetype = "dashed") +
         stat_summary(fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
@@ -973,6 +975,7 @@ plot_total_biomass <- function(object,
         # biomass_total_yts1$Region <- sapply(1:nrow(biomass_total_yts1), function(x) paste0("Region ", biomass_total_yts1$Region[x]))
         p <- p + geom_line(data = biomass_total_yts1, aes(x = Year, y = value, colour = Sex), linetype = 2)
     }
+  }
 }
 
 #' Plot biomass measures

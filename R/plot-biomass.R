@@ -889,26 +889,26 @@ plot_biomass <- function(object,
     p <- plot_ssb(object)
     ggsave(paste0(figure_dir, "biomass_spawning.png"), p, width = 12)
 
-    p <- plot_ssb(object, show_proj = TRUE)
+    p <- plot_ssb(object, show_proj = TRUE, show_map = FALSE)
     ggsave(paste0(figure_dir, "biomass_spawning_v2.png"), p, width=15)
 
     p <- plot_ssb(object, show_ref = TRUE)
     ggsave(paste0(figure_dir, "biomass_spawning_wRef.png"), p, width = 12)
 
-    p <- plot_ssb(object, show_proj = TRUE, show_ref = TRUE)
+    p <- plot_ssb(object, show_proj = TRUE, show_ref = TRUE, show_map = FALSE)
     ggsave(paste0(figure_dir, "biomass_spawning_wRef_v2.png"), p, width=15)
 
     # AW vulnerable reference biomass
     p <- plot_vulnref_AW(object)
     ggsave(paste0(figure_dir, "biomass_AW_vulnref.png"), p, width = 12)
 
-    p <- plot_vulnref_AW(object, show_proj = TRUE)
+    p <- plot_vulnref_AW(object, show_proj = TRUE, show_map = FALSE)
     ggsave(paste0(figure_dir, "biomass_AW_vulnref_v2.png"), p, width=15)
 
     p <- plot_vulnref_AW(object, show_ref = TRUE)
     ggsave(paste0(figure_dir, "biomass_AW_vulnref_wRef.png"), p, width = 12)
 
-    p <- plot_vulnref_AW(object, show_proj = TRUE, show_ref = TRUE)
+    p <- plot_vulnref_AW(object, show_proj = TRUE, show_ref = TRUE, show_map = FALSE)
     ggsave(paste0(figure_dir, "biomass_AW_vulnref_wRef_v2.png"), p, width=15)
 
 
@@ -1015,7 +1015,7 @@ plot_biomass <- function(object,
     ggsave(paste0(figure_dir, "biomass_vuln.png"), p, width = 10)
 
     ## vulnerable biomass with projection
-    p <- plot_vulnerable_biomass(object, show_proj = TRUE)
+    p <- plot_vulnerable_biomass(object, show_proj = TRUE, show_map = FALSE)
     ggsave(paste0(figure_dir, "biomass_vuln_v2.png"), p, width = 12)
 
 
@@ -1040,7 +1040,7 @@ plot_biomass <- function(object,
     # if (length(map) > 0 & show_map) {
     #     p <- p + geom_line(data = biomass_vulnref_yt1, aes(x = Year, y = value/1000), linetype = 2)
     # }
-    p <- plot_vulnerable_reference_biomass(object, show_proj = TRUE)
+    p <- plot_vulnerable_reference_biomass(object, show_proj = TRUE, show_map = FALSE)
     ggsave(paste0(figure_dir, "biomass_vulnref_v2.png"), p, width = 12)
 
 

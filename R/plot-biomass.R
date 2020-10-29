@@ -1296,7 +1296,7 @@ plot_vulnref_rel <- function(object,
     din2 <- rbind.data.frame(dinaw2, dinss2) %>%
       ungroup()
 
-    if (length(map) > 0){
+    if (length(map) > 0  & show_map){
       dinx <- bvref_in1 %>% group_by(.data$Iteration, .data$Year, .data$Season, .data$Region, .data$value)
     } else {
       dinx <- NULL
@@ -1366,7 +1366,7 @@ plot_vulnref_rel <- function(object,
 
     din2 <- rbind.data.frame(dinaw2, dinss2) %>% ungroup()
 
-    if (length(map) > 0) {
+    if (length(map) > 0 & show_map) {
       dinx <- bvref_in1 %>% group_by(Iteration, Year, Season, Region, value)
     } else{
       dinx <- NULL

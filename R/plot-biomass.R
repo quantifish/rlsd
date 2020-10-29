@@ -302,7 +302,7 @@ plot_vulnref_AW <- function(object,
 #' @importFrom stats quantile
 #' @export
 #'
-plot_adjusted_vulnerable_biomass <- function(object,
+plot_vulnerable_reference_biomass <- function(object,
                                               scales = "free_x",
                                               show_map = TRUE,
                                               show_mcmc = TRUE,
@@ -1048,7 +1048,7 @@ plot_biomass <- function(object,
 
 
     # Reference biomass - version 1
-    p <- plot_adjusted_vulnerable_biomass(object)
+    p <- plot_vulnerable_reference_biomass(object)
     ggsave(paste0(figure_dir, "biomass_vulnref.png"), p, width = 10)
 
 
@@ -1067,7 +1067,7 @@ plot_biomass <- function(object,
     # if (length(map) > 0 & show_map) {
     #     p <- p + geom_line(data = biomass_vulnref_yt1, aes(x = Year, y = value/1000), linetype = 2)
     # }
-    p <- plot_adjusted_vulnerable_biomass(object, show_proj = TRUE, show_map = FALSE)
+    p <- plot_vulnerable_reference_biomass(object, show_proj = TRUE, show_map = FALSE)
     ggsave(paste0(figure_dir, "biomass_vulnref_v2.png"), p, width = 12)
 
 

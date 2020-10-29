@@ -1001,6 +1001,21 @@ plot_biomass <- function(object,
                          xlab = "Fishing year",
                          figure_dir = "figure/")
 {
+    data <- object@data
+    map <- object@map
+    mcmc <- object@mcmc
+
+    years <- data$first_yr:data$last_yr
+    pyears <- data$first_yr:data$last_proj_yr
+    sex <- c("Male","Immature female","Mature female")
+
+    seasons <- c("AW","SS")
+    regions <- 1:data$n_area
+    if(length(regions)>1) regions2 <- c(regions, max(regions + 1))
+    if(length(regions)==1) regions2 <- regions
+    YR <- "YR" # label for the season before the season change year
+    n_rules <- data$n_rules
+
 
     # spawning stock biomass
     p <- plot_ssb(object)

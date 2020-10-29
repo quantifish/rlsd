@@ -189,7 +189,7 @@ plot_ssb <- function(object,
   return(p)
 }
 
-#' Plot AW vulnerable reference biomass
+#' Plot AW adjusted vulnerable biomass
 #'
 #' @param object and LSD object
 #' @param scales free or fixed
@@ -285,7 +285,7 @@ plot_vulnref_AW <- function(object,
 }
 
 
-#' Plot vulnerable reference biomass
+#' Plot adjusted vulnerable biomass
 #'
 #' @param object and LSD object
 #' @param scales free or fixed
@@ -302,7 +302,7 @@ plot_vulnref_AW <- function(object,
 #' @importFrom stats quantile
 #' @export
 #'
-plot_vulnerable_reference_biomass <- function(object,
+plot_adjusted_vulnerable_biomass <- function(object,
                                               scales = "free_x",
                                               show_map = TRUE,
                                               show_mcmc = TRUE,
@@ -482,7 +482,7 @@ plot_vulnerable_reference_biomass <- function(object,
 }
 
 
-#' Plot vulnerable reference biomass
+#' Plot adjusted vulnerable biomass
 #'
 #' @param object and LSD object
 #' @param scales free or fixed
@@ -647,24 +647,24 @@ plot_vulnerable_biomass <- function(object,
   return(p)
 }
 
-
-#' Plot biomass measures
-#'
-#' Plots three types of biomass.
+#' Plot total biomass
 #'
 #' @param object and LSD object
 #' @param scales free or fixed
 #' @param show_map show MAP or not
 #' @param show_mcmc show MCMC or not
+#' @param show_proj show projection or not
+#' @param show_quants the quantiles to plot
 #' @param xlab the x axis label
-#' @param figure_dir the directory to save to
+#' @param ref which reference biomass to plot
 #' @import dplyr
 #' @import ggplot2
+#' @import ggrepel
 #' @importFrom reshape2 melt
 #' @importFrom stats quantile
 #' @export
 #'
-plot_biomass <- function(object,
+plot_total_biomass <- function(object,
                          scales = "free_x",
                          show_map = TRUE,
                          show_mcmc = TRUE,
@@ -883,35 +883,6 @@ plot_biomass <- function(object,
       biomass_total_ytrs2 <- NULL
       biomass_total_yts2 <- NULL
     }
-
-
-    # spawning stock biomass
-    p <- plot_ssb(object)
-    ggsave(paste0(figure_dir, "biomass_spawning.png"), p, width = 12)
-
-    p <- plot_ssb(object, show_proj = TRUE, show_map = FALSE)
-    ggsave(paste0(figure_dir, "biomass_spawning_v2.png"), p, width=15)
-
-    p <- plot_ssb(object, show_ref = TRUE)
-    ggsave(paste0(figure_dir, "biomass_spawning_wRef.png"), p, width = 12)
-
-    p <- plot_ssb(object, show_proj = TRUE, show_ref = TRUE, show_map = FALSE)
-    ggsave(paste0(figure_dir, "biomass_spawning_wRef_v2.png"), p, width=15)
-
-    # AW vulnerable reference biomass
-    p <- plot_vulnref_AW(object)
-    ggsave(paste0(figure_dir, "biomass_AW_vulnref.png"), p, width = 12)
-
-    p <- plot_vulnref_AW(object, show_proj = TRUE, show_map = FALSE)
-    ggsave(paste0(figure_dir, "biomass_AW_vulnref_v2.png"), p, width=15)
-
-    p <- plot_vulnref_AW(object, show_ref = TRUE)
-    ggsave(paste0(figure_dir, "biomass_AW_vulnref_wRef.png"), p, width = 12)
-
-    p <- plot_vulnref_AW(object, show_proj = TRUE, show_ref = TRUE, show_map = FALSE)
-    ggsave(paste0(figure_dir, "biomass_AW_vulnref_wRef_v2.png"), p, width=15)
-
-
     # Plot recruited biomass - no projection
     biomass_recruited_ytrs2_in <- dplyr::filter(biomass_recruited_jytrs2, Year <= data$last_yr)
     # biomass_recruited_ytrs2_in$Region <- sapply(1:nrow(biomass_recruited_ytrs2_in), function(x) paste0("Region ", biomass_recruited_ytrs2_in$Region[x]))
@@ -921,52 +892,49 @@ plot_biomass <- function(object,
     }
 
 
-    p <- ggplot(data = biomass_recruited_ytrs2_in %>% filter(Region %in% regions), aes(x = Year, y = value, color = Sex, fill = Sex))
-    p <- p + stat_summary(fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
-        stat_summary(fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
-        stat_summary(fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1) +
-        expand_limits(y = 0) +
-        xlab(xlab) + ylab("Recruited biomass (tonnes)") +
-        scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
-        theme_lsd()
-    if (length(map) > 0 & show_map) {
-        p <- p + geom_line(data = biomass_recruited_ytrs1_in %>% filter(Region %in% regions), aes(x = Year, y = value, colour = Sex), linetype = 2)
-    }
-    if (data$n_area > 1) {
-        p <- p + facet_wrap(Region ~ Season)
-    } else {
-        p <- p + facet_wrap( ~ Season)
-    }
-    ggsave(paste0(figure_dir, "biomass_recruited.png"), p, width = 12)
+    # p <- ggplot(data = biomass_recruited_ytrs2_in %>% filter(Region %in% regions), aes(x = Year, y = value, color = Sex, fill = Sex))
+    # p <- p + stat_summary(fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
+    #     stat_summary(fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
+    #     stat_summary(fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1) +
+    #     expand_limits(y = 0) +
+    #     xlab(xlab) + ylab("Recruited biomass (tonnes)") +
+    #     scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
+    #     theme_lsd()
+    # if (length(map) > 0 & show_map) {
+    #     p <- p + geom_line(data = biomass_recruited_ytrs1_in %>% filter(Region %in% regions), aes(x = Year, y = value, colour = Sex), linetype = 2)
+    # }
+    # if (data$n_area > 1) {
+    #     p <- p + facet_wrap(Region ~ Season)
+    # } else {
+    #     p <- p + facet_wrap( ~ Season)
+    # }
 
-    biomass_recruited_ytrs2_in <- biomass_recruited_jytrs2
-    # biomass_recruited_ytrs2_in$Region <- sapply(1:nrow(biomass_recruited_ytrs2_in), function(x) paste0("Region ", biomass_recruited_ytrs2_in$Region[x]))
-    if (length(map) > 0 & show_map){
-      biomass_recruited_ytrs1_in <- biomass_recruited_jytrs1
-      # biomass_recruited_ytrs1_in$Region <- sapply(1:nrow(biomass_recruited_ytrs1_in), function(x) paste0("Region ", biomass_recruited_ytrs1_in$Region[x]))
-    }
+    # biomass_recruited_ytrs2_in <- biomass_recruited_jytrs2
+    # # biomass_recruited_ytrs2_in$Region <- sapply(1:nrow(biomass_recruited_ytrs2_in), function(x) paste0("Region ", biomass_recruited_ytrs2_in$Region[x]))
+    # if (length(map) > 0 & show_map){
+    #   biomass_recruited_ytrs1_in <- biomass_recruited_jytrs1
+    #   # biomass_recruited_ytrs1_in$Region <- sapply(1:nrow(biomass_recruited_ytrs1_in), function(x) paste0("Region ", biomass_recruited_ytrs1_in$Region[x]))
+    # }
 
-    p <- ggplot(data = biomass_recruited_ytrs2_in %>% filter(Region %in% regions), aes(x = Year, y = value, color = Sex, fill = Sex))
-    p <- p + geom_vline(aes(xintercept = data$last_yr), linetype = "dashed")
-    p <- p + stat_summary(fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
-        stat_summary(fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
-        stat_summary(fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1) +
-        expand_limits(y = 0) +
-        xlab(xlab) + ylab("Recruited biomass (tonnes)") +
-        scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
-        theme_lsd()
-    if (length(map) > 0 & show_map) {
-        p <- p + geom_line(data = biomass_recruited_ytrs1_in %>% filter(Region %in% regions), aes(x = Year, y = value, colour = Sex), linetype = 2)
-    }
-    if (data$n_area > 1) {
-        p <- p + facet_wrap(Region ~ Season)
-    } else {
-        p <- p + facet_wrap( ~ Season)
-    }
-    ggsave(paste0(figure_dir, "biomass_recruited_v2.png"), p, width = 12)
+    # p <- ggplot(data = biomass_recruited_ytrs2_in %>% filter(Region %in% regions), aes(x = Year, y = value, color = Sex, fill = Sex))
+    # p <- p + geom_vline(aes(xintercept = data$last_yr), linetype = "dashed")
+    # p <- p + stat_summary(fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
+    #     stat_summary(fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
+    #     stat_summary(fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1) +
+    #     expand_limits(y = 0) +
+    #     xlab(xlab) + ylab("Recruited biomass (tonnes)") +
+    #     scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
+    #     theme_lsd()
+    # if (length(map) > 0 & show_map) {
+    #     p <- p + geom_line(data = biomass_recruited_ytrs1_in %>% filter(Region %in% regions), aes(x = Year, y = value, colour = Sex), linetype = 2)
+    # }
+    # if (data$n_area > 1) {
+    #     p <- p + facet_wrap(Region ~ Season)
+    # } else {
+    #     p <- p + facet_wrap( ~ Season)
+    # }
 
-
-    # Total biomass
+   # Total biomass
     if (length(map) > 0 & show_map){
       biomass_total_ytrs1_in <- dplyr::filter(biomass_total_jytrs1, Year <= data$last_yr)
       # biomass_total_ytrs1_in$Region <- sapply(1:nrow(biomass_total_ytrs1_in), function(x) paste0("Region ", biomass_total_ytrs1_in$Region[x]))
@@ -990,8 +958,6 @@ plot_biomass <- function(object,
     } else {
         p <- p + facet_wrap( ~ Season)
     }
-    ggsave(paste0(figure_dir, "biomass_total.png"), p, width = 12)
-
 
     p <- ggplot(data = biomass_total_yts2, aes(x = Year, y = value, color = Sex, fill = Sex)) +
         geom_vline(aes(xintercept = data$last_yr), linetype = "dashed") +
@@ -1007,6 +973,67 @@ plot_biomass <- function(object,
         # biomass_total_yts1$Region <- sapply(1:nrow(biomass_total_yts1), function(x) paste0("Region ", biomass_total_yts1$Region[x]))
         p <- p + geom_line(data = biomass_total_yts1, aes(x = Year, y = value, colour = Sex), linetype = 2)
     }
+}
+
+#' Plot biomass measures
+#'
+#' Plots three types of biomass.
+#'
+#' @param object and LSD object
+#' @param scales free or fixed
+#' @param show_map show MAP or not
+#' @param show_mcmc show MCMC or not
+#' @param xlab the x axis label
+#' @param figure_dir the directory to save to
+#' @import dplyr
+#' @import ggplot2
+#' @importFrom reshape2 melt
+#' @importFrom stats quantile
+#' @export
+#'
+plot_biomass <- function(object,
+                         scales = "free_x",
+                         show_map = TRUE,
+                         show_mcmc = TRUE,
+                         xlab = "Fishing year",
+                         figure_dir = "figure/")
+{
+
+    # spawning stock biomass
+    p <- plot_ssb(object)
+    ggsave(paste0(figure_dir, "biomass_spawning.png"), p, width = 12)
+
+    p <- plot_ssb(object, show_proj = TRUE, show_map = FALSE)
+    ggsave(paste0(figure_dir, "biomass_spawning_v2.png"), p, width=15)
+
+    p <- plot_ssb(object, show_ref = TRUE)
+    ggsave(paste0(figure_dir, "biomass_spawning_wRef.png"), p, width = 12)
+
+    p <- plot_ssb(object, show_proj = TRUE, show_ref = TRUE, show_map = FALSE)
+    ggsave(paste0(figure_dir, "biomass_spawning_wRef_v2.png"), p, width=15)
+
+    # AW adjusted vulnerable biomass
+    p <- plot_vulnref_AW(object)
+    ggsave(paste0(figure_dir, "biomass_AW_vulnref.png"), p, width = 12)
+
+    p <- plot_vulnref_AW(object, show_proj = TRUE, show_map = FALSE)
+    ggsave(paste0(figure_dir, "biomass_AW_vulnref_v2.png"), p, width=15)
+
+    p <- plot_vulnref_AW(object, show_ref = TRUE)
+    ggsave(paste0(figure_dir, "biomass_AW_vulnref_wRef.png"), p, width = 12)
+
+    p <- plot_vulnref_AW(object, show_proj = TRUE, show_ref = TRUE, show_map = FALSE)
+    ggsave(paste0(figure_dir, "biomass_AW_vulnref_wRef_v2.png"), p, width=15)
+
+    # ggsave(paste0(figure_dir, "biomass_recruited.png"), p, width = 12)
+    # ggsave(paste0(figure_dir, "biomass_recruited_v2.png"), p, width = 12)
+
+
+    p <- plot_total_biomass(object)
+    ggsave(paste0(figure_dir, "biomass_total.png"), p, width = 12)
+
+
+    p <- plot_total_biomass(object, show_proj = TRUE, show_map = FALSE)
     ggsave(paste0(figure_dir, "biomass_total_v2.png"), p, width = 15)
 
 
@@ -1021,7 +1048,7 @@ plot_biomass <- function(object,
 
 
     # Reference biomass - version 1
-    p <- plot_vulnerable_reference_biomass(object)
+    p <- plot_adjusted_vulnerable_biomass(object)
     ggsave(paste0(figure_dir, "biomass_vulnref.png"), p, width = 10)
 
 
@@ -1040,7 +1067,7 @@ plot_biomass <- function(object,
     # if (length(map) > 0 & show_map) {
     #     p <- p + geom_line(data = biomass_vulnref_yt1, aes(x = Year, y = value/1000), linetype = 2)
     # }
-    p <- plot_vulnerable_reference_biomass(object, show_proj = TRUE, show_map = FALSE)
+    p <- plot_adjusted_vulnerable_biomass(object, show_proj = TRUE, show_map = FALSE)
     ggsave(paste0(figure_dir, "biomass_vulnref_v2.png"), p, width = 12)
 
 
@@ -1085,7 +1112,6 @@ plot_biomass <- function(object,
       dinx <- NULL
 
     }
-
 
     dinawx <- dinx %>% filter(.data$Season == "AW")
     dinaw1x <- dinawx %>% filter(.data$Year == 1979) %>% rename("B1" = value)

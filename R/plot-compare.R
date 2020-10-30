@@ -861,7 +861,7 @@ plot_compare_recruitment <- function(object_list, object_names, figure_dir = "co
         dimnames(recruits2) <- list("Iteration" = 1:n_iter, "Region" = regions_list[[x]], "Year" = pyears_list[[x]])
         recruits2 <- reshape2::melt(recruits2) %>%
            # filter(Year <= max(years_list[[x]])) %>%
-            group_by(Iteration, Year) %>%
+            group_by(Iteration, Year, Region) %>%
             summarise(value = sum(value))
 
         recruits2$Model <- object_names[x]
@@ -869,7 +869,7 @@ plot_compare_recruitment <- function(object_list, object_names, figure_dir = "co
         recruits2
     })
     recruits <- data.frame(do.call(rbind, rec_list)) %>%
-        group_by(Iteration, Year, Model, qconstant) %>%
+        group_by(Iteration, Year, Model, Region, qconstant) %>%
         summarise(value = sum(value))
     recruits$Model <- factor(recruits$Model)
     recruits$qconstant <- factor(recruits$qconstant)
@@ -924,6 +924,9 @@ plot_compare_recruitment <- function(object_list, object_names, figure_dir = "co
         scale_fill_brewer(palette = "Set1") +
         scale_color_brewer(palette = "Set1")
     }
+    if(length(unique(recruits$Region)) > 1){
+      p <- p + facet_wrap(~Region)
+    }
     # if (data_list[[1]]$n_area > 1) {
     #     p <- p + facet_wrap(~Region)
     # }
@@ -954,6 +957,9 @@ plot_compare_recruitment <- function(object_list, object_names, figure_dir = "co
         p <- p +
           scale_fill_brewer(palette = "Set1") +
           scale_color_brewer(palette = "Set1")
+    }
+    if(length(unique(recruits$Region)) > 1){
+      p <- p + facet_wrap(~Region)
     }
     # if (data_list[[1]]$n_area > 1) {
     #     p <- p + facet_wrap(~Region)

@@ -45,7 +45,7 @@ plot_data_extent <- function(object,
     filter(Catch > 0) %>%
     mutate(DataType = "Catch", DataSource = paste(DataType, Season, Type)) %>%
     select(-Catch) %>%
-    mutate(N = scalar/2)
+    mutate(N = scalar / 2)
 
   # Abundance Index
   ocpue <- data.frame(Region = d$data_cpue_area_i, Year = d$data_cpue_year_i, Source = d$data_cpue_q_i, Season = seasons[d$data_cpue_season_i], CPUE = d$data_cpue_i, Type = "CPUE", N = d$cov_cpue_sd_i) %>%
@@ -76,15 +76,16 @@ plot_data_extent <- function(object,
 
   # Tags
   tags <- data.frame("Area" = d$cov_grow_release_area_g, "Year" = d$cov_grow_release_yr_g, "Season" = "AW", "Type" = 1, DataType = "Tags") %>%
-    mutate(DataSource = paste(DataType, Area)) %>%
+    mutate(DataSource = paste(DataType, Area), Type = as.character(Type)) %>%
     group_by(Year, Season, Area, Type, DataType, DataSource) %>%
     summarise(N = n()) %>%
     ungroup() %>%
     mutate(N = N / max(N) * scalar) %>%
     select(-Area) %>%
-    full_join(data.frame("DataType" = "Tags", "Region" = regions))
+    full_join(data.frame("DataType" = "Tags", "Region" = regions), by = "DataType")
 
-  ggd <- rbind(dcatch, ocpue, dlf, tags)
+  #ggd <- rbind(dcatch, ocpue, dlf, tags)
+  ggd <- bind_rows(dcatch, ocpue, dlf, tags)
 
   p <- ggplot(data = ggd) +
     geom_point(aes(x = Year, y = DataSource, colour = DataType, size = N), alpha = 0.6) +

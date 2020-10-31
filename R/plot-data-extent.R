@@ -12,95 +12,98 @@
 #' @import ggplot2
 #' @importFrom reshape2 melt
 #' @export
-#' 
+#'
 plot_data_extent <- function(object,
                              xlab = "Fishing year (1 April - 31 March)",
                              figure_dir = "figure/",
                              save_plot = TRUE) {
-    d <- object@data
-    mcmc <- object@mcmc
-    
-    years <- d$first_yr:d$last_yr
-    seasons <- c("AW", "SS")
-    regions <- 1:d$n_area
-    bins <- d$size_midpoint_l
-    sex <- c("Male", "Immature female", "Mature female")
-    sources <- c("LB", "CS")
-    n_iter <- nrow(mcmc[[1]])
+  d <- object@data
+  mcmc <- object@mcmc
 
-    scalar <- 5
+  years <- d$first_yr:d$last_yr
+  seasons <- c("AW", "SS")
+  regions <- 1:d$n_area
+  bins <- d$size_midpoint_l
+  sex <- c("Male", "Immature female", "Mature female")
+  sources <- c("LB", "CS")
+  n_iter <- nrow(mcmc[[1]])
 
-    # Catch
-    dsl <- d$data_catch_commercial_ryt
-    dimnames(dsl) <- list(Region = regions, Year = years, Season = seasons)
-    dsl <- reshape2::melt(dsl,  value.name = "Catch") %>%
-      dplyr::mutate(Type = "SL")
-    
-    dnsl <- d$data_catch_nsl_ryt
-    dimnames(dnsl) <- list(Region = regions, Year = years, Season = seasons)
-    dnsl <- reshape2::melt(dnsl, value.name = "Catch") %>%
-      dplyr::mutate(Type = "NSL")
-    
-    dcatch <- rbind(dnsl, dnsl) %>%
-        dplyr::filter(Catch > 0) %>%
-      dplyr::mutate(DataType = "Catch", DataSource = paste(DataType, Season, Type)) %>%
-      dplyr::select(-Catch) %>%
-      dplyr::mutate(N = scalar/2)
+  scalar <- 5
 
-    # Abundance Index
-    ocpue <- data.frame(Region = d$data_cpue_area_i, Year = d$data_cpue_year_i, Source = d$data_cpue_q_i, Season = seasons[d$data_cpue_season_i], CPUE = d$data_cpue_i, Type = "CPUE", N = d$cov_cpue_sd_i) %>%
-      dplyr::select(-CPUE) %>%
-      dplyr::mutate(DataType = "CPUE", DataSource = paste(DataType, Season, Type)) %>%
-      dplyr::mutate(DataType = paste(DataType, Source)) %>%
-      dplyr::select(-Source) %>%
-      dplyr::mutate(N = N / max(N) * scalar)
+  # Catch
+  dsl <- d$data_catch_commercial_ryt
+  dimnames(dsl) <- list(Region = regions, Year = years, Season = seasons)
+  dsl <- melt(dsl,  value.name = "Catch") %>%
+    mutate(Type = "SL")
 
-    # Observed LF
-    w <- data.frame(LF = 1:d$n_lf, Year = d$data_lf_year_i,
-                    Season = d$data_lf_season_i, Source = d$data_lf_source_i,
-                    Region = d$data_lf_area_i, N = rowSums(d$data_lf_N_is))
-    dlf <- mcmc$data_lf_out_isl
-    dimnames(dlf) <- list("Iteration" = 1:n_iter, "LF" = 1:d$n_lf,
-                          "Sex" = sex, "Size" = bins)
-    dlf <- reshape2::melt(dlf) %>%
-      dplyr::left_join(w, by = "LF") %>%
-      dplyr::mutate(Type = factor(Source), Type = sources[Source]) %>%
-      dplyr::mutate(Season = factor(Season), Season = seasons[Season]) %>%
-      dplyr::filter(Iteration == 1, value >= 0) %>%
-      dplyr::select(-c(Iteration, LF, Size, value)) %>%
-      dplyr::mutate(DataType = "LF", DataSource = paste(DataType, Season, Type)) %>%
-      dplyr::select(-Sex, -Source) %>%
-      dplyr::group_by(Year, Season, Region, Type, DataType, DataSource) %>%
-      dplyr::summarise(N = sum(N)) %>%
-      dplyr::ungroup() %>%
-      dplyr::mutate(N = N / max(N) * scalar)
+  dnsl <- d$data_catch_nsl_ryt
+  dimnames(dnsl) <- list(Region = regions, Year = years, Season = seasons)
+  dnsl <- melt(dnsl, value.name = "Catch") %>%
+    mutate(Type = "NSL")
 
-    # Tags
-    tags <- data.frame("Area" = d$cov_grow_release_area_g, "Year" = d$cov_grow_release_yr_g, "Season" = "AW", "Type" = 1, DataType = "Tags") %>%
-      dplyr::mutate(DataSource = paste(DataType, Area)) %>%
-      dplyr::group_by(Year, Season, Area, Type, DataType, DataSource) %>%
-      dplyr::summarise(N = n()) %>%
-      dplyr::ungroup() %>%
-      dplyr::mutate(N = N / max(N) * scalar) %>%
-      dplyr::select(-Area) %>%
-      dplyr::full_join(data.frame("DataType" = "Tags", "Region" = regions))
+  dcatch <- rbind(dnsl, dnsl) %>%
+    filter(Catch > 0) %>%
+    mutate(DataType = "Catch", DataSource = paste(DataType, Season, Type)) %>%
+    select(-Catch) %>%
+    mutate(N = scalar/2)
 
-    ggd <- rbind(dcatch, ocpue, dlf, tags)
+  # Abundance Index
+  ocpue <- data.frame(Region = d$data_cpue_area_i, Year = d$data_cpue_year_i, Source = d$data_cpue_q_i, Season = seasons[d$data_cpue_season_i], CPUE = d$data_cpue_i, Type = "CPUE", N = d$cov_cpue_sd_i) %>%
+    select(-CPUE) %>%
+    mutate(DataType = "CPUE", DataSource = paste(DataType, Season, Type)) %>%
+    mutate(DataType = paste(DataType, Source)) %>%
+    select(-Source) %>%
+    mutate(N = N / max(N) * scalar)
 
-    p <- ggplot(data = ggd) +
-        geom_point(aes(x = Year, y = DataSource, colour = DataType, size = N), alpha = 0.6) +
-        scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
-        labs(x = xlab, y = NULL) +
-        theme_lsd() +
-        theme(legend.position = "none", axis.text.x = element_text(angle = 45,hjust = 1))
-    if (d$n_area > 1) {
-        p <- p + facet_wrap(~Region)
-    }
-    
-    if (save_plot) {
-      #ggsave(paste0(figure_dir, "data_extent.png"), p, width = 14)
-      ggsave(paste0(figure_dir, "data_extent.png"), p)
+  # Observed LF
+  w <- data.frame(LF = 1:d$n_lf, Year = d$data_lf_year_i,
+                  Season = d$data_lf_season_i, Source = d$data_lf_source_i,
+                  Region = d$data_lf_area_i, N = rowSums(d$data_lf_N_is))
+  dlf <- mcmc$data_lf_out_isl
+  dimnames(dlf) <- list("Iteration" = 1:n_iter, "LF" = 1:d$n_lf, "Sex" = sex, "Size" = bins)
+  dlf <- melt(dlf) %>%
+    left_join(w, by = "LF") %>%
+    mutate(Type = factor(Source), Type = sources[Source]) %>%
+    mutate(Season = factor(Season), Season = seasons[Season]) %>%
+    filter(Iteration == 1, value >= 0) %>%
+    select(-c(Iteration, LF, Size, value)) %>%
+    mutate(DataType = "LF", DataSource = paste(DataType, Season, Type)) %>%
+    select(-Sex, -Source) %>%
+    group_by(Year, Season, Region, Type, DataType, DataSource) %>%
+    summarise(N = sum(N)) %>%
+    ungroup() %>%
+    mutate(N = N / max(N) * scalar)
+
+  # Tags
+  tags <- data.frame("Area" = d$cov_grow_release_area_g, "Year" = d$cov_grow_release_yr_g, "Season" = "AW", "Type" = 1, DataType = "Tags") %>%
+    mutate(DataSource = paste(DataType, Area)) %>%
+    group_by(Year, Season, Area, Type, DataType, DataSource) %>%
+    summarise(N = n()) %>%
+    ungroup() %>%
+    mutate(N = N / max(N) * scalar) %>%
+    select(-Area) %>%
+    full_join(data.frame("DataType" = "Tags", "Region" = regions))
+
+  ggd <- rbind(dcatch, ocpue, dlf, tags)
+
+  p <- ggplot(data = ggd) +
+    geom_point(aes(x = Year, y = DataSource, colour = DataType, size = N), alpha = 0.6) +
+    scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
+    labs(x = xlab, y = NULL) +
+    theme_lsd() +
+    theme(legend.position = "none", axis.text.x = element_text(angle = 45, hjust = 1))
+
+  if (d$n_area > 1) {
+    p <- p + facet_wrap(~Region)
+  }
+
+  if (save_plot) {
+    if (data$n_area > 1) {
+      ggsave(paste0(figure_dir, "data_extent.png"), p, width = 14)
     } else {
-      return(p)
+      ggsave(paste0(figure_dir, "data_extent.png"), p)
     }
+  } else {
+    return(p)
+  }
 }

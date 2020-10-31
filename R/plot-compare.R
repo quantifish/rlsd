@@ -723,7 +723,7 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
         #stat_summary(data=vb, fun.ymin = function(x) quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75), geom = "ribbon", alpha=0.45, colour = NA) +
         stat_summary(data = vb %>% filter(Year %in% years) %>% group_by(Iteration, Year, Model) %>% summarise(value = sum(value)), 
                      fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha=0.75) +
-        geom_hline(data = Bref, aes(yintercept = value), lwd = 1.2) +
+        geom_hline(data = Bref, aes(yintercept = value), lwd = 1.1) +
         geom_label(data = Bref %>% filter(Region == 1), label = "Reference", aes(x = min(vb$Year) + 10, y = value), size = 5, color = "black", fill = "white") +
         # scale_fill_manual(values = cols_all, labels = object_names) +
         # scale_colour_manual(values = cols_all, labels = object_names) +
@@ -759,7 +759,7 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
          #stat_summary(data=vb, fun.ymin = function(x) quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75), geom = "ribbon", alpha=0.45, colour = NA) +
          stat_summary(data = vb %>% filter(Year %in% years), 
                       fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha=0.75) +
-        geom_hline(data = Bref, aes(yintercept = value), lwd = 1.2) +
+        geom_hline(data = Bref, aes(yintercept = value), lwd = 1.1) +
         geom_label(data = Bref %>% filter(Region == 1), label = "Reference", aes(x = min(vb$Year) + 10, y = value), size = 5, color = "black", fill = "white") +
          # scale_fill_manual(values = cols_all, labels = object_names) +
          # scale_colour_manual(values = cols_all, labels = object_names) +
@@ -855,6 +855,66 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
       if (sum(by.Region) >= 1) {
       ggsave(paste0(figure_dir, "biomass_relvulnref_compare_byRegion.png"), q, width = 10)
       }
+    }
+
+    if(any(Bref$value > 0)){
+          # Vulnerable biomass
+    p <- ggplot(data = vb %>% group_by(Iteration, Year, Model) %>% summarise(value = sum(value)),
+                aes(x = Year, y = value, color = Model, fill = Model)) +
+        geom_vline(aes(xintercept = max(years) + 0.5), linetype = 2) +
+        stat_summary(data = vb %>% group_by(Iteration, Year, Model,) %>% summarise(value = sum(value)), fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
+        geom_hline(data = Bref, aes(yintercept = value), lwd = 1.2) +
+        geom_label(data = Bref %>% filter(Region == 1), label = "Reference", aes(x = min(vb$Year) + 10, y = value), size = 5, color = "black", fill = "white") +        
+        #stat_summary(data = vb %>% group_by(Iteration, Year, Model) %>% summarise(value = sum(value)), fun.ymin = function(x) quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75), geom = "ribbon", alpha=0.45, colour = NA) +
+        stat_summary(data = vb %>% group_by(Iteration, Year, Model) %>% summarise(value = sum(value)), fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75) +
+        expand_limits(y = 0) +
+        xlab("Fishing year") + ylab("Adjusted vulnerable biomass (tonnes)") +
+        scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
+        theme_lsd(base_size = 14) +
+        theme(axis.text.x = element_text(angle = 45,hjust = 1))
+
+    if (nmod > 5) {
+        p <- p +
+          scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
+          scale_color_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod)))
+    } else {
+        p <- p +
+          scale_fill_brewer(palette = "Set1") +
+          scale_color_brewer(palette = "Set1")
+    }
+    if (sum(by.Region) >= 1) {
+    q <- ggplot(data = vb,
+                aes(x = Year, y = value, color = Model, fill = Model)) +
+      geom_vline(aes(xintercept = max(years) + 0.5), linetype = 2) +
+      stat_summary(data = vb, fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
+      #stat_summary(data = vb, fun.ymin = function(x) quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75), geom = "ribbon", alpha=0.45, colour = NA) +
+      stat_summary(data = vb, fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75) +
+      geom_hline(data = Bref, aes(yintercept = value), lwd = 1.2) +
+      geom_label(data = Bref %>% filter(Region == 1), label = "Reference", aes(x = min(vb$Year) + 10, y = value), size = 5, color = "black", fill = "white") +
+      expand_limits(y = 0) +
+      xlab("Fishing year") + ylab("Adjusted vulnerable biomass (tonnes)") +
+      scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
+      theme_lsd(base_size = 14) +
+      theme(axis.text.x = element_text(angle = 45,hjust = 1))+
+      facet_wrap(~Region)    
+    
+    if (nmod > 5) {
+      q <- q +
+        scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
+        scale_color_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod)))
+    } else {
+      q <- q +
+        scale_fill_brewer(palette = "Set1") +
+        scale_color_brewer(palette = "Set1")
+    }
+  
+    if (save_plot) {
+      ggsave(paste0(figure_dir, "biomass_vulnref_compare_wRef_v2_byRegion.png"), q, width = 10)
+    }
+   }
+    if (save_plot) {
+      ggsave(paste0(figure_dir, "biomass_vulnref_compare_wRef_v2.png"), p, width = 10)
+    }
     }
 
     # Vulnerable biomass

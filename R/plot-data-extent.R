@@ -41,7 +41,7 @@ plot_data_extent <- function(object,
   dnsl <- melt(dnsl, value.name = "Catch") %>%
     mutate(Type = "NSL")
 
-  dcatch <- rbind(dnsl, dnsl) %>%
+  dcatch <- bind_rows(dnsl, dnsl) %>%
     filter(Catch > 0) %>%
     mutate(DataType = "Catch", DataSource = paste(DataType, Season, Type)) %>%
     select(-Catch) %>%
@@ -99,7 +99,7 @@ plot_data_extent <- function(object,
   }
 
   if (save_plot) {
-    if (data$n_area > 1) {
+    if (d$n_area > 1) {
       ggsave(paste0(figure_dir, "data_extent.png"), p, width = 14)
     } else {
       ggsave(paste0(figure_dir, "data_extent.png"), p)

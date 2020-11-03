@@ -516,8 +516,10 @@ if(any(grepl("B0now_r", names(mcmc1)))){
       dplyr::filter(Region != "Total") %>%
       dplyr::group_by(Region, RuleNum) %>%
       dplyr::summarise(CV = sd(Catch)/mean(Catch),
-                      Prisk = length(which(RelSSBnow <= 0.2))/length(RelSSBnow),
-                      RiskConstraint = ifelse(Prisk >= 0.05, 1, 0),
+                      PriskNow = length(which(RelSSBnow <= 0.2))/length(RelSSBnow),
+                      Prisk = length(which(RelSSB <= 0.2))/length(RelSSB),
+                      RiskConstraintNow = ifelse(Prisk >= 0.05, 1, 0),
+                      RiskConstraint = ifelse(PriskNow >= 0.05, 1, 0),
                       ExpectedCatchSL = sum(par2),
                       ObsCatchSL = sum(SL),
                       AvgTotalCatch = sum(Catch)/max(Iteration)) %>%
@@ -829,7 +831,7 @@ if(any(grepl("B0now_r", names(mcmc1)))){
     sum_status <- full_join(sum_curr, status_check)
 
     msy_info_sub <- msy_info %>% 
-      dplyr::select(Region, RuleNum, CV, Prisk, AvgTotalCatch, par2, RuleType) %>%
+      dplyr::select(Region, RuleNum, CV, Prisk, PriskNow, AvgTotalCatch, par2, RuleType) %>%
       unique()
 
     sum_info <- left_join(sum_status, msy_info_sub)

@@ -518,8 +518,8 @@ if(any(grepl("B0now_r", names(mcmc1)))){
       dplyr::summarise(CV = sd(Catch)/mean(Catch),
                       PriskNow = length(which(RelSSBnow <= 0.2))/length(RelSSBnow),
                       Prisk = length(which(RelSSB <= 0.2))/length(RelSSB),
-                      RiskConstraintNow = ifelse(Prisk >= 0.05, 1, 0),
-                      RiskConstraint = ifelse(PriskNow >= 0.05, 1, 0),
+                      RiskConstraint = ifelse(Prisk >= 0.05, 1, 0),
+                      RiskConstraintNow = ifelse(PriskNow >= 0.05, 1, 0),
                       ExpectedCatchSL = sum(par2),
                       ObsCatchSL = sum(SL),
                       AvgTotalCatch = sum(Catch)/max(Iteration)) %>%

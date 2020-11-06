@@ -33,50 +33,41 @@ plot_compare_ssb <- function(object_list,
     n_iter <- nrow(mcmc_list[[x]][[1]])
     bio <- mcmc_list[[x]]$biomass_ssb_jyr
     dimnames(bio) <- list("Iteration" = 1:n_iter, "Rule" = 1:dim(bio)[2], "Year" = pyears_list[[x]], "Region" = regions_list[[x]])
-    bio2 <- reshape2::melt(bio) %>%
+    bio2 <- melt(bio) %>%
       group_by(Iteration, Year, Rule, Region) %>%
       summarise(value = sum(value))
     bio2$Model <- object_names[x]
     return(bio2)
   })
-  ssb <- data.frame(do.call(rbind, sb_list))
-  ssb <- ssb %>%
+  ssb <- data.frame(do.call(rbind, sb_list)) %>%
     mutate(Model = factor(Model), type = "SSB")
 
   ssb0_list <- lapply(1:length(object_list), function(x) {
     n_iter <- nrow(mcmc_list[[x]][[1]])
     bio <- mcmc_list[[x]]$SSB0_r
     dimnames(bio) <- list("Iteration" = 1:n_iter, "Region" = regions_list2[[x]])
-    hl <- reshape2::melt(bio) %>%
+    hl <- melt(bio) %>%
       left_join(expand.grid(Iteration = 1:n_iter, Year = pyears_list[[x]]), by = "Iteration") %>%
       filter(Region != "Total") %>%
       group_by(Iteration, Year, Region) %>%
       summarise(value = sum(value)) %>%
       ungroup() %>%
       mutate(Rule = 1, type = "Hard limit", value = value * 0.1)
-    sl <- reshape2::melt(bio) %>%
+    sl <- melt(bio) %>%
       left_join(expand.grid(Iteration = 1:n_iter, Year = pyears_list[[x]]), by = "Iteration") %>%
       filter(Region != "Total") %>%
       group_by(Iteration, Year, Region) %>%
       summarise(value = sum(value)) %>%
       ungroup() %>%
       mutate(Rule = 1, type = "Soft limit", value = value * 0.2)
-    ssb0 <- reshape2::melt(bio) %>%
+    ssb0 <- melt(bio) %>%
       left_join(expand.grid(Iteration = 1:n_iter, Year = pyears_list[[x]]), by = "Iteration") %>%
       filter(Region != "Total") %>%
       group_by(Iteration, Year, Region) %>%
       summarise(value = sum(value)) %>%
       ungroup() %>%
       mutate(Rule = 1, type = "SSB0")
-    # bio <- mcmc_list[[x]]$SSBref_jr
-    # dimnames(bio) <- list("Iteration" = 1:n_iter, "Rule" = 1, "Region" = regions_list[[x]])
-    # ref <- reshape2::melt(bio) %>%
-    #     left_join(expand.grid(Iteration = 1:n_iter, Year = pyears_list[[x]]), by = "Iteration") %>%
-    #     group_by(Iteration, Region, Rule, value, Year) %>%
-    #     ungroup() #%>%
-    # mutate(type = "Target")
-    bio2 <- rbind(ssb0, sl, hl) #%>% ##, ref)
-    # filter(Year <= max(years_list[[x]]))
+    bio2 <- rbind(ssb0, sl, hl)
     bio2$Model <- object_names[x]
     return(bio2)
   })
@@ -209,16 +200,14 @@ plot_compare_ssb <- function(object_list,
       stat_summary(data = ssb0 %>% filter(type == "SSB0"), fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
       stat_summary(data = ssb0 %>% filter(type == "SSB0"), fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model)) +
       # stat_summary(data = filter(ssb0, type == "Target"), fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
-      # stat_summary(data = filter(ssb0, type == "Target"), fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model)) +
       stat_summary(data = ssb, fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
       stat_summary(data = ssb, fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model)) +
-      # geom_text(data = labs, aes(x = Year, y = value, label = type), nudge_x = -5) +
       expand_limits(y = 0) +
       labs(x = "Fishing year", y = "Spawning stock biomass (tonnes)") +
       scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
-      # scale_y_continuous(expand = c(0,0), limits = c(0, max(ssb0$value)*1.05)) +
-      theme_lsd(base_size = 14)
-    q1 <- q1 + facet_wrap(~Region)
+      theme_lsd(base_size = 14) +
+      facet_wrap(~Region)
+
     if (nmod > 5) {
       q1 <- q1 +
         scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
@@ -258,9 +247,7 @@ plot_compare_ssb <- function(object_list,
     geom_hline(aes(yintercept = 0.2), col = "gray") +
     geom_hline(aes(yintercept = 0.1), col = "gray") +
     geom_text(data = labs_rel, aes(x = "base", y = value, label = type)) +
-    ylab("Terminal year relative spawning biomass") +
-    xlab("Model") #+
-  # scale_y_continuous(expand = c(0,0), limits = c(0, 1))
+    xlab("Model") + ylab("Terminal year relative spawning biomass")
 
   if (nmod > 5) {
     p <- p +
@@ -273,40 +260,39 @@ plot_compare_ssb <- function(object_list,
   }
 
   if (max(relssb_next$Iteration) == 1) {
-    p <- p + geom_point(aes(x = Model, y=RelSSB, fill = Model), cex=4, pch=21)
+    p <- p + geom_point(aes(x = Model, y = RelSSB, fill = Model), cex = 4, pch = 21)
     if (any(relssb_next$Model == "base")) p <- p + geom_hline(data = relssb_next %>% filter(Model == "base"), aes(yintercept = unique(RelSSB)), linetype = 2)
   } else {
-    p <- p + geom_violin(aes(x = Model, y=RelSSB, fill = Model))
+    p <- p + geom_violin(aes(x = Model, y = RelSSB, fill = Model))
     if (any(relssb_next$Model == "base")) p <- p + geom_hline(data = relssb_next %>% filter(Model == "base"), aes(yintercept = median(RelSSB)), linetype = 2)
-
   }
 
-  if(save_plot) {
-    ggsave(paste0(figure_dir, "relssb_nextyear_compare.png"), p, width=10)
+  if (save_plot) {
+    ggsave(paste0(figure_dir, "relssb_nextyear_compare.png"), p, width = 10)
   }
 
   if (sum(by.Region) >= 1) {
-    relssb_r <- rbind(ssb, ssb0 %>% filter(type=="SSB0")) %>%
+    relssb_r <- rbind(ssb, ssb0 %>% filter(type == "SSB0")) %>%
       tidyr::spread(type, value) %>%
       mutate(RelSSB = SSB/SSB0)
 
     labs_rel_r <- labs %>%
       mutate(value = ifelse(type == "Hard limit", 0.1, ifelse(type == "Soft limit", 0.2, ifelse(type == "SSB0", 1, NA)))) %>%
-      filter(type!="SSB0")
+      filter(type != "SSB0")
 
     nmod <- length(unique(relssb_r$Model))
 
-    relssb_next_r <- relssb_r %>% filter(Year == max(years)+1)
+    relssb_next_r <- relssb_r %>% filter(Year == max(years) + 1)
 
     q <- ggplot(relssb_next_r) +
-      theme_lsd(base_size=14) +
-      theme(axis.text.x=element_blank()) +
+      theme_lsd(base_size = 14) +
+      theme(axis.text.x = element_blank()) +
       expand_limits(y = 0) +
-      geom_hline(aes(yintercept = 0.2), col="gray") +
-      geom_hline(aes(yintercept = 0.1), col="gray") +
+      geom_hline(aes(yintercept = 0.2), col = "gray") +
+      geom_hline(aes(yintercept = 0.1), col = "gray") +
       geom_text(data = labs_rel_r, aes(x = "base", y = value, label = type)) +
-      ylab("Terminal year relative spawning biomass") +
       xlab("Model") +
+      ylab("Terminal year relative spawning biomass") +
       facet_wrap(~Region)
 
     if (nmod > 5) {
@@ -327,7 +313,7 @@ plot_compare_ssb <- function(object_list,
       if (any(relssb_next_r$Model == "base")) q <- q + geom_hline(data = relssb_next %>% filter(Model == "base"), aes(yintercept = median(RelSSB)), linetype = 2)
     }
 
-    if(save_plot) {
+    if (save_plot) {
       ggsave(paste0(figure_dir, "relssb_nextyear_compare_byRegion.png"), q, width=10)
     }
   }
@@ -560,10 +546,9 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
   n_iter <- nrow(mcmc_list[[1]][[1]])
   bref <- mcmc_list[[1]]$Bref_jr
   dimnames(bref) <- list("Iteration" = 1:n_iter, "Rules" = 1:rules_list[[1]], "Region" = regions_list2[[1]])
-  Bref <- reshape2::melt(bref) %>%
+  Bref <- melt(bref) %>%
     filter(Iteration == 1) %>%
     select(-c(Iteration, Rules))
-
 
   vb_list <- lapply(1:length(object_list), function(x) {
     n_iter <- nrow(mcmc_list[[x]][[1]])
@@ -571,7 +556,7 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
     if ("biomass_vulnref_jytr" %in% names(mcmc_list[[x]])) {
       bvuln_ytr <- mcmc_list[[x]]$biomass_vulnref_jytr
       dimnames(bvuln_ytr) <- list("Iteration" = 1:n_iter, "Rules" = 1:rules_list[[x]], "Year" = pyears_list[[x]], "Season" = seasons, "Region" = regions_list[[x]])
-      bvuln_ytr2 <- reshape2::melt(bvuln_ytr) %>%
+      bvuln_ytr2 <- melt(bvuln_ytr) %>%
         filter(value > 0) %>%
         mutate(Season = as.character(Season), Season = ifelse(Year >= data_list[[x]]$season_change_yr, Season, YR)) %>%
         filter(Season %in% c("YR","AW")) %>%
@@ -581,7 +566,7 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
     } else {
       bvuln_ytr <- mcmc_list[[x]]$biomass_vulnref_ytr
       dimnames(bvuln_ytr) <- list("Iteration" = 1:n_iter, "Year" = pyears_list[[x]], "Season" = seasons, "Region" = regions_list[[x]])
-      bvuln_ytr2 <- reshape2::melt(bvuln_ytr) %>%
+      bvuln_ytr2 <- melt(bvuln_ytr) %>%
         filter(value > 0) %>%
         mutate(Season = as.character(Season), Season = ifelse(Year >= data_list[[x]]$season_change_yr, Season, YR)) %>%
         filter(Season %in% c("YR","AW")) %>%
@@ -602,7 +587,7 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
     n_iter <- nrow(mcmc_list[[x]][[1]])
     bio <- mcmc_list[[x]]$B0_r
     dimnames(bio) <- list("Iteration" = 1:n_iter, "Region" = regions_list2[[x]])
-    vb0 <- reshape2::melt(bio) %>%
+    vb0 <- melt(bio) %>%
       left_join(expand.grid(Iteration = 1:n_iter, Year = pyears_list[[x]]), by = "Iteration") %>%
       filter(Region != "Total") %>%
       group_by(Iteration, Year, Region) %>%
@@ -611,13 +596,12 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
       mutate(Rule = 1, type = "VB0")
     # bio <- mcmc_list[[x]]$SSBref_jr
     # dimnames(bio) <- list("Iteration" = 1:n_iter, "Rule" = 1, "Region" = regions_list[[x]])
-    # ref <- reshape2::melt(bio) %>%
+    # ref <- melt(bio) %>%
     #     left_join(expand.grid(Iteration = 1:n_iter, Year = pyears_list[[x]]), by = "Iteration") %>%
     #     group_by(Iteration, Region, Rule, value, Year) %>%
     #     ungroup() #%>%
     # mutate(type = "Target")
     bio2 <- vb0
-    # filter(Year <= max(years_list[[x]]))
     bio2$Model <- object_names[x]
     return(bio2)
   })
@@ -632,13 +616,11 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
   # n1 <- sapply(1:length(object_names), function(x) strsplit(object_names[x], "_")[[1]][1])
   # # n2 <- sapply(1:length(object_names), function(x) strsplit(object_names[x], paste0(n1[x],"_"))[[1]][2])
   # # n2[which(is.na(n2))] <- "base"
-
   # n2u <- unique(n1)
   # nm <- length(n2u)
   # if (nm > 2) cols <- brewer.pal(nm, "Set1")
   # if (nm == 2) cols <- c("tomato", "steelblue")
   # if (nm == 1) cols <- "tomato"
-
   # cols_all <- unlist(as.vector(sapply(1:nm, function(x) rep(cols[x],length(which(n1==n2u[x]))))))
   # names(cols_all) <- object_names
   # lty_all <- rep(1, length(object_names))
@@ -656,16 +638,11 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
     #stat_summary(data=vb, fun.ymin = function(x) quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75), geom = "ribbon", alpha=0.45, colour = NA) +
     stat_summary(data = vb %>% filter(Year %in% years) %>% group_by(Iteration, Year, Model) %>% summarise(value = sum(value)),
                  fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75) +
-    # scale_fill_manual(values = cols_all, labels = object_names) +
-    # scale_colour_manual(values = cols_all, labels = object_names) +
-    # guides(colour = guide_legend(override.aes = list(colour = cols_all, linetype = lty_all))) +
-    # scale_linetype(guide=FALSE) +
     expand_limits(y = 0) +
     xlab("Fishing year") + ylab("Adjusted vulnerable biomass (tonnes)") +
     scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
     theme_lsd(base_size = 14) +
     theme(axis.text.x = element_text(angle = 45,hjust = 1))
-  # scale_y_continuous(expand = c(0,0), limits = c(0, max(vb$value)*1.05))
 
   if (nmod > 5) {
     p <- p +
@@ -693,13 +670,12 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
       # scale_fill_manual(values = cols_all, labels = object_names) +
       # scale_colour_manual(values = cols_all, labels = object_names) +
       # guides(colour = guide_legend(override.aes = list(colour = cols_all, linetype = lty_all))) +
-      # scale_linetype(guide=FALSE) +
       expand_limits(y = 0) +
       xlab("Fishing year") + ylab("Adjusted vulnerable biomass (tonnes)") +
       scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
       theme_lsd(base_size = 14) +
-      theme(axis.text.x = element_text(angle = 45, hjust = 1))
-    q <- q + facet_wrap(~Region)
+      theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+      facet_wrap(~Region)
 
     if (nmod > 5) {
       q <- q +
@@ -711,6 +687,7 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
         scale_color_brewer(palette = "Set1")
     }
   }
+
   if (save_plot) {
     ggsave(paste0(figure_dir, "biomass_vulnref_compare.png"), p, width = 10)
     if (sum(by.Region) >= 1) {
@@ -719,7 +696,6 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
   }
 
   if (any(Bref$value > 0)) {
-
     # Vulnerable biomass
     p <- ggplot(data = vb %>% filter(Year %in% years) %>% group_by(Iteration, Year, Model) %>% summarise(value = sum(value)),
                 aes(x = Year, y = value, color = Model, fill = Model)) +
@@ -738,8 +714,7 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
       xlab("Fishing year") + ylab("Adjusted vulnerable biomass (tonnes)") +
       scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
       theme_lsd(base_size = 14) +
-      theme(axis.text.x = element_text(angle = 45,hjust = 1))
-    # scale_y_continuous(expand = c(0,0), limits = c(0, max(vb$value)*1.05))
+      theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
     if (nmod > 5) {
       p <- p +
@@ -807,7 +782,7 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
                  fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
     #stat_summary(data=vb, fun.ymin = function(x) quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75), geom = "ribbon", alpha=0.45, colour = NA) +
     stat_summary(data = relvb %>% filter(Year %in% years) %>% group_by(Iteration, Year, Model) %>% summarise(value = median(RelVB)),
-                 fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha=0.75) +
+                 fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75) +
     # scale_fill_manual(values = cols_all, labels = object_names) +
     # scale_colour_manual(values = cols_all, labels = object_names) +
     # guides(colour = guide_legend(override.aes = list(colour = cols_all, linetype = lty_all))) +
@@ -815,9 +790,10 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
     expand_limits(y = 0) +
     xlab("Fishing year") + ylab("Relative adjusted vulnerable biomass (tonnes)") +
     scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
-    theme_lsd(base_size=14) +
-    theme(axis.text.x = element_text(angle = 45,hjust = 1))
+    theme_lsd(base_size = 14) +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
   # scale_y_continuous(expand = c(0,0), limits = c(0, max(vb$value)*1.05))
+
   if (nmod > 5) {
     p <- p +
       scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
@@ -827,6 +803,7 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
       scale_fill_brewer(palette = "Set1") +
       scale_color_brewer(palette = "Set1")
   }
+
   if (sum(by.Region) >= 1) {
     q <- ggplot(data = relvb %>% filter(Year %in% years),
                 aes(x = Year, y = RelVB, color = Model, fill = Model)) +
@@ -834,7 +811,7 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
                    fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
       #stat_summary(data=vb, fun.ymin = function(x) quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75), geom = "ribbon", alpha=0.45, colour = NA) +
       stat_summary(data = relvb %>% filter(Year %in% years),
-                   fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha=0.75) +
+                   fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75) +
       # scale_fill_manual(values = cols_all, labels = object_names) +
       # scale_colour_manual(values = cols_all, labels = object_names) +
       # guides(colour = guide_legend(override.aes = list(colour = cols_all, linetype = lty_all))) +
@@ -842,9 +819,10 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
       expand_limits(y = 0) +
       xlab("Fishing year") + ylab("Relative adjusted vulnerable biomass (tonnes)") +
       scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
-      theme_lsd(base_size=14) +
-      theme(axis.text.x = element_text(angle = 45,hjust = 1)) +
+      theme_lsd(base_size = 14) +
+      theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
       facet_wrap(~Region)
+
     if (nmod > 5) {
       q <- q +
         scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
@@ -1010,7 +988,7 @@ plot_compare_recruitment <- function(object_list, object_names, figure_dir = "co
     n_iter <- nrow(mcmc_list[[x]][[1]])
     recruits2 <- mcmc_list[[x]]$recruits_ry
     dimnames(recruits2) <- list("Iteration" = 1:n_iter, "Region" = regions_list[[x]], "Year" = pyears_list[[x]])
-    recruits2 <- reshape2::melt(recruits2) %>%
+    recruits2 <- melt(recruits2) %>%
       # filter(Year <= max(years_list[[x]])) %>%
       group_by(Iteration, Year, Region) %>%
       summarise(value = sum(value))
@@ -1143,12 +1121,12 @@ plot_compare_selectivity <- function(object_list, object_names, figure_dir = "co
 
     w <- data_list[[x]]$which_sel_rsyt
     dimnames(w) <- list("Region" = paste0("Region ", regions), "Sex" = sex, "Year" = pyears, "Season" = 1:n_season)
-    w <- reshape2::melt(w, value.name = "Selex")
+    w <- melt(w, value.name = "Selex")
 
 
     sel2 <- mcmc_list[[x]]$selectivity_ml
     dimnames(sel2) <- list("Iteration" = 1:n_iter, "Selex" = 1:data_list[[x]]$n_sel, "Size" = data_list[[x]]$size_midpoint_l)
-    sel2 <- reshape2::melt(sel2, value.name = "Selectivity") %>%
+    sel2 <- melt(sel2, value.name = "Selectivity") %>%
       inner_join(w, by = "Selex") %>%
       filter(Year <= max(years_list[[x]])) %>%
       mutate(Year = factor(Year)) %>%
@@ -1267,7 +1245,7 @@ plot_compare_cpue <- function(object_list,
     n_iter <- nrow(mcmc_list[[x]][[1]])
     pcpue1 <- mcmc_list[[x]]$pred_cpue_i
     dimnames(pcpue1) <- list("Iteration" = 1:n_iter, "I" = 1:data_list[[x]]$n_cpue)
-    pcpue1 <- reshape2::melt(pcpue1, value.name = "CPUE") %>%
+    pcpue1 <- melt(pcpue1, value.name = "CPUE") %>%
       select(Iteration, CPUE) %>%
       mutate(Data = "Expected", Type = "CPUE", Region = rep(data_list[[x]]$data_cpue_area_i, each = n_iter), Year = rep(data_list[[x]]$data_cpue_year_i, each = n_iter), Season = seasons[rep(data_list[[x]]$data_cpue_season_i, each = n_iter)])
     pcpue1$Model <- object_names[[x]]
@@ -1380,7 +1358,7 @@ plot_compare_q <- function(object_list, object_names, figure_dir = "compare_figu
     n_iter <- nrow(mcmc_list[[x]][[1]])
     q2 <- mcmc_list[[x]]$par_q_cpue_qy
     dimnames(q2) <- list("Iteration" = 1:n_iter, "qtype" = 1:nq_list[[x]], "Year" = pyears_list[[x]])
-    q2 <- reshape2::melt(q2)
+    q2 <- melt(q2)
 
     if (max(q2$qtype) < maxq) {
       subq <- q2$qtype
@@ -1408,10 +1386,8 @@ plot_compare_q <- function(object_list, object_names, figure_dir = "compare_figu
   })
 
   q <- data.frame(do.call(rbind, q_list)) %>%
-    group_by(Iteration, Year, Model, qconstant, qtype, QY)
-  q$Model <- factor(q$Model)
-  q$qconstant <- factor(q$qconstant)
-
+    group_by(Iteration, Year, Model, qconstant, qtype, QY) %>%
+    mutate(Model = factor(Model), qconstant = factor(qconstant))
 
   # n1 <- sapply(1:length(object_names), function(x) strsplit(object_names[x], "_")[[1]][1])
   # # n2 <- sapply(1:length(object_names), function(x) strsplit(object_names[x], paste0(n1[x],"_"))[[1]][2])
@@ -1445,6 +1421,7 @@ plot_compare_q <- function(object_list, object_names, figure_dir = "compare_figu
     # scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
     theme_lsd() +
     facet_wrap(~qtype, scales = "free")
+
   if (nmod > 5) {
     p <- p +
       scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
@@ -1454,15 +1431,18 @@ plot_compare_q <- function(object_list, object_names, figure_dir = "compare_figu
       scale_fill_brewer(palette = "Set1") +
       scale_color_brewer(palette = "Set1")
   }
+
   # if (data_list[[1]]$n_area > 1) {
   #     p <- p + facet_wrap(~Region)
   # }
+
   if (save_plot) {
     ggsave(paste0(figure_dir, "q_y_compare.png"), p, width = 10)
   } else {
     return(p)
   }
 }
+
 
 #' Table comparing residuals for various data types across models
 #'
@@ -1475,18 +1455,18 @@ plot_compare_q <- function(object_list, object_names, figure_dir = "compare_figu
 #' @export
 #'
 table_compare_residuals <- function(object_list, object_names, figure_dir = "compare_figure/") {
-  rlist <- lapply(1:length(object_list), function(x){
+  rlist <- lapply(1:length(object_list), function(x) {
     res <- table_residuals(object = object_list[[x]], figure_dir = figure_dir, save_table = FALSE)
     res <- res %>% mutate("model" = object_names[[x]])
     return(res)
   })
   rdf <- do.call(rbind, rlist)
   rdf2 <- rdf %>%
-    tidyr::pivot_longer(-c(model,data), names_to = "residual_type", values_to = "value") %>%
-    tidyr::pivot_wider(names_from = model)
-
+    pivot_longer(-c(model,data), names_to = "residual_type", values_to = "value") %>%
+    pivot_wider(names_from = model)
   write.csv(rdf2, file = file.path(figure_dir, "Residual_summaries.csv"), row.names = FALSE)
 }
+
 
 #' Table comparing estimated parameters across models
 #'
@@ -1499,17 +1479,19 @@ table_compare_residuals <- function(object_list, object_names, figure_dir = "com
 #' @export
 #'
 table_compare_parameters <- function(object_list, object_names, figure_dir = "compare_figure/") {
-  plist <- lapply(1:length(object_list), function(x){ #apply fun to each object
+  # apply fun to each object
+  plist <- lapply(1:length(object_list), function(x) {
     pars <- table_parameters(object = object_list[[x]], figure_dir = figure_dir, save_table = FALSE)
     pars <- pars %>% mutate("model" = object_names[[x]])
     return(pars)
   })
   pdf <- do.call(rbind, plist)
   pdf2 <- pdf %>%
-    # tidyr::pivot_longer(-c(model,Parameter), names_to = "Type", values_to = "value") %>%
-    tidyr::pivot_wider(names_from = model, values_from = Estimate)
+    # pivot_longer(-c(model,Parameter), names_to = "Type", values_to = "value") %>%
+    pivot_wider(names_from = model, values_from = Estimate)
   write.csv(pdf2, file = file.path(figure_dir, "parameter_summaries.csv"), row.names = FALSE)
 }
+
 
 #' Table computing leave-one-out information criterion for various datasets
 #'
@@ -1528,8 +1510,8 @@ looic <- function(object_list, object_names, figure_dir = "compare_figure/") {
   mcmc_list <- lapply(1:length(object_list), function(x) object_list[[x]]@mcmc)
   n_iter <- sapply(1:length(object_list), function(x) nrow(mcmc_list[[x]][[1]]))
 
-  if(any(n_iter < 3)) return(NULL)
-  if(all(n_iter > 3)) {
+  if (any(n_iter < 3)) return(NULL)
+  if (all(n_iter > 3)) {
 
     ## cpue
     cpue_list <- lapply(1:length(object_list), function(x) {
@@ -1590,5 +1572,4 @@ looic <- function(object_list, object_names, figure_dir = "compare_figure/") {
 
     return(out)
   }
-
 }

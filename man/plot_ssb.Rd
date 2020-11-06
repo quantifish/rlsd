@@ -10,7 +10,7 @@ plot_ssb(
   show_map = TRUE,
   show_mcmc = TRUE,
   show_proj = FALSE,
-  show_target = FALSE,
+  show_ref = FALSE,
   xlab = "Fishing year (1 April - 31 March)"
 )
 }
@@ -25,7 +25,7 @@ plot_ssb(
 
 \item{show_proj}{show projection or not}
 
-\item{show_target}{show target or not}
+\item{show_ref}{show reference level or not}
 
 \item{xlab}{the x axis label}
 }

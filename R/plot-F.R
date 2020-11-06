@@ -40,11 +40,11 @@ plot_F <- function(object, scales = "free_y",
       F_jytrf1 <- melt(F_jytrf1)
       F_jytrf1 <- F_jytrf1 %>% filter(Year %in% pyears)
 
-      if(show_proj == FALSE) {
+      if (show_proj == FALSE) {
         F_jytrf1 <- F_jytrf1 %>% filter(.data$Year %in% years)
       }
 
-      if("Fmsy" %in% ref){
+      if ("Fmsy" %in% ref) {
         Fmsy1 <- map$Fmsy_r
         dimnames(Fmsy1) <- list("Iteration" = 1, "Region" = regions)
         Fmsy1 <- melt(Fmsy1) %>%
@@ -103,7 +103,7 @@ plot_F <- function(object, scales = "free_y",
       }
     }
 
-    p <- p + 
+    p <- p +
       expand_limits(y = 0) +
       xlab(xlab) + ylab(ylab) +
       scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +

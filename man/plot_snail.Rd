@@ -14,5 +14,5 @@ plot_snail(object, figure_dir = "figure/", irule = 1)
 \item{irule}{if multiple rules then which rule}
 }
 \description{
-Plot snail trial
+Creates snail trail plots for MPI plenary report.
 }

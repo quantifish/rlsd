@@ -9,8 +9,7 @@ plot_catch(
   show_proj = FALSE,
   scales = "free",
   xlab = "Fishing year",
-  ylab = "Catch (tonnes)",
-  figure_dir = "figure/"
+  ylab = "Catch (tonnes)"
 )
 }
 \arguments{

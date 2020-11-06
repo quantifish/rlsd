@@ -14,5 +14,5 @@ plot_selectivity(object, xlab = "Size (mm)", figure_dir = "figure/")
 \item{figure_dir}{the directory to save the figure to}
 }
 \description{
-Plot selectivity
+Plot selectivity by size class for each sex, region, and year.
 }

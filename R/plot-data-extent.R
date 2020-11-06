@@ -56,9 +56,12 @@ plot_data_extent <- function(object,
     mutate(N = N / max(N) * scalar)
 
   # Observed LF
-  w <- data.frame(LF = 1:d$n_lf, Year = d$data_lf_year_i,
-                  Season = d$data_lf_season_i, Source = d$data_lf_source_i,
-                  Region = d$data_lf_area_i, N = rowSums(d$data_lf_N_is))
+  w <- data.frame(LF = 1:d$n_lf,
+                  Year = d$data_lf_year_i,
+                  Season = d$data_lf_season_i,
+                  Source = d$data_lf_source_i,
+                  Region = d$data_lf_area_i,
+                  N = rowSums(d$data_lf_N_is))
   dlf <- mcmc$data_lf_out_isl
   dimnames(dlf) <- list("Iteration" = 1:n_iter, "LF" = 1:d$n_lf, "Sex" = sex, "Size" = bins)
   dlf <- melt(dlf) %>%

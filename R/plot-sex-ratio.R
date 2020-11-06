@@ -93,7 +93,7 @@ plot_sex_ratio <- function(object, scales = "free",
     p <- ggplot(rsexr2) +
         geom_hline(yintercept = 0, alpha = 0.2) +
         # expand_limits(y = 0) +
-        xlab(xlab) + ylab("Standardised residual") +
+        labs(x = xlab, y = "Standardised residual") +
         theme_lsd()  +
         guides(alpha = FALSE) +
         theme(axis.text.x = element_text(angle = 45, hjust = 1))
@@ -105,13 +105,15 @@ plot_sex_ratio <- function(object, scales = "free",
     } else {
         p <- p + geom_point(aes(x = .data$Year, y = .data$value, color = .data$Source, alpha = .data$Sigma), cex = 2) +
             scale_x_continuous(breaks = seq(0, 1e6, 5), minor_breaks = seq(0, 1e6, 1)) +
-            scale_alpha(range = c(1,0.5))
+            scale_alpha(range = c(1, 0.5))
     }
+
     if (data$n_area == 1) {
         p <- p + facet_grid(Sex ~ Season, scales = "free_x")
     } else {
         p <- p + facet_grid(Sex ~ Season + Region, scales = "free_x")
     }
+
     ggsave(paste0(figure_dir, "sex_ratio_resid.png"), p, height = 9, width = 9)
 
 

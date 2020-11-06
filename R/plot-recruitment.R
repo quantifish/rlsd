@@ -1,5 +1,5 @@
 #' Plot recruitment deviations
-#' 
+#'
 #' @param object an lsd object
 #' @param xlab x axis label
 #' @param ylab y axis label
@@ -9,7 +9,7 @@
 #' @importFrom reshape2 melt
 #' @importFrom stats quantile
 #' @export
-#' 
+#'
 plot_recruitment_deviations <- function(object,
                                         xlab = "Year",
                                         ylab = "Recruitment deviations",
@@ -18,7 +18,7 @@ plot_recruitment_deviations <- function(object,
     data <- object@data
     map  <- object@map
     mcmc <- object@mcmc
-    
+
     years <- data$first_rdev_yr:data$last_rdev_yr
     regions <- 1:data$n_area
 
@@ -29,7 +29,7 @@ plot_recruitment_deviations <- function(object,
     } else {
         rdevs1 <- NULL
     }
-    
+
     if (length(mcmc) > 0) {
         n_iter <- nrow(mcmc[[1]])
         rdevs2 <- mcmc$par_rec_dev_ry
@@ -38,41 +38,41 @@ plot_recruitment_deviations <- function(object,
     } else {
         rdevs2 <- NULL
     }
-    
+
     if(!is.null(rdevs2)) {
         p <- ggplot(data = rdevs2, aes(x = Year, y = value))
     } else if (!is.null(rdevs1)) {
         p <- ggplot(data = rdevs1, aes(x = Year, y = value))
     }
-    
+
     if (!is.null(rdevs2)) {
         p <- p + stat_summary(data = rdevs2, aes(x = Year, y = value), fun.min = function(x) stats::quantile(x, 0.05), fun.max = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
             stat_summary(data = rdevs2, aes(x = Year, y = value), fun.min = function(x) stats::quantile(x, 0.25), fun.max = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
             stat_summary(data = rdevs2, aes(x = Year, y = value), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1)
     }
-    
+
     if (!is.null(rdevs1)) {
         p <- p + geom_line(data = rdevs1, aes(x = Year, y = value), linetype = 2)
     }
-    
+
     if (data$n_area > 1) p <- p + facet_wrap(~Region)
-    
+
     p <- p + expand_limits(y = 0) +
         xlab(xlab) + ylab(ylab) +
         scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
         theme_lsd() +
         theme(axis.text.x = element_text(angle = 45,hjust = 1))
-    
+
     ggsave(paste0(figure_dir, "recruitment_deviations.png"), p)
 }
 
 
 #' Plot recruitment
-#' 
+#'
 #' This plot shows MAP and posterior of recruitment, MAP and posterior
 #' of R0, and a vertical dashed line indicates the final model year
 #' (after the line is projected recruitment).
-#' 
+#'
 #' @param object an lsd object
 #' @param xlab x axis label
 #' @param ylab y axis label
@@ -82,7 +82,7 @@ plot_recruitment_deviations <- function(object,
 #' @importFrom reshape2 melt
 #' @importFrom stats quantile
 #' @export
-#' 
+#'
 plot_recruitment <- function(object,
                              xlab = "Year",
                              ylab = "Recruitment (millions of individuals)",
@@ -91,7 +91,7 @@ plot_recruitment <- function(object,
     data <- object@data
     map  <- object@map
     mcmc <- object@mcmc
-    
+
     ny <- dim(mcmc$recruits_ry)[3]
     years <- data$first_yr:(data$first_yr + ny - 1)
     regions <- 1:data$n_area
@@ -109,17 +109,17 @@ plot_recruitment <- function(object,
         recruits1 <- NULL
         R01 <- NULL
     }
-    
+
     if (length(mcmc) > 0) {
         n_iter <- nrow(mcmc[[1]])
         recruits2 <- mcmc$recruits_ry
         dimnames(recruits2) <- list("Iteration" = 1:n_iter, "Region" = regions, "Year" = years)
-        recruits2 <- reshape2::melt(recruits2)
+        recruits2 <- melt(recruits2)
 
         R02 <- mcmc$par_R0_r
         dimnames(R02) <- list("Iteration" = 1:n_iter, "Region" = regions)
-        R02 <- reshape2::melt(R02) %>%
-            dplyr::left_join(expand.grid(Iteration = 1:n_iter, Year = years), by = "Iteration")
+        R02 <- melt(R02) %>%
+            left_join(expand.grid(Iteration = 1:n_iter, Year = years), by = "Iteration")
     } else {
         recruits2 <- NULL
         R02 <- NULL
@@ -127,7 +127,6 @@ plot_recruitment <- function(object,
     xmin <- min(recruits1$Year, recruits2$Year)
     xmax <- max(recruits1$Year, recruits2$Year)
 
-    
     if (!is.null(recruits2)) {
         p <- ggplot(data = recruits2, aes(x = Year, y = value))
     } else if (!is.null(recruits1)) {
@@ -147,14 +146,16 @@ plot_recruitment <- function(object,
         p <- p + geom_line(data = R01, aes(x = Year, y = value/1e+6), linetype = 2, colour = "green") +
             geom_line(data = recruits1, aes(x = Year, y = value/1e+6), linetype = 2)
     }
+
     p <- p + expand_limits(y = 0) +
         xlab(xlab) + ylab(ylab) +
         #scale_x_continuous(breaks = seq(xmin, xmax, 10), minor_breaks = seq(xmin, xmax, 1)) +
         scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
         theme_lsd() +
         theme(axis.text.x = element_text(angle = 45,hjust = 1))
+
     if (data$n_area > 1) p <- p + facet_wrap(~Region)
-    
+
     ggsave(paste0(figure_dir, "recruitment.png"), p)
 
     # Time-series analysis of recruitment
@@ -170,7 +171,7 @@ plot_recruitment <- function(object,
 
 
 #' Plot recruitment size
-#' 
+#'
 #' @param object an lsd object
 #' @param xlab x axis label
 #' @param ylab y axis label
@@ -179,23 +180,23 @@ plot_recruitment <- function(object,
 #' @import ggplot2
 #' @importFrom reshape2 melt
 #' @export
-#' 
+#'
 plot_recruitment_size <- function(object, xlab = "Size at recruitment (mm)", ylab = "Proportion", figure_dir = "figure/")
 {
     data <- object@data
     mcmc <- object@mcmc
-    
+
     dimnames(mcmc$recruitment_size_dist_l) <- list("Iteration" = 1:nrow(mcmc[[1]]), "Size" = data$size_midpoint_l)
     mcmc$recruitment_size_dist_l <- reshape2::melt(mcmc$recruitment_size_dist_l) %>%
         dplyr::filter(Iteration == 1)
-    
+
     p <- ggplot(data = mcmc$recruitment_size_dist_l, aes(x = Size, y = value)) +
         geom_line() +
         geom_point() +
         expand_limits(y = 0) +
-        xlab(xlab) + 
+        xlab(xlab) +
         ylab(ylab) +
         theme_lsd()
-    
+
     ggsave(paste0(figure_dir, "recruitment_size.png"), p)
 }

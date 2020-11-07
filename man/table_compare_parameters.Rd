@@ -7,7 +7,8 @@
 table_compare_parameters(
   object_list,
   object_names,
-  figure_dir = "compare_figure/"
+  figure_dir = "compare_figure/",
+  save_plot = TRUE
 )
 }
 \arguments{
@@ -16,6 +17,8 @@ table_compare_parameters(
 \item{object_names}{vector of model names associated with each of the output files in object_list}
 
 \item{figure_dir}{the directory to save to}
+
+\item{save_plot}{to save the plot to file or not}
 }
 \description{
 Table comparing estimated parameters across models

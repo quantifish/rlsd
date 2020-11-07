@@ -738,19 +738,15 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
                      fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
         #stat_summary(data=vb, fun.ymin = function(x) quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75), geom = "ribbon", alpha=0.45, colour = NA) +
         stat_summary(data = vb %>% filter(Year %in% years),
-                     fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha=0.75) +
+                     fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75) +
         geom_hline(data = Bref, aes(yintercept = value), lwd = 1.1) +
         geom_label(data = Bref %>% filter(Region == 1), label = "Reference", aes(x = min(vb$Year) + 10, y = value), size = 5, color = "black", fill = "white") +
-        # scale_fill_manual(values = cols_all, labels = object_names) +
-        # scale_colour_manual(values = cols_all, labels = object_names) +
-        # guides(colour = guide_legend(override.aes = list(colour = cols_all, linetype = lty_all))) +
-        # scale_linetype(guide=FALSE) +
-        expand_limits(y = 0) +
+        scale_y_continuous(expand = expansion(mult = c(0, 0.05)), limits = c(0, NA)) +
         xlab("Fishing year") + ylab("Adjusted vulnerable biomass (tonnes)") +
         scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
-        theme_lsd(base_size=14) +
-        theme(axis.text.x = element_text(angle = 45,hjust = 1))
-      q <- q + facet_wrap(~Region)
+        theme_lsd(base_size = 14) +
+        theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+        facet_wrap(~Region)
 
       if (nmod > 5) {
         q <- q +
@@ -762,6 +758,7 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
           scale_color_brewer(palette = "Set1")
       }
     }
+
     if (save_plot) {
       ggsave(paste0(figure_dir, "biomass_vulnref_compare_wRef.png"), p, width = 10)
       if (sum(by.Region) >= 1) {
@@ -783,16 +780,11 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
     #stat_summary(data=vb, fun.ymin = function(x) quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75), geom = "ribbon", alpha=0.45, colour = NA) +
     stat_summary(data = relvb %>% filter(Year %in% years) %>% group_by(Iteration, Year, Model) %>% summarise(value = median(RelVB)),
                  fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75) +
-    # scale_fill_manual(values = cols_all, labels = object_names) +
-    # scale_colour_manual(values = cols_all, labels = object_names) +
-    # guides(colour = guide_legend(override.aes = list(colour = cols_all, linetype = lty_all))) +
-    # scale_linetype(guide=FALSE) +
-    expand_limits(y = 0) +
+    scale_y_continuous(expand = expansion(mult = c(0, 0.05)), limits = c(0, NA)) +
     xlab("Fishing year") + ylab("Relative adjusted vulnerable biomass (tonnes)") +
     scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
     theme_lsd(base_size = 14) +
     theme(axis.text.x = element_text(angle = 45, hjust = 1))
-  # scale_y_continuous(expand = c(0,0), limits = c(0, max(vb$value)*1.05))
 
   if (nmod > 5) {
     p <- p +
@@ -816,7 +808,7 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
       # scale_colour_manual(values = cols_all, labels = object_names) +
       # guides(colour = guide_legend(override.aes = list(colour = cols_all, linetype = lty_all))) +
       # scale_linetype(guide=FALSE) +
-      expand_limits(y = 0) +
+      scale_y_continuous(expand = expansion(mult = c(0, 0.05)), limits = c(0, NA)) +
       xlab("Fishing year") + ylab("Relative adjusted vulnerable biomass (tonnes)") +
       scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
       theme_lsd(base_size = 14) +
@@ -833,6 +825,7 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
         scale_color_brewer(palette = "Set1")
     }
   }
+
   if (save_plot) {
     ggsave(paste0(figure_dir, "biomass_relvulnref_compare.png"), p, width = 10)
     if (sum(by.Region) >= 1) {
@@ -840,7 +833,7 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
     }
   }
 
-  if(any(Bref$value > 0)){
+  if (any(Bref$value > 0)) {
     # Vulnerable biomass
     p <- ggplot(data = vb %>% group_by(Iteration, Year, Model) %>% summarise(value = sum(value)),
                 aes(x = Year, y = value, color = Model, fill = Model)) +
@@ -865,6 +858,7 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
         scale_fill_brewer(palette = "Set1") +
         scale_color_brewer(palette = "Set1")
     }
+
     if (sum(by.Region) >= 1) {
       q <- ggplot(data = vb,
                   aes(x = Year, y = value, color = Model, fill = Model)) +
@@ -874,7 +868,7 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
         stat_summary(data = vb, fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75) +
         geom_hline(data = Bref, aes(yintercept = value), lwd = 1.2) +
         geom_label(data = Bref %>% filter(Region == 1), label = "Reference", aes(x = min(vb$Year) + 10, y = value), size = 5, color = "black", fill = "white") +
-        expand_limits(y = 0) +
+        scale_y_continuous(expand = expansion(mult = c(0, 0.05)), limits = c(0, NA)) +
         xlab("Fishing year") + ylab("Adjusted vulnerable biomass (tonnes)") +
         scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
         theme_lsd(base_size = 14) +
@@ -907,7 +901,7 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
     stat_summary(data = vb %>% group_by(Iteration, Year, Model,) %>% summarise(value = sum(value)), fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
     #stat_summary(data = vb %>% group_by(Iteration, Year, Model) %>% summarise(value = sum(value)), fun.ymin = function(x) quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75), geom = "ribbon", alpha=0.45, colour = NA) +
     stat_summary(data = vb %>% group_by(Iteration, Year, Model) %>% summarise(value = sum(value)), fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75) +
-    expand_limits(y = 0) +
+    scale_y_continuous(expand = expansion(mult = c(0, 0.05)), limits = c(0, NA)) +
     xlab("Fishing year") + ylab("Adjusted vulnerable biomass (tonnes)") +
     scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
     theme_lsd(base_size = 14) +
@@ -922,6 +916,7 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
       scale_fill_brewer(palette = "Set1") +
       scale_color_brewer(palette = "Set1")
   }
+
   if (sum(by.Region) >= 1) {
     q <- ggplot(data = vb,
                 aes(x = Year, y = value, color = Model, fill = Model)) +
@@ -929,7 +924,7 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
       stat_summary(data = vb, fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
       #stat_summary(data = vb, fun.ymin = function(x) quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75), geom = "ribbon", alpha=0.45, colour = NA) +
       stat_summary(data = vb, fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75) +
-      expand_limits(y = 0) +
+      scale_y_continuous(expand = expansion(mult = c(0, 0.05)), limits = c(0, NA)) +
       xlab("Fishing year") + ylab("Adjusted vulnerable biomass (tonnes)") +
       scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
       theme_lsd(base_size = 14) +
@@ -950,6 +945,7 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
       ggsave(paste0(figure_dir, "biomass_vulnref_compare_v2_byRegion.png"), q, width = 10)
     }
   }
+
   if (save_plot) {
     ggsave(paste0(figure_dir, "biomass_vulnref_compare_v2.png"), p, width = 10)
     vb_summary <- vb %>%
@@ -1035,15 +1031,11 @@ plot_compare_recruitment <- function(object_list, object_names, figure_dir = "co
     stat_summary(fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
     #stat_summary(fun.ymin = function(x) quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75), geom = "ribbon", alpha=0.45, colour = NA) +
     stat_summary(fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75) +
-    # scale_fill_manual(values = cols_all, labels = object_names) +
-    # scale_colour_manual(values = cols_all, labels = object_names) +
-    # guides(colour = guide_legend(override.aes = list(colour = cols_all, linetype = lty_all))) +
-    # scale_linetype(guide=FALSE) +
-    expand_limits(y = 0) +
-    xlab("Fishing year") + ylab("Recruitment (millions of individuals)") +
+    scale_y_continuous(expand = expansion(mult = c(0, 0.05)), limits = c(0, NA)) +
+    labs(x = "Fishing year", y = "Recruitment (millions of individuals)") +
     scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
-    theme_lsd(base_size = 14) #+
-  # scale_y_continuous(expand = c(0,0), limits = c(0, max(recruits$value)*1.05))
+    theme_lsd(base_size = 14)
+
   if (nmod > 5) {
     p <- p +
       scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
@@ -1053,6 +1045,7 @@ plot_compare_recruitment <- function(object_list, object_names, figure_dir = "co
       scale_fill_brewer(palette = "Set1") +
       scale_color_brewer(palette = "Set1")
   }
+
   if (length(unique(recruits$Region)) > 1) {
     p <- p + facet_wrap(~Region)
   }
@@ -1068,10 +1061,11 @@ plot_compare_recruitment <- function(object_list, object_names, figure_dir = "co
     geom_vline(aes(xintercept = max(years) + 0.5), linetype = 2) +
     stat_summary(fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
     stat_summary(fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75) +
-    expand_limits(y = 0) +
-    xlab("Fishing year") + ylab("Recruitment (millions of individuals)") +
+    scale_y_continuous(expand = expansion(mult = c(0, 0.05)), limits = c(0, NA)) +
+    labs(x = "Fishing year", y = "Recruitment (millions of individuals)") +
     scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
     theme_lsd(base_size = 14)
+
   if (nmod > 5) {
     p <- p +
       scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
@@ -1081,6 +1075,7 @@ plot_compare_recruitment <- function(object_list, object_names, figure_dir = "co
       scale_fill_brewer(palette = "Set1") +
       scale_color_brewer(palette = "Set1")
   }
+
   if (length(unique(recruits$Region)) > 1) {
     p <- p + facet_wrap(~Region)
   }
@@ -1281,21 +1276,21 @@ plot_compare_cpue <- function(object_list,
     geom_point(aes(x = Year, y = CPUE, color = Model), alpha = 0.75) +
     geom_linerange(aes(x = Year, ymin = exp(log(CPUE) - SD), ymax = exp(log(CPUE) + SD), color = Model), alpha = 0.75) +
     scale_x_continuous(breaks = pretty(c(min(ocr_yrs$Year), max(ocr_yrs$Year)))) +
-    expand_limits(y = 0) +
-    xlab(xlab) + ylab(ylab) +
+    scale_y_continuous(expand = expansion(mult = c(0, 0.05)), limits = c(0, NA)) +
+    labs(x = xlab, y = ylab) +
     theme_lsd()
 
   if (!is.null(pcpue)) {
-    p <- p + stat_summary(data = pcr_yrs, aes(x = .data$Year, y = .data$CPUE, fill = .data$Model), fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
+    p <- p + stat_summary(data = pcr_yrs, aes(x = .data$Year, y = .data$CPUE, fill = .data$Model), fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
       # stat_summary(data = pcr_yrs, aes(x = Year, y = CPUE, fill = Model), fun.ymin = function(x) quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
-      stat_summary(data = pcr_yrs, aes(x = .data$Year, y = .data$CPUE, color = .data$Model), fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1)
+      stat_summary(data = pcr_yrs, aes(x = .data$Year, y = .data$CPUE, color = .data$Model), fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1)
   }
 
   if (nmod > 5) {
     p <- p +
       scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
       scale_color_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod)))
-  } else{
+  } else {
     p <- p +
       scale_fill_brewer(palette = "Set1") +
       scale_color_brewer(palette = "Set1")
@@ -1308,6 +1303,7 @@ plot_compare_cpue <- function(object_list,
     p <- p + facet_wrap(~Season, scales = "free", ncol = n_area)
     if (save_plot) ggsave(paste0(figure_dir, "cpue_CELR.png"), p, height = 9)
   }
+
   if (!save_plot) return(p)
 }
 
@@ -1473,12 +1469,13 @@ table_compare_residuals <- function(object_list, object_names, figure_dir = "com
 #' @param object_list list of 'lsd.rds' files from multiple models
 #' @param object_names vector of model names associated with each of the output files in object_list
 #' @param figure_dir the directory to save to
+#' @param save_plot to save the plot to file or not
 #' @import dplyr
 #' @importFrom reshape2 melt
 #' @importFrom tidyr pivot_longer pivot_wider
 #' @export
 #'
-table_compare_parameters <- function(object_list, object_names, figure_dir = "compare_figure/") {
+table_compare_parameters <- function(object_list, object_names, figure_dir = "compare_figure/", save_plot = TRUE) {
   # apply fun to each object
   plist <- lapply(1:length(object_list), function(x) {
     pars <- table_parameters(object = object_list[[x]], figure_dir = figure_dir, save_table = FALSE)
@@ -1489,7 +1486,11 @@ table_compare_parameters <- function(object_list, object_names, figure_dir = "co
   pdf2 <- pdf %>%
     # pivot_longer(-c(model,Parameter), names_to = "Type", values_to = "value") %>%
     pivot_wider(names_from = model, values_from = Estimate)
-  write.csv(pdf2, file = file.path(figure_dir, "parameter_summaries.csv"), row.names = FALSE)
+  if (save_plot) {
+    write.csv(pdf2, file = file.path(figure_dir, "parameter_summaries.csv"), row.names = FALSE)
+  } else {
+    return(pdf2)
+  }
 }
 
 

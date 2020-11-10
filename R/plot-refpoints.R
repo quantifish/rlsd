@@ -552,10 +552,10 @@ if(any(grepl("B0now_r", names(mcmc1)))){
       # mutate(CatchConstraint = replace(CatchConstraint, which(RuleType != "FixedCatch"), 0))  
 
     output2$Constraint <- sapply(1:nrow(output2), function(x){
-      if(output2$CatchConstraint[x] == 1 & output2$RiskConstraint[x] == 1) out <- "Risk + Catch"
-      if(output2$CatchConstraint[x] == 1 & output2$RiskConstraint[x] == 0) out <- "Catch"
-      if(output2$CatchConstraint[x] == 0 & output2$RiskConstraint[x] == 1) out <- "Risk" #output2$CatchConstraint[x] == 0 & 
-      if(output2$CatchConstraint[x] == 0 & output2$RiskConstraint[x] == 0) out <- "Pass"
+      if(output2$CatchConstraint[x] == 1 & output2$RiskConstraintNow[x] == 1) out <- "Risk + Catch"
+      if(output2$CatchConstraint[x] == 1 & output2$RiskConstraintNow[x] == 0) out <- "Catch"
+      if(output2$CatchConstraint[x] == 0 & output2$RiskConstraintNow[x] == 1) out <- "Risk" #output2$CatchConstraint[x] == 0 & 
+      if(output2$CatchConstraint[x] == 0 & output2$RiskConstraintNow[x] == 0) out <- "Pass"
       return(out)
     })
     output2$Constraint <- factor(output2$Constraint, levels = c("Pass", "Catch", "Risk", "Risk + Catch"))
@@ -577,7 +577,7 @@ if(any(grepl("B0now_r", names(mcmc1)))){
 
   ## filter MP rules where CV < CV(MSY Fixed F)
   CVmaxF <- min(as.numeric(unlist(msy_info1[which(msy_info1$RuleType == "FixedF"),"CV"])))
-  output_mp <- output2 %>% filter(RuleType == "CPUE-based") %>% filter(RiskConstraint == 0)
+  output_mp <- output2 %>% filter(RuleType == "CPUE-based") %>% filter(RiskConstraintNow == 0)
   CVquants <- quantile(output_mp$CV)
 
   output2$CVConstraint = 0
@@ -592,10 +592,10 @@ if(any(grepl("B0now_r", names(mcmc1)))){
   gc()
 
   output2$Constraint <- sapply(1:nrow(output2), function(x){
-      if(output2$CatchConstraint[x] == 1 & output2$RiskConstraint[x] == 1) out <- "Risk + Catch"
-      if(output2$CatchConstraint[x] == 1 & output2$RiskConstraint[x] == 0) out <- "Catch"
-      if(output2$CatchConstraint[x] == 0 & output2$RiskConstraint[x] == 1) out <- "Risk" #output2$CatchConstraint[x] == 0 & 
-      if(output2$CatchConstraint[x] == 0 & output2$RiskConstraint[x] == 0) out <- "Pass"
+      if(output2$CatchConstraint[x] == 1 & output2$RiskConstraintNow[x] == 1) out <- "Risk + Catch"
+      if(output2$CatchConstraint[x] == 1 & output2$RiskConstraintNow[x] == 0) out <- "Catch"
+      if(output2$CatchConstraint[x] == 0 & output2$RiskConstraintNow[x] == 1) out <- "Risk" #output2$CatchConstraint[x] == 0 & 
+      if(output2$CatchConstraint[x] == 0 & output2$RiskConstraintNow[x] == 0) out <- "Pass"
     return(out)
   })
   write.csv(output2, file.path(figure_dir, "Summary_byVariable.csv"))

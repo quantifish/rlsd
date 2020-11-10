@@ -4,13 +4,7 @@
 \alias{do_plot}
 \title{Plot model fits}
 \usage{
-do_plot(
-  object,
-  map = FALSE,
-  mcmc = FALSE,
-  variational = FALSE,
-  figure_dir = "figure/"
-)
+do_plot(object, map = FALSE, mcmc = FALSE, figure_dir = "figure/")
 }
 \arguments{
 \item{object}{the lsd object}
@@ -19,10 +13,8 @@ do_plot(
 
 \item{mcmc}{plot MCMC if a .mcmc output is available}
 
-\item{variational}{plot variational if a .var output is available}
-
 \item{figure_dir}{the directory to save figures to}
 }
 \description{
-Plot model fits
+This is a wrapper that generates most of the LSD model plots.
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/plot-biomass.R
 \name{plot_vulnerable_biomass}
 \alias{plot_vulnerable_biomass}
-\title{Plot vulnerable reference biomass}
+\title{Plot adjusted vulnerable biomass}
 \usage{
 plot_vulnerable_biomass(
   object,
@@ -11,8 +11,7 @@ plot_vulnerable_biomass(
   show_mcmc = TRUE,
   show_proj = FALSE,
   xlab = "Fishing year (1 April - 31 March)",
-  show_quants = c(0.05, 0.25),
-  ref = c("Bmsy", "Bref")
+  show_quants = c(0.05, 0.25)
 )
 }
 \arguments{
@@ -33,5 +32,5 @@ plot_vulnerable_biomass(
 \item{ref}{which reference biomass to plot}
 }
 \description{
-Plot vulnerable reference biomass
+Plot adjusted vulnerable biomass
 }

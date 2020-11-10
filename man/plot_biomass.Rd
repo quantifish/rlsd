@@ -10,8 +10,7 @@ plot_biomass(
   show_map = TRUE,
   show_mcmc = TRUE,
   xlab = "Fishing year",
-  figure_dir = "figure/",
-  ref = c("Bmsy", "Bref")
+  figure_dir = "figure/"
 )
 }
 \arguments{
@@ -26,8 +25,6 @@ plot_biomass(
 \item{xlab}{the x axis label}
 
 \item{figure_dir}{the directory to save to}
-
-\item{ref}{specify Bmsy, Bref, or both}
 }
 \description{
 Plots three types of biomass.

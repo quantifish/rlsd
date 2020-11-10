@@ -4,7 +4,7 @@
 \alias{table_parameters}
 \title{Create residuals table}
 \usage{
-table_parameters(object, figure_dir = "figure/", save_table)
+table_parameters(object, figure_dir = "figure/", save_table = TRUE)
 }
 \arguments{
 \item{object}{and LSD object}

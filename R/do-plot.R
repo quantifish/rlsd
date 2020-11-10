@@ -5,15 +5,12 @@
 #' @param object the lsd object
 #' @param map plot MAP if a .map output is available
 #' @param mcmc plot MCMC if a .mcmc output is available
-#' @param variational plot variational if a .var output is available
 #' @param figure_dir the directory to save figures to
 #' @import dplyr
 #' @import ggplot2
 #' @export
 #'
-do_plot <- function(object,
-                    map = FALSE, mcmc = FALSE, variational = FALSE,
-                    figure_dir = "figure/") {
+do_plot <- function(object, map = FALSE, mcmc = FALSE, figure_dir = "figure/") {
 
     # Data only plots
     plot_data_extent(object, figure_dir = figure_dir)
@@ -46,7 +43,7 @@ do_plot <- function(object,
         print("plotting traces")
         for (i in 1:length(sq)) {
             pq <- sq[i]:(sq[i] + n_panel - 1)
-            d <- filter(posteriors, .data$par %in% unique(posteriors$par)[pq])
+            d <- posteriors %>% filter(.data$par %in% unique(posteriors$par)[pq])
             npar <- length(unique(d$par))
             p <- ggplot(d) +
                 geom_line(aes(x = as.integer(.data$iteration), y = .data$value, col = .data$chain)) +
@@ -60,7 +57,7 @@ do_plot <- function(object,
         print("plotting histograms")
         for (i in 1:length(sq)) {
             pq <- sq[i]:(sq[i] + n_panel - 1)
-            d <- filter(posteriors, .data$par %in% unique(posteriors$par)[pq])
+            d <- posteriors %>% filter(.data$par %in% unique(posteriors$par)[pq])
             npar <- length(unique(d$par))
             p <- ggplot(data = d, aes(x = .data$value, fill = .data$chain)) +
                 geom_histogram(aes(x = value), bins = 50) +
@@ -94,7 +91,7 @@ do_plot <- function(object,
         print("plotting cumulative density")
         for (i in 1:length(sq)) {
             pq <- sq[i]:(sq[i] + n_panel - 1)
-            d <- filter(posteriors, par %in% unique(posteriors$par)[pq])
+            d <- posteriors %>% filter(.data$par %in% unique(posteriors$par)[pq])
             npar <- length(unique(d$par))
             p <- ggplot(d, aes(x = .data$value, colour = .data$chain)) +
                 stat_ecdf() +

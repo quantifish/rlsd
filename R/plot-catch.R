@@ -3,6 +3,77 @@
 #' Plot the catch data and fit to the data.
 #'
 #' @param object and LSD object
+#' @param xlab the x axis label
+#' @param ylab the y axis label
+#' @param figure_dir the directory to save to
+#' @param save_plot save the plot to file 
+#' @import dplyr
+#' @import ggplot2
+#' @importFrom reshape2 melt
+#' @importFrom stats quantile
+#' @export
+#'
+plot_catch_rule <- function(object,
+                            xlab = "Fishing year",
+                            ylab = "Catch (tonnes)",
+                            figure_dir = "figure/",
+                            save_plot = TRUE)
+{
+  data <- object@data
+  mcmc <- object@mcmc
+
+  n_iter <- nrow(mcmc[[1]])
+  rules <- 1:data$n_rules
+  regions <- 1:data$n_area
+  seasons <- c("AW", "SS")
+  pyears <- data$first_yr:data$last_proj_yr
+
+  #psl <- mcmc$pred_catch_sl_jryt
+  psl <- mcmc$proj_catch_commercial_jryt
+  dimnames(psl) <- list("Iteration" = 1:n_iter, 
+                        "Rule" = rules, 
+                        "Region" = regions, 
+                        "Year" = pyears, 
+                        "Season" = seasons)
+  psl <- melt(psl, value.name = "Catch") %>%
+    mutate(Rule = factor(.data$Rule))
+
+  psl %>% filter(Year > data$last_yr) %>% 
+    group_by(Iteration, Rule, Year) %>% 
+    summarise(Catch = sum(Catch)) %>%
+    filter(Iteration == 4) %>%
+    arrange(Rule) %>%
+    data.frame()
+
+  df <- psl %>%
+    group_by(Iteration, Rule, Year) %>% 
+    summarise(Catch = sum(Catch))
+
+  p2 <- ggplot(data = df, aes(x = .data$Year, y = .data$Catch, colour = .data$Rule, fill = .data$Rule)) + 
+    geom_vline(aes(xintercept = data$last_yr + 0.5), linetype = "dashed") +
+    stat_summary(fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.5, colour = NA) +
+    stat_summary(fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1) +
+    labs(x = xlab, y = ylab) +
+    scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
+    scale_y_continuous(expand = expansion(mult = c(0, 0.05)), limits = c(0, NA)) +
+    theme_lsd() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+  if (save_plot) {
+    ggsave(paste0(figure_dir, "catch_rule.png"), p2)
+  } else {
+    return(p2)    
+  }
+}
+
+
+
+
+#' Plot catch
+#'
+#' Plot the catch data and fit to the data.
+#'
+#' @param object and LSD object
 #' @param show_proj show projection or not
 #' @param scales free or fixed
 #' @param xlab the x axis label

@@ -12,7 +12,9 @@
 #' @importFrom ggridges geom_density_ridges
 #' @export
 #'
-plot_selectivity <- function(object, xlab = "Size (mm)", figure_dir = "figure/") {
+plot_selectivity <- function(object, 
+                             xlab = "Size (mm)", 
+                             figure_dir = "figure/") {
     data <- object@data
     mcmc <- object@mcmc
     map <- object@map

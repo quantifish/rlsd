@@ -277,6 +277,10 @@ if(any(grepl("B0now_r", names(mcmc1)))){
   # qpar <- mcmc$par_q_cpue_qy
   # dimnames(qpar) <- list("Iteration" = 1:n_iter, "qtype" = 1:3, "Year" = pyears)
   # qpar2 <- reshape2::melt(qpar, value.name = "q")
+  # qpar2 <- qpar2 %>%
+  #   group_by(Year, qtype) %>%
+  #   mutate(q_med = median(q))
+  # ggplot(qpar2) + geom_line(aes(x = Year, y = q_med, color = factor(qtype)))
 
   # p <- ggplot(qpar2) +
   # geom_line(aes(x = Year, y = q)) +

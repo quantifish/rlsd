@@ -526,6 +526,7 @@ if(any(grepl("B0now_r", names(mcmc1)))){
                       RiskConstraintNow = ifelse(PriskNow >= 0.05, 1, 0),
                       ExpectedCatchSL = sum(par2),
                       ObsCatchSL = sum(SL),
+                      Pcatch = length(which(SL < 0.99 * par2)),
                       AvgTotalCatch = sum(Catch)/max(Iteration)) %>%
       dplyr::left_join(ruledf) %>%
       # dplyr::mutate(ExpectedCatchSL = replace(ExpectedCatchSL, RuleType != "FixedCatch", 0)) %>%

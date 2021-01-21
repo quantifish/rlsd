@@ -1309,9 +1309,9 @@ if(any(grepl("B0now_r", names(mcmc1)))){
     ggsave(file.path(figure_dir, "SSB_VB_Ref.png"), pb, height = 8, width = 20)
   }
 
-  pb <- ggplot(check3 %>% filter(Variable == "VB")) +
-    stat_summary(data = checkt %>% filter(Variable == "VB"), aes(x = Year, y = Value), fun.min = function(x) stats::quantile(x, 0.05), fun.max = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25) +
-    stat_summary(data = checkt %>% filter(Variable == "VB"), aes(x = Year, y = Value), fun = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1.2) +
+  pb <- ggplot(check3 %>% filter(Variable == "B")) +
+    stat_summary(data = checkt %>% filter(Variable == "B"), aes(x = Year, y = Value), fun.min = function(x) stats::quantile(x, 0.05), fun.max = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25) +
+    stat_summary(data = checkt %>% filter(Variable == "B"), aes(x = Year, y = Value), fun = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1.2) +
     geom_hline(aes(yintercept = Mean, color = RuleType), lwd = 1.4) +
     scale_color_manual(values = rev(c("goldenrod", "forestgreen","steelblue")))+
     guides(color = guide_legend(title="Reference level")) +

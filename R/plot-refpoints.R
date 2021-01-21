@@ -530,8 +530,8 @@ if(any(grepl("B0now_r", names(mcmc1)))){
                       Catch95 = quantile(Catch,0.95)) %>%
       dplyr::left_join(ruledf) %>%
       # dplyr::mutate(ExpectedCatchSL = replace(ExpectedCatchSL, RuleType != "FixedCatch", 0)) %>%
-      # dplyr::mutate(CatchConstraint = ifelse(RuleType == "FixedCatch" & Pcatch > 0.05, 1, 0))
-      dplyr::mutate(CatchConstraint = ifelse(RuleType == "FixedCatch" & (Catch95-Catch5)>1, 1, 0))
+      dplyr::mutate(CatchConstraint = ifelse(RuleType == "FixedCatch" & Pcatch > 0.05, 1, 0))
+      # dplyr::mutate(CatchConstraint = ifelse(RuleType == "FixedCatch" & (Catch95-Catch5)>1, 1, 0))
     # constraints <- unique(constraints)
 
       gc()

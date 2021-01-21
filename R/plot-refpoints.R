@@ -1108,8 +1108,8 @@ if(any(grepl("B0now_r", names(mcmc1)))){
     geom_point(aes(x = RelVB_Mean, y = Catch_Mean, fill = Constraint), pch = 21, cex = 3, alpha = 0.5) +
     expand_limits(y = 0, x = 0) +
     xlab(expression("Relative AW adjusted vulnerable biomass (B/B"[0]*")")) + ylab("Average annual catch (tonnes)") +
-    # scale_fill_colorblind() +
-    # scale_color_colorblind() +
+    scale_fill_colorblind() +
+    scale_color_colorblind() +
     theme_bw(base_size = 20)
   if(length(regions) > 1){
     p_relvb <- p_relvb + facet_grid(Region~RuleType) 
@@ -1189,7 +1189,7 @@ if(any(grepl("B0now_r", names(mcmc1)))){
     geom_segment(aes(x = TB_Mean, xend = TB_Mean, y = Catch_P5, yend = Catch_P95, color = Constraint), lwd = 1.2, alpha = 0.25) +
     geom_point(aes(x = TB_Mean, y = Catch_Mean, fill = Constraint), pch = 21, cex = 3, alpha = 0.5) +
     expand_limits(y = 0, x = 0) +
-    xlab("Total biomass (Btot; tonnes)") + ylab("Average annual catch (tonnes)") +
+    xlab(expression("Total biomass (B"["tot"]*"; tonnes)")) + ylab("Average annual catch (tonnes)") +
     scale_fill_colorblind() +
     scale_color_colorblind() +
     theme_bw(base_size = 20) 
@@ -1280,10 +1280,14 @@ if(any(grepl("B0now_r", names(mcmc1)))){
     dplyr::mutate(Variable = "SSB")
   check3 <- full_join(check, check2) %>%
     dplyr::left_join(limits) %>%
-    dplyr::filter(Variable != "SSB0") 
+    dplyr::filter(Variable != "SSB0")  %>%
+    mutate(Variable = replace(Variable, Variable == "TB", "Btot"),
+           Variable = replace(Variable, Variable == "VB", "B"))
   checkt <- dinfo %>%
     dplyr::select(Iteration, Year, Region, SSB, VB, TB) %>%
-    tidyr::pivot_longer(cols = c(SSB,VB,TB), names_to = "Variable", values_to = "Value")
+    tidyr::pivot_longer(cols = c(SSB,VB,TB), names_to = "Variable", values_to = "Value") %>%
+    mutate(Variable = replace(Variable, Variable == "TB", "Btot"),
+           Variable = replace(Variable, Variable == "VB", "B"))
   check3$RuleType <- factor(check3$RuleType, levels = c("FixedCatch", "Average", "FixedF"))
   pb <- ggplot(check3) +
     stat_summary(data = checkt, aes(x = Year, y = Value), fun.min = function(x) stats::quantile(x, 0.05), fun.max = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25) +
@@ -1411,7 +1415,7 @@ if(any(grepl("B0now_r", names(mcmc1)))){
     scale_fill_tableau() +
     scale_color_tableau() +
     guides(color = FALSE, fill = FALSE) +
-    ylab("Relative AW adjusted vulnerable biomass (B/B0)") +
+    ylab(expression("Relative AW adjusted vulnerable biomass (B/B"["0"]*")")) +
     coord_cartesian(xlim = c(min(check$Year),max(check$Year)), expand = FALSE) +
     theme_bw(base_size = 20)
   if(length(regions) > 1){
@@ -1423,14 +1427,14 @@ if(any(grepl("B0now_r", names(mcmc1)))){
 
   check_avg <- average_sum %>%
     dplyr::select(Region, Variable, P5, Mean, P95) %>%
-    dplyr::filter(Variable == "RelVBdata") %>%
+    dplyr::filter(Variable == "RelVB") %>%
     # dplyr::rename(P50 = Mean) %>%
     dplyr::mutate(RuleType = "Average") %>% 
     dplyr::mutate(CVConstraint = 0)
   check_avg$CVConstraint <- factor(check_avg$CVConstraint)
   max_sub <- max_all %>%
     dplyr::select(-Constraint) %>%
-    dplyr::filter(Variable == "RelVBdata") %>%
+    dplyr::filter(Variable == "RelVB") %>%
     dplyr::full_join(check_avg)
   check <- dinfo %>% left_join(max_sub) %>%
     dplyr::filter(RuleType %in% c("FixedCatch", "FixedF", "Average"))
@@ -1440,14 +1444,14 @@ if(any(grepl("B0now_r", names(mcmc1)))){
     # geom_hline(aes(yintercept = P50, color =RuleType), lwd = 1.2) +
     geom_hline(aes(yintercept = Mean, color =RuleType), lwd = 1.2) +
     # geom_line(aes(x = Year, y = VB), lwd = 1.2) +
-    stat_summary(aes(x = Year, y = RelVBdata), fun.min = function(x) stats::quantile(x, 0.05), fun.max = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25) +
-    stat_summary(aes(x = Year, y = RelVBdata), fun = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1.2) +
+    stat_summary(aes(x = Year, y = RelVB), fun.min = function(x) stats::quantile(x, 0.05), fun.max = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25) +
+    stat_summary(aes(x = Year, y = RelVB), fun = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1.2) +
     expand_limits(y = 0) +
     # scale_fill_brewer(palette = "Spectral") +
     # scale_color_brewer(palette = "Spectral") +
     scale_fill_tableau() +
     scale_color_tableau() +
-    ylab(expression("Relative AW adjusted vulnerable biomass (B/B"["0_data"]*")")) +
+    ylab(expression("Relative AW adjusted vulnerable biomass (B/B"["0"]*")")) +
     guides(color = FALSE, fill = FALSE) +
     coord_cartesian(xlim = c(min(check$Year),max(check$Year)), expand = FALSE) +
     theme_bw(base_size = 20)
@@ -1478,7 +1482,7 @@ if(any(grepl("B0now_r", names(mcmc1)))){
     scale_fill_tableau() +
     scale_color_tableau() +
     guides(color = FALSE, fill = FALSE) +
-    ylab("Relative total biomass (Btot/Btot_0)") +
+    ylab(expression("Relative total biomass (B"["tot"]*"/B"["tot_0"]*")")) +
     coord_cartesian(xlim = c(min(check$Year),max(check$Year)), expand = FALSE) +
     theme_bw(base_size = 20)
   if(length(regions) > 1){
@@ -1490,14 +1494,14 @@ if(any(grepl("B0now_r", names(mcmc1)))){
   
   check_avg <- average_sum %>%
     dplyr::select(Region, Variable, P5, Mean, P95) %>%
-    dplyr::filter(Variable == "RelTBdata") %>%
+    dplyr::filter(Variable == "RelTB") %>%
     # dplyr::rename(P50 = Mean) %>%
     dplyr::mutate(RuleType = "Average") %>% 
     dplyr::mutate(CVConstraint = 0)
   check_avg$CVConstraint <- factor(check_avg$CVConstraint)
   max_sub <- max_all %>%
     dplyr::select(-Constraint) %>%
-    dplyr::filter(Variable == "RelTBdata") %>%
+    dplyr::filter(Variable == "RelTB") %>%
     dplyr::full_join(check_avg)
   check <- dinfo %>% left_join(max_sub) %>%
     dplyr::filter(RuleType %in% c("FixedCatch", "FixedF", "Average"))
@@ -1507,14 +1511,14 @@ if(any(grepl("B0now_r", names(mcmc1)))){
     # geom_hline(aes(yintercept = P50, color =RuleType), lwd = 1.2) +
     geom_hline(aes(yintercept = Mean, color =RuleType), lwd = 1.2) +
     # geom_line(aes(x = Year, y = VB), lwd = 1.2) +
-    stat_summary(aes(x = Year, y = RelTBdata), fun.min = function(x) stats::quantile(x, 0.05), fun.max = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25) +
-    stat_summary(aes(x = Year, y = RelTBdata), fun = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1.2) +
+    stat_summary(aes(x = Year, y = RelTB), fun.min = function(x) stats::quantile(x, 0.05), fun.max = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25) +
+    stat_summary(aes(x = Year, y = RelTB), fun = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1.2) +
     expand_limits(y = 0) +
     # scale_fill_brewer(palette = "Spectral") +
     # scale_color_brewer(palette = "Spectral") +
     scale_fill_tableau() +
     scale_color_tableau() +
-    ylab("Relative total biomass (Btot/Btot_0_data)") +
+    ylab(expression("Relative total biomass (B"["tot"]*"/B"["tot_0"]*")")) +
     guides(color = FALSE, fill = FALSE) +
     coord_cartesian(xlim = c(min(check$Year),max(check$Year)), expand = FALSE) +
     theme_bw(base_size = 20)

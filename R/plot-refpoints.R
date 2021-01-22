@@ -799,7 +799,7 @@ if(any(grepl("B0now_r", names(mcmc1)))){
     theme_bw(base_size = 20)
   if(length(regions) > 1){
     p <- p + facet_grid(Region~., scales = "free_x") 
-    ggsave(file.path(figure_dir, "VB_Distributions.png"), p, height = 8, width = 20)
+    ggsave(file.path(figure_dir, "VB_Distributions.png"), p, height = 8, width = 10)
 
   } else {
     ggsave(file.path(figure_dir, "VB_Distributions.png"), p, height = 8, width = 10)
@@ -819,18 +819,18 @@ if(any(grepl("B0now_r", names(mcmc1)))){
                      P_above_med = length(which(Current >= P50))/length(Current))
   # write.csv(curr, file.path(figure_dir, "P_above_ref.csv"))
 
-  if(any(grepl("B0now_r", names(mcmc1)))){
-   curr <- pinfo %>%
-    dplyr::filter(Year == max(years)+1) %>%
-    tidyr::pivot_longer(cols = c(unique(summary$Variable)), names_to = "Variable", values_to = "Value") %>%
-    ungroup() %>%
-    dplyr::select(Region, Variable, Value) %>%
-    dplyr::rename(Current = Value) %>%
-    dplyr::left_join(sum %>% dplyr::select(Region, RuleType, Variable, Mean, P50)) %>%
-    dplyr::group_by(Region, Variable, RuleType) %>%
-    dplyr::summarise(P_above_mean = length(which(Current >= Mean))/length(Current),
-                     P_above_med = length(which(Current >= P50))/length(Current))
-  }
+  # if(any(grepl("B0now_r", names(mcmc1)))){
+  #  curr <- pinfo %>%
+  #   dplyr::filter(Year == max(years)+1) %>%
+  #   tidyr::pivot_longer(cols = c(unique(summary$Variable)), names_to = "Variable", values_to = "Value") %>%
+  #   ungroup() %>%
+  #   dplyr::select(Region, Variable, Value) %>%
+  #   dplyr::rename(Current = Value) %>%
+  #   dplyr::left_join(sum %>% dplyr::select(Region, RuleType, Variable, Mean, P50)) %>%
+  #   dplyr::group_by(Region, Variable, RuleType) %>%
+  #   dplyr::summarise(P_above_mean = length(which(Current >= Mean))/length(Current),
+  #                    P_above_med = length(which(Current >= P50))/length(Current))
+  # }
     sum_curr <- full_join(sum, curr)
     status_check <- status_check %>%
       dplyr::rename(Current_P5 = P5, Current_P50 = P50, Current_Mean = Mean, Current_P95 = P95)

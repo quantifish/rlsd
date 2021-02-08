@@ -1090,7 +1090,7 @@ if(any(grepl("B0now_r", names(mcmc1)))){
     geom_segment(aes(x = VB_Mean, xend = VB_Mean, y = CPUE_P5, yend = CPUE_P95, color = Constraint), lwd = 1.2, alpha = 0.25) +
     geom_point(aes(x = VB_Mean, y = CPUE_Mean, fill = Constraint), pch = 21, cex = 4, alpha = 0.5) +
     expand_limits(y = 0, x = 0) +
-    ylab("Offset-year CPUE") + xlab(expression("Relative AW adjusted vulnerable biomass (B/B"[0]*")")) +
+    ylab("Offset-year CPUE") + xlab("AW adjusted vulnerable biomass (B; tonnes") +
     scale_fill_colorblind() +
     scale_color_colorblind() +
     theme_bw(base_size = 20)

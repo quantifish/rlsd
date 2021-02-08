@@ -672,7 +672,8 @@ if(any(grepl("B0now_r", names(mcmc1)))){
       dplyr::summarise(Catch = sum(Catch),
                        VB = sum(VB),
                        SSB = sum(SSB),
-                       TB = sum(TB)) %>%
+                       TB = sum(TB),
+                       CPUE = mean(CPUE)) %>%
       dplyr::left_join(vb0now %>% dplyr::filter(Region == "Total")) %>%
       dplyr::left_join(ssb0now %>% dplyr::filter(Region == "Total")) %>%
       dplyr::left_join(tb0now %>% dplyr::filter(Region == "Total")) %>%
@@ -686,7 +687,7 @@ if(any(grepl("B0now_r", names(mcmc1)))){
       dplyr::mutate(RelSSB = SSB / SSB0) %>%
       dplyr::mutate(RelTB = TB / TB0) %>%
       tidyr::drop_na()  %>%
-      tidyr::pivot_longer(cols = c(Catch, VB, SSB, TB, VB0now, SSB0now, TB0now, VB0, SSB0, TB0, RelVBdata, RelSSBdata, RelTBdata, RelVB, RelSSB, RelTB), names_to = "Variable", values_to = "Value") %>%
+      tidyr::pivot_longer(cols = c(Catch, CPUE, VB, SSB, TB, VB0now, SSB0now, TB0now, VB0, SSB0, TB0, RelVBdata, RelSSBdata, RelTBdata, RelVB, RelSSB, RelTB), names_to = "Variable", values_to = "Value") %>%
       dplyr::group_by(RuleType, Constraint, CVConstraint, Variable) %>%
       dplyr::summarise(P5 = quantile(Value, 0.05),
                        P50 = quantile(Value, 0.5),
@@ -744,7 +745,8 @@ if(any(grepl("B0now_r", names(mcmc1)))){
       dplyr::summarise(Catch = sum(Catch), 
                        VB = sum(VB),
                        SSB = sum(SSB),
-                       TB = sum(TB)) %>%
+                       TB = sum(TB),
+                       CPUE = mean(CPUE)) %>%
       dplyr::left_join(vb0now %>% dplyr::filter(Region == "Total")) %>%
       dplyr::left_join(ssb0now %>% dplyr::filter(Region == "Total")) %>%
       dplyr::left_join(tb0now %>% dplyr::filter(Region == "Total")) %>%

@@ -1078,7 +1078,33 @@ if(any(grepl("B0now_r", names(mcmc1)))){
     # geom_hline(data = output5, aes(yintercept = Catch_P50), linetype = 2, lwd = 1.5)
     geom_vline(data = output5, aes(xintercept = CPUE_Mean), linetype = 2, lwd = 1.5) +
     geom_hline(data = output5, aes(yintercept = Catch_Mean), linetype = 2, lwd = 1.5)
-  ggsave(file.path(figure_dir, "CV_vs_Catch_wTarget.png"), p_cpue_v2, height = 8, width = 20)
+  ggsave(file.path(figure_dir, "CPUE_vs_Catch_wTarget.png"), p_cpue_v2, height = 8, width = 20)
+
+  p_cpue_b <- ggplot(output4) +
+    # geom_segment(aes(x = RelSSB_P5, xend = RelSSB_P95, y = Catch_P50, yend = Catch_P50, color = Constraint), lwd = 1.2, alpha = 0.8) +
+    # geom_segment(aes(x = RelSSB_P50, xend = RelSSB_P50, y = Catch_P5, yend = Catch_P95, color = Constraint), lwd = 1.2, alpha = 0.8) +
+    # geom_point(aes(x = RelSSB_P50, y = Catch_P50, fill = Constraint), pch = 21, cex = 4) +
+    geom_segment(aes(x = VB_P5, xend = VB_P95, y = CPUE_Mean, yend = CPUE_Mean, color = Constraint), lwd = 1.2, alpha = 0.25) +
+    geom_segment(aes(x = VB_Mean, xend = VB_Mean, y = CPUE_P5, yend = CPUE_P95, color = Constraint), lwd = 1.2, alpha = 0.25) +
+    geom_point(aes(x = VB_Mean, y = CPUE_Mean, fill = Constraint), pch = 21, cex = 4, alpha = 0.5) +
+    expand_limits(y = 0, x = 0) +
+    ylab("Offset-year CPUE") + xlab(expression("Relative AW adjusted vulnerable biomass (B/B"[0]*")")) +
+    scale_fill_colorblind() +
+    scale_color_colorblind() +
+    theme_bw(base_size = 20)
+  if(length(regions) > 1){
+    p_cpue_b <- p_cpue_b + facet_grid(Region~RuleType, scales = "free_x") 
+  } else {
+    p_cpue_b <- p_cpue_b + facet_grid(~RuleType)
+  }
+  ggsave(file.path(figure_dir, "CPUE_vs_VB_byConstraint.png"), p_cpue_b, height = 8, width = 20)
+  
+  p_cpue_b_v2 <- p_cpue_b +
+    # geom_vline(data = output5, aes(xintercept = RelVB_P50), linetype = 2, lwd = 1.5) +
+    # geom_hline(data = output5, aes(yintercept = Catch_P50), linetype = 2, lwd = 1.5)
+    geom_vline(data = output5, aes(xintercept = VB_Mean), linetype = 2, lwd = 1.5) +
+    geom_hline(data = output5, aes(yintercept = CPUE_Mean), linetype = 2, lwd = 1.5)
+  ggsave(file.path(figure_dir, "CPUE_vs_VB_wTarget.png"), p_cpue_b_v2, height = 8, width = 20)
 
 
   p_cv <- ggplot(output4) +

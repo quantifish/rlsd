@@ -287,12 +287,12 @@ if(any(grepl("B0now_r", names(mcmc1)))){
   # facet_wrap(~qtype) +
   # theme_bw()
   
-  # cpue <- mcmc$mp_offset_cpue_jry
-  # dimnames(cpue) <- list("Iteration" = 1:n_iter, "RuleNum" = 1:n_rules, "Region" = regions, "Year" = pyears)
-  # cpue2 <- reshape2::melt(cpue, value.name = "CPUE")
-  # cpue2 <- tibble(cpue2)
+  cpue <- mcmc$mp_offset_cpue_jry
+  dimnames(cpue) <- list("Iteration" = 1:n_iter, "RuleNum" = 1:n_rules, "Region" = regions, "Year" = pyears)
+  cpue2 <- reshape2::melt(cpue, value.name = "CPUE")
+  cpue2 <- tibble(cpue2)
   
-  # gc()
+  gc()
   
   slcatch <- mcmc$pred_catch_sl_jryt
   dimnames(slcatch) <- list("Iteration"=1:n_iter, "RuleNum"=1:dim(slcatch)[2], "Region"=regions, "Year"=pyears, "Season"=seasons)
@@ -438,9 +438,9 @@ if(any(grepl("B0now_r", names(mcmc1)))){
   info <- full_join(catch, relb1)
   gc()
 
-  # cpue2$Region <- factor(cpue2$Region)
+  cpue2$Region <- factor(cpue2$Region)
   # projF2$Region <- factor(projF2$Region)
-  # info <- full_join(info, cpue2)
+  info <- full_join(info, cpue2)
   info$Region <- factor(info$Region)
   gc()
   
@@ -541,7 +541,7 @@ if(any(grepl("B0now_r", names(mcmc1)))){
   #####################
     summary <- cinfo %>%
       dplyr::filter(Region != "Total") %>%
-      tidyr::pivot_longer(cols=c(Catch,SSB,SSB0now,SSB0,RelSSB,RelSSBdata,VB,VB0now,VB0,RelVB,RelVBdata,TB,TB0,TB0now, RelTB, RelTBdata), names_to = "Variable", values_to = "Value") %>% #CPUE,F)
+      tidyr::pivot_longer(cols=c(Catch,CPUE,SSB,SSB0now,SSB0,RelSSB,RelSSBdata,VB,VB0now,VB0,RelVB,RelVBdata,TB,TB0,TB0now, RelTB, RelTBdata), names_to = "Variable", values_to = "Value") %>% #CPUE,F)
       dplyr::group_by(Region, RuleNum, Variable) %>%
       dplyr::summarise(P5 = quantile(Value, 0.05),
                        P50 = quantile(Value, 0.5),
@@ -558,13 +558,13 @@ if(any(grepl("B0now_r", names(mcmc1)))){
       # mutate(CatchConstraint = replace(CatchConstraint, which(RuleType != "FixedCatch"), 0))  
 
     output2$Constraint <- sapply(1:nrow(output2), function(x){
-      if(output2$CatchConstraint[x] == 1 & output2$RiskConstraint[x] == 1) out <- "Risk + Catch"
-      if(output2$CatchConstraint[x] == 1 & output2$RiskConstraint[x] == 0) out <- "Catch"
-      if(output2$CatchConstraint[x] == 0 & output2$RiskConstraint[x] == 1) out <- "Risk" #output2$CatchConstraint[x] == 0 & 
+      if(output2$CatchConstraint[x] == 1 & output2$RiskConstraint[x] == 1) out <- "Fail: Risk + Catch"
+      if(output2$CatchConstraint[x] == 1 & output2$RiskConstraint[x] == 0) out <- "Fail: Catch"
+      if(output2$CatchConstraint[x] == 0 & output2$RiskConstraint[x] == 1) out <- "Fail: Risk" #output2$CatchConstraint[x] == 0 & 
       if(output2$CatchConstraint[x] == 0 & output2$RiskConstraint[x] == 0) out <- "Pass"
       return(out)
     })
-    output2$Constraint <- factor(output2$Constraint, levels = c("Pass", "Catch", "Risk", "Risk + Catch"))
+    output2$Constraint <- factor(output2$Constraint, levels = c("Pass", "Fail: Catch", "Fail: Risk", "Fail: Risk + Catch"))
     
     gc()
 
@@ -598,9 +598,9 @@ if(any(grepl("B0now_r", names(mcmc1)))){
   gc()
 
   output2$Constraint <- sapply(1:nrow(output2), function(x){
-      if(output2$CatchConstraint[x] == 1 & output2$RiskConstraint[x] == 1) out <- "Risk + Catch"
-      if(output2$CatchConstraint[x] == 1 & output2$RiskConstraint[x] == 0) out <- "Catch"
-      if(output2$CatchConstraint[x] == 0 & output2$RiskConstraint[x] == 1) out <- "Risk" #output2$CatchConstraint[x] == 0 & 
+      if(output2$CatchConstraint[x] == 1 & output2$RiskConstraint[x] == 1) out <- "Fail: Risk + Catch"
+      if(output2$CatchConstraint[x] == 1 & output2$RiskConstraint[x] == 0) out <- "Fail: Catch"
+      if(output2$CatchConstraint[x] == 0 & output2$RiskConstraint[x] == 1) out <- "Fail: Risk" #output2$CatchConstraint[x] == 0 & 
       if(output2$CatchConstraint[x] == 0 & output2$RiskConstraint[x] == 0) out <- "Pass"
     return(out)
   })
@@ -1054,6 +1054,31 @@ if(any(grepl("B0now_r", names(mcmc1)))){
   # facet_grid(RuleType ~ Fleet) + 
   # theme_bw()
 
+  p_cpue <- ggplot(output4) +
+    # geom_segment(aes(x = RelSSB_P5, xend = RelSSB_P95, y = Catch_P50, yend = Catch_P50, color = Constraint), lwd = 1.2, alpha = 0.8) +
+    # geom_segment(aes(x = RelSSB_P50, xend = RelSSB_P50, y = Catch_P5, yend = Catch_P95, color = Constraint), lwd = 1.2, alpha = 0.8) +
+    # geom_point(aes(x = RelSSB_P50, y = Catch_P50, fill = Constraint), pch = 21, cex = 4) +
+    geom_segment(aes(x = CPUE_P5, xend = CPUE_P95, y = Catch_Mean, yend = Catch_Mean, color = Constraint), lwd = 1.2, alpha = 0.25) +
+    geom_segment(aes(x = CPUE_Mean, xend = CPUE_Mean, y = Catch_P5, yend = Catch_P95, color = Constraint), lwd = 1.2, alpha = 0.25) +
+    geom_point(aes(x = CPUE_Mean, y = Catch_Mean, fill = Constraint), pch = 21, cex = 4, alpha = 0.5) +
+    expand_limits(y = 0, x = 0) +
+    xlab("Offset-year CPUE") + ylab("Average annual catch (tonnes)") +
+    scale_fill_colorblind() +
+    scale_color_colorblind() +
+    theme_bw(base_size = 20)
+  if(length(regions) > 1){
+    p_cpue <- p_cpue + facet_grid(Region~RuleType, scales = "free_x") 
+  } else {
+    p_cpue <- p_cpue + facet_grid(~RuleType)
+  }
+  ggsave(file.path(figure_dir, "CPUE_vs_Catch_byConstraint.png"), p_cpue, height = 8, width = 20)
+  
+  p_cpue_v2 <- p_cpue +
+    # geom_vline(data = output5, aes(xintercept = RelVB_P50), linetype = 2, lwd = 1.5) +
+    # geom_hline(data = output5, aes(yintercept = Catch_P50), linetype = 2, lwd = 1.5)
+    geom_vline(data = output5, aes(xintercept = CPUE_Mean), linetype = 2, lwd = 1.5) +
+    geom_hline(data = output5, aes(yintercept = Catch_Mean), linetype = 2, lwd = 1.5)
+  ggsave(file.path(figure_dir, "CV_vs_Catch_wTarget.png"), p_cpue_v2, height = 8, width = 20)
 
 
   p_cv <- ggplot(output4) +
@@ -1683,11 +1708,11 @@ if(any(grepl("B0now_r", names(mcmc1)))){
     tidyr::pivot_longer(cols = c(Catch,RelVB,RelSSBdata), names_to = "Variable", values_to = "Value") %>%
     dplyr::filter(RuleType == "CPUE-based") %>%
     dplyr::filter(CVConstraint != "Min") %>%
-    dplyr::mutate(CVConstraint = replace(CVConstraint, Constraint == "Risk" & CVConstraint != "Max", 0)) %>%
-    dplyr::mutate(CVConstraint = replace(CVConstraint, Constraint == "Risk" & CVConstraint == "Max", "Risk")) %>%
+    dplyr::mutate(CVConstraint = replace(CVConstraint, Constraint == "Fail: Risk" & CVConstraint != "Max", 0)) %>%
+    dplyr::mutate(CVConstraint = replace(CVConstraint, Constraint == "Fail: Risk" & CVConstraint == "Max", "Fail: Risk")) %>%
     dplyr::filter(CVConstraint != 0)
-  if(any(grepl("Risk", check1$Constraint))) check1$CVConstraint <- factor(check1$CVConstraint, levels = c("Risk","Max","75%","Median","25%"))
-  if(any(grepl("Risk", check1$Constraint)) == FALSE) check1$CVConstraint <- factor(check1$CVConstraint, levels = c("Max","75%","Median","25%"))
+  if(any(grepl("Fail: Risk", check1$Constraint))) check1$CVConstraint <- factor(check1$CVConstraint, levels = c("Fail: Risk","Max","75%","Median","25%"))
+  if(any(grepl("Fail: Risk", check1$Constraint)) == FALSE) check1$CVConstraint <- factor(check1$CVConstraint, levels = c("Max","75%","Median","25%"))
   if(nrow(check1) > 0){
     check2 <- check1 %>%
       dplyr::group_by(Year, Region, RuleType, Constraint, CVConstraint, Variable) %>%
@@ -1695,8 +1720,8 @@ if(any(grepl("B0now_r", names(mcmc1)))){
                        P50 = quantile(Value, 0.50),
                        Mean = mean(Value),
                        P95 = quantile(Value, 0.95))
-    if(any(grepl("Risk", check2$Constraint))) check2$CVConstraint <- factor(check2$CVConstraint, levels = c("Risk","Max","75%","Median","25%"))
-    if(any(grepl("Risk", check2$Constraint)) == FALSE) check2$CVConstraint <- factor(check2$CVConstraint, levels = c("Max","75%","Median","25%"))
+    if(any(grepl("Fail: Risk", check2$Constraint))) check2$CVConstraint <- factor(check2$CVConstraint, levels = c("Fail: Risk","Max","75%","Median","25%"))
+    if(any(grepl("Fail: Risk", check2$Constraint)) == FALSE) check2$CVConstraint <- factor(check2$CVConstraint, levels = c("Max","75%","Median","25%"))
     # if(length(unique(check2$RuleType))==3) check2$RuleType <- factor(check2$RuleType, levels = c("FixedCatch", "CPUE-based", "FixedF"))
     # if(length(unique(check1$RuleType))==3) check1$RuleType <- factor(check1$RuleType, levels = c("FixedCatch", "CPUE-based", "FixedF"))
     # 

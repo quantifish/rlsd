@@ -79,6 +79,7 @@ plot_data_extent <- function(object,
 
   # Tags
   tags <- data.frame("Area" = d$cov_grow_release_area_g, "Year" = d$cov_grow_release_yr_g, "Season" = "AW", "Type" = 1, DataType = "Tags") %>%
+    mutate(Area = replace(Area, Area == -1, "Unknown")) %>%
     mutate(DataSource = paste(DataType, Area), Type = as.character(Type)) %>%
     group_by(Year, Season, Area, Type, DataType, DataSource) %>%
     summarise(N = n()) %>%
@@ -86,7 +87,6 @@ plot_data_extent <- function(object,
     mutate(N = N / max(N) * scalar) %>%
     select(-Area) %>%
     full_join(data.frame("DataType" = "Tags", "Region" = regions), by = "DataType")
-
 
   ## puerulus
   poo <- data.frame("Region" = d$data_puerulus_area_i, "Year" = d$data_puerulus_year_i, "Puerulus" = d$data_puerulus_i, "N" = d$cov_puerulus_sd_i, "Season" = "AW", "Type" = 1, DataType = "Puerulus") %>%

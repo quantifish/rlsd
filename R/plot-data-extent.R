@@ -41,7 +41,7 @@ plot_data_extent <- function(object,
   dnsl <- melt(dnsl, value.name = "Catch") %>%
     mutate(Type = "NSL")
 
-  dcatch <- bind_rows(dnsl, dnsl) %>%
+  dcatch <- bind_rows(dsl, dnsl) %>%
     filter(Catch > 0) %>%
     mutate(DataType = "Catch", DataSource = paste(DataType, Season, Type)) %>%
     select(-Catch) %>%
@@ -87,8 +87,18 @@ plot_data_extent <- function(object,
     select(-Area) %>%
     full_join(data.frame("DataType" = "Tags", "Region" = regions), by = "DataType")
 
+
+  ## puerulus
+  poo <- data.frame("Region" = d$data_puerulus_area_i, "Year" = d$data_puerulus_year_i, "Puerulus" = d$data_puerulus_i, "N" = d$cov_puerulus_sd_i, "Season" = "AW", "Type" = 1, DataType = "Puerulus") %>%
+    mutate(DataSource = paste(DataType), Type = as.character(Type)) %>%
+    group_by(Year, Season, Region, Type, DataType, DataSource) %>%
+    summarise(N = sum(N)) %>%
+    ungroup() %>%
+    mutate(N = N / max(N) * scalar)
+
   #ggd <- rbind(dcatch, ocpue, dlf, tags)
   ggd <- bind_rows(dcatch, ocpue, dlf, tags)
+  if(d$puerulus_on == 1) ggd <- bind_rows(ggd, poo)
 
   p <- ggplot(data = ggd) +
     geom_point(aes(x = Year, y = DataSource, colour = DataType, size = N), alpha = 0.6) +

@@ -17,6 +17,7 @@ plot_data_extent <- function(object,
                              xlab = "Fishing year (1 April - 31 March)",
                              figure_dir = "figure/",
                              save_plot = TRUE) {
+
   d <- object@data
   mcmc <- object@mcmc
 
@@ -62,6 +63,7 @@ plot_data_extent <- function(object,
                   Source = d$data_lf_source_i,
                   Region = d$data_lf_area_i,
                   N = rowSums(d$data_lf_N_is))
+
   dlf <- mcmc$data_lf_out_isl
   dimnames(dlf) <- list("Iteration" = 1:n_iter, "LF" = 1:d$n_lf, "Sex" = sex, "Size" = bins)
   dlf <- melt(dlf) %>%
@@ -88,7 +90,7 @@ plot_data_extent <- function(object,
     select(-Area) %>%
     full_join(data.frame("DataType" = "Tags", "Region" = regions), by = "DataType")
 
-  ## puerulus
+  # Puerulus
   poo <- data.frame("Region" = d$data_puerulus_area_i, "Year" = d$data_puerulus_year_i, "Puerulus" = d$data_puerulus_i, "N" = d$cov_puerulus_sd_i, "Season" = "AW", "Type" = 1, DataType = "Puerulus") %>%
     mutate(DataSource = paste(DataType), Type = as.character(Type)) %>%
     group_by(Year, Season, Region, Type, DataType, DataSource) %>%
@@ -98,7 +100,7 @@ plot_data_extent <- function(object,
 
   #ggd <- rbind(dcatch, ocpue, dlf, tags)
   ggd <- bind_rows(dcatch, ocpue, dlf, tags)
-  if(d$puerulus_on == 1) ggd <- bind_rows(ggd, poo)
+  if (d$puerulus_on == 1) ggd <- bind_rows(ggd, poo)
 
   p <- ggplot(data = ggd) +
     geom_point(aes(x = Year, y = DataSource, colour = DataType, size = N), alpha = 0.6) +

@@ -402,8 +402,8 @@ plot_cpue <- function(object,
 
     ### CELR
     dfilter <- expand.grid("Year" = 1989:max(ocpue$Year), "Season" = c("AW","SS"))
-    dfilter <- dfilter[-which(dfilter$Year==1989 & dfilter$Season == "AW"),]
-    dfilter <- dfilter[-which(dfilter$Year == max(ocpue$Year) & dfilter$Season == "SS"),]
+    # dfilter <- dfilter[-which(dfilter$Year==1989 & dfilter$Season == "AW"),]
+    # dfilter <- dfilter[-which(dfilter$Year == max(ocpue$Year) & dfilter$Season == "SS"),]
     rcr_yrs <- rcpue %>% right_join(dfilter) %>% mutate(Region = paste0("Region ", Region))
     p <- ggplot(rcr_yrs) +
         geom_hline(yintercept = 0, alpha = 0.2) +

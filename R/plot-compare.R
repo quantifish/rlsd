@@ -1,3 +1,130 @@
+#' Compare LFs from multiple models
+#'
+#' @param object_list list of 'lsd.rds' files from multiple models
+#' @param object_names vector of model names associated with each of the output files in object_list
+#' @import dplyr
+#' @import ggplot2
+#' @importFrom reshape2 melt
+#' @importFrom grDevices colorRampPalette gray
+#' @importFrom stats quantile
+#' @export
+#'
+plot_compare_lfs <- function(object_list,
+                             object_names,
+                             yrs = 2015:2016,
+                             xlab = "Midpoint of size-class (mm)",
+                             ylab = "Proportion at size (mm)")
+{
+  sex <- c("Male", "Immature female", "Mature female")
+  seasons <- c("AW", "SS")
+  sources <- c("LB", "CS")
+  nmod <- length(object_list)
+
+  elf <- NULL
+  plf <- NULL
+  dlf <- NULL
+
+  for (i in 1:nmod) {
+    object <- object_list[[i]]
+    data <- object@data
+    mcmc <- object@mcmc
+
+    n_iter <- nrow(mcmc[[1]])
+    bins <- data$size_midpoint_l
+    regions <- 1:data$n_area
+
+    w <- data.frame(LF = 1:data$n_lf,
+                    Year = data$data_lf_year_i, Season = data$data_lf_season_i,
+                    Source = data$data_lf_source_i, Region = data$data_lf_area_i)
+
+    # 1. Minimum legal size by region, year and sex. These get plotted as vertical lines on each panel.
+    # 2. Bin limits
+    # 3. Effective N
+    # 4. Weights
+    mls <- data$cov_mls_ytrs
+    dimnames(mls) <- list("Year" = data$first_yr:data$last_proj_yr, "Season" = seasons, "Region" = regions, "Sex" = sex)
+    mls <- reshape2::melt(mls, id.var = "Year", variable.name = "Sex", value.name = "MLS")
+
+    lim <- array(NA, dim = c(length(regions), length(sex), 2))
+    lim[,,] <- data$data_lf_bin_limits_rsi
+    dimnames(lim) <- list("Region" = regions, "Sex" = sex, "Limit" = c("lower", "upper"))
+    lim <- reshape2::melt(lim, variable.name = "Sex") %>%
+      mutate(value = bins[value]) %>%
+      tidyr::spread(Limit, value)
+
+    rawN <- data$data_lf_N_is
+    dimnames(rawN) <- list("LF" = 1:data$n_lf, "Sex" = sex)
+    rawN <- reshape2::melt(rawN, value.name = "rawN") %>% mutate(Iteration = 1)
+
+    rawW <- data$data_lf_weight_is
+    dimnames(rawW) <- list("LF" = 1:data$n_lf, "Sex" = sex)
+    rawW <- reshape2::melt(rawW, value.name = "rawW") %>% mutate(Iteration = 1)
+
+    effN <- mcmc$pred_lf_effN_is
+    dimnames(effN) <- list("Iteration" = 1:n_iter, "LF" = 1:data$n_lf, "Sex" = sex)
+    effN <- reshape2::melt(effN, value.name = "effN")
+
+    elf1 <- left_join(rawN, effN) %>%
+      left_join(w, by = "LF") %>%
+      mutate(Source = sources[Source], Season = factor(seasons[Season]), Model = object_names[i]) %>%
+      left_join(mls, by = c("Region", "Year", "Season", "Sex")) %>%
+      left_join(lim, by = c("Region", "Sex")) %>%
+      dplyr::select(-Iteration) %>%
+      mutate(effN = paste0("n: ", sprintf("%.2f", effN))) %>%
+      mutate(rawN = paste0("N: ", sprintf("%.0f", rawN)))
+    elf <- rbind(elf, elf1)
+
+    # Observed LF
+    dlf1 <- mcmc$data_lf_out_isl
+    dimnames(dlf1) <- list("Iteration" = 1:n_iter, "LF" = 1:data$n_lf, "Sex" = sex, "Bin" = 1:length(bins))
+    dlf1 <- reshape2::melt(dlf1) %>%
+      left_join(w, by = "LF") %>%
+      mutate(Source = factor(sources[Source]), Model = object_names[i]) %>%
+      mutate(Season = seasons[Season], Size = bins[Bin]) %>%
+      filter(Iteration == 1, value >= 0) %>%
+      dplyr::select(-Iteration) %>%
+      left_join(lim, by = c("Sex", "Region"))
+    dlf <- rbind(dlf, dlf1)
+
+    # Predicted LF
+    plf1 <- mcmc$pred_lf_isl
+    dimnames(plf1) <- list("Iteration" = 1:n_iter, "LF" = 1:data$n_lf, "Sex" = sex, "Size" = bins)
+    plf1 <- reshape2::melt(plf1) %>%
+      left_join(w, by = "LF") %>%
+      mutate(Source = sources[Source], Season = seasons[Season], Model = object_names[i]) %>%
+      left_join(lim, by = c("Sex", "Region"))
+    plf <- rbind(plf, plf1)
+  }
+
+  p <- ggplot() +
+    geom_vline(data = elf %>% filter(Year %in% yrs), aes(xintercept = MLS), linetype = "dashed") +
+    # geom_label(data = elf %>% filter(Year %in% yrs), aes(x = Inf, y = Inf, label = paste(rawN, "\n", effN)), hjust = 1, vjust = 1) +
+    # stat_summary(data = plf %>% filter(Year %in% yrs, Size >= lower & Size <= upper),
+    #              aes(x = as.numeric(as.character(Size)), y = value), fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
+    # stat_summary(data = plf %>% filter(Year %in% yrs, Size >= lower & Size <= upper),
+    #              aes(x = as.numeric(as.character(Size)), y = value), fun.min = function(x) quantile(x, 0.25), fun.max = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
+    stat_summary(data = plf %>% filter(Year %in% yrs, Size >= lower & Size <= upper),
+                 aes(x = as.numeric(as.character(Size)), y = value, colour = Model), fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1) +
+    geom_point(data = dlf %>% filter(Year %in% yrs, Size >= lower & Size <= upper),
+               aes(x = as.numeric(as.character(Size)), y = value, colour = Model, shape = Model)) +
+    labs(x = xlab, y = ylab) +
+    # guides(shape = "none", colour = "none") +
+    # scale_shape_manual(values = c(0, 4)) +
+    # scale_colour_manual(values = rev(ggplotColours(n = length(sources)))) +
+    scale_color_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
+    scale_x_continuous(minor_breaks = seq(0, 1e6, 2), limits = c(min(elf$lower), max(elf$upper))) +
+    theme_lsd()
+
+  if (data$n_area == 1) {
+    p <- p + facet_grid(Year + Season + Source ~ Sex, scales = "free_y")
+  } else {
+    p <- p + facet_grid(Region + Year + Season + Source ~ Sex, scales = "free_y")
+  }
+
+  return(p)
+}
+
+
 #' Compare vulnerable biomass from multiple models
 #'
 #' @param object_list list of 'lsd.rds' files from multiple models

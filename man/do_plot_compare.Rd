@@ -7,7 +7,7 @@
 do_plot_compare(
   object_list,
   object_names,
-  single_stock,
+  single_stock = TRUE,
   figure_dir = "compare_figure/"
 )
 }

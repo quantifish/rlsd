@@ -126,7 +126,7 @@ plot_sex_ratio <- function(object, scales = "free",
     if (length(mcmc) > 0) {
         p <- p + stat_summary(data = psexr2, aes(x = .data$Year, y = .data$value), fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
             stat_summary(data = psexr2, aes(x = .data$Year, y = .data$value), fun.min = function(x) quantile(x, 0.25), fun.max = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
-            stat_summary(data = psexr2, aes(x = .data$Year, y = .data$value), fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1)
+            stat_summary(data = psexr2, aes(x = .data$Year, y = .data$value), fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1)
     }
 
     if (length(map) > 0) {
@@ -136,7 +136,7 @@ plot_sex_ratio <- function(object, scales = "free",
     p <- p + geom_point(data = osexr, aes(x = .data$Year, y = .data$value, color = .data$Source)) +
         geom_linerange(data = osexr, aes(x = .data$Year, ymin = .data$value - .data$SD, ymax = .data$value + .data$SD, color = .data$Source), alpha = 0.75) +
         scale_y_continuous(expand = c(0, 0)) +
-        coord_cartesian(ylim = c(0, 1)) +
+        coord_cartesian(ylim = c(0, 1.1)) +
         xlab(xlab) +
         ylab(ylab) +
         theme_lsd() +

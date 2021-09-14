@@ -107,6 +107,7 @@ plot_F <- function(object, scales = "free_y",
       expand_limits(y = 0) +
       xlab(xlab) + ylab(ylab) +
       scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
+      scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
       theme_lsd() +
       theme(axis.text.x = element_text(angle = 45, hjust = 1))
 

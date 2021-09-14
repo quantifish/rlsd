@@ -4,6 +4,7 @@
 #' @param figure_dir the directory to save the figure to
 #' @import dplyr
 #' @import ggplot2
+#' @import scales
 #' @importFrom reshape2 melt
 #' @importFrom stats quantile
 #' @export
@@ -40,7 +41,9 @@ plot_q <- function(object, figure_dir = "figure/")
             # scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
             theme_lsd() +
             theme(legend.position = "none") +
-            facet_wrap(~qtype, scales = "free")
+            facet_wrap(~qtype, scales = "free") +
+           scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
+           scale_x_continuous(breaks= pretty_breaks())
 
     # if (data$n_area > 1 & "Region" %in% colnames(q)) {
     #     p <- p + facet_wrap(Region~qtype, scales="free")

@@ -151,6 +151,7 @@ plot_recruitment <- function(object,
         xlab(xlab) + ylab(ylab) +
         #scale_x_continuous(breaks = seq(xmin, xmax, 10), minor_breaks = seq(xmin, xmax, 1)) +
         scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
+        scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
         theme_lsd() +
         theme(axis.text.x = element_text(angle = 45,hjust = 1))
 

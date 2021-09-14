@@ -67,8 +67,6 @@ plot_catch_rule <- function(object,
 }
 
 
-
-
 #' Plot catch
 #'
 #' Plot the catch data and fit to the data.
@@ -298,7 +296,8 @@ plot_catch <- function(object,
   p4 <- ggplot(dcatch2) +
     geom_area(data = dcatch2, aes(x = Year, y = Catch, colour = Sector, fill = Sector), position = "stack") +
     xlab(xlab) + ylab(ylab) +
-    theme_lsd()
+    theme_lsd() +
+    scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1)))
 
   # add msy
   p4 <- p4 +
@@ -312,7 +311,6 @@ plot_catch <- function(object,
   #ggsave(paste0(figure_dir, "catch_type.png"), p, width = 10)
   return(list(p1, p2, p3, p4))
 }
-
 
 plot_catch_save <- function(figure_dir = "figure/") {
   p <- plot_catch(object, show_proj = FALSE)

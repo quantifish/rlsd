@@ -8,6 +8,7 @@
 #' @param figure_dir the directory to save figures to
 #' @import dplyr
 #' @import ggplot2
+#' @import scales
 #' @export
 #'
 do_plot <- function(object, map = FALSE, mcmc = FALSE, figure_dir = "figure/") {

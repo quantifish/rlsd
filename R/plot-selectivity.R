@@ -89,7 +89,8 @@ plot_selectivity <- function(object,
 
     p <- p +
         #scale_x_continuous(breaks = seq(30, 90, 10)) +
-        expand_limits(y = c(0, 1)) +
+        expand_limits(y = c(0, 1)) + 
+        scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
         xlab(xlab) +
         theme_lsd()
 

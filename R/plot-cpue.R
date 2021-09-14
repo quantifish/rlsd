@@ -74,7 +74,6 @@ plot_offset_cpue <- function(object,
     ggsave(paste0(figure_dir, "cpue_offset.png"), p, width = 12)
 }
 
-
 #' Plot CPUE
 #'
 #' Plot the CPUE data and fit to the data.
@@ -252,6 +251,7 @@ plot_cpue <- function(object,
             geom_point(aes(x = Year, y = CPUE), color = "red", alpha = 0.75) +
             geom_linerange(aes(x = Year, ymin = exp(log(CPUE) - SD), ymax = exp(log(CPUE) + SD)), color = "red", alpha = 0.75) +
             scale_x_continuous(breaks = pretty(c(min(ocr_yrs$Year), max(ocr_yrs$Year)))) +
+            scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
             expand_limits(y = 0) +
             xlab(xlab) + ylab(ylab) +
             theme_lsd()
@@ -281,6 +281,7 @@ plot_cpue <- function(object,
         geom_point(aes(x = Year, y = CPUE), color = "red", alpha = 0.75) +
         geom_linerange(aes(x = Year, ymin = exp(log(CPUE) - SD), ymax = exp(log(CPUE) + SD)), color = "red", alpha = 0.75) +
         scale_x_continuous(breaks = pretty(c(min(ocr_yrs$Year), max(ocr_yrs$Year)))) +
+        scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
         expand_limits(y = 0) +
         xlab(xlab) + ylab(ylab) +
         theme_lsd()
@@ -311,6 +312,7 @@ plot_cpue <- function(object,
         geom_point(aes(x = Year, y = CPUE), color = "red", alpha = 0.75) +
         geom_linerange(aes(x = Year, ymin = exp(log(CPUE) - SD), ymax = exp(log(CPUE) + SD)), color = "red", alpha = 0.75) +
         scale_x_continuous(breaks = pretty(c(min(ocr_yrs$Year), max(ocr_yrs$Year)))) +
+        scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
         expand_limits(y = 0) +
         xlab(xlab) + ylab(ylab) +
         theme_lsd()

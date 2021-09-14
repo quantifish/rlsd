@@ -278,6 +278,7 @@ plot_growth_matrix <- function(object,
         xlab(xlab) + ylab(ylab) +
         guides(colour = FALSE, fill = FALSE) +
         facet_wrap(File~.) +
+        scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
         theme_lsd()
         #guides(colour = guide_legend("Size before growth (mm)")) + 
     ggsave(paste0(figure_dir, "growth_matrix_v1.png"), p, width=14)
@@ -286,7 +287,7 @@ plot_growth_matrix <- function(object,
         geom_vline(aes(xintercept = as.numeric(as.character(Size1)))) +
         stat_summary(fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.15, colour = NA) +
         stat_summary(fun.y = function(x) stats::quantile(x, 0.5), geom = "path", lwd = 0.5) +
-        expand_limits(y = 0) +
+        expand_limits(y = 0) + scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
         xlab(xlab) + ylab(ylab) +
         facet_wrap(Size1~.) +
         theme_lsd()
@@ -298,7 +299,7 @@ plot_growth_matrix <- function(object,
         geom_vline(aes(xintercept = as.numeric(as.character(Size1)))) +
         stat_summary(fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.15, colour = NA) +
         stat_summary(fun.y = function(x) stats::quantile(x, 0.5), geom = "path", lwd = 0.5) +
-        expand_limits(y = 0) +
+        expand_limits(y = 0) + scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
         xlab(xlab) + ylab(ylab) +
         facet_wrap(Size1~.) +
         theme_lsd()
@@ -312,7 +313,7 @@ plot_growth_matrix <- function(object,
         stat_summary(fun.y = function(x) stats::quantile(x, 0.5), geom = "path", lwd = 1, colour = "grey") +
         geom_line(data = tm, colour = "red") +
         facet_wrap(Size1~.) +
-        expand_limits(y = 0) +
+        expand_limits(y = 0) + scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
         xlab(xlab) + ylab(ylab) +
         theme_lsd()
     ggsave(paste0(figure_dir, "growth_matrix_vs_empirical_males_v1.png"), p, width=14)

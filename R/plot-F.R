@@ -13,7 +13,7 @@
 #' @importFrom stats quantile
 #' @export
 #'
-plot_F <- function(object, scales = "free_y",
+plot_F <- function(object, scales = "free",
                    xlab = "Fishing year",
                    ylab = "Fishing mortality (F)",
                    figure_dir = "figure/",
@@ -38,6 +38,7 @@ plot_F <- function(object, scales = "free_y",
       F_jytrf1 <- map$proj_F_jytrf
       dimnames(F_jytrf1) <- list("Iteration" = 1, "Rule" = rules, "Year" = data$first_yr:data$last_proj_yr, "Season" = seasons, "Region" = regions, "Fishery" = c("SL", "NSL"))
       F_jytrf1 <- melt(F_jytrf1)
+      F_jytrf1 <- F_jytrf1 %>% filter (! (Season=="SS" & Year<1979))
       F_jytrf1 <- F_jytrf1 %>% filter(Year %in% pyears)
 
       if (show_proj == FALSE) {
@@ -60,6 +61,7 @@ plot_F <- function(object, scales = "free_y",
       F_jytrf2 <- mcmc$proj_F_jytrf
       dimnames(F_jytrf2) <- list("Iteration" = 1:n_iter, "Rule" = rules, "Year" = data$first_yr:data$last_proj_yr, "Season" = seasons, "Region" = regions, "Fishery" = c("SL", "NSL"))
       F_jytrf2 <- melt(F_jytrf2)
+      F_jytrf2 <- F_jytrf2 %>% filter (! (Season=="SS" & Year<1979))
       F_jytrf2 <- F_jytrf2 %>% filter(.data$Year %in% pyears)
 
       if (show_proj == FALSE) {

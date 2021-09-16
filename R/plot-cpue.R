@@ -9,6 +9,7 @@
 #' @param figure_dir the directory to save to
 #' @import dplyr
 #' @import ggplot2
+#' @import scales
 #' @importFrom stats quantile
 #' @importFrom reshape2 melt
 #' @export
@@ -57,6 +58,7 @@ plot_offset_cpue <- function(object,
         expand_limits(y = 0) +
         xlab(xlab) + ylab(ylab) +
         scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
+        scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
         theme_lsd()
     if (!is.null(mcmc_offset)) {
         p <- p + stat_summary(data = mcmc_offset, aes(x = Year, y = value), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
@@ -222,13 +224,14 @@ plot_cpue <- function(object,
     p <- ggplot(data = ocpue) +
         geom_point(aes(x = Year, y = CPUE), color = "red", alpha = 0.75) +
         geom_linerange(aes(x = Year, ymin = exp(log(CPUE) - SD), ymax = exp(log(CPUE) + SD)), color = "red", alpha = 0.75) +
-        #expand_limits(y = 0) +
+        scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) + 
+        scale_x_continuous(breaks= pretty_breaks()) +
         xlab(xlab) + ylab(ylab) +
         theme_lsd()
     if (!is.null(pcpue)) {
         p <- p + stat_summary(data = filter(pcpue, pcpue$QY %in% ocpue$QY), aes(x = Year, y = CPUE), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
-            stat_summary(data = filter(pcpue, pcpue$QY %in% ocpue$QY), aes(x = Year, y = CPUE), fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
-            stat_summary(data = filter(pcpue, pcpue$QY %in% ocpue$QY), aes(x = Year, y = CPUE), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1)
+            stat_summary(data = filter(pcpue, pcpue$QY %in% ocpue$QY), aes(x = Year, y = CPUE), fun = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
+            stat_summary(data = filter(pcpue, pcpue$QY %in% ocpue$QY), aes(x = Year, y = CPUE), fun = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1)
     }
     if (!is.null(pcpue1)) {
         p <- p + geom_line(data = pcpue1, aes(x = Year, y = CPUE), linetype = 2)

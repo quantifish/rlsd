@@ -199,9 +199,15 @@ plot_compare_ssb <- function(object_list,
   ssb0 <- data.frame(do.call(rbind, ssb0_list))
 
   labs <- ssb0 %>%
-    filter(Year == max(Year)) %>%
-    group_by(Year, type) %>%
+    filter(Year == min(Year))  %>%
+    #group_by(Region, type, Model) %>%
+    #summarise(value = mean(value)) %>%
+    group_by(type, Model) %>%
+    summarise(value = sum(value)) %>%
+    group_by(type) %>%
     summarise(value = mean(value))
+
+  labs$Year <- rep(max(ssb$Year), nrow(labs))
 
   nmod <- length(unique(ssb$Model))
   years <- unique(unlist(years_list))
@@ -224,12 +230,13 @@ plot_compare_ssb <- function(object_list,
     stat_summary(data = ssb %>% filter(Year %in% years) %>% group_by(Iteration, Year, Model) %>% summarise(value = sum(value)), fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
     stat_summary(data = ssb %>% filter(Year %in% years) %>% group_by(Iteration, Year, Model) %>% summarise(value = sum(value)), fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model)) +
     stat_summary(data = ssb %>% filter(Year %in% years) %>% group_by(Iteration, Year, Model) %>% summarise(value = sum(value)), fun = function(x) quantile(x, 0.5), geom = "point", size = 1.5, alpha = 0.75, aes(color = Model)) +
-    geom_text(data = labs, aes(x = Year, y = value, label = type), nudge_x = -5) +
+    geom_label(data = labs, aes(x = Year, y = value, label = type), nudge_x = -5) +
     labs(x = "Fishing year", y = "Spawning stock biomass (tonnes)") +
     scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
     scale_y_continuous(expand = expansion(mult = c(0, 0.05)), limits = c(0, NA)) +
     theme_lsd(base_size = 14) +
-    theme(axis.text.x = element_text(angle = 45,hjust = 1))
+    theme(axis.text.x = element_text(angle = 45,hjust = 1)) +
+    coord_cartesian(clip = "off")
 
   if (nmod > 5) {
     p1 <- p1 +
@@ -247,6 +254,12 @@ plot_compare_ssb <- function(object_list,
   }
 
   if (sum(by.Region) >= 1) {
+    labs2 <- ssb0 %>%
+      filter(Year == min(Year))  %>%
+      group_by(Region, type) %>%
+      summarise(value = mean(value))
+    labs2$Year <- rep(max(ssb$Year), nrow(labs2))
+
     q1 <- ggplot(ssb %>% filter(Year %in% years), aes(x = Year, y = value)) +
       stat_summary(data = ssb0 %>% filter(Year %in% years) %>% filter(type == "Soft limit"), fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
       stat_summary(data = ssb0 %>% filter(Year %in% years) %>% filter(type == "Soft limit"), fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model)) +
@@ -259,13 +272,14 @@ plot_compare_ssb <- function(object_list,
       stat_summary(data = ssb %>% filter(Year %in% years) , fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
       stat_summary(data = ssb %>% filter(Year %in% years) , fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model)) +
       stat_summary(data = ssb %>% filter(Year %in% years) , fun = function(x) quantile(x, 0.5), geom = "point", lwd = 1.5, alpha = 0.75, aes(color = Model)) +
-      #geom_text(data = labs, aes(x = Year, y = value, label = type), nudge_x = -5) +
       labs(x = "Fishing year", y = "Spawning stock biomass (tonnes)") +
       scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
       scale_y_continuous(expand = expansion(mult = c(0, 0.05)), limits = c(0, NA)) +
       theme_lsd(base_size = 14) +
       theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-      facet_wrap(~ Region)
+      facet_wrap(~ Region) +
+      geom_label(data = labs2, mapping = aes(x = Year, y = value, label = type), nudge_x = -5) +
+      coord_cartesian(clip = "off")
 
     if (nmod > 5) {
       q1 <- q1 +
@@ -298,7 +312,7 @@ plot_compare_ssb <- function(object_list,
     stat_summary(fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
     stat_summary(fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model, linetype = Model)) +
     stat_summary(fun = function(x) quantile(x, 0.5), geom = "point", size = 1.5, alpha = 0.75, aes(color = Model)) +
-    # geom_text(data = labs, aes(x = Year, y = value, label = type), nudge_x = -5) +
+    geom_label(data = labs, aes(x = Year, y = value, label = type), nudge_x = -5) +
     labs(x = "Fishing year", y = "Spawning stock biomass (tonnes)") +
     scale_x_continuous(breaks = seq(0, 1e6, 5), minor_breaks = seq(0, 1e6, 1)) +
     scale_y_continuous(expand = expansion(mult = c(0, 0.05)), limits = c(0, NA)) +
@@ -333,7 +347,9 @@ plot_compare_ssb <- function(object_list,
       scale_y_continuous(expand = expansion(mult = c(0, 0.05)), limits = c(0, NA)) +
       theme_lsd(base_size = 14) +
       facet_wrap(~Region) +
-      theme(axis.text.x = element_text(angle = 45, hjust = 1))
+      theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+      geom_label(data = labs2, mapping = aes(x = Year, y = value, label = type), nudge_x = -5) +
+      coord_cartesian(clip = "off")
 
     if (nmod > 5) {
       q1 <- q1 +

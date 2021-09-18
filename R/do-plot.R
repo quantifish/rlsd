@@ -38,13 +38,15 @@ do_plot <- function(object, map = FALSE, mcmc = FALSE, figure_dir = "figure/") {
             filter(!.data$par %in% rm_prior$par) %>%
             mutate(par = as.character(gsub(pattern = "prior_", replacement = "par_", x = par)), type = "Prior")
 
-        sq <- seq(1, length(unique(posteriors$par)), n_panel)
+        posteriors_trace <- posteriors %>% filter(grepl('par', par) | grepl('lp', par))
+
+        sq<- seq(1, length(unique(posteriors_trace$par)), n_panel)
 
         # MCMC trace plot
         print("plotting traces")
         for (i in 1:length(sq)) {
             pq <- sq[i]:(sq[i] + n_panel - 1)
-            d <- posteriors %>% filter(.data$par %in% unique(posteriors$par)[pq])
+            d <- posteriors_trace %>% filter(.data$par %in% unique(posteriors_trace$par)[pq])
             npar <- length(unique(d$par))
             p <- ggplot(d) +
                 geom_line(aes(x = as.integer(.data$iteration), y = .data$value, col = .data$chain)) +
@@ -54,6 +56,7 @@ do_plot <- function(object, map = FALSE, mcmc = FALSE, figure_dir = "figure/") {
             ggsave(paste0(figure_dir, "par_trace_", i, ".png"), p, width = ifelse(npar > 1, 8, 4), height = 10) #npar + (npar %% 2)
         }
 
+        sq <- seq(1, length(unique(posteriors$par)), n_panel)
         # MCMC histogram
         print("plotting histograms")
         for (i in 1:length(sq)) {

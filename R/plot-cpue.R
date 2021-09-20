@@ -307,7 +307,7 @@ plot_cpue <- function(object,
     # CELR
     dfilter <- expand.grid("Year" = 1989:max(ocpue$Year), "Season" = c("AW","SS"))
     dfilter <- dfilter[-which(dfilter$Year == 1989 & dfilter$Season == "AW"),]
-    dfilter <- dfilter[-which(dfilter$Year == max(ocpue$Year) & dfilter$Season == "SS"),]
+    # dfilter <- dfilter[-which(dfilter$Year == max(ocpue$Year) & dfilter$Season == "SS"),]
     ocr_yrs <- ocpue %>% right_join(dfilter) %>% mutate(Region = paste0("Region ", Region))
     pcr_yrs <- pcpue %>% right_join(dfilter) %>% mutate(Region = paste0("Region ", Region))
     p1cr_yrs <- pcpue1 %>% right_join(dfilter) %>% mutate(Region = paste0("Region ", Region))

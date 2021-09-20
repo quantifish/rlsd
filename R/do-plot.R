@@ -152,4 +152,5 @@ do_plot <- function(object, map = FALSE, mcmc = FALSE, figure_dir = "figure/") {
     plot_aw_cpue_lm(object, figure_dir = figure_dir)
     #plot_surplus_production(object, figure_dir = figure_dir)
     #plot_retro(object, figure_dir = figure_dir)
+    plot_movement (object, figure_dir = figure_dir)
 }

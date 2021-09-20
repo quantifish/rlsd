@@ -1538,6 +1538,67 @@ plot_compare_q <- function(object_list, object_names, figure_dir = "compare_figu
   }
 }
 
+plot_compare_movement <- function(object_list , object_names , figure_dir  = "compare_figure/",
+                                  save_plot = TRUE)
+{
+
+  data_list <- lapply(1:length(object_list), function(x) object_list[[x]]@data)
+  mcmc_list <- lapply(1:length(object_list), function(x) object_list[[x]]@mcmc)
+
+  n_iter <- nrow(mcmc_list[[1]][[1]])
+
+  years_list <- lapply(1:length(object_list), function(x) data_list[[x]]$first_yr:data_list[[x]]$last_yr)
+  pyears_list <- lapply(1:length(object_list), function(x) data_list[[x]]$first_yr:data_list[[x]]$last_proj_yr)
+
+  mov_list <- lapply(1:length(object_list), function(x) {
+    n_iter <- nrow(mcmc_list[[x]][[1]])
+    mov <- mcmc_list[[x]]$movement_iy
+    dimnames(mov) <- list("Iteration" = 1:n_iter, "Model" = object_names[x], "Year" = pyears_list[[x]])
+    mov2 <- melt(mov)
+  } )
+
+  MOV <- data.frame(do.call(rbind, mov_list)) %>%
+    group_by(Iteration, Year, Model) %>%
+    mutate(Model = factor(Model))
+# data$move_yrs
+  # mov_list_est <- lapply(1:length(object_list), function(x) {
+  #   n_iter <- nrow(mcmc_list[[x]][[1]])
+  #   mov_est <- mcmc_list[[x]]$par_move_i
+  #   dimnames(mov_est) <- list("Iteration" = 1:n_iter, "Year" = years_list[[x]][c(length(years_list[[x]])-length(mcmc_list[[x]]$par_move_i)+1): c(length(years_list[[x]]))])
+  #   mov_est2 <- melt(mov_est)
+  #   } )
+  # MOV_est <- data.frame(do.call(rbind, mov_list_est)) %>%
+  #   group_by(Iteration, Year) %>%
+  #   mutate(Model = factor(Model))
+
+  nmod <- length(unique(MOV$Model))
+  years <- unique(unlist(years_list))
+
+  p <- ggplot(data = MOV %>% filter(Year %in% years), aes(x = Year, y = value, colour = Model, fill = Model)) +
+    stat_summary(fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
+    # stat_summary(fun.min = function(x) quantile(x, 0.25), fun.max = function(x) quantile(x, 0.75), geom = "ribbon", alpha=0.45, colour = NA) +
+    stat_summary(fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75) +
+    scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
+    xlab("Fishing year") + ylab("Movement (proportion)") +
+    # scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
+    theme_lsd()
+
+  if (nmod > 5) {
+    p <- p +
+      scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
+      scale_color_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod)))
+  } else{
+    p <- p +
+      scale_fill_brewer(palette = "Set1") +
+      scale_color_brewer(palette = "Set1")
+  }
+
+  if (save_plot) {
+    ggsave(paste0(figure_dir, "Movement_prop.png"), p, width = 10)
+  } else {
+    return(p)
+  }
+}
 
 #' Table comparing residuals for various data types across models
 #'
@@ -1676,3 +1737,5 @@ looic <- function(object_list, object_names, figure_dir = "compare_figure/") {
     return(out)
   }
 }
+
+

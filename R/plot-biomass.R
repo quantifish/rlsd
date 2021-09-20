@@ -82,7 +82,7 @@ plot_ssb_recruitment <- function(object,
 #' @export
 #'
 plot_ssb <- function(object,
-                     scales = "free_x",
+                     scales = "free",
                      show_map = TRUE,
                      show_mcmc = TRUE,
                      show_proj = FALSE,
@@ -178,7 +178,7 @@ plot_ssb <- function(object,
     expand_limits(y = 0) +
     labs(x = xlab, y = "Spawning stock biomass (tonnes)", colour = NULL, fill = NULL) +
     scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1), expand = c(0, 1)) +
-    scale_y_continuous(expand = c(0, 0), limits = c(0, max(ssb_in$value) * 1.05)) +
+    scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
     scale_fill_manual(values = cpal) +
     scale_colour_manual(values = cpal) +
     theme_lsd()
@@ -186,7 +186,7 @@ plot_ssb <- function(object,
     p <- p + geom_line(data = ssb1_in %>% filter(Region %in% regions), aes(x = Year, y = SSB, colour = type), linetype = 2)
   }
   if (data$n_area > 1) {
-    p <- p + facet_wrap(~Region)
+    p <- p + facet_wrap(~Region, scales="free")
   }
   return(p)
 }
@@ -207,7 +207,7 @@ plot_ssb <- function(object,
 #' @export
 #'
 plot_vulnref_AW <- function(object,
-                     scales = "free_x",
+                     scales = "free",
                      show_map = TRUE,
                      show_mcmc = TRUE,
                      show_proj = FALSE,
@@ -269,7 +269,7 @@ plot_vulnref_AW <- function(object,
     expand_limits(y = 0) +
     labs(x = xlab, y = "AW adjusted vulnerable biomass (tonnes)", colour = NULL, fill = NULL) +
     scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1), expand = c(0, 1)) +
-    scale_y_continuous(expand = c(0, 0), limits = c(0, max(vb$VB)*1.05)) +
+    scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
     # scale_fill_manual(values = cpal) +
     # scale_colour_manual(values = cpal) +
     guides(color = FALSE, fill = FALSE) +
@@ -280,7 +280,7 @@ plot_vulnref_AW <- function(object,
   }
 
   if (data$n_area > 1) {
-    p <- p + facet_wrap(~ .data$Region)
+    p <- p + facet_wrap(~ .data$Region, scales = scales)
   }
 
   return(p)
@@ -305,7 +305,7 @@ plot_vulnref_AW <- function(object,
 #' @export
 #'
 plot_vulnerable_reference_biomass <- function(object,
-                                              scales = "free_x",
+                                              scales = "free",
                                               show_map = TRUE,
                                               show_mcmc = TRUE,
                                               show_proj = FALSE,
@@ -469,7 +469,7 @@ plot_vulnerable_reference_biomass <- function(object,
     expand_limits(y = 0) +
     labs(x = xlab, y = "Adjusted vulnerable biomass (tonnes)") +
     scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1), expand = c(0, 1)) +
-    scale_y_continuous(expand = c(0, 0), limits = c(0, max(din$value) * 1.05)) +
+    scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
     theme_lsd()
 
   if (length(map) > 0 & show_map) {
@@ -477,7 +477,7 @@ plot_vulnerable_reference_biomass <- function(object,
   }
 
   if (data$n_area > 1) {
-    p <- p + facet_wrap(~ .data$Region)
+    p <- p + facet_wrap(~ .data$Region, scales = scales)
   }
 
   return(p)
@@ -502,7 +502,7 @@ plot_vulnerable_reference_biomass <- function(object,
 #' @export
 #'
 plot_vulnerable_biomass <- function(object,
-                                    scales = "free_x",
+                                    scales = "free",
                                     show_map = TRUE,
                                     show_mcmc = TRUE,
                                     show_proj = FALSE,
@@ -631,7 +631,7 @@ plot_vulnerable_biomass <- function(object,
     expand_limits(y = 0) +
     labs(x = xlab, y = "Vulnerable biomass (tonnes)") +
     scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1), expand = c(0, 1)) +
-    scale_y_continuous(expand = c(0, 0), limits = c(0, max(vb_in$value) * 1.05)) +
+    scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
     theme_lsd()
 
   if (length(map) > 0 & show_map) {
@@ -640,7 +640,7 @@ plot_vulnerable_biomass <- function(object,
 
   if (data$n_area > 1) {
     if (data$n_rules == 1) {
-      p <- p + facet_wrap(~ .data$Region)
+      p <- p + facet_wrap(~ .data$Region, scales = scales)
     } else {
       p <- p + facet_wrap(.data$Rule ~ .data$Region)
     }
@@ -667,7 +667,7 @@ plot_vulnerable_biomass <- function(object,
 #' @export
 #'
 plot_total_biomass <- function(object,
-                         scales = "free_x",
+                         scales = "free",
                          show_proj = TRUE,
                          show_map = TRUE,
                          show_mcmc = TRUE,
@@ -959,7 +959,7 @@ plot_total_biomass <- function(object,
         p <- p + geom_line(data = biomass_total_ytrs1_in %>% filter(Region %in% regions), aes(x = Year, y = value, colour = Sex), linetype = 2)
     }
     if (data$n_area > 1) {
-        p <- p + facet_wrap(Region ~ Season)
+        p <- p + facet_wrap(Region ~ Season, scales = scales)
     } else {
         p <- p + facet_wrap( ~ Season)
     }
@@ -973,7 +973,7 @@ plot_total_biomass <- function(object,
         stat_summary(fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1) +
         expand_limits(y = 0) +
         xlab(xlab) + ylab("Total biomass (tonnes)") +
-        facet_wrap( ~ Season) +
+        facet_wrap( ~ Season, scales = scales) +
         scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
         scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
         theme_lsd()
@@ -1003,7 +1003,7 @@ plot_total_biomass <- function(object,
 #' @export
 #'
 plot_vulnref_rel <- function(object,
-                         scales = "free_x",
+                         scales = "free",
                          show_proj = TRUE,
                          show_map = TRUE,
                          show_mcmc = TRUE,
@@ -1442,7 +1442,7 @@ plot_vulnref_rel <- function(object,
 #' @export
 #'
 plot_money_biomass <-  function(object,
-                                scales = "free_x",
+                                scales = "free",
                                 show_map = TRUE,
                                 show_mcmc = TRUE,
                                 show_proj = FALSE,
@@ -1452,9 +1452,9 @@ plot_money_biomass <-  function(object,
   data <- object@data
   map <- object@map
   mcmc <- object@mcmc
-  
+
   cpal <- c("#56B4E9", "#009E73", "#E69F00", "tomato")
-  
+
   years <- data$first_yr:data$last_yr
   pyears <- data$first_yr:data$last_proj_yr
   sex <- c("Male", "Immature female", "Mature female")
@@ -1464,23 +1464,23 @@ plot_money_biomass <-  function(object,
   if (length(regions) == 1) regions2 <- regions
   YR <- "YR" # label for the season before the season change year
   n_rules <- data$n_rules
-  
+
   if (length(map) > 0 & show_map) {
     mb1 <- map$biomass_money_jytr
     dimnames(mb1) <- list("Iteration" = 1, "Rule" = 1:n_rules, "Year" = pyears, "Season" = seasons, "Region" = regions)
     mb1 <- melt(mb1) %>%
       filter(.data$value > 0) %>%
       mutate(Season = as.character(.data$Season), Season = ifelse(.data$Year >= data$season_change_yr, .data$Season, YR))
-    
+
     mb1 <- mb1 %>%
       group_by(.data$Iteration, .data$Rule, .data$Year, .data$Season, .data$Region) %>%
       summarise(value = sum(.data$value))
-    
+
   }
-  
+
   if (length(mcmc) > 0 & show_mcmc) {
     n_iter <- nrow(mcmc[[1]])
-    
+
     mb2 <- mcmc$biomass_money_jytr
     dimnames(mb2) <- list("Iteration" = 1:n_iter, "Rule"=1:n_rules, "Year" = pyears, "Season" = seasons, "Region" = regions)
     mb2 <- melt(mb2) %>%
@@ -1489,7 +1489,7 @@ plot_money_biomass <-  function(object,
       group_by(.data$Iteration, .data$Rule, .data$Year, .data$Season, .data$Region) %>%
       summarise(value = sum(.data$value))
   }
-  
+
   # money biomass
   if (show_proj) {
     if (length(map) > 0 & show_map) mb_in1 <- mb1
@@ -1500,13 +1500,13 @@ plot_money_biomass <-  function(object,
     }
     mb_in2 <- mb2 %>% filter(.data$Year <= data$last_yr)
   }
-  
+
   mb_in <- mb_in2 %>% mutate("Label" = "") %>%
     group_by(.data$Iteration, .data$Rule, .data$Year, .data$Season, .data$Region, .data$value, .data$Label)
-  
+
   p <- ggplot(data = mb_in, aes(x = .data$Year, y = .data$value, colour = .data$Season, fill = .data$Season))
   if (show_proj) p <- p + geom_vline(aes(xintercept = data$last_yr), linetype = "dashed")
-  
+
   #
   if (0.05 %in% show_quants) {
     p <- p +
@@ -1522,13 +1522,13 @@ plot_money_biomass <-  function(object,
     expand_limits(y = 0) +
     labs(x = xlab, y = "Money biomass (tonnes)") +
     scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1), expand = c(0, 1)) +
-    scale_y_continuous(expand = c(0, 0), limits = c(0, max(mb_in$value) * 1.05)) +
+    scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
     theme_lsd()
-  
+
   if (length(map) > 0 & show_map) {
     p <- p + geom_line(data = mb_in1, aes(x = .data$Year, y = .data$value), linetype = 2)
   }
-  
+
   if (data$n_area > 1) {
     if (data$n_rules == 1) {
       p <- p + facet_wrap(~ .data$Region, scales = scales)
@@ -1536,7 +1536,7 @@ plot_money_biomass <-  function(object,
       p <- p + facet_wrap(.data$Rule ~ .data$Region, scales = scales)
     }
   }
-  
+
   return(p)
 }
 
@@ -1557,7 +1557,7 @@ plot_money_biomass <-  function(object,
 #' @export
 #'
 plot_biomass <- function(object,
-                         scales = "free_x",
+                         scales = "free",
                          show_map = TRUE,
                          show_mcmc = TRUE,
                          xlab = "Fishing year",
@@ -1640,7 +1640,7 @@ plot_biomass <- function(object,
 
     p <- plot_vulnref_rel(object, show_proj = TRUE, show_map = FALSE)
     ggsave(paste0(figure_dir, "biomass_vulnref_relyr1_v2.png"), p, width = 10)
-    
+
     # plot Money biomss
     p <- plot_money_biomass(object, show_proj = FALSE, show_map = TRUE)
     ggsave(paste0(figure_dir, "biomass_money.png"), p, width = 12)

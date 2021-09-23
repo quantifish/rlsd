@@ -141,7 +141,7 @@ plot_lfs <- function(object,
         guides(shape = FALSE, colour = FALSE) +
 
         scale_colour_manual(values = rev(ggplotColours(n = length(sources)))) +
-        scale_x_continuous(minor_breaks = seq(0, 1e6, 2), limits = c(min(elf$lower), max(elf$upper)),
+        scale_x_continuous(minor_breaks = seq(0, 1e6, 2), limits = c(30, max(elf$upper)),
                            expand = c(0, 0)) +
         scale_y_discrete(expand = c(0, 0)) +
         theme_lsd()+
@@ -164,7 +164,7 @@ plot_lfs <- function(object,
             guides(shape = FALSE, colour = FALSE) +
             scale_colour_manual(values = rev(ggplotColours(n = length(sources)))) +
             scale_x_continuous(minor_breaks = seq(0, 1e6, 2), limits = c(min(elf$lower), max(elf$upper))) +
-            scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +  
+            scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
             theme_lsd()
         if (data$n_area == 1) {
             p <- p + facet_grid(Year + Season + Source ~ Sex, scales = "free_y")

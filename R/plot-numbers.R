@@ -33,7 +33,7 @@ plot_initial_numbers <- function(object,
         #stat_summary(fun.min = function(x) stats::quantile(x, 0.05), fun.max = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
         #stat_summary(fun.min = function(x) stats::quantile(x, 0.25), fun.max = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
         stat_summary(fun = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1) +
-        expand_limits(y = 0) +
+        scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
         xlab(xlab) + ylab(ylab) +
         theme_lsd()
     if (data$n_area > 1) p <- p + facet_wrap(~Region, scales="free_y")
@@ -44,7 +44,7 @@ plot_initial_numbers <- function(object,
         #stat_summary(fun.min = function(x) stats::quantile(x, 0.05), fun.max = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
         #stat_summary(fun.min = function(x) stats::quantile(x, 0.25), fun.max = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
         stat_summary(fun = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1) +
-        expand_limits(y = 0) +
+        scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1)))  +
         xlab(xlab) + ylab(ylab) +
         theme_lsd()
     if (data$n_area > 1) p <- p + facet_wrap(~Region, scales="free_y")
@@ -92,7 +92,7 @@ plot_numbers <- function(object,
         #stat_summary(fun.min = function(x) stats::quantile(x, 0.05), fun.max = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
         # stat_summary(fun.min = function(x) stats::quantile(x, 0.25), fun.max = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
         stat_summary(fun = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1) +
-      scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
+        scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
         xlab(xlab) + ylab(ylab) +
         theme_lsd()
     ggsave(paste0(figure_dir, "numbers_AW_finalyear.png"), p)

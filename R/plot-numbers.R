@@ -36,7 +36,7 @@ plot_initial_numbers <- function(object,
         expand_limits(y = 0) +
         xlab(xlab) + ylab(ylab) +
         theme_lsd()
-    if (data$n_area > 1) p <- p + facet_wrap(~Region)
+    if (data$n_area > 1) p <- p + facet_wrap(~Region, scales="free_y")
 
     ggsave(paste0(figure_dir, "numbers_initial_v1.png"), p)
 
@@ -47,7 +47,7 @@ plot_initial_numbers <- function(object,
         expand_limits(y = 0) +
         xlab(xlab) + ylab(ylab) +
         theme_lsd()
-    if (data$n_area > 1) p <- p + facet_wrap(~Region)
+    if (data$n_area > 1) p <- p + facet_wrap(~Region, scales="free_y")
 
     ggsave(paste0(figure_dir, "numbers_initial_v2.png"), p)
 }
@@ -98,7 +98,7 @@ plot_numbers <- function(object,
     ggsave(paste0(figure_dir, "numbers_AW_finalyear.png"), p)
 
     if (data$n_area > 1) {
-      p <- p + facet_wrap( ~ .data$Region, ncol = 2)
+      p <- p + facet_wrap( ~ .data$Region, ncol = 2, scales="free_y")
       ggsave(paste0(figure_dir, "numbers_AW_finalyear_byArea.png"), p)
     }
 

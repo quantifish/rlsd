@@ -1635,7 +1635,7 @@ plot_biomass <- function(object,
     p <- plot_vulnerable_reference_biomass(object, show_proj = TRUE, show_map = FALSE)
     ggsave(paste0(figure_dir, "biomass_vulnref_v2.png"), p, width = 12)
 
-    p <- plot_vulnref_rel(object)
+    p <- plot_vulnref_rel(object, show_proj = FALSE)
     ggsave(paste0(figure_dir, "biomass_vulnref_relyr1.png"), p, width = 10)
 
     p <- plot_vulnref_rel(object, show_proj = TRUE, show_map = FALSE)

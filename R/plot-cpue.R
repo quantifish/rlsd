@@ -224,7 +224,7 @@ plot_cpue <- function(object,
     p <- ggplot(data = ocpue) +
         geom_point(aes(x = Year, y = CPUE), color = "red", alpha = 0.75) +
         geom_linerange(aes(x = Year, ymin = exp(log(CPUE) - SD), ymax = exp(log(CPUE) + SD)), color = "red", alpha = 0.75) +
-        scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) + 
+        scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
         scale_x_continuous(breaks= pretty_breaks()) +
         xlab(xlab) + ylab(ylab) +
         theme_lsd()
@@ -307,7 +307,7 @@ plot_cpue <- function(object,
     # CELR
     dfilter <- expand.grid("Year" = 1989:max(ocpue$Year), "Season" = c("AW","SS"))
     dfilter <- dfilter[-which(dfilter$Year == 1989 & dfilter$Season == "AW"),]
-    # dfilter <- dfilter[-which(dfilter$Year == max(ocpue$Year) & dfilter$Season == "SS"),]
+    dfilter <- dfilter[-which(dfilter$Year >=2019 & dfilter$Season == "SS"),]
     ocr_yrs <- ocpue %>% right_join(dfilter) %>% mutate(Region = paste0("Region ", Region))
     pcr_yrs <- pcpue %>% right_join(dfilter) %>% mutate(Region = paste0("Region ", Region))
     p1cr_yrs <- pcpue1 %>% right_join(dfilter) %>% mutate(Region = paste0("Region ", Region))
@@ -408,7 +408,7 @@ plot_cpue <- function(object,
     ### CELR
     dfilter <- expand.grid("Year" = 1989:max(ocpue$Year), "Season" = c("AW","SS"))
     # dfilter <- dfilter[-which(dfilter$Year==1989 & dfilter$Season == "AW"),]
-    # dfilter <- dfilter[-which(dfilter$Year == max(ocpue$Year) & dfilter$Season == "SS"),]
+    dfilter <- dfilter[-which(dfilter$Year == max(ocpue$Year) & dfilter$Season == "SS"),]
     rcr_yrs <- rcpue %>% right_join(dfilter) %>% mutate(Region = paste0("Region ", Region))
     p <- ggplot(rcr_yrs) +
         geom_hline(yintercept = 0, alpha = 0.2) +
@@ -497,6 +497,7 @@ plot_aw_cpue_lm <- function(object, figure_dir = "figure/")
     yr <- data$data_aw_cpue_year_i
     yy1 <- data.frame(yr = yr, py = mcmc$mp_proportion_catch_aw_ry[1,1,])
     xx1 <- data.frame(yr = yr, px = mcmc$mp_pred_aw_cpue_ry[1,1,])
+    xx1 <- xx1[-which(xx1$yr >=2020),]
     dd1 <- inner_join(yy1, xx1)
 
     xx2 <- seq(0, max(xx1$px) * 1.1, 0.0001)

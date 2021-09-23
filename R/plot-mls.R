@@ -33,6 +33,7 @@ plot_mls <- function(object,
         geom_step(aes(x = Year, y = value, color = Sex), linetype = 1, size = 1.5) +
         xlab(xlab) +
         ylab(ylab) +
+        scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
         theme_lsd()
     if (data$n_area > 1) {
       p <- p + facet_wrap(Season~Region)

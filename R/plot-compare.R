@@ -1560,26 +1560,20 @@ plot_compare_movement <- function(object_list , object_names , figure_dir  = "co
   MOV <- data.frame(do.call(rbind, mov_list)) %>%
     group_by(Iteration, Year, Model) %>%
     mutate(Model = factor(Model))
-# data$move_yrs
-  # mov_list_est <- lapply(1:length(object_list), function(x) {
-  #   n_iter <- nrow(mcmc_list[[x]][[1]])
-  #   mov_est <- mcmc_list[[x]]$par_move_i
-  #   dimnames(mov_est) <- list("Iteration" = 1:n_iter, "Year" = years_list[[x]][c(length(years_list[[x]])-length(mcmc_list[[x]]$par_move_i)+1): c(length(years_list[[x]]))])
-  #   mov_est2 <- melt(mov_est)
-  #   } )
-  # MOV_est <- data.frame(do.call(rbind, mov_list_est)) %>%
-  #   group_by(Iteration, Year) %>%
-  #   mutate(Model = factor(Model))
+
+  mov_list_yr <- lapply(1:length(object_list), function(x) data_list[[1]]$move_yrs)
 
   nmod <- length(unique(MOV$Model))
   years <- unique(unlist(years_list))
 
   p <- ggplot(data = MOV %>% filter(Year %in% years), aes(x = Year, y = value, colour = Model, fill = Model)) +
     stat_summary(fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
-    # stat_summary(fun.min = function(x) quantile(x, 0.25), fun.max = function(x) quantile(x, 0.75), geom = "ribbon", alpha=0.45, colour = NA) +
+    stat_summary(fun.min = function(x) quantile(x, 0.25), fun.max = function(x) quantile(x, 0.75), geom = "ribbon", alpha=0.45, colour = NA) +
     stat_summary(fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75) +
     scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
     xlab("Fishing year") + ylab("Movement (proportion)") +
+    geom_point(data = MOV %>% filter (Year %in% min(mov_list_yr[[1]]):max(mov_list_yr[[1]])),
+             mapping = aes(x = Year, y = value)) +
     # scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
     theme_lsd()
 

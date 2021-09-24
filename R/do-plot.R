@@ -151,7 +151,7 @@ do_plot <- function(object, map = FALSE, mcmc = FALSE, figure_dir = "figure/") {
     }
     #plot_offset_cpue(object, figure_dir = figure_dir)
     #plot_offset_cpue_lm(object, figure_dir = figure_dir)
-    plot_aw_cpue_lm(object, figure_dir = figure_dir)
+    # plot_aw_cpue_lm(object, figure_dir = figure_dir)
     #plot_surplus_production(object, figure_dir = figure_dir)
     #plot_retro(object, figure_dir = figure_dir)
 

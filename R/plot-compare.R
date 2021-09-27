@@ -1390,6 +1390,8 @@ plot_compare_cpue <- function(object_list,
   ocr_yrs <- ocpue %>% right_join(dfilter) %>% mutate(Region = paste0("Region ", Region))
   pcr_yrs <- pcpue %>% right_join(dfilter) %>% mutate(Region = paste0("Region ", Region))
 
+  ocr_yrs$Model <- factor(ocr_yrs$Model, levels = object_names)
+  pcr_yrs$Model <- factor(pcr_yrs$Model, levels = object_names)
   p <- ggplot(data = ocr_yrs) +
     geom_point(aes(x = Year, y = CPUE, color = Model), alpha = 0.75) +
     geom_linerange(aes(x = Year, ymin = exp(log(CPUE) - SD), ymax = exp(log(CPUE) + SD), color = Model), alpha = 0.75) +

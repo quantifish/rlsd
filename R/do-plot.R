@@ -146,11 +146,13 @@ do_plot <- function(object, map = FALSE, mcmc = FALSE, figure_dir = "figure/") {
     plot_selectivity(object, figure_dir = figure_dir)
     plot_initial_numbers(object, figure_dir = figure_dir)
     plot_numbers(object, figure_dir = figure_dir)
-
+    if (object@data$move_on > 0) {
+    plot_movement (object, figure_dir = figure_dir)
+    }
     #plot_offset_cpue(object, figure_dir = figure_dir)
     #plot_offset_cpue_lm(object, figure_dir = figure_dir)
-    plot_aw_cpue_lm(object, figure_dir = figure_dir)
+    # plot_aw_cpue_lm(object, figure_dir = figure_dir)
     #plot_surplus_production(object, figure_dir = figure_dir)
     #plot_retro(object, figure_dir = figure_dir)
-    plot_movement (object, figure_dir = figure_dir)
+
 }

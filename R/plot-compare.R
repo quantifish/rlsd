@@ -277,7 +277,7 @@ plot_compare_ssb <- function(object_list,
       scale_y_continuous(expand = expansion(mult = c(0, 0.05)), limits = c(0, NA)) +
       theme_lsd(base_size = 14) +
       theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-      facet_wrap(~ Region) +
+      facet_wrap(~ Region, scales ="free_y") +
       geom_label(data = labs2, mapping = aes(x = Year, y = value, label = type), nudge_x = -5) +
       coord_cartesian(clip = "off")
 
@@ -346,7 +346,7 @@ plot_compare_ssb <- function(object_list,
       scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
       scale_y_continuous(expand = expansion(mult = c(0, 0.05)), limits = c(0, NA)) +
       theme_lsd(base_size = 14) +
-      facet_wrap(~Region) +
+      facet_wrap(~Region, scales = "free_y") +
       theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
       geom_label(data = labs2, mapping = aes(x = Year, y = value, label = type), nudge_x = -5) +
       coord_cartesian(clip = "off")
@@ -812,7 +812,7 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
       scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
       theme_lsd(base_size = 14) +
       theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-      facet_wrap(~Region)
+      facet_wrap(~Region, scales = "free_y")
 
     if (nmod > 5) {
       q <- q +
@@ -884,7 +884,7 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
         scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
         theme_lsd(base_size = 14) +
         theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-        facet_wrap(~Region)
+        facet_wrap(~Region, scales = "free_y")
 
       if (nmod > 5) {
         q <- q +
@@ -945,7 +945,7 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
       # scale_colour_manual(values = cols_all, labels = object_names) +
       # guides(colour = guide_legend(override.aes = list(colour = cols_all, linetype = lty_all))) +
       # scale_linetype(guide=FALSE) +
-      scale_y_continuous(expand = expansion(mult = c(0, 0.05)), limits = c(0, NA)) +
+      #scale_y_continuous(expand = expansion(mult = c(0, 0.05)), limits = c(0, NA)) +
       xlab("Fishing year") + ylab("Relative adjusted vulnerable biomass (tonnes)") +
       scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
       scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
@@ -1006,13 +1006,13 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
         stat_summary(data = vb %>% filter(Year %in% years), fun = function(x) quantile(x, 0.5), geom = "point", size = 1.5, alpha = 0.75) +
         geom_hline(data = Bref %>% filter(Region == 1), aes(yintercept = value), lwd = 1.2) +
         geom_label(data = Bref %>% filter(Region == 1), label = "Reference", aes(x = min(vb$Year) + 10, y = value), size = 5, color = "black", fill = "white") +
-        scale_y_continuous(expand = expansion(mult = c(0, 0.05)), limits = c(0, NA)) +
+        #scale_y_continuous(expand = expansion(mult = c(0, 0.05)), limits = c(0, NA)) +
         xlab("Fishing year") + ylab("Adjusted vulnerable biomass (tonnes)") +
         scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
         scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
         theme_lsd(base_size = 14) +
         theme(axis.text.x = element_text(angle = 45,hjust = 1)) +
-        facet_wrap(~Region)
+        facet_wrap(~Region, scales = "free_y")
 
       if (nmod > 5) {
         q <- q +
@@ -1069,7 +1069,7 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
       scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
       theme_lsd(base_size = 14) +
       theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-      facet_wrap(~Region)
+      facet_wrap(~Region, scales ="free_y")
 
     if (nmod > 5) {
       q <- q +
@@ -1136,11 +1136,14 @@ plot_compare_recruitment <- function(object_list, object_names, figure_dir = "co
     summarise(value = sum(.data$value) / 1e6) %>%
     mutate(Model = factor(.data$Model), qconstant = factor(.data$qconstant))
 
-  mods <- unique(recruits$Model)
-  mod_num <- sapply(1:length(mods), function(m) as.numeric(strsplit(as.character(mods[m]),"_")[[1]][1]))
-  nmod <- length(unique(recruits$Model))
   years <- unique(unlist(years_list))
-  recruits$Model <- factor(recruits$Model, levels = unique(mods)[order(mod_num)])
+
+  nmod <- length(unique(recruits$Model))
+  mods <- unique(recruits$Model)
+  mod_num <- sapply(1:length(mods), function(m) as.numeric(strsplit(as.character(mods[m]), "_")[[1]][1]))
+  recruits$Model <- factor(recruits$Model, levels = object_names)
+
+
 
   # plot recruitment
   p <- ggplot(data = recruits %>% filter(.data$Year %in% years), aes(x = .data$Year, y = .data$value, color = .data$Model, fill = .data$Model)) +
@@ -1256,7 +1259,7 @@ plot_compare_selectivity <- function(object_list, object_names, figure_dir = "co
   nmod <- length(unique(sel$Model))
   mods <- unique(sel$Model)
   mod_num <- sapply(1:length(mods), function(m) as.numeric(strsplit(as.character(mods[m]), "_")[[1]][1]))
-  sel$Model <- factor(sel$Model, levels = unique(mods)[order(mod_num)])
+  sel$Model <- factor(sel$Model, levels = object_names)
 
   # if multiple seasons, regardless of year
   if (length(unique(sel$Season)) > 1) {
@@ -1387,6 +1390,8 @@ plot_compare_cpue <- function(object_list,
   ocr_yrs <- ocpue %>% right_join(dfilter) %>% mutate(Region = paste0("Region ", Region))
   pcr_yrs <- pcpue %>% right_join(dfilter) %>% mutate(Region = paste0("Region ", Region))
 
+  ocr_yrs$Model <- factor(ocr_yrs$Model, levels = object_names)
+  pcr_yrs$Model <- factor(pcr_yrs$Model, levels = object_names)
   p <- ggplot(data = ocr_yrs) +
     geom_point(aes(x = Year, y = CPUE, color = Model), alpha = 0.75) +
     geom_linerange(aes(x = Year, ymin = exp(log(CPUE) - SD), ymax = exp(log(CPUE) + SD), color = Model), alpha = 0.75) +
@@ -1560,26 +1565,20 @@ plot_compare_movement <- function(object_list , object_names , figure_dir  = "co
   MOV <- data.frame(do.call(rbind, mov_list)) %>%
     group_by(Iteration, Year, Model) %>%
     mutate(Model = factor(Model))
-# data$move_yrs
-  # mov_list_est <- lapply(1:length(object_list), function(x) {
-  #   n_iter <- nrow(mcmc_list[[x]][[1]])
-  #   mov_est <- mcmc_list[[x]]$par_move_i
-  #   dimnames(mov_est) <- list("Iteration" = 1:n_iter, "Year" = years_list[[x]][c(length(years_list[[x]])-length(mcmc_list[[x]]$par_move_i)+1): c(length(years_list[[x]]))])
-  #   mov_est2 <- melt(mov_est)
-  #   } )
-  # MOV_est <- data.frame(do.call(rbind, mov_list_est)) %>%
-  #   group_by(Iteration, Year) %>%
-  #   mutate(Model = factor(Model))
+
+  mov_list_yr <- lapply(1:length(object_list), function(x) data_list[[1]]$move_yrs)
 
   nmod <- length(unique(MOV$Model))
   years <- unique(unlist(years_list))
 
   p <- ggplot(data = MOV %>% filter(Year %in% years), aes(x = Year, y = value, colour = Model, fill = Model)) +
     stat_summary(fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
-    # stat_summary(fun.min = function(x) quantile(x, 0.25), fun.max = function(x) quantile(x, 0.75), geom = "ribbon", alpha=0.45, colour = NA) +
+    stat_summary(fun.min = function(x) quantile(x, 0.25), fun.max = function(x) quantile(x, 0.75), geom = "ribbon", alpha=0.45, colour = NA) +
     stat_summary(fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75) +
     scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
     xlab("Fishing year") + ylab("Movement (proportion)") +
+    geom_point(data = MOV %>% filter (Year %in% min(mov_list_yr[[1]]):max(mov_list_yr[[1]])),
+             mapping = aes(x = Year, y = value)) +
     # scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
     theme_lsd()
 

@@ -84,7 +84,7 @@ plot_maturation <- function(object,
         stat_summary(fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
         stat_summary(fun.ymin = function(x) quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
         stat_summary(fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1) +
-        expand_limits(y = c(0, 1)) +
+        scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
         xlab(xlab) +
         ylab(ylab) +
         theme_lsd()

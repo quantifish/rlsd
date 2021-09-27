@@ -22,12 +22,12 @@ plot_movement <- function(object,
   data <- object@data
   map <- object@map
   mcmc <- object@mcmc
-  
+
   regions <- 1:data$n_area
   n_rules <- data$n_rules
-  
+
   data$move_yrs
-  
+
   if (length(mcmc) > 0) {
     n_iter <- nrow(mcmc[[1]])
     mov <- mcmc$movement_iy
@@ -35,13 +35,13 @@ plot_movement <- function(object,
                           Year = data$first_yr:data$last_proj_yr)
     mov <- melt(mov, value.name = "Mov") %>%
       filter(Year %in% data$first_yr:data$last_yr)
-    
-    mov_est <- mov %>% filter(Year >= min(data$move_yrs) | Year >= max(data$move_yrs))
-                        
+
+    mov_est <- mov %>% filter (Year %in% min(data$move_yrs):max(data$move_yrs))
+
     p <- ggplot(mov, aes(x = Year, y = Mov)) +
       geom_path() +
-      geom_point(data = mov_est, 
-                 mapping = aes(x = Year, y = Mov)) + 
+      geom_point(data = mov_est,
+                 mapping = aes(x = Year, y = Mov)) +
       labs(x = xlab) +
       labs(y = ylab) +
       theme_lsd() +

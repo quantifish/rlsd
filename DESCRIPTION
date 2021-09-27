@@ -27,7 +27,7 @@ Suggests:
     testthat,
     bayesplot
 License: MIT + file LICENSE
-RoxygenNote: 7.1.1
+RoxygenNote: 7.1.2
 Collate:
     'TACC.R'
     'create-rules.R'
@@ -52,6 +52,7 @@ Collate:
     'plot-length-frequency.R'
     'plot-maturation.R'
     'plot-mls.R'
+    'plot-movement.R'
     'plot-mp-rules.R'
     'plot-numbers.R'
     'plot-pars.R'

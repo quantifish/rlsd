@@ -6,7 +6,7 @@
 \usage{
 plot_F(
   object,
-  scales = "free_y",
+  scales = "free",
   xlab = "Fishing year",
   ylab = "Fishing mortality (F)",
   figure_dir = "figure/",

@@ -6,7 +6,7 @@
 \usage{
 plot_total_biomass(
   object,
-  scales = "free_x",
+  scales = "free",
   show_proj = TRUE,
   show_map = TRUE,
   show_mcmc = TRUE,

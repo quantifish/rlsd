@@ -394,7 +394,7 @@ plot_lfs_resid <- function(object, figure_dir = "figure/", ylim = c(-5, 5))
         	geom_violin(aes(x = factor(Size), y = value, fill=Source, colour=Source, alpha=WtSz), scale="width") +
         	xlab("Size (mm)") + ylab("Standardised residuals") +
             geom_hline(yintercept = 0, alpha = 0.8) +
-        	theme_lsd() + theme(axis.text.x = element_text(angle = 90, vjust = 1, hjust=1)) +
+        	theme_lsd() + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
             scale_alpha(guide = "none") +
             coord_cartesian(ylim = ylim)
         if(length(regions)>1){
@@ -408,7 +408,7 @@ plot_lfs_resid <- function(object, figure_dir = "figure/", ylim = c(-5, 5))
             geom_violin(aes(x = factor(Size), y = value, fill=Season, colour=Season, alpha=WtSz), scale="width") +
             xlab("Size (mm)") + ylab("Standardised residuals") +
             geom_hline(yintercept = 0, alpha = 0.8) +
-            theme_lsd() + theme(axis.text.x = element_text(angle = 90, vjust = 1, hjust=1)) +
+            theme_lsd() + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
             scale_alpha(guide = "none") +
             coord_cartesian(ylim = ylim)
         if(length(regions)>1){
@@ -437,7 +437,7 @@ plot_lfs_resid <- function(object, figure_dir = "figure/", ylim = c(-5, 5))
         	geom_violin(aes(x = factor(Size), y = value, alpha = WtSz), fill="tomato", colour = "tomato", scale="width") +
         	xlab("Size (mm)") + ylab("Standardised residuals") +
             geom_hline(yintercept = 0, alpha = 0.8) +
-        	theme_lsd() + theme(axis.text.x = element_text(angle = 90, vjust = 1, hjust=1)) +
+        	theme_lsd() + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
             scale_alpha(guide = "none") +
             coord_cartesian(ylim = ylim)
         if(length(regions)>1){

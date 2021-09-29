@@ -111,7 +111,7 @@ plot_sex_ratio <- function(object, scales = "free",
     if (data$n_area == 1) {
         p <- p + facet_grid(Sex ~ Season, scales = "free_x")
     } else {
-        p <- p + facet_grid(Sex ~ Season + Region, scales = "free_x")
+        p <- p + facet_grid(Sex ~ Region + Season, scales = "free_x")
     }
 
     ggsave(paste0(figure_dir, "sex_ratio_resid.png"), p, height = 9, width = 9)
@@ -145,7 +145,7 @@ plot_sex_ratio <- function(object, scales = "free",
     if (data$n_area == 1) {
         p <- p + facet_grid(Sex ~ Season, scales = "free_x")
     } else {
-        p <- p + facet_grid(Sex ~ Season + Region, scales = "free_x")
+        p <- p + facet_grid(Sex ~ Region + Season, scales = "free_x")
     }
 
     ggsave(paste0(figure_dir, "sex_ratio.png"), p)

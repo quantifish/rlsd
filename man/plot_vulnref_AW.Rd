@@ -6,7 +6,7 @@
 \usage{
 plot_vulnref_AW(
   object,
-  scales = "free_x",
+  scales = "free",
   show_map = TRUE,
   show_mcmc = TRUE,
   show_proj = FALSE,

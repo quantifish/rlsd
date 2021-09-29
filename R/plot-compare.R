@@ -1136,11 +1136,14 @@ plot_compare_recruitment <- function(object_list, object_names, figure_dir = "co
     summarise(value = sum(.data$value) / 1e6) %>%
     mutate(Model = factor(.data$Model), qconstant = factor(.data$qconstant))
 
-  mods <- unique(recruits$Model)
-  mod_num <- sapply(1:length(mods), function(m) as.numeric(strsplit(as.character(mods[m]),"_")[[1]][1]))
-  nmod <- length(unique(recruits$Model))
   years <- unique(unlist(years_list))
-  recruits$Model <- factor(recruits$Model, levels = unique(mods)[order(mod_num)])
+
+  nmod <- length(unique(recruits$Model))
+  mods <- unique(recruits$Model)
+  mod_num <- sapply(1:length(mods), function(m) as.numeric(strsplit(as.character(mods[m]), "_")[[1]][1]))
+  recruits$Model <- factor(recruits$Model, levels = object_names)
+
+
 
   # plot recruitment
   p <- ggplot(data = recruits %>% filter(.data$Year %in% years), aes(x = .data$Year, y = .data$value, color = .data$Model, fill = .data$Model)) +
@@ -1256,7 +1259,7 @@ plot_compare_selectivity <- function(object_list, object_names, figure_dir = "co
   nmod <- length(unique(sel$Model))
   mods <- unique(sel$Model)
   mod_num <- sapply(1:length(mods), function(m) as.numeric(strsplit(as.character(mods[m]), "_")[[1]][1]))
-  sel$Model <- factor(sel$Model, levels = unique(mods)[order(mod_num)])
+  sel$Model <- factor(sel$Model, levels = object_names)
 
   # if multiple seasons, regardless of year
   if (length(unique(sel$Season)) > 1) {
@@ -1387,6 +1390,8 @@ plot_compare_cpue <- function(object_list,
   ocr_yrs <- ocpue %>% right_join(dfilter) %>% mutate(Region = paste0("Region ", Region))
   pcr_yrs <- pcpue %>% right_join(dfilter) %>% mutate(Region = paste0("Region ", Region))
 
+  ocr_yrs$Model <- factor(ocr_yrs$Model, levels = object_names)
+  pcr_yrs$Model <- factor(pcr_yrs$Model, levels = object_names)
   p <- ggplot(data = ocr_yrs) +
     geom_point(aes(x = Year, y = CPUE, color = Model), alpha = 0.75) +
     geom_linerange(aes(x = Year, ymin = exp(log(CPUE) - SD), ymax = exp(log(CPUE) + SD), color = Model), alpha = 0.75) +

@@ -22,6 +22,8 @@ plot_movement(
 
 \item{xlab}{the x axis label}
 
+\item{ylab}{the y axis label}
+
 \item{figure_dir}{the directory to save to}
 }
 \description{

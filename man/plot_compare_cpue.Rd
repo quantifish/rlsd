@@ -15,6 +15,10 @@ plot_compare_cpue(
 )
 }
 \arguments{
+\item{object_list}{list of 'lsd.rds' files from multiple models}
+
+\item{object_names}{vector of model names associated with each of the output files in object_list}
+
 \item{scales}{free or fixed}
 
 \item{xlab}{the x axis label}

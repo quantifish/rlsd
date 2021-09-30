@@ -22,8 +22,6 @@ plot_catch(
 \item{xlab}{the x axis label}
 
 \item{ylab}{the y axis label}
-
-\item{figure_dir}{the directory to save to}
 }
 \description{
 Plot the catch data and fit to the data.

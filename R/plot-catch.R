@@ -6,7 +6,7 @@
 #' @param xlab the x axis label
 #' @param ylab the y axis label
 #' @param figure_dir the directory to save to
-#' @param save_plot save the plot to file 
+#' @param save_plot save the plot to file
 #' @import dplyr
 #' @import ggplot2
 #' @importFrom reshape2 melt
@@ -30,26 +30,26 @@ plot_catch_rule <- function(object,
 
   #psl <- mcmc$pred_catch_sl_jryt
   psl <- mcmc$proj_catch_commercial_jryt
-  dimnames(psl) <- list("Iteration" = 1:n_iter, 
-                        "Rule" = rules, 
-                        "Region" = regions, 
-                        "Year" = pyears, 
+  dimnames(psl) <- list("Iteration" = 1:n_iter,
+                        "Rule" = rules,
+                        "Region" = regions,
+                        "Year" = pyears,
                         "Season" = seasons)
   psl <- melt(psl, value.name = "Catch") %>%
     mutate(Rule = factor(.data$Rule))
 
-  psl %>% filter(Year > data$last_yr) %>% 
-    group_by(Iteration, Rule, Year) %>% 
+  psl %>% filter(Year > data$last_yr) %>%
+    group_by(Iteration, Rule, Year) %>%
     summarise(Catch = sum(Catch)) %>%
     filter(Iteration == 4) %>%
     arrange(Rule) %>%
     data.frame()
 
   df <- psl %>%
-    group_by(Iteration, Rule, Year) %>% 
+    group_by(Iteration, Rule, Year) %>%
     summarise(Catch = sum(Catch))
 
-  p2 <- ggplot(data = df, aes(x = .data$Year, y = .data$Catch, colour = .data$Rule, fill = .data$Rule)) + 
+  p2 <- ggplot(data = df, aes(x = .data$Year, y = .data$Catch, colour = .data$Rule, fill = .data$Rule)) +
     geom_vline(aes(xintercept = data$last_yr + 0.5), linetype = "dashed") +
     stat_summary(fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.5, colour = NA) +
     stat_summary(fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1) +
@@ -62,7 +62,7 @@ plot_catch_rule <- function(object,
   if (save_plot) {
     ggsave(paste0(figure_dir, "catch_rule.png"), p2)
   } else {
-    return(p2)    
+    return(p2)
   }
 }
 
@@ -76,7 +76,6 @@ plot_catch_rule <- function(object,
 #' @param scales free or fixed
 #' @param xlab the x axis label
 #' @param ylab the y axis label
-#' @param figure_dir the directory to save to
 #' @import dplyr
 #' @import ggplot2
 #' @import ggrepel
@@ -88,8 +87,7 @@ plot_catch <- function(object,
                        show_proj = FALSE,
                        scales = "free",
                        xlab = "Fishing year",
-                       ylab = "Catch (tonnes)") #,
-  #figure_dir = "figure/")
+                       ylab = "Catch (tonnes)")
 {
   data <- object@data
   mcmc <- object@mcmc
@@ -111,9 +109,8 @@ plot_catch <- function(object,
     group_by(Iteration, Region, Year) %>%
     summarise(Catch = sum(Catch))
 
-  #dcatch <- data.frame(Year = c(1994, 1996, 2011), Catch = c(95, 149, 42))
+  # dcatch <- data.frame(Year = c(1994, 1996, 2011), Catch = c(95, 149, 42))
   # dcatch <- data.frame(Year = c(1994, 1996, 2011), Catch = c(142000, 223000, 60100))
-
   # p <- ggplot(d, aes(x = Year, y = Catch)) +
   #     stat_summary(fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
   #     stat_summary(fun.ymin = function(x) quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
@@ -156,7 +153,7 @@ plot_catch <- function(object,
   dimnames(ph) <- list("Iteration" = 1:n_iter, "Region" = regions, "Year" = pyears, "Season" = seasons)
   ph <- melt(ph, value.name = "Catch") %>%
     mutate(Type = "Handling mortality", Data = "Expected")
-  phlist <- lapply(rules, function(x){
+  phlist <- lapply(rules, function(x) {
     out <- ph %>% mutate(Rule = x)
     return(out)
   })
@@ -197,7 +194,6 @@ plot_catch <- function(object,
 
   p1 <- p1 +
     stat_summary(fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
-    # stat_summary(fun.ymin = function(x) quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
     stat_summary(fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1) +
     geom_point(data = dcatch1, color = "red") +
     geom_point(data = filter(pcatch1, Year > data$last_yr, Type != "Handling mortality"), color = "blue") +
@@ -212,8 +208,6 @@ plot_catch <- function(object,
   } else {
     p1 <- p1 + facet_grid(Type ~ Season, scales = "free")
   }
-  #ggsave(paste0(figure_dir, "catch.png"), p1, width = 8, height = 10)
-
 
   # Plot of catch summed over seasons and drop handling mortality
   dcatch_sum <- dcatch %>%
@@ -235,7 +229,6 @@ plot_catch <- function(object,
 
   p2 <- p2 +
     stat_summary(fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
-    # stat_summary(fun.ymin = function(x) quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
     stat_summary(fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1) +
     geom_point(data = dcatch_sum, aes(x = Year, y = Catch), color = "red") +
     geom_point(data = filter(pcatch_sum1, Year > data$last_yr, Type != "Handling mortality"), color = "blue") +
@@ -250,23 +243,19 @@ plot_catch <- function(object,
   } else {
     p2 <- p2 + facet_grid(Type ~ ., scales = scales)
   }
-  #ggsave(paste0(figure_dir, "catch_sums.png"), p)
-
 
   # Catch residuals
   rsl <- mcmc$resid_catch_sl_jryt
-  dimnames(rsl) <- list("Iteration" = 1:n_iter, "Rule" = rules, "Region" = regions,
-                        "Year" = pyears, "Season" = seasons)
+  dimnames(rsl) <- list("Iteration" = 1:n_iter, "Rule" = rules, "Region" = regions, "Year" = pyears, "Season" = seasons)
   rsl <- melt(rsl, value.name = "Catch") %>%
     mutate(Type = "SL", Data = "Residual")
   rnsl <- mcmc$resid_catch_nsl_jryt
-  dimnames(rnsl) <- list("Iteration" = 1:n_iter, "Rule" = rules, "Region" = regions,
-                         "Year" = pyears, "Season" = seasons)
+  dimnames(rnsl) <- list("Iteration" = 1:n_iter, "Rule" = rules, "Region" = regions, "Year" = pyears, "Season" = seasons)
   rnsl <- melt(rnsl, value.name = "Catch") %>%
     mutate(Type = "NSL", Data = "Residual")
 
   rcatch <- rbind(rsl, rnsl)
-  rcatch$Type <- factor(rcatch$Type, levels = c("SL","NSL"))
+  rcatch$Type <- factor(rcatch$Type, levels = c("SL", "NSL"))
 
   p3 <- ggplot(data = rcatch, aes(x = Year, y = Catch)) +
     stat_summary(fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
@@ -278,9 +267,8 @@ plot_catch <- function(object,
     theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
   p3 <- p3 + facet_grid(Region + Type ~ Season, scales = "free")
-  #ggsave(paste0(figure_dir, "catch_resid.png"), p)
 
-  ## catch area
+  # Catch area
   msy <- mcmc$MSY_r
   dimnames(msy) <- list(Iteration = 1:n_iter, "Region" = regions2)
   msy <- melt(msy) %>% rename("MSY" = value) %>% mutate(Region = factor(Region))
@@ -302,15 +290,14 @@ plot_catch <- function(object,
   # add msy
   p4 <- p4 +
     stat_summary(aes(x = Year, y = MSY), fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.125, colour = "black", fill = "black" ) +
-    # stat_summary(aes(x = Year, y = MSY), fun.ymin = function(x) quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.25, colour = NA) +
     stat_summary(aes(x = Year, y = MSY), fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1) +
-    ggrepel::geom_label_repel(data = dcatch2, aes(x = Year, y = MSY, label = Label), fill = "black", size = 5, color = 'white', force = 10, segment.color = '#bbbbbb', min.segment.length = unit(0, "lines"))
+    geom_label_repel(data = dcatch2, aes(x = Year, y = MSY, label = Label), fill = "black", size = 5, color = 'white', force = 10, segment.color = '#bbbbbb', min.segment.length = unit(0, "lines"))
 
   p4 <- p4 + facet_grid(Region ~ ., scales = "free")
 
-  #ggsave(paste0(figure_dir, "catch_type.png"), p, width = 10)
   return(list(p1, p2, p3, p4))
 }
+
 
 plot_catch_save <- function(figure_dir = "figure/") {
   p <- plot_catch(object, show_proj = FALSE)
@@ -323,4 +310,3 @@ plot_catch_save <- function(figure_dir = "figure/") {
   ggsave(paste0(figure_dir, "catch_v2.png"), p[[1]], width = 10, height = 8)
   ggsave(paste0(figure_dir, "catch_sums_v2.png"), p[[2]])
 }
-

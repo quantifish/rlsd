@@ -10,6 +10,7 @@
 #' @importFrom reshape2 melt
 #' @importFrom grDevices hcl
 #' @importFrom stats quantile
+#' @importFrom forcats fct_rev
 #' @export
 #'
 plot_lfs <- function(object,
@@ -22,12 +23,11 @@ plot_lfs <- function(object,
     mcmc <- object@mcmc
 
     n_iter <- nrow(mcmc[[1]])
-    years <- data$first_yr:data$last_yr
-    sex <- c("Male","Immature female","Mature female")
-    seasons <- c("AW","SS")
+    sex <- c("Male", "Immature female", "Mature female")
+    seasons <- c("AW", "SS")
     bins <- data$size_midpoint_l
     regions <- 1:data$n_area
-    sources <- c("LB","CS")
+    sources <- c("LB", "CS")
 
     w <- data.frame(LF = 1:data$n_lf,
                     Year = data$data_lf_year_i, Season = data$data_lf_season_i,
@@ -122,7 +122,7 @@ plot_lfs <- function(object,
             geom_point(aes(x = Year, y = Size, size = value, colour = Source), alpha = 0.7) +
             guides(size = guide_legend(title = "Proportion")) +
             theme_lsd()
-    if(data$n_area == 1) {
+    if (data$n_area == 1) {
         p <- p + facet_grid(Sex ~ Source, scales = "fixed")
     } else{
         p <- p + facet_grid(Sex ~ Region + Source, scales = "fixed")
@@ -132,11 +132,10 @@ plot_lfs <- function(object,
   # observed by sex, year, source and area
     dlfw <- right_join(dlf, elf2, by = c("LF","Sex","Year","Source","Region","Season","lower","upper"))
 
-    for(i in 1:data$n_area){
-
+    for (i in 1:data$n_area) {
       p <- ggplot(data = filter(dlfw, Region %in% i, Size >= lower & Size <= upper),
-                  aes(x =Size, y = forcats::fct_rev(paste(Year, Season)), height = value, fill=Source, alpha = rawW)) +
-        ggridges::geom_density_ridges(stat = "identity", scale =3.5) +
+                  aes(x = Size, y = fct_rev(paste(Year, Season)), height = value, fill = Source, alpha = rawW)) +
+        ggridges::geom_density_ridges(stat = "identity", scale = 3.5) +
         xlab(xlab) + ylab(ylab) +
         guides(shape = FALSE, colour = FALSE) +
 
@@ -144,13 +143,12 @@ plot_lfs <- function(object,
         scale_x_continuous(minor_breaks = seq(0, 1e6, 2), limits = c(30, max(elf$upper)),
                            expand = c(0, 0)) +
         scale_y_discrete(expand = c(0, 0)) +
-        theme_lsd()+
+        theme_lsd() +
         theme(axis.text.x = element_text(angle = 45,hjust = 1)) +
-        labs(alpha="weight")
+        labs(alpha = "weight")
       p <- p + facet_grid(~ Sex, scales = "free")
       ggsave(paste0(figure_dir, "lf_obs_Region", i, ".png"), p, height = 10, width = 9)
     }
-    #
     for (i in 1:length(sq)) {
         pq <- sq[i]:(sq[i] + n_panel - 1)
         p <- ggplot() +

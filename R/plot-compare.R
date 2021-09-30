@@ -2,6 +2,9 @@
 #'
 #' @param object_list list of 'lsd.rds' files from multiple models
 #' @param object_names vector of model names associated with each of the output files in object_list
+#' @param yrs the years to compare
+#' @param xlab the x axis label
+#' @param ylab the y axis label
 #' @import dplyr
 #' @import ggplot2
 #' @importFrom reshape2 melt
@@ -200,8 +203,6 @@ plot_compare_ssb <- function(object_list,
 
   labs <- ssb0 %>%
     filter(Year == min(Year))  %>%
-    #group_by(Region, type, Model) %>%
-    #summarise(value = mean(value)) %>%
     group_by(type, Model) %>%
     summarise(value = sum(value)) %>%
     group_by(type) %>%
@@ -225,8 +226,6 @@ plot_compare_ssb <- function(object_list,
     stat_summary(data = ssb0 %>% filter(Year %in% years) %>% filter(type == "Hard limit") %>% group_by(Iteration, Year, Model) %>% summarise(value = sum(value)), fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model)) +
     stat_summary(data = ssb0 %>% filter(Year %in% years) %>% filter(type == "SSB0") %>% group_by(Iteration, Year, Model) %>% summarise(value = sum(value)), fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
     stat_summary(data = ssb0 %>% filter(Year %in% years) %>% filter(type == "SSB0") %>% group_by(Iteration, Year, Model) %>% summarise(value = sum(value)), fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model)) +
-    # stat_summary(data = filter(ssb0, type == "Target"), fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
-    # stat_summary(data = filter(ssb0, type == "Target"), fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model)) +
     stat_summary(data = ssb %>% filter(Year %in% years) %>% group_by(Iteration, Year, Model) %>% summarise(value = sum(value)), fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
     stat_summary(data = ssb %>% filter(Year %in% years) %>% group_by(Iteration, Year, Model) %>% summarise(value = sum(value)), fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model)) +
     stat_summary(data = ssb %>% filter(Year %in% years) %>% group_by(Iteration, Year, Model) %>% summarise(value = sum(value)), fun = function(x) quantile(x, 0.5), geom = "point", size = 1.5, alpha = 0.75, aes(color = Model)) +
@@ -267,8 +266,6 @@ plot_compare_ssb <- function(object_list,
       stat_summary(data = ssb0 %>% filter(Year %in% years) %>% filter(type == "Hard limit"), fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model)) +
       stat_summary(data = ssb0 %>% filter(Year %in% years) %>% filter(type == "SSB0"), fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
       stat_summary(data = ssb0 %>% filter(Year %in% years) %>% filter(type == "SSB0"), fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model)) +
-      #stat_summary(data = filter(ssb0, type == "Target"), fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
-      #stat_summary(data = filter(ssb0, type == "Target"), fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model)) +
       stat_summary(data = ssb %>% filter(Year %in% years) , fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
       stat_summary(data = ssb %>% filter(Year %in% years) , fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model)) +
       stat_summary(data = ssb %>% filter(Year %in% years) , fun = function(x) quantile(x, 0.5), geom = "point", lwd = 1.5, alpha = 0.75, aes(color = Model)) +
@@ -277,7 +274,7 @@ plot_compare_ssb <- function(object_list,
       scale_y_continuous(expand = expansion(mult = c(0, 0.05)), limits = c(0, NA)) +
       theme_lsd(base_size = 14) +
       theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-      facet_wrap(~ Region, scales ="free_y") +
+      facet_wrap(~ Region, scales = "free_y") +
       geom_label(data = labs2, mapping = aes(x = Year, y = value, label = type), nudge_x = -5) +
       coord_cartesian(clip = "off")
 
@@ -307,8 +304,6 @@ plot_compare_ssb <- function(object_list,
     stat_summary(data = ssb0 %>% filter(type == "Hard limit") %>% group_by(Iteration, Year, Model) %>% summarise(value = sum(value)), fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model)) +
     stat_summary(data = ssb0 %>% filter(type == "SSB0") %>% group_by(Iteration, Year, Model) %>% summarise(value = sum(value)), fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
     stat_summary(data = ssb0 %>% filter(type == "SSB0") %>% group_by(Iteration, Year, Model) %>% summarise(value = sum(value)), fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model)) +
-    # stat_summary(data = filter(ssb0, type == "Target"), fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
-    # stat_summary(data = filter(ssb0, type == "Target"), fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model)) +
     stat_summary(fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
     stat_summary(fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model, linetype = Model)) +
     stat_summary(fun = function(x) quantile(x, 0.5), geom = "point", size = 1.5, alpha = 0.75, aes(color = Model)) +
@@ -338,7 +333,6 @@ plot_compare_ssb <- function(object_list,
       stat_summary(data = ssb0 %>% filter(type == "Hard limit"), fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model)) +
       stat_summary(data = ssb0 %>% filter(type == "SSB0"), fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
       stat_summary(data = ssb0 %>% filter(type == "SSB0"), fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model)) +
-      # stat_summary(data = filter(ssb0, type == "Target"), fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
       stat_summary(data = ssb, fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
       stat_summary(data = ssb, fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model)) +
       stat_summary(data = ssb, fun = function(x) quantile(x, 0.5), geom = "point", size = 1.5, alpha = 0.75, aes(color = Model)) +
@@ -430,7 +424,7 @@ plot_compare_ssb <- function(object_list,
     q <- ggplot(relssb_next_r) +
       theme_lsd(base_size = 14) +
       theme(axis.text.x = element_blank()) +
-      scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
+      scale_y_continuous(limits = c(0, NA), expand = expansion(mult = c(0, 0.1))) +
       geom_hline(aes(yintercept = 0.2), col = "gray") +
       geom_hline(aes(yintercept = 0.1), col = "gray") +
       geom_text(data = labs_rel_r, aes(x = "base", y = value, label = type)) +
@@ -449,7 +443,7 @@ plot_compare_ssb <- function(object_list,
     }
 
     if (max(relssb_next$Iteration) == 1) {
-      q <- q + geom_point(aes(x = Model, y = RelSSB, fill = Model), cex=4, pch=21)
+      q <- q + geom_point(aes(x = Model, y = RelSSB, fill = Model), cex = 4, pch = 21)
       if (any(relssb_next_r$Model == "base")) q <- q + geom_hline(data = relssb_next %>% filter(Model == "base"), aes(yintercept = unique(RelSSB)), linetype = 2)
     } else {
       q <- q + geom_violin(aes(x = Model, y = RelSSB, fill = Model))
@@ -457,7 +451,7 @@ plot_compare_ssb <- function(object_list,
     }
 
     if (save_plot) {
-      ggsave(paste0(figure_dir, "relssb_nextyear_compare_byRegion.png"), q, width=10)
+      ggsave(paste0(figure_dir, "relssb_nextyear_compare_byRegion.png"), q, width = 10)
     }
   }
 
@@ -485,7 +479,7 @@ plot_compare_ssb <- function(object_list,
   }
   if (max(relssb_next_proj$Iteration) == 1) {
     p <- p + geom_point(aes(x = Model, y = RelSSB, fill = Model, alpha = Year), cex = 4, pch = 21)
-    if(any(relssb_next_proj$Model == "base")) p <- p + geom_hline(data = relssb_next_proj %>% filter(Model == "base") %>% filter(Year == max(years) + 1), aes(yintercept = unique(RelSSB)), linetype = 2)
+    if (any(relssb_next_proj$Model == "base")) p <- p + geom_hline(data = relssb_next_proj %>% filter(Model == "base") %>% filter(Year == max(years) + 1), aes(yintercept = unique(RelSSB)), linetype = 2)
 
   } else {
     p <- p + geom_violin(aes(x = Model, y = RelSSB, fill = Model, alpha = Year))
@@ -601,7 +595,6 @@ plot_compare_ssb <- function(object_list,
 
     q <- ggplot(relssb %>% filter(Year %in% years)) +
       theme_lsd(base_size = 14) +
-      #expand_limits(y = 0) +
       geom_hline(aes(yintercept = 0.2), col = "gray") +
       geom_hline(aes(yintercept = 0.1), col = "gray") +
       geom_text(data = labs_rel, aes(x = (min(Year) - 10), y = value, label = type)) +
@@ -1320,8 +1313,8 @@ plot_compare_selectivity <- function(object_list, object_names, figure_dir = "co
 #'
 #' Plot the CPUE data and fit to the data.
 #'
-#' @param object_list
-#' @param object_names
+#' @param object_list list of 'lsd.rds' files from multiple models
+#' @param object_names vector of model names associated with each of the output files in object_list
 #' @param scales free or fixed
 #' @param xlab the x axis label
 #' @param ylab the y axis label

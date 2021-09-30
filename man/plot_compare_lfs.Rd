@@ -16,6 +16,12 @@ plot_compare_lfs(
 \item{object_list}{list of 'lsd.rds' files from multiple models}
 
 \item{object_names}{vector of model names associated with each of the output files in object_list}
+
+\item{yrs}{the years to compare}
+
+\item{xlab}{the x axis label}
+
+\item{ylab}{the y axis label}
 }
 \description{
 Compare LFs from multiple models

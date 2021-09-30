@@ -8,7 +8,6 @@
 #' @param figure_dir the directory to save figures to
 #' @import dplyr
 #' @import ggplot2
-#' @import scales
 #' @export
 #'
 do_plot <- function(object, map = FALSE, mcmc = FALSE, figure_dir = "figure/") {
@@ -40,7 +39,7 @@ do_plot <- function(object, map = FALSE, mcmc = FALSE, figure_dir = "figure/") {
 
         posteriors_trace <- posteriors %>% filter(grepl('par', par) | grepl('lp', par))
 
-        sq<- seq(1, length(unique(posteriors_trace$par)), n_panel)
+        sq <- seq(1, length(unique(posteriors_trace$par)), n_panel)
 
         # MCMC trace plot
         print("plotting traces")
@@ -147,12 +146,11 @@ do_plot <- function(object, map = FALSE, mcmc = FALSE, figure_dir = "figure/") {
     plot_initial_numbers(object, figure_dir = figure_dir)
     plot_numbers(object, figure_dir = figure_dir)
     if (object@data$move_on > 0) {
-    plot_movement (object, figure_dir = figure_dir)
+        plot_movement(object, figure_dir = figure_dir)
     }
-    #plot_offset_cpue(object, figure_dir = figure_dir)
-    #plot_offset_cpue_lm(object, figure_dir = figure_dir)
+    # plot_offset_cpue(object, figure_dir = figure_dir)
+    # plot_offset_cpue_lm(object, figure_dir = figure_dir)
     # plot_aw_cpue_lm(object, figure_dir = figure_dir)
-    #plot_surplus_production(object, figure_dir = figure_dir)
-    #plot_retro(object, figure_dir = figure_dir)
-
+    # plot_surplus_production(object, figure_dir = figure_dir)
+    # plot_retro(object, figure_dir = figure_dir)
 }

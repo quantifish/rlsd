@@ -9,7 +9,6 @@
 #' @param figure_dir the directory to save to
 #' @import dplyr
 #' @import ggplot2
-#' @import scales
 #' @importFrom stats quantile
 #' @importFrom reshape2 melt
 #' @export
@@ -403,7 +402,7 @@ plot_cpue <- function(object,
     } else {
         p <- p + facet_wrap( ~ Season, scales = "free", ncol = data$n_area)
     }
-    ggsave(paste0(figure_dir, "cpue_resid_FSU.png"), p, height = 9, width=9)
+    ggsave(paste0(figure_dir, "cpue_resid_FSU.png"), p, height = 9, width = 9)
 
     ### CELR
     dfilter <- expand.grid("Year" = 1989:max(ocpue$Year), "Season" = c("AW","SS"))
@@ -429,7 +428,7 @@ plot_cpue <- function(object,
     } else {
         p <- p + facet_wrap( ~ Season, scales = "free", ncol = data$n_area)
     }
-    ggsave(paste0(figure_dir, "cpue_resid_CELR.png"), p, height = 9, width=9)
+    ggsave(paste0(figure_dir, "cpue_resid_CELR.png"), p, height = 9, width = 9)
 
 }
 

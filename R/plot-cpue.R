@@ -224,7 +224,7 @@ plot_cpue <- function(object,
         geom_point(aes(x = Year, y = CPUE), color = "red", alpha = 0.75) +
         geom_linerange(aes(x = Year, ymin = exp(log(CPUE) - SD), ymax = exp(log(CPUE) + SD)), color = "red", alpha = 0.75) +
         scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
-        scale_x_continuous(breaks= pretty_breaks()) +
+        scale_x_continuous(breaks= scales::pretty_breaks()) +
         xlab(xlab) + ylab(ylab) +
         theme_lsd()
     if (!is.null(pcpue)) {

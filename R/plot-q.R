@@ -41,7 +41,7 @@ plot_q <- function(object, figure_dir = "figure/")
         theme(legend.position = "none") +
         facet_wrap(~qtype, scales = "free") +
         scale_y_continuous(limits = c(0, NA), expand = expansion(mult = c(0, 0.1))) +
-        scale_x_continuous(breaks = pretty_breaks())
+        scale_x_continuous(breaks = scales::pretty_breaks())
 
     ggsave(paste0(figure_dir, "q_over_time.png"), p, width = 10)
 }

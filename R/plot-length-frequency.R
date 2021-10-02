@@ -133,8 +133,9 @@ plot_lfs <- function(object,
     dlfw <- right_join(dlf, elf2, by = c("LF","Sex","Year","Source","Region","Season","lower","upper"))
 
     for (i in 1:data$n_area) {
-      p <- ggplot(data = filter(dlfw, Region %in% i, Size >= lower & Size <= upper),
-                  aes(x = Size, y = fct_rev(paste(Year, Season)), height = value, fill = Source, alpha = rawW)) +
+      for (j in unique(dlfw$Season)) {
+      p <- ggplot(data = filter(dlfw, Region %in% i, Season == j, Size >= lower & Size <= upper),
+                  aes(x = Size, y = fct_rev(paste(Year)), height = value, fill = Source, alpha = rawW)) +
         ggridges::geom_density_ridges(stat = "identity", scale = 3.5) +
         xlab(xlab) + ylab(ylab) +
         guides(shape = FALSE, colour = FALSE) +
@@ -146,8 +147,11 @@ plot_lfs <- function(object,
         theme_lsd() +
         theme(axis.text.x = element_text(angle = 45,hjust = 1)) +
         labs(alpha = "weight")
-      p <- p + facet_grid(~ Sex, scales = "free")
-      ggsave(paste0(figure_dir, "lf_obs_Region", i, ".png"), p, height = 10, width = 9)
+      p <- p + facet_grid(~ Sex, scales = "free") +
+        ggtitle(paste("Region", i, "Season", j, sep="  ")) +
+        theme(plot.title = element_text(hjust = 0.5))
+      ggsave(paste0(figure_dir, "lf_obs_Region", i, j, ".png"), p, height = 10, width = 9)
+      }
     }
     for (i in 1:length(sq)) {
         pq <- sq[i]:(sq[i] + n_panel - 1)

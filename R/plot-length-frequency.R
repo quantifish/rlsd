@@ -147,6 +147,7 @@ plot_lfs <- function(object,
         theme(axis.text.x = element_text(angle = 45,hjust = 1)) +
         labs(alpha = "weight")
       p <- p + facet_grid(~ Sex, scales = "free") +
+        ggtitle(paste("Region", i, sep="  ")) +
             theme(plot.title = element_text(hjust = 0.5))
       ggsave(paste0(figure_dir, "lf_obs_Region", i, ".png"), p, height = 10, width = 9)
       }

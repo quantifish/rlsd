@@ -45,8 +45,8 @@ do_extract <- function(dir = ".", data = TRUE,
                     "n_SSBproj_l_20SSB0_jr", "n_SSBproj_l_10SSB0_jr", "n_SSBproj_l_20SSB0now_jr", "n_SSBproj_l_10SSB0now_jr")
 
     # Priors that we want to compare with posteriors
-    do_extract_priors <- c("prior_R0_r","prior_M_i", "prior_q_cpue_drift_i",
-                           "prior_mat_50_i","prior_mat_95_i",
+    do_extract_priors <- c("prior_R0_r", "prior_M_i", "prior_q_cpue_drift_i",
+                           "prior_mat_50_i", "prior_mat_95_i",
                            "prior_grow_alpha_i", "prior_grow_diff_i", "prior_grow_shape_i", "prior_grow_cv_i", "prior_grow_sd_i",
                            "prior_sel_1_i", "prior_sel_2_i", "prior_sel_3_i",
                            "prior_vuln_i", "prior_init_erate_i")
@@ -73,9 +73,10 @@ do_extract <- function(dir = ".", data = TRUE,
             # trim estimated pars
             i <- apply(as.matrix(do_extract), 1, FUN = function(x) {any(grepl(x, names(map)))})
             do_extract_map <- do_extract[i]
-            do_extract_map <- c(do_extract_map,
-                                "sdnr_cpue", "sdnr_tag", "sdnr_sexr", "sdnr_lfs", "sdnr_puerulus",
-                                "MAR_puerulus", "MAR_cpue", "MAR_tag", "MAR_sexr", "MAR_lfs", "Francis_lf_new_wt_r")
+            do_extract_map <- c("sdnr_cpue", "sdnr_tag", "sdnr_sexr", "sdnr_lfs", "sdnr_puerulus",
+                                "MAR_puerulus", "MAR_cpue", "MAR_tag", "MAR_sexr", "MAR_lfs",
+                                "Francis_lf_new_wt_r",
+                                do_extract_map)
 
             # write to txt file
             map_tmp <- rstan::extract(map, pars = do_extract_map, permuted = FALSE, inc_warmup = FALSE, include = TRUE)

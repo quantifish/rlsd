@@ -14,7 +14,7 @@
 #'
 plot_compare_lfs <- function(object_list,
                              object_names,
-                             yrs = 2015:2016,
+                             yrs = 2018:2019,
                              xlab = "Midpoint of size-class (mm)",
                              ylab = "Proportion at size (mm)")
 {
@@ -274,7 +274,7 @@ plot_compare_ssb <- function(object_list,
       scale_y_continuous(expand = expansion(mult = c(0, 0.05)), limits = c(0, NA)) +
       theme_lsd(base_size = 14) +
       theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-      facet_wrap(~ Region, scales = "free_y") +
+      facet_wrap(~ Region) +
       #geom_label(data = labs2, mapping = aes(x = Year, y = value, label = type), nudge_x = -5) +
       coord_cartesian(clip = "off")
 
@@ -340,7 +340,7 @@ plot_compare_ssb <- function(object_list,
       scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
       scale_y_continuous(expand = expansion(mult = c(0, 0.05)), limits = c(0, NA)) +
       theme_lsd(base_size = 14) +
-      facet_wrap(~Region, scales = "free_y") +
+      facet_wrap(~Region) +
       theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
       #geom_label(data = labs2, mapping = aes(x = Year, y = value, label = type), nudge_x = -5) +
       coord_cartesian(clip = "off")
@@ -805,7 +805,7 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
       scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
       theme_lsd(base_size = 14) +
       theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-      facet_wrap(~Region, scales = "free_y")
+      facet_wrap(~Region)
 
     if (nmod > 5) {
       q <- q +
@@ -877,7 +877,7 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
         scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
         theme_lsd(base_size = 14) +
         theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-        facet_wrap(~Region, scales = "free_y")
+        facet_wrap(~Region)
 
       if (nmod > 5) {
         q <- q +
@@ -1005,7 +1005,7 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
         scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
         theme_lsd(base_size = 14) +
         theme(axis.text.x = element_text(angle = 45,hjust = 1)) +
-        facet_wrap(~Region, scales = "free_y")
+        facet_wrap(~Region)
 
       if (nmod > 5) {
         q <- q +
@@ -1062,7 +1062,7 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
       scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
       theme_lsd(base_size = 14) +
       theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-      facet_wrap(~Region, scales ="free_y")
+      facet_wrap(~Region)
 
     if (nmod > 5) {
       q <- q +

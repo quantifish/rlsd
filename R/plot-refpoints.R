@@ -152,7 +152,7 @@ plot_refpoints <- function(object, object1, figure_dir){
   rec2 <- reshape2::melt(rec) %>%
     dplyr::rename(Recruitment = value)
   rec2$Region <- factor(rec2$Region)
-  
+
 if(any(grepl("B0now_r", names(mcmc1)))){
   relssb <- full_join(ssb2, ssb0now) %>%
     dplyr::full_join(SSB0) %>%
@@ -397,12 +397,45 @@ if(any(grepl("B0now_r", names(mcmc1)))){
   
   gc()
 
-  # rec <- mcmc$recruits_ry
-  # dimnames(rec) <- list("Iteration" = 1:n_iter, "Region" = regions, "Year" = pyears)
-  # rec2 <- reshape2::melt(rec) %>%
-  #   dplyr::rename(Recruitment = value)
-  # rec2$Region <- factor(rec2$Region)
-  # gc()
+  rec <- mcmc$recruits_ry
+  dimnames(rec) <- list("Iteration" = 1:n_iter, "Region" = regions, "Year" = pyears)
+  rec2 <- reshape2::melt(rec) %>%
+    dplyr::rename(Recruitment = value)
+  rec2$Region <- factor(rec2$Region)
+
+  rec3 <- rec2 %>%
+  group_by(Region, Year) %>%
+  summarise(P5 = quantile(Recruitment, 0.05),
+            P50 = quantile(Recruitment, 0.5),
+            P95 = quantile(Recruitment, 0.95))
+  
+  # rec4 <- rec2 %>%
+  # filter(Year %in% min(data$data_lf_year_i):(max(years)-2)) %>%
+  # group_by(Region) %>%
+  # summarise(AvgData = median(Recruitment))
+
+  # rec5 <- rec2 %>%
+  # filter(Year %in% (max(years)- 9 - 2):(max(years)-2)) %>%
+  # group_by(Region) %>%
+  # summarise(Avg10 = median(Recruitment))
+
+  # rec3 <- rec3 %>%
+  # left_join(rec4) %>%
+  # left_join(rec5)
+
+  p <- ggplot(rec3) +
+    geom_ribbon(aes(x = Year, ymin = P5, ymax = P95), alpha = 0.3) +
+    geom_line(aes(x = Year, y = P50)) +
+    geom_vline(aes(xintercept = min(data$data_lf_year_i)), lty = 2) +
+    geom_vline(aes(xintercept = projyears[1]), lty = 2) +
+    ylab("Recruitment") +
+    # geom_line(aes(x = Year, y = AvgData), color = "red") +
+    # geom_line(aes(x = Year, y = Avg10), color = "blue") +
+    facet_wrap(~Region) +
+    theme_lsd()
+  ggsave(file.path(figure_dir, "Recruitment_proj.png"), p, height = 8, width = 15)
+
+  gc()
   
   relssb <- inner_join(ssb2, ssb0now) %>%
     dplyr::left_join(SSB0) %>%
@@ -535,7 +568,7 @@ if(any(grepl("B0now_r", names(mcmc1)))){
     # constraints <- unique(constraints)
 
       gc()
-    
+
   #####################
   ## start summarising
   #####################
@@ -797,6 +830,8 @@ if(any(grepl("B0now_r", names(mcmc1)))){
     scale_fill_colorblind() +
     scale_color_colorblind() +
     guides(color = FALSE) +
+    expand_limits(y = 0) +
+    scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
     xlab("AW adjusted vulnerable biomass (B; tonnes)") + ylab("Density") +
     theme_bw(base_size = 20)
   if(length(regions) > 1){
@@ -1064,6 +1099,8 @@ if(any(grepl("B0now_r", names(mcmc1)))){
     geom_segment(aes(x = CPUE_Mean, xend = CPUE_Mean, y = Catch_P5, yend = Catch_P95, color = Constraint), lwd = 1.2, alpha = 0.25) +
     geom_point(aes(x = CPUE_Mean, y = Catch_Mean, fill = Constraint), pch = 21, cex = 4, alpha = 0.5) +
     expand_limits(y = 0, x = 0) +
+    scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
+    scale_x_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
     xlab("Offset-year CPUE") + ylab("Average annual catch (tonnes)") +
     scale_fill_colorblind() +
     scale_color_colorblind() +
@@ -1090,6 +1127,8 @@ if(any(grepl("B0now_r", names(mcmc1)))){
     geom_segment(aes(x = VB_Mean, xend = VB_Mean, y = CPUE_P5, yend = CPUE_P95, color = Constraint), lwd = 1.2, alpha = 0.25) +
     geom_point(aes(x = VB_Mean, y = CPUE_Mean, fill = Constraint), pch = 21, cex = 4, alpha = 0.5) +
     expand_limits(y = 0, x = 0) +
+    scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
+    scale_x_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
     ylab("Offset-year CPUE") + xlab("AW adjusted vulnerable biomass (B; tonnes)") +
     scale_fill_colorblind() +
     scale_color_colorblind() +
@@ -1114,6 +1153,8 @@ if(any(grepl("B0now_r", names(mcmc1)))){
     # geom_point(aes(x = CV, y = Catch_P50, fill = Constraint), pch = 21, cex = 4) +
     geom_point(aes(x = CV, y = Catch_Mean, fill = Constraint), pch = 21, cex = 4, alpha = 0.5) +
     expand_limits(y = 0, x = 0) +
+    scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
+    scale_x_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
     xlab("CV of catch over time and iteration") + ylab("Average annual catch (tonnes)") +
     scale_fill_colorblind() +
     scale_color_colorblind() +
@@ -1141,6 +1182,8 @@ if(any(grepl("B0now_r", names(mcmc1)))){
     geom_segment(aes(x = RelSSBdata_Mean, xend = RelSSBdata_Mean, y = Catch_P5, yend = Catch_P95, color = Constraint), lwd = 1.2, alpha = 0.25) +
     geom_point(aes(x = RelSSBdata_Mean, y = Catch_Mean, fill = Constraint), pch = 21, cex = 4, alpha = 0.5) +
     expand_limits(y = 0, x = 0) +
+    scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
+    scale_x_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
     xlab(expression("Relative spawning biomass (SSB/SSB"["0_data"]*")")) + ylab("Average annual catch (tonnes)") +
     scale_fill_colorblind() +
     scale_color_colorblind() +
@@ -1160,9 +1203,12 @@ if(any(grepl("B0now_r", names(mcmc1)))){
     geom_segment(aes(x = RelVB_Mean, xend = RelVB_Mean, y = Catch_P5, yend = Catch_P95, color = Constraint), lwd = 1.2, alpha = 0.25) +
     geom_point(aes(x = RelVB_Mean, y = Catch_Mean, fill = Constraint), pch = 21, cex = 3, alpha = 0.5) +
     expand_limits(y = 0, x = 0) +
+    scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
+    scale_x_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
     xlab(expression("Relative AW adjusted vulnerable biomass (B/B"[0]*")")) + ylab("Average annual catch (tonnes)") +
     scale_fill_colorblind() +
     scale_color_colorblind() +
+    expand_limits(y = 0) +
     theme_bw(base_size = 20)
   if(length(regions) > 1){
     p_relvb <- p_relvb + facet_grid(Region~RuleType) 
@@ -1215,6 +1261,8 @@ if(any(grepl("B0now_r", names(mcmc1)))){
     geom_segment(aes(x = RelTB_Mean, xend = RelTB_Mean, y = Catch_P5, yend = Catch_P95, color = Constraint), lwd = 1.2, alpha = 0.25) +
     geom_point(aes(x = RelTB_Mean, y = Catch_Mean, fill = Constraint), pch = 21, cex = 3, alpha = 0.5) +
     expand_limits(y = 0, x = 0) +
+    scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
+    scale_x_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
     xlab(expression("Relative total biomass (B"["tot"]*"/B"["tot_0"]*")")) + ylab("Average annual catch (tonnes)") +
     scale_fill_colorblind() +
     scale_color_colorblind() +
@@ -1353,6 +1401,7 @@ if(any(grepl("B0now_r", names(mcmc1)))){
     scale_color_manual(values = rev(c("goldenrod", "forestgreen","steelblue")))+
     guides(color = guide_legend(title="Reference level")) +
     expand_limits(y = 0) + 
+    scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
     theme_bw(base_size = 20)
   if(length(regions) > 1){
     pb <- pb + facet_wrap(Region~Variable, scales = "free_y", ncol = 3) 
@@ -1369,6 +1418,7 @@ if(any(grepl("B0now_r", names(mcmc1)))){
     scale_color_manual(values = rev(c("goldenrod", "forestgreen","steelblue")))+
     guides(color = guide_legend(title="Reference level")) +
     expand_limits(y = 0) + 
+    scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
     ylab("AW adjusted vulnerable biomass (B; tonnes)") +
     theme_bw(base_size = 20)
   if(length(regions) > 1){
@@ -1662,6 +1712,7 @@ if(any(grepl("B0now_r", names(mcmc1)))){
       scale_fill_tableau() +
       scale_color_tableau() +
       expand_limits(y = 0) +
+      scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
       ylab("Value") + xlab("Projection Year") +
       guides(color = FALSE, fill = FALSE) +
       theme_bw(base_size = 20)
@@ -1719,6 +1770,7 @@ if(any(grepl("B0now_r", names(mcmc1)))){
       scale_fill_tableau() +
       ylab("Value") + xlab("Projection Year") +
       expand_limits(y = 0) +
+      scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
       guides(color = FALSE, fill = FALSE) +
       theme_bw(base_size = 20)
     if(length(regions)>1){

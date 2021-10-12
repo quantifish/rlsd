@@ -56,6 +56,7 @@ Collate:
     'plot-mp-rules.R'
     'plot-numbers.R'
     'plot-pars.R'
+    'plot-projections.R'
     'plot-puerulus.R'
     'plot-q.R'
     'plot-recruitment.R'

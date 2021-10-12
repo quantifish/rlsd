@@ -1760,5 +1760,5 @@ plot_biomass <- function(object,
 
   # Plot projected biomass
   p <- plot_vulnref_AW_proj(object)
-  ggsave(paste0(figure_dir, "biomass_vulnref_proj.png"), p, width = 10)
+  ggsave(paste0(figure_dir, "biomass_vulnref_proj.png"), p, width = 12)
 }

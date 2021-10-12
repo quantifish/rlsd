@@ -25,22 +25,15 @@ plot_ssb_recruitment <- function(object,
   regions <- 1:data$n_area
   n_rules <- data$n_rules
 
-  # if (length(map) > 0) {
-
-  # }
-
   if (length(mcmc) > 0) {
     n_iter <- nrow(mcmc[[1]])
     ssb <- mcmc$biomass_ssb_jyr
-    dimnames(ssb) <- list(Iteration = 1:n_iter, Rules = 1:n_rules,
-                          Year = data$first_yr:data$last_proj_yr,
-                          Region = regions)
+    dimnames(ssb) <- list(Iteration = 1:n_iter, Rules = 1:n_rules, Year = data$first_yr:data$last_proj_yr, Region = regions)
     ssb <- melt(ssb, value.name = "SSB") %>%
       filter(Year %in% data$first_yr:data$last_yr)
 
     rec <- mcmc$recruits_ry
-    dimnames(rec) <- list(Iteration = 1:n_iter, Region = regions,
-                          Year = data$first_yr:data$last_proj_yr)
+    dimnames(rec) <- list(Iteration = 1:n_iter, Region = regions, Year = data$first_yr:data$last_proj_yr)
     rec <- melt(rec, value.name = "Recruitment") %>%
       filter(Year %in% data$first_yr:data$last_yr)
 
@@ -57,14 +50,14 @@ plot_ssb_recruitment <- function(object,
       labs(x = xlab) +
       facet_wrap(~Region) +
       theme_lsd() +
-      scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1)))
-
+      scale_y_continuous(limits = c(0, NA), expand = expansion(mult = c(0, 0.1)))
   }
   #stat_smooth(method = "loess") +
   # B0 <- 179280
   # (SSB / B0)/(1-((5*h-1)/(4*h))*(1-(SSB / B0)));
   ggsave(paste0(figure_dir, "biomass_ssb_recruitment.png"), p, width = 12)
 }
+
 
 #' Plot spawning stock biomass (SSB)
 #'
@@ -182,14 +175,18 @@ plot_ssb <- function(object,
     scale_fill_manual(values = cpal) +
     scale_colour_manual(values = cpal) +
     theme_lsd()
+
   if (length(map) > 0 & show_map) {
     p <- p + geom_line(data = ssb1_in %>% filter(Region %in% regions), aes(x = Year, y = SSB, colour = type), linetype = 2)
   }
+
   if (data$n_area > 1) {
-    p <- p + facet_wrap(~Region, scales="free")
+    p <- p + facet_wrap(~Region, scales = "free")
   }
+
   return(p)
 }
+
 
 #' Plot AW adjusted vulnerable biomass
 #'
@@ -220,12 +217,11 @@ plot_vulnref_AW <- function(object,
 
   cpal <- c("#56B4E9", "#009E73", "#E69F00", "tomato")
 
-  years <- data$first_yr:data$last_yr
-  pyears <- data$first_yr:data$last_proj_yr
   regions <- 1:data$n_area
+  n_rules <- data$n_rules
+
   if (length(regions) > 1) regions2 <- c(regions, "Total")
   if (length(regions) == 1) regions2 <- regions
-  n_rules <- data$n_rules
 
   if (length(map) > 0 & show_map) {
     vb1 <- map$biomass_vulnref_AW_jyr
@@ -247,13 +243,13 @@ plot_vulnref_AW <- function(object,
     Bref <- unique(Bref %>% select(.data$Region, .data$value)) %>% filter(Region %in% regions)
   }
 
-  # spawning stock biomass
   if (show_proj == FALSE) {
     vb <- vb %>% filter(.data$Year <= data$last_yr)
     if (length(map) > 0 & show_map) vb1 <- vb1 %>% filter(.data$Year <= data$last_yr)
   }
 
   p <- ggplot(data = vb %>% filter(.data$Region %in% regions), aes(x = .data$Year, y = .data$VB))
+
   if (show_ref) {
     # p <- p + geom_vline(aes(xintercept = data$first_ref_yr), linetype = "dashed", colour = cpal[2]) +
     #     geom_vline(aes(xintercept = data$last_ref_yr), linetype = "dashed", colour = cpal[2])
@@ -261,7 +257,9 @@ plot_vulnref_AW <- function(object,
       geom_hline(data = Bref, aes(yintercept = .data$value), colour = cpal[2]) +
       geom_label(data = Bref %>% filter(.data$Region == 1), label = "Reference", aes(x = min(vb$Year) + 10, y = .data$value), color = cpal[2], size = 5)
   }
+
   if (show_proj) p <- p + geom_vline(aes(xintercept = data$last_yr), linetype = "dashed")
+
   p <- p +
     stat_summary(fill = cpal[1], fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.125) +
     stat_summary(fill = cpal[1], fun.ymin = function(x) quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.25) +
@@ -329,14 +327,12 @@ plot_vulnerable_reference_biomass <- function(object,
   n_rules <- data$n_rules
 
   if (length(map) > 0 & show_map) {
-    if("biomass_vulnref_jytr" %in% names(map)){
+    if ("biomass_vulnref_jytr" %in% names(map)) {
       vbref1 <- map$biomass_vulnref_jytr
       dimnames(vbref1) <- list("Iteration" = 1, "Rule" = 1:n_rules, "Year" = pyears, "Season" = seasons, "Region" = regions)
       vbref1 <- melt(vbref1) %>%
         filter(.data$value > 0) %>%
-        mutate(Season = as.character(.data$Season), Season = ifelse(.data$Year >= data$season_change_yr, .data$Season, YR))
-
-      vbref1 <- vbref1 %>%
+        mutate(Season = as.character(.data$Season), Season = ifelse(.data$Year >= data$season_change_yr, .data$Season, YR)) %>%
         group_by(.data$Iteration, .data$Year, .data$Season, .data$Region) %>%
         summarise(value = sum(.data$value))
     } else {
@@ -344,9 +340,7 @@ plot_vulnerable_reference_biomass <- function(object,
       dimnames(vbref1) <- list("Iteration" = 1,"Year" = pyears, "Season" = seasons, "Region" = regions)
       vbref1 <- melt(vbref1) %>%
         filter(.data$value > 0) %>%
-        mutate(Season = as.character(.data$Season), Season = ifelse(.data$Year >= data$season_change_yr, .data$Season, YR))
-
-      vbref1 <- vbref1 %>%
+        mutate(Season = as.character(.data$Season), Season = ifelse(.data$Year >= data$season_change_yr, .data$Season, YR)) %>%
         group_by(.data$Iteration, .data$Year, .data$Season, .data$Region) %>%
         summarise(value = sum(.data$value))
     }
@@ -367,14 +361,12 @@ plot_vulnerable_reference_biomass <- function(object,
   if (length(mcmc) > 0 & show_mcmc) {
     n_iter <- nrow(mcmc[[1]])
 
-    if("biomass_vulnref_jytr" %in% names(mcmc)){
+    if ("biomass_vulnref_jytr" %in% names(mcmc)) {
       vbref <- mcmc$biomass_vulnref_jytr
       dimnames(vbref) <- list("Iteration" = 1:n_iter, "Rule" = 1:n_rules, "Year" = pyears, "Season" = seasons, "Region" = regions)
       vbref <- melt(vbref) %>%
         filter(.data$value > 0) %>%
-        mutate(Season = as.character(.data$Season), Season = ifelse(.data$Year >= data$season_change_yr, .data$Season, YR))
-
-      vbref <- vbref %>%
+        mutate(Season = as.character(.data$Season), Season = ifelse(.data$Year >= data$season_change_yr, .data$Season, YR)) %>%
         group_by(.data$Iteration, .data$Year, .data$Season, .data$Region) %>%
         summarise(value = sum(.data$value))
     } else {
@@ -382,9 +374,7 @@ plot_vulnerable_reference_biomass <- function(object,
       dimnames(vbref) <- list("Iteration" = 1:n_iter, "Year" = pyears, "Season" = seasons, "Region" = regions)
       vbref <- melt(vbref) %>%
         filter(.data$value > 0) %>%
-        mutate(Season = as.character(.data$Season), Season = ifelse(.data$Year >= data$season_change_yr, .data$Season, YR))
-
-      vbref <- vbref %>%
+        mutate(Season = as.character(.data$Season), Season = ifelse(.data$Year >= data$season_change_yr, .data$Season, YR)) %>%
         group_by(.data$Iteration, .data$Year, .data$Season, .data$Region) %>%
         summarise(value = sum(.data$value))
     }
@@ -530,9 +520,7 @@ plot_vulnerable_biomass <- function(object,
     dimnames(vb1) <- list("Iteration" = 1, "Rule" = 1:n_rules, "Year" = pyears, "Season" = seasons, "Region" = regions, Sex = sex)
     vb1 <- melt(vb1) %>%
       filter(.data$value > 0) %>%
-      mutate(Season = as.character(.data$Season), Season = ifelse(.data$Year >= data$season_change_yr, .data$Season, YR))
-
-    vb1 <- vb1 %>%
+      mutate(Season = as.character(.data$Season), Season = ifelse(.data$Year >= data$season_change_yr, .data$Season, YR)) %>%
       group_by(.data$Iteration, .data$Rule, .data$Year, .data$Season, .data$Region) %>%
       summarise(value = sum(.data$value))
 
@@ -554,7 +542,7 @@ plot_vulnerable_biomass <- function(object,
     n_iter <- nrow(mcmc[[1]])
 
     vb2 <- mcmc$biomass_vuln_jytrs
-    dimnames(vb2) <- list("Iteration" = 1:n_iter, "Rule"=1:n_rules, "Year" = pyears, "Season" = seasons, "Region" = regions, Sex = sex)
+    dimnames(vb2) <- list("Iteration" = 1:n_iter, "Rule" = 1:n_rules, "Year" = pyears, "Season" = seasons, "Region" = regions, Sex = sex)
     vb2 <- melt(vb2) %>%
       filter(.data$value > 0) %>%
       mutate(Season = as.character(.data$Season), Season = ifelse(.data$Year >= data$season_change_yr, .data$Season, YR)) %>%
@@ -590,6 +578,7 @@ plot_vulnerable_biomass <- function(object,
     group_by(.data$Iteration, .data$Rule, .data$Year, .data$Season, .data$Region, .data$value, .data$Label)
 
   p <- ggplot(data = vb_in, aes(x = .data$Year, y = .data$value, colour = .data$Season, fill = .data$Season))
+
   if (show_proj) p <- p + geom_vline(aes(xintercept = data$last_yr), linetype = "dashed")
 
   # if ("Bref" %in% ref) {
@@ -622,11 +611,13 @@ plot_vulnerable_biomass <- function(object,
       stat_summary(data = vb_in, geom = "ribbon", alpha = 0.125, colour = NA, aes(x = .data$Year, y = .data$value, fill = .data$Season),
                    fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95))
   }
+
   if (0.25 %in% show_quants) {
     p <- p +
       stat_summary(data = vb_in, geom = "ribbon", alpha = 0.25, colour = NA, aes(x = .data$Year, y = .data$value, fill = .data$Season),
                    fun.ymin = function(x) quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75))
   }
+
   p <- p + stat_summary(data = vb_in, aes(x = .data$Year, y = .data$value, color = .data$Season), fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1) +
     expand_limits(y = 0) +
     labs(x = xlab, y = "Vulnerable biomass (tonnes)") +
@@ -648,6 +639,7 @@ plot_vulnerable_biomass <- function(object,
 
   return(p)
 }
+
 
 #' Plot total biomass
 #'
@@ -684,13 +676,13 @@ plot_total_biomass <- function(object,
 
   seasons <- c("AW","SS")
   regions <- 1:data$n_area
-  if(length(regions)>1) regions2 <- c(regions, max(regions + 1))
-  if(length(regions)==1) regions2 <- regions
+  if (length(regions) > 1) regions2 <- c(regions, max(regions + 1))
+  if (length(regions) == 1) regions2 <- regions
   YR <- "YR" # label for the season before the season change year
   n_rules <- data$n_rules
 
   if (length(map) > 0 & show_map) {
-    if("biomass_recruited_jytrs" %in% names(map)){
+    if ("biomass_recruited_jytrs" %in% names(map)) {
       biomass_recruited_jytrs1 <- map$biomass_recruited_jytrs
       dimnames(biomass_recruited_jytrs1) <- list("Iteration" = 1, "Rule" = 1:n_rules, "Year" = pyears, "Season" = seasons, "Region" = regions, Sex = c(sex,"Total"))
       biomass_recruited_jytrs1 <- melt(biomass_recruited_jytrs1) %>%
@@ -776,9 +768,9 @@ plot_total_biomass <- function(object,
 
   if (length(mcmc) > 0 & show_mcmc) {
     n_iter <- nrow(mcmc[[1]])
-    if("biomass_recruited_jytrs" %in% names(mcmc)){
+    if ("biomass_recruited_jytrs" %in% names(mcmc)) {
       biomass_recruited_jytrs2 <- mcmc$biomass_recruited_jytrs
-      dimnames(biomass_recruited_jytrs2) <- list("Iteration" = 1:n_iter, "Rule"=1:n_rules, "Year" = pyears, "Season" = seasons, "Region" = regions, Sex = c(sex,"Total"))
+      dimnames(biomass_recruited_jytrs2) <- list("Iteration" = 1:n_iter, "Rule" = 1:n_rules, "Year" = pyears, "Season" = seasons, "Region" = regions, Sex = c(sex,"Total"))
       biomass_recruited_jytrs2 <- melt(biomass_recruited_jytrs2) %>%
         filter(value > 0)
 
@@ -791,7 +783,7 @@ plot_total_biomass <- function(object,
         summarise(value = sum(value))
 
       biomass_vulnref_jytr2 <- mcmc$biomass_vulnref_jytr
-      dimnames(biomass_vulnref_jytr2) <- list("Iteration" = 1:n_iter, "Rule"=1:n_rules, "Year" = pyears, "Season" = seasons, "Region" = regions)
+      dimnames(biomass_vulnref_jytr2) <- list("Iteration" = 1:n_iter, "Rule" = 1:n_rules, "Year" = pyears, "Season" = seasons, "Region" = regions)
       biomass_vulnref_jytr2 <- melt(biomass_vulnref_jytr2) %>%
         filter(value > 0) %>%
         mutate(Season = as.character(Season), Season = ifelse(Year >= data$season_change_yr, Season, YR))
@@ -833,7 +825,7 @@ plot_total_biomass <- function(object,
         filter(value > 0)
 
       biomass_vuln_jytrs2 <- mcmc$biomass_vuln_jytrs
-      dimnames(biomass_vuln_jytrs2) <- list("Iteration" = 1:n_iter, "Rule"=1:n_rules, "Year" = pyears, "Season" = seasons, "Region" = regions, Sex = sex)
+      dimnames(biomass_vuln_jytrs2) <- list("Iteration" = 1:n_iter, "Rule" = 1:n_rules, "Year" = pyears, "Season" = seasons, "Region" = regions, Sex = sex)
       biomass_vuln_jytr2 <- melt(biomass_vuln_jytrs2) %>%
         filter(value > 0) %>%
         mutate(Season = as.character(Season), Season = ifelse(Year >= data$season_change_yr, Season, YR)) %>%
@@ -889,11 +881,10 @@ plot_total_biomass <- function(object,
   # Plot recruited biomass - no projection
   biomass_recruited_ytrs2_in <- filter(biomass_recruited_jytrs2, Year <= data$last_yr)
   # biomass_recruited_ytrs2_in$Region <- sapply(1:nrow(biomass_recruited_ytrs2_in), function(x) paste0("Region ", biomass_recruited_ytrs2_in$Region[x]))
-  if (length(map) > 0 & show_map){
+  if (length(map) > 0 & show_map) {
     biomass_recruited_ytrs1_in <- filter(biomass_recruited_jytrs1, Year <= data$last_yr)
     # biomass_recruited_ytrs1_in$Region <- sapply(1:nrow(biomass_recruited_ytrs1_in), function(x) paste0("Region ", biomass_recruited_ytrs1_in$Region[x]))
   }
-
 
   # p <- ggplot(data = biomass_recruited_ytrs2_in %>% filter(Region %in% regions), aes(x = Year, y = value, color = Sex, fill = Sex))
   # p <- p + stat_summary(fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
@@ -938,16 +929,16 @@ plot_total_biomass <- function(object,
   # }
 
   # Total biomass
-  if (length(map) > 0 & show_map){
+  if (length(map) > 0 & show_map) {
     biomass_total_ytrs1_in <- filter(biomass_total_jytrs1, Year <= data$last_yr)
     # biomass_total_ytrs1_in$Region <- sapply(1:nrow(biomass_total_ytrs1_in), function(x) paste0("Region ", biomass_total_ytrs1_in$Region[x]))
   }
   biomass_total_ytrs2_in <- filter(biomass_total_jytrs2, Year <= data$last_yr)
   # biomass_total_ytrs2_in$Region <- sapply(1:nrow(biomass_total_ytrs2_in), function(x) paste0("Region ", biomass_total_ytrs2_in$Region[x]))
 
-  if(show_proj == FALSE){
-    p <- ggplot(data = biomass_total_ytrs2_in %>% filter(Region %in% regions), aes(x = Year, y = value, color = Sex, fill = Sex))
-    p <- p + stat_summary(fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
+  if (show_proj == FALSE) {
+    p <- ggplot(data = biomass_total_ytrs2_in %>% filter(Region %in% regions), aes(x = Year, y = value, color = Sex, fill = Sex)) +
+      stat_summary(fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
       stat_summary(fun.ymin = function(x) quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
       stat_summary(fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1) +
       expand_limits(y = 0) +
@@ -965,17 +956,17 @@ plot_total_biomass <- function(object,
     }
   }
 
-  if(show_proj == TRUE){
+  if (show_proj == TRUE) {
     p <- ggplot(data = biomass_total_yts2, aes(x = Year, y = value, color = Sex, fill = Sex)) +
       geom_vline(aes(xintercept = data$last_yr), linetype = "dashed") +
-      stat_summary(fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
-      stat_summary(fun.ymin = function(x) quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
-      stat_summary(fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1) +
+      stat_summary(fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
+      stat_summary(fun.min = function(x) quantile(x, 0.25), fun.max = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
+      stat_summary(fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1) +
       expand_limits(y = 0) +
       xlab(xlab) + ylab("Total biomass (tonnes)") +
       facet_wrap( ~ Season, scales = scales) +
       scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
-      scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
+      scale_y_continuous(limits = c(0, NA), expand = expansion(mult = c(0, 0.1))) +
       theme_lsd()
     if (length(map) > 0 & show_map) {
       # biomass_total_yts1$Region <- sapply(1:nrow(biomass_total_yts1), function(x) paste0("Region ", biomass_total_yts1$Region[x]))
@@ -984,6 +975,7 @@ plot_total_biomass <- function(object,
   }
   return(p)
 }
+
 
 #' Plot relative adjusted vulnerable biomass
 #'
@@ -1020,13 +1012,13 @@ plot_vulnref_rel <- function(object,
 
   seasons <- c("AW","SS")
   regions <- 1:data$n_area
-  if(length(regions)>1) regions2 <- c(regions, max(regions + 1))
-  if(length(regions)==1) regions2 <- regions
+  if (length(regions) > 1) regions2 <- c(regions, max(regions + 1))
+  if (length(regions) == 1) regions2 <- regions
   YR <- "YR" # label for the season before the season change year
   n_rules <- data$n_rules
 
   if (length(map) > 0 & show_map) {
-    if("biomass_recruited_jytrs" %in% names(map)){
+    if ("biomass_recruited_jytrs" %in% names(map)) {
       biomass_recruited_jytrs1 <- map$biomass_recruited_jytrs
       dimnames(biomass_recruited_jytrs1) <- list("Iteration" = 1, "Rule" = 1:n_rules, "Year" = pyears, "Season" = seasons, "Region" = regions, Sex = c(sex,"Total"))
       biomass_recruited_jytrs1 <- melt(biomass_recruited_jytrs1) %>%
@@ -1099,7 +1091,6 @@ plot_vulnref_rel <- function(object,
         group_by(Iteration, Year, Season, Sex) %>%
         summarise(value = sum(value))
     }
-
   } else {
     biomass_recruited_jytrs1 <- NULL
     biomass_vuln_jytrs1 <- NULL
@@ -1112,9 +1103,9 @@ plot_vulnref_rel <- function(object,
 
   if (length(mcmc) > 0 & show_mcmc) {
     n_iter <- nrow(mcmc[[1]])
-    if("biomass_recruited_jytrs" %in% names(mcmc)){
+    if ("biomass_recruited_jytrs" %in% names(mcmc)) {
       biomass_recruited_jytrs2 <- mcmc$biomass_recruited_jytrs
-      dimnames(biomass_recruited_jytrs2) <- list("Iteration" = 1:n_iter, "Rule"=1:n_rules, "Year" = pyears, "Season" = seasons, "Region" = regions, Sex = c(sex,"Total"))
+      dimnames(biomass_recruited_jytrs2) <- list("Iteration" = 1:n_iter, "Rule" = 1:n_rules, "Year" = pyears, "Season" = seasons, "Region" = regions, Sex = c(sex,"Total"))
       biomass_recruited_jytrs2 <- melt(biomass_recruited_jytrs2) %>%
         filter(value > 0)
 
@@ -1127,7 +1118,7 @@ plot_vulnref_rel <- function(object,
         summarise(value = sum(value))
 
       biomass_vulnref_jytr2 <- mcmc$biomass_vulnref_jytr
-      dimnames(biomass_vulnref_jytr2) <- list("Iteration" = 1:n_iter, "Rule"=1:n_rules, "Year" = pyears, "Season" = seasons, "Region" = regions)
+      dimnames(biomass_vulnref_jytr2) <- list("Iteration" = 1:n_iter, "Rule" = 1:n_rules, "Year" = pyears, "Season" = seasons, "Region" = regions)
       biomass_vulnref_jytr2 <- melt(biomass_vulnref_jytr2) %>%
         filter(value > 0) %>%
         mutate(Season = as.character(Season), Season = ifelse(Year >= data$season_change_yr, Season, YR))
@@ -1169,7 +1160,7 @@ plot_vulnref_rel <- function(object,
         filter(value > 0)
 
       biomass_vuln_jytrs2 <- mcmc$biomass_vuln_jytrs
-      dimnames(biomass_vuln_jytrs2) <- list("Iteration" = 1:n_iter, "Rule"=1:n_rules, "Year" = pyears, "Season" = seasons, "Region" = regions, Sex = sex)
+      dimnames(biomass_vuln_jytrs2) <- list("Iteration" = 1:n_iter, "Rule" = 1:n_rules, "Year" = pyears, "Season" = seasons, "Region" = regions, Sex = sex)
       biomass_vuln_jytr2 <- melt(biomass_vuln_jytrs2) %>%
         filter(value > 0) %>%
         mutate(Season = as.character(Season), Season = ifelse(Year >= data$season_change_yr, Season, YR)) %>%
@@ -1222,6 +1213,7 @@ plot_vulnref_rel <- function(object,
     biomass_total_ytrs2 <- NULL
     biomass_total_yts2 <- NULL
   }
+
   # Plot recruited biomass - no projection
   biomass_recruited_ytrs2_in <- filter(biomass_recruited_jytrs2, Year <= data$last_yr)
   # biomass_recruited_ytrs2_in$Region <- sapply(1:nrow(biomass_recruited_ytrs2_in), function(x) paste0("Region ", biomass_recruited_ytrs2_in$Region[x]))
@@ -1277,6 +1269,7 @@ plot_vulnref_rel <- function(object,
     bvref_in1 <- biomass_vulnref_jytr1 %>%
       filter(Year <= data$last_yr)
   }
+
   bvref_in2 <- biomass_vulnref_jytr2 %>%
     filter(Year <= data$last_yr)
 
@@ -1307,6 +1300,7 @@ plot_vulnref_rel <- function(object,
   } else {
     dinx <- NULL
   }
+
   if (length(mcmc) > 0) {
     dinx <- bvref_in2 %>% group_by(.data$Iteration, .data$Year, .data$Season, .data$Region, .data$value)
   } else{
@@ -1330,9 +1324,7 @@ plot_vulnref_rel <- function(object,
 
   din2x <- rbind.data.frame(dinaw2x, dinss2x) %>% ungroup()
 
-  if (show_proj == FALSE) {
-    # din2$Region <- sapply(1:nrow(din2), function(x) paste0("Region ", din2$Region[x]))
-    # din2x$Region <- sapply(1:nrow(din2x), function(x) paste0("Region ", din2x$Region[x]))
+  if (!show_proj) {
     p <- ggplot(data = din2, aes(x = .data$Year, y = .data$BB1, colour = .data$Season, fill = .data$Season)) +
       geom_hline(aes(yintercept = 0.5), linetype = "dashed", colour = "purple") +
       geom_hline(aes(yintercept = 0.3), linetype = "dashed", colour = "purple") +
@@ -1343,11 +1335,8 @@ plot_vulnref_rel <- function(object,
       expand_limits(y = 0) +
       xlab(xlab) + ylab("Reference biomass (tonnes)") +
       scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
-      scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
+      scale_y_continuous(limits = c(0, NA), expand = expansion(mult = c(0, 0.1))) +
       theme_lsd()
-    # if (length(map) > 0 & show_map) {
-    #    p <- p + geom_path(data = din2x, aes(x = Year, y = BB1, color = Season), linetype = 2)
-    # }
     if (data$n_area > 1) {
       p <- p + facet_wrap(~Region)
     }
@@ -1378,6 +1367,7 @@ plot_vulnref_rel <- function(object,
   } else{
     dinx <- NULL
   }
+
   if (length(mcmc) > 0) {
     dinx <- bvref_in2 %>% group_by(Iteration, Year, Season, Region, value)
   } else{
@@ -1404,9 +1394,9 @@ plot_vulnref_rel <- function(object,
     p <- ggplot(data = din2, aes(x = .data$Year, y = .data$BB1, colour = .data$Season, fill = .data$Season)) +
       geom_hline(aes(yintercept = 0.5), linetype = "dashed", colour = "purple") +
       geom_hline(aes(yintercept = 0.3), linetype = "dashed", colour = "purple") +
-      geom_hline(aes(yintercept = 0.1), linetype = "dashed", colour = "purple")
-    p <- p + geom_vline(aes(xintercept = data$last_yr), linetype = "dashed")
-    p <- p + stat_summary(data = din2, aes(x = Year, y = BB1, color = Season, fill = Season), fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
+      geom_hline(aes(yintercept = 0.1), linetype = "dashed", colour = "purple") +
+      geom_vline(aes(xintercept = data$last_yr), linetype = "dashed") +
+      stat_summary(data = din2, aes(x = Year, y = BB1, color = Season, fill = Season), fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
       stat_summary(data = din2, aes(x = Year, y = BB1, color = Season, fill = Season), fun.ymin = function(x) quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
       stat_summary(data = din2, aes(x = Year, y = BB1, color = Season), fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1) +
       expand_limits(y = 0) +
@@ -1414,15 +1404,13 @@ plot_vulnref_rel <- function(object,
       scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
       scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
       theme_lsd()
-    # if (length(map) > 0 & show_map) {
-    #    p <- p + geom_line(data = din2x, aes(x = Year, y = BB1), linetype = 2)
-    # }
     if (data$n_area > 1) {
       p <- p + facet_wrap(~Region)
     }
   }
   return(p)
 }
+
 
 #' Plot Money biomass
 #'
@@ -1466,9 +1454,7 @@ plot_money_biomass <-  function(object,
     dimnames(mb1) <- list("Iteration" = 1, "Rule" = 1:n_rules, "Year" = pyears, "Season" = seasons, "Region" = regions)
     mb1 <- melt(mb1) %>%
       filter(.data$value > 0) %>%
-      mutate(Season = as.character(.data$Season), Season = ifelse(.data$Year >= data$season_change_yr, .data$Season, YR))
-
-    mb1 <- mb1 %>%
+      mutate(Season = as.character(.data$Season), Season = ifelse(.data$Year >= data$season_change_yr, .data$Season, YR)) %>%
       group_by(.data$Iteration, .data$Rule, .data$Year, .data$Season, .data$Region) %>%
       summarise(value = sum(.data$value))
   }
@@ -1484,7 +1470,6 @@ plot_money_biomass <-  function(object,
       summarise(value = sum(.data$value))
   }
 
-  # money biomass
   if (show_proj) {
     if (length(map) > 0 & show_map) mb_in1 <- mb1
     mb_in2 <- mb2
@@ -1518,7 +1503,7 @@ plot_money_biomass <-  function(object,
     expand_limits(y = 0) +
     labs(x = xlab, y = "Money biomass (tonnes)") +
     scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1), expand = c(0, 1)) +
-    scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
+    scale_y_continuous(limits = c(0, NA), expand = expansion(mult = c(0, 0.1))) +
     theme_lsd()
 
   if (length(map) > 0 & show_map) {
@@ -1636,9 +1621,6 @@ plot_money_vuln_biomass <-  function(object,
     all_b2 <- all_b2 %>% filter(.data$Year <= data$last_yr)
   }
 
-  # mb_in <- mb_in2 %>% mutate("Label" = "") %>%
-  #   group_by(.data$Iteration, .data$Rule, .data$Year, .data$Season, .data$Region, .data$value, .data$Label)
-  #
   p <- ggplot(data = all_b1, aes(x = .data$Year, y = .data$value, colour = .data$Season, fill = .data$Season, linetype = Type))
 
   if (show_proj) p <- p + geom_vline(aes(xintercept = data$last_yr), linetype = "dashed")
@@ -1648,6 +1630,7 @@ plot_money_vuln_biomass <-  function(object,
       stat_summary(data = all_b1, geom = "ribbon", alpha = 0.125, colour = NA, aes(x = .data$Year, y = .data$value, fill = .data$Season, linetype = .data$Type),
                    fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95))
   }
+
   if (0.25 %in% show_quants) {
     p <- p +
       stat_summary(data = all_b1, geom = "ribbon", alpha = 0.25, colour = NA, aes(x = .data$Year, y = .data$value, fill = .data$Season, linetype = .data$Type),
@@ -1658,12 +1641,8 @@ plot_money_vuln_biomass <-  function(object,
     expand_limits(y = 0) +
     labs(x = xlab, y = "Biomass (tonnes)") +
     scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1), expand = c(0, 1)) +
-    scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
+    scale_y_continuous(limits = c(0, NA), expand = expansion(mult = c(0, 0.1))) +
     theme_lsd()
-
-  # if (length(map) > 0 & show_map) {
-  #   p <- p + geom_line(data = all_b1, aes(x = .data$Year, y = .data$value, linetype = .data$Type), linetype = 2)
-  # }
 
   if (data$n_area > 1) {
     if (data$n_rules == 1) {
@@ -1672,6 +1651,7 @@ plot_money_vuln_biomass <-  function(object,
       p <- p + facet_wrap(.data$Rule ~ .data$Region, scales = scales)
     }
   }
+
   return(p)
 }
 
@@ -1777,4 +1757,8 @@ plot_biomass <- function(object,
   # plot Money and vulnerable biomass on the same plot
   p <- plot_money_vuln_biomass(object, show_proj = FALSE, show_map = TRUE)
   ggsave(paste0(figure_dir, "biomass_vuln_and_money.png"), p, width = 12)
+
+  # Plot projected biomass
+  p <- plot_vulnref_AW_proj(object)
+  ggsave(paste0(figure_dir, "biomass_vulnref_proj.png"), p, width = 10)
 }

@@ -427,7 +427,7 @@ if(any(grepl("B0now_r", names(mcmc1)))){
   left_join(r0) %>%
   filter(Year %in% min(data$data_lf_year_i):(max(years)-2)) %>%
   group_by(Region) %>%
-  summarise(DataYears = median(R0) * exp(median(Recruitment) - 0.5 * data$fpar_rec_sd ^ 2))
+  summarise(R0 = median(R0), DataYears = median(R0) * exp(median(Recruitment) - 0.5 * data$fpar_rec_sd ^ 2))
 
   recdev4 <- recdev2 %>%
   left_join(r0) %>%
@@ -439,7 +439,7 @@ if(any(grepl("B0now_r", names(mcmc1)))){
   rec3 <- rec3 %>%
   left_join(recdev3) %>%
   left_join(recdev4) %>%
-  tidyr::pivot_longer(DataYears:Last10Years, names_to = "Type", values_to = "Average")
+  tidyr::pivot_longer(R0:Last10Years, names_to = "Type", values_to = "Average")
 
   p <- ggplot(rec3) +
     geom_ribbon(aes(x = Year, ymin = P5, ymax = P95), alpha = 0.3) +

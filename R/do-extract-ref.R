@@ -27,10 +27,10 @@ do_extract_ref <- function(dir = ".", model = "ref_lsd")
                           "B0now_r",
                           "biomass_ssb_jyr",
                           "SSB0_r",
-                          "SSB0now_r"#,
+                          "SSB0now_r",
                           # "MSY_r",
                           # "Bmsy_r",
-                          # "proj_F_jytrf",
+                          "proj_F_jytrf"#,
                           # "par_q_cpue_qy"
                           )
 

@@ -258,6 +258,9 @@ if(any(grepl("B0now_r", names(mcmc1)))){
   sex <- c("Male","Immature female","Mature female")
   rules <- data$mp_rule_parameters
   n_rules <- nrow(rules)
+  rule_type <- data.frame(RuleType1 = rules[,1], RuleNum = 1:n_rules) %>%
+  mutate(RuleType = ifelse(RuleType1 == 1, "FixedCatch", "FixedF")) %>%
+  select(-RuleType1)
   fleets <- c("SL","NSL")
   
   # projF <- mcmc$proj_F_jytrf
@@ -267,10 +270,10 @@ if(any(grepl("B0now_r", names(mcmc1)))){
   #   dplyr::summarise(F = sum(F))
 
   gc()
-  # sub <- projF2 %>% filter(RuleNum %in% c(6,37))
+  # sub <- projF2 %>% filter(RuleNum > 22) %>% filter(Iteration == 1)
   # p <- ggplot(sub %>% filter(Iteration == 1)) +
   # geom_line(aes(x = Year, y = F, color = factor(RuleNum))) +
-  # # facet_wrap(~Fleet) +
+  # facet_wrap(~Region, scales = "free_y") +
   # # coord_cartesian(ylim = c(0,quantile(sub$F,0.99))) +
   # theme_bw()
 
@@ -291,6 +294,13 @@ if(any(grepl("B0now_r", names(mcmc1)))){
   dimnames(cpue) <- list("Iteration" = 1:n_iter, "RuleNum" = 1:n_rules, "Region" = regions, "Year" = pyears)
   cpue2 <- reshape2::melt(cpue, value.name = "CPUE")
   cpue2 <- tibble(cpue2)
+
+  # sub <- cpue2 %>% filter(RuleNum > 22) %>% filter(Iteration == 1)
+  # p <- ggplot(sub %>% filter(Iteration == 1)) +
+  # geom_line(aes(x = Year, y = CPUE, color = factor(RuleNum))) +
+  # facet_wrap(~Region, scales = "free_y") +
+  # # coord_cartesian(ylim = c(0,quantile(sub$F,0.99))) +
+  # theme_bw()
   
   gc()
   
@@ -327,6 +337,13 @@ if(any(grepl("B0now_r", names(mcmc1)))){
   gc()
 
   catch <- pcatch
+
+  sub <- catch %>% left_join(rule_type) %>% filter(Iteration == 1)
+  p <- ggplot(sub %>% filter(Iteration == 1)) +
+    geom_line(aes(x = Year, y = Catch, color = factor(RuleNum))) +
+    facet_grid(RuleType~Region, scales = "free_y") +
+    theme_bw(base_size = 20)
+  ggsave(file.path(figure_dir, "Catch_check.png"), p, height = 10, width = 15)
 
   rm(pcatch)
   gc()
@@ -453,7 +470,7 @@ if(any(grepl("B0now_r", names(mcmc1)))){
     expand_limits(y = 0) +
     scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
     scale_color_brewer(palette = "Set1") + 
-    theme_lsd()
+    theme_bw(base_size = 20)
   ggsave(file.path(figure_dir, "Recruitment_proj.png"), p, height = 8, width = 15)
 
   gc()

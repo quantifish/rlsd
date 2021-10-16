@@ -98,9 +98,10 @@ plot_catch <- function(object,
   n_iter <- nrow(mcmc[[1]])
   years <- data$first_yr:data$last_yr
   pyears <- data$first_yr:data$last_proj_yr
+  rules <- 1:data$n_rules
+
   if (length(regions) == 1) regions2 <- regions
   if (length(regions) > 1) regions2 <- c(regions, "Total")
-  rules <- 1:data$n_rules
 
   # Fit to recreational catch
   pcatch <- mcmc$pred_catch_recreational_ryt
@@ -149,8 +150,8 @@ plot_catch <- function(object,
   pnsl <- melt(pnsl, value.name = "Catch") %>%
     mutate(Type = "NSL", Data = "Expected")
 
-  ph <- mcmc$pred_death_handling_ryt
-  dimnames(ph) <- list("Iteration" = 1:n_iter, "Region" = regions, "Year" = pyears, "Season" = seasons)
+  ph <- mcmc$pred_death_handling_jryt
+  dimnames(ph) <- list("Iteration" = 1:n_iter, "Rule" = rules, "Region" = regions, "Year" = pyears, "Season" = seasons)
   ph <- melt(ph, value.name = "Catch") %>%
     mutate(Type = "Handling mortality", Data = "Expected")
   phlist <- lapply(rules, function(x) {
@@ -174,7 +175,7 @@ plot_catch <- function(object,
   }
 
   # This simply sets up factor order in plot
-  ord1 <- c("NSL", "SL", "Handling mortality")
+  ord1 <- c("NSL", "SL", "Handling")
   ord2 <- c(YR, "AW", "SS")
   pcatch$Type <- factor(pcatch$Type, levels = ord1)
   pcatch$Season <- factor(pcatch$Season, levels = ord2)
@@ -193,11 +194,11 @@ plot_catch <- function(object,
   if (show_proj) p1 <- p1 + geom_vline(aes(xintercept = data$last_yr), linetype = "dashed")
 
   p1 <- p1 +
-    stat_summary(fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
-    stat_summary(fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1) +
+    stat_summary(fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
+    stat_summary(fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1) +
     geom_point(data = dcatch1, color = "red") +
-    geom_point(data = filter(pcatch1, Year > data$last_yr, Type != "Handling mortality"), color = "blue") +
-    xlab(xlab) + ylab(ylab) +
+    geom_point(data = filter(pcatch1, Year > data$last_yr, Type != "Handling"), color = "blue") +
+    labs(x = xlab, y = ylab) +
     scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
     scale_y_continuous(expand = expansion(mult = c(0, 0.05)), limits = c(0, NA)) +
     theme_lsd() +
@@ -213,11 +214,11 @@ plot_catch <- function(object,
   dcatch_sum <- dcatch %>%
     group_by(Iteration, Region, Year, Type, Data) %>%
     summarise(Catch = sum(Catch)) %>%
-    filter(Type != "Handling mortality")
+    filter(Type != "Handling")
   pcatch_sum <- pcatch %>%
     group_by(Rule, Iteration, Region, Year, Type, Data) %>%
     summarise(Catch = sum(Catch)) %>%
-    filter(Type != "Handling mortality")
+    filter(Type != "Handling")
   pcatch_sum$Type <- factor(pcatch_sum$Type, levels = c("SL", "NSL"))
   pcatch_sum1 <- pcatch_sum %>%
     group_by(Region, Year, Type, Data) %>%
@@ -228,8 +229,8 @@ plot_catch <- function(object,
   if (show_proj) p2 <- p2 + geom_vline(aes(xintercept = data$last_yr), linetype = "dashed")
 
   p2 <- p2 +
-    stat_summary(fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
-    stat_summary(fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1) +
+    stat_summary(fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
+    stat_summary(fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1) +
     geom_point(data = dcatch_sum, aes(x = Year, y = Catch), color = "red") +
     geom_point(data = filter(pcatch_sum1, Year > data$last_yr, Type != "Handling mortality"), color = "blue") +
     xlab(xlab) + ylab(ylab) +
@@ -258,9 +259,9 @@ plot_catch <- function(object,
   rcatch$Type <- factor(rcatch$Type, levels = c("SL", "NSL"))
 
   p3 <- ggplot(data = rcatch, aes(x = Year, y = Catch)) +
-    stat_summary(fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
-    stat_summary(fun.ymin = function(x) quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
-    stat_summary(fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1) +
+    stat_summary(fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
+    stat_summary(fun.min = function(x) quantile(x, 0.25), fun.max = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
+    stat_summary(fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1) +
     scale_y_continuous(expand = expansion(mult = c(0, 0.05)), limits = c(0, NA)) +
     xlab(xlab) + ylab("Residual") +
     theme_lsd() +
@@ -288,9 +289,9 @@ plot_catch <- function(object,
     scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1)))
 
   # add msy
-  p4 <- p4 +
-    stat_summary(aes(x = Year, y = MSY), fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.125, colour = "black", fill = "black" ) +
-    stat_summary(aes(x = Year, y = MSY), fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1) +
+    p4 <- p4 +
+      stat_summary(aes(x = Year, y = MSY), fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.125, colour = "black", fill = "black" ) +
+      stat_summary(aes(x = Year, y = MSY), fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1) +
     geom_label_repel(data = dcatch2, aes(x = Year, y = MSY, label = Label), fill = "black", size = 5, color = 'white', force = 10, segment.color = '#bbbbbb', min.segment.length = unit(0, "lines"))
 
   p4 <- p4 + facet_grid(Region ~ ., scales = "free")
@@ -299,6 +300,10 @@ plot_catch <- function(object,
 }
 
 
+#' Save catch plots
+#'
+#' @export
+#'
 plot_catch_save <- function(figure_dir = "figure/") {
   p <- plot_catch(object, show_proj = FALSE)
   ggsave(paste0(figure_dir, "catch.png"), p[[1]], width = 10, height = 8)

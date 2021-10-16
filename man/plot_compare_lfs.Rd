@@ -7,7 +7,7 @@
 plot_compare_lfs(
   object_list,
   object_names,
-  yrs = 2015:2016,
+  yrs = 2018:2019,
   xlab = "Midpoint of size-class (mm)",
   ylab = "Proportion at size (mm)"
 )

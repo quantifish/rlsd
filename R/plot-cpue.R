@@ -274,11 +274,33 @@ plot_cpue <- function(object,
     }
 
     # FSU
-    dfilter <- expand.grid("Year" = 1979:1989, "Season" = c("AW","SS"))
-    dfilter <- dfilter[-which(dfilter$Year == 1989 & dfilter$Season == "SS"),]
-    ocr_yrs <- ocpue %>% right_join(dfilter) %>% mutate(Region = paste0("Region ", Region))
-    pcr_yrs <- pcpue %>% right_join(dfilter) %>% mutate(Region = paste0("Region ", Region))
-    p1cr_yrs <- pcpue1 %>%  right_join(dfilter) %>% mutate(Region = paste0("Region ", Region))
+    # dfilter <- expand.grid("Year" = 1979:1989, "Season" = c("AW","SS"))
+    # dfilter <- dfilter[-which(dfilter$Year == 1989 & dfilter$Season == "SS"),]
+    ocpue <- ocpue %>% 
+        mutate(Flag = case_when(Year %in% 1979:1988 ~ 1,
+                                    Year == 1979 & Season == "AW" ~ 1,
+                                    Year %in% 1990:2018 ~ 2,
+                                    Year == 1989 & Season == "SS" ~ 2,
+                                    Year == 2019 & Season == "AW" ~ 2)) %>%
+        mutate(Region = paste0("Region ", Region))
+    pcpue <- pcpue %>%
+        mutate(Flag = case_when(Year %in% 1979:1988 ~ 1,
+                                    Year == 1979 & Season == "AW" ~ 1,
+                                    Year %in% 1990:2018 ~ 2,
+                                    Year == 1989 & Season == "SS" ~ 2,
+                                    Year == 2019 & Season == "AW" ~ 2)) %>%
+        mutate(Region = paste0("Region ", Region))
+    pcpue1 <- pcpue1 %>%
+        mutate(Flag = case_when(Year %in% 1979:1988 ~ 1,
+                                    Year == 1979 & Season == "AW" ~ 1,
+                                    Year %in% 1990:2018 ~ 2,
+                                    Year == 1989 & Season == "SS" ~ 2,
+                                    Year == 2019 & Season == "AW" ~ 2)) %>%
+        mutate(Region = paste0("Region ", Region))
+
+    ocr_yrs <- ocpue %>% filter(Flag == 1) #ocpue %>% right_join(dfilter) %>% mutate(Region = paste0("Region ", Region))
+    pcr_yrs <- pcpue %>% filter(Flag == 1) #right_join(dfilter) %>% mutate(Region = paste0("Region ", Region))
+    p1cr_yrs <- pcpue1 %>%  filter(Flag == 1) #right_join(dfilter) %>% mutate(Region = paste0("Region ", Region))
     p <- ggplot(data = ocr_yrs) +
         geom_point(aes(x = Year, y = CPUE), color = "red", alpha = 0.75) +
         geom_linerange(aes(x = Year, ymin = exp(log(CPUE) - SD), ymax = exp(log(CPUE) + SD)), color = "red", alpha = 0.75) +
@@ -304,12 +326,12 @@ plot_cpue <- function(object,
     }
 
     # CELR
-    dfilter <- expand.grid("Year" = 1989:max(ocpue$Year), "Season" = c("AW","SS"))
-    dfilter <- dfilter[-which(dfilter$Year == 1989 & dfilter$Season == "AW"),]
-    dfilter <- dfilter[-which(dfilter$Year >=2019 & dfilter$Season == "SS"),]
-    ocr_yrs <- ocpue %>% right_join(dfilter) %>% mutate(Region = paste0("Region ", Region))
-    pcr_yrs <- pcpue %>% right_join(dfilter) %>% mutate(Region = paste0("Region ", Region))
-    p1cr_yrs <- pcpue1 %>% right_join(dfilter) %>% mutate(Region = paste0("Region ", Region))
+    # dfilter <- expand.grid("Year" = 1989:max(ocpue$Year), "Season" = c("AW","SS"))
+    # dfilter <- dfilter[-which(dfilter$Year == 1989 & dfilter$Season == "AW"),]
+    # dfilter <- dfilter[-which(dfilter$Year >=2019 & dfilter$Season == "SS"),]
+    ocr_yrs <- ocpue %>% filter(Flag == 2) #right_join(dfilter) %>% mutate(Region = paste0("Region ", Region))
+    pcr_yrs <- pcpue %>% filter(Flag == 2) #right_join(dfilter) %>% mutate(Region = paste0("Region ", Region))
+    p1cr_yrs <- pcpue1 %>% filter(Flag == 2) #right_join(dfilter) %>% mutate(Region = paste0("Region ", Region))
     p <- ggplot(data = ocr_yrs) +
         geom_point(aes(x = Year, y = CPUE), color = "red", alpha = 0.75) +
         geom_linerange(aes(x = Year, ymin = exp(log(CPUE) - SD), ymax = exp(log(CPUE) + SD)), color = "red", alpha = 0.75) +
@@ -380,9 +402,17 @@ plot_cpue <- function(object,
     }
 
     ### FSU
-    dfilter <- expand.grid("Year" = 1979:1989, "Season" = c("AW","SS"))
-    dfilter <- dfilter[-which(dfilter$Year == 1989 & dfilter$Season == "SS"),]
-    rcr_yrs <- rcpue %>% right_join(dfilter) %>% mutate(Region = paste0("Region ", Region))
+    # dfilter <- expand.grid("Year" = 1979:1989, "Season" = c("AW","SS"))
+    # dfilter <- dfilter[-which(dfilter$Year == 1989 & dfilter$Season == "SS"),]
+    rcpue <- rcpue %>%
+        mutate(Flag = case_when(Year %in% 1979:1988 ~ 1,
+                                    Year == 1979 & Season == "AW" ~ 1,
+                                    Year %in% 1990:2018 ~ 2,
+                                    Year == 1989 & Season == "SS" ~ 2,
+                                    Year == 2019 & Season == "AW" ~ 2)) %>%
+        mutate(Region = paste0("Region ", Region))
+
+    rcr_yrs <- rcpue %>% filter(Flag == 1) #right_join(dfilter) %>% mutate(Region = paste0("Region ", Region))
     p <- ggplot(rcr_yrs) +
         geom_hline(yintercept = 0, alpha = 0.2) +
         # expand_limits(y = 0) +
@@ -405,10 +435,10 @@ plot_cpue <- function(object,
     ggsave(paste0(figure_dir, "cpue_resid_FSU.png"), p, height = 9, width = 9)
 
     ### CELR
-    dfilter <- expand.grid("Year" = 1989:max(ocpue$Year), "Season" = c("AW","SS"))
+    # dfilter <- expand.grid("Year" = 1989:max(ocpue$Year), "Season" = c("AW","SS"))
     # dfilter <- dfilter[-which(dfilter$Year==1989 & dfilter$Season == "AW"),]
-    dfilter <- dfilter[-which(dfilter$Year == max(ocpue$Year) & dfilter$Season == "SS"),]
-    rcr_yrs <- rcpue %>% right_join(dfilter) %>% mutate(Region = paste0("Region ", Region))
+    # dfilter <- dfilter[-which(dfilter$Year == max(ocpue$Year) & dfilter$Season == "SS"),]
+    rcr_yrs <- rcpue %>% filter(Flag == 2) #right_join(dfilter) %>% mutate(Region = paste0("Region ", Region))
     p <- ggplot(rcr_yrs) +
         geom_hline(yintercept = 0, alpha = 0.2) +
         # expand_limits(y = 0) +

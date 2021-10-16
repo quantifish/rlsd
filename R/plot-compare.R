@@ -14,7 +14,7 @@
 #'
 plot_compare_lfs <- function(object_list,
                              object_names,
-                             yrs = 2015:2016,
+                             yrs = 2018:2019,
                              xlab = "Midpoint of size-class (mm)",
                              ylab = "Proportion at size (mm)")
 {
@@ -220,16 +220,16 @@ plot_compare_ssb <- function(object_list,
   ssb0$Model <- factor(ssb0$Model, levels = unique(mods)[order(mod_num)])
 
   p1 <- ggplot(ssb %>% filter(Year %in% years) %>% group_by(Iteration, Year, Model) %>% summarise(value = sum(value)), aes(x = Year, y = value)) +
-    stat_summary(data = ssb0 %>% filter(Year %in% years) %>% filter(type == "Soft limit") %>% group_by(Iteration, Year, Model) %>% summarise(value = sum(value)), fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
-    stat_summary(data = ssb0 %>% filter(Year %in% years) %>% filter(type == "Soft limit") %>% group_by(Iteration, Year, Model) %>% summarise(value = sum(value)), fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model)) +
-    stat_summary(data = ssb0 %>% filter(Year %in% years) %>% filter(type == "Hard limit") %>% group_by(Iteration, Year, Model) %>% summarise(value = sum(value)), fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
-    stat_summary(data = ssb0 %>% filter(Year %in% years) %>% filter(type == "Hard limit") %>% group_by(Iteration, Year, Model) %>% summarise(value = sum(value)), fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model)) +
-    stat_summary(data = ssb0 %>% filter(Year %in% years) %>% filter(type == "SSB0") %>% group_by(Iteration, Year, Model) %>% summarise(value = sum(value)), fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
-    stat_summary(data = ssb0 %>% filter(Year %in% years) %>% filter(type == "SSB0") %>% group_by(Iteration, Year, Model) %>% summarise(value = sum(value)), fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model)) +
+    #stat_summary(data = ssb0 %>% filter(Year %in% years) %>% filter(type == "Soft limit") %>% group_by(Iteration, Year, Model) %>% summarise(value = sum(value)), fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
+    #stat_summary(data = ssb0 %>% filter(Year %in% years) %>% filter(type == "Soft limit") %>% group_by(Iteration, Year, Model) %>% summarise(value = sum(value)), fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model)) +
+    #stat_summary(data = ssb0 %>% filter(Year %in% years) %>% filter(type == "Hard limit") %>% group_by(Iteration, Year, Model) %>% summarise(value = sum(value)), fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
+    #stat_summary(data = ssb0 %>% filter(Year %in% years) %>% filter(type == "Hard limit") %>% group_by(Iteration, Year, Model) %>% summarise(value = sum(value)), fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model)) +
+    #stat_summary(data = ssb0 %>% filter(Year %in% years) %>% filter(type == "SSB0") %>% group_by(Iteration, Year, Model) %>% summarise(value = sum(value)), fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
+    #stat_summary(data = ssb0 %>% filter(Year %in% years) %>% filter(type == "SSB0") %>% group_by(Iteration, Year, Model) %>% summarise(value = sum(value)), fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model)) +
     stat_summary(data = ssb %>% filter(Year %in% years) %>% group_by(Iteration, Year, Model) %>% summarise(value = sum(value)), fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
     stat_summary(data = ssb %>% filter(Year %in% years) %>% group_by(Iteration, Year, Model) %>% summarise(value = sum(value)), fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model)) +
     stat_summary(data = ssb %>% filter(Year %in% years) %>% group_by(Iteration, Year, Model) %>% summarise(value = sum(value)), fun = function(x) quantile(x, 0.5), geom = "point", size = 1.5, alpha = 0.75, aes(color = Model)) +
-    geom_label(data = labs, aes(x = Year, y = value, label = type), nudge_x = -5) +
+    #geom_label(data = labs, aes(x = Year, y = value, label = type), nudge_x = -5) +
     labs(x = "Fishing year", y = "Spawning stock biomass (tonnes)") +
     scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
     scale_y_continuous(expand = expansion(mult = c(0, 0.05)), limits = c(0, NA)) +
@@ -260,12 +260,12 @@ plot_compare_ssb <- function(object_list,
     labs2$Year <- rep(max(ssb$Year), nrow(labs2))
 
     q1 <- ggplot(ssb %>% filter(Year %in% years), aes(x = Year, y = value)) +
-      stat_summary(data = ssb0 %>% filter(Year %in% years) %>% filter(type == "Soft limit"), fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
-      stat_summary(data = ssb0 %>% filter(Year %in% years) %>% filter(type == "Soft limit"), fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model)) +
-      stat_summary(data = ssb0 %>% filter(Year %in% years) %>% filter(type == "Hard limit"), fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
-      stat_summary(data = ssb0 %>% filter(Year %in% years) %>% filter(type == "Hard limit"), fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model)) +
-      stat_summary(data = ssb0 %>% filter(Year %in% years) %>% filter(type == "SSB0"), fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
-      stat_summary(data = ssb0 %>% filter(Year %in% years) %>% filter(type == "SSB0"), fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model)) +
+      #stat_summary(data = ssb0 %>% filter(Year %in% years) %>% filter(type == "Soft limit"), fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
+      #stat_summary(data = ssb0 %>% filter(Year %in% years) %>% filter(type == "Soft limit"), fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model)) +
+      #stat_summary(data = ssb0 %>% filter(Year %in% years) %>% filter(type == "Hard limit"), fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
+      #stat_summary(data = ssb0 %>% filter(Year %in% years) %>% filter(type == "Hard limit"), fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model)) +
+      #stat_summary(data = ssb0 %>% filter(Year %in% years) %>% filter(type == "SSB0"), fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
+      #stat_summary(data = ssb0 %>% filter(Year %in% years) %>% filter(type == "SSB0"), fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model)) +
       stat_summary(data = ssb %>% filter(Year %in% years) , fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
       stat_summary(data = ssb %>% filter(Year %in% years) , fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model)) +
       stat_summary(data = ssb %>% filter(Year %in% years) , fun = function(x) quantile(x, 0.5), geom = "point", lwd = 1.5, alpha = 0.75, aes(color = Model)) +
@@ -274,8 +274,8 @@ plot_compare_ssb <- function(object_list,
       scale_y_continuous(expand = expansion(mult = c(0, 0.05)), limits = c(0, NA)) +
       theme_lsd(base_size = 14) +
       theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-      facet_wrap(~ Region, scales = "free_y") +
-      geom_label(data = labs2, mapping = aes(x = Year, y = value, label = type), nudge_x = -5) +
+      facet_wrap(~ Region) +
+      #geom_label(data = labs2, mapping = aes(x = Year, y = value, label = type), nudge_x = -5) +
       coord_cartesian(clip = "off")
 
     if (nmod > 5) {
@@ -298,16 +298,16 @@ plot_compare_ssb <- function(object_list,
 
   p1 <- ggplot(ssb %>% group_by(Iteration, Year, Model, Region) %>% summarise(value = sum(value)), aes(x = Year, y = value)) +
     geom_vline(aes(xintercept = max(years) + 0.5), linetype = 2) +
-    stat_summary(data = ssb0 %>% filter(type == "Soft limit") %>% group_by(Iteration, Year, Model) %>% summarise(value = sum(value)), fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
-    stat_summary(data = ssb0 %>% filter(type == "Soft limit") %>% group_by(Iteration, Year, Model) %>% summarise(value = sum(value)), fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model)) +
-    stat_summary(data = ssb0 %>% filter(type == "Hard limit") %>% group_by(Iteration, Year, Model) %>% summarise(value = sum(value)), fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
-    stat_summary(data = ssb0 %>% filter(type == "Hard limit") %>% group_by(Iteration, Year, Model) %>% summarise(value = sum(value)), fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model)) +
-    stat_summary(data = ssb0 %>% filter(type == "SSB0") %>% group_by(Iteration, Year, Model) %>% summarise(value = sum(value)), fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
-    stat_summary(data = ssb0 %>% filter(type == "SSB0") %>% group_by(Iteration, Year, Model) %>% summarise(value = sum(value)), fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model)) +
+    #stat_summary(data = ssb0 %>% filter(type == "Soft limit") %>% group_by(Iteration, Year, Model) %>% summarise(value = sum(value)), fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
+    #stat_summary(data = ssb0 %>% filter(type == "Soft limit") %>% group_by(Iteration, Year, Model) %>% summarise(value = sum(value)), fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model)) +
+    #stat_summary(data = ssb0 %>% filter(type == "Hard limit") %>% group_by(Iteration, Year, Model) %>% summarise(value = sum(value)), fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
+    #stat_summary(data = ssb0 %>% filter(type == "Hard limit") %>% group_by(Iteration, Year, Model) %>% summarise(value = sum(value)), fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model)) +
+    #stat_summary(data = ssb0 %>% filter(type == "SSB0") %>% group_by(Iteration, Year, Model) %>% summarise(value = sum(value)), fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
+    #stat_summary(data = ssb0 %>% filter(type == "SSB0") %>% group_by(Iteration, Year, Model) %>% summarise(value = sum(value)), fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model)) +
     stat_summary(fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
     stat_summary(fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model, linetype = Model)) +
     stat_summary(fun = function(x) quantile(x, 0.5), geom = "point", size = 1.5, alpha = 0.75, aes(color = Model)) +
-    geom_label(data = labs, aes(x = Year, y = value, label = type), nudge_x = -5) +
+    #geom_label(data = labs, aes(x = Year, y = value, label = type), nudge_x = -5) +
     labs(x = "Fishing year", y = "Spawning stock biomass (tonnes)") +
     scale_x_continuous(breaks = seq(0, 1e6, 5), minor_breaks = seq(0, 1e6, 1)) +
     scale_y_continuous(expand = expansion(mult = c(0, 0.05)), limits = c(0, NA)) +
@@ -327,12 +327,12 @@ plot_compare_ssb <- function(object_list,
   if (sum(by.Region) >= 1) {
     q1 <- ggplot(ssb, aes(x = Year, y = value)) +
       geom_vline(aes(xintercept = max(years) + 0.5), linetype = 2) +
-      stat_summary(data = ssb0 %>% filter(type == "Soft limit"), fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
-      stat_summary(data = ssb0 %>% filter(type == "Soft limit"), fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model)) +
-      stat_summary(data = ssb0 %>% filter(type == "Hard limit"), fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
-      stat_summary(data = ssb0 %>% filter(type == "Hard limit"), fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model)) +
-      stat_summary(data = ssb0 %>% filter(type == "SSB0"), fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
-      stat_summary(data = ssb0 %>% filter(type == "SSB0"), fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model)) +
+      #stat_summary(data = ssb0 %>% filter(type == "Soft limit"), fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
+      #stat_summary(data = ssb0 %>% filter(type == "Soft limit"), fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model)) +
+      #stat_summary(data = ssb0 %>% filter(type == "Hard limit"), fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
+      #stat_summary(data = ssb0 %>% filter(type == "Hard limit"), fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model)) +
+      #stat_summary(data = ssb0 %>% filter(type == "SSB0"), fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
+      #stat_summary(data = ssb0 %>% filter(type == "SSB0"), fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model)) +
       stat_summary(data = ssb, fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
       stat_summary(data = ssb, fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model)) +
       stat_summary(data = ssb, fun = function(x) quantile(x, 0.5), geom = "point", size = 1.5, alpha = 0.75, aes(color = Model)) +
@@ -340,9 +340,9 @@ plot_compare_ssb <- function(object_list,
       scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
       scale_y_continuous(expand = expansion(mult = c(0, 0.05)), limits = c(0, NA)) +
       theme_lsd(base_size = 14) +
-      facet_wrap(~Region, scales = "free_y") +
+      facet_wrap(~Region) +
       theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-      geom_label(data = labs2, mapping = aes(x = Year, y = value, label = type), nudge_x = -5) +
+      #geom_label(data = labs2, mapping = aes(x = Year, y = value, label = type), nudge_x = -5) +
       coord_cartesian(clip = "off")
 
     if (nmod > 5) {
@@ -805,7 +805,7 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
       scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
       theme_lsd(base_size = 14) +
       theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-      facet_wrap(~Region, scales = "free_y")
+      facet_wrap(~Region)
 
     if (nmod > 5) {
       q <- q +
@@ -877,7 +877,7 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
         scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
         theme_lsd(base_size = 14) +
         theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-        facet_wrap(~Region, scales = "free_y")
+        facet_wrap(~Region)
 
       if (nmod > 5) {
         q <- q +
@@ -1005,7 +1005,7 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
         scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
         theme_lsd(base_size = 14) +
         theme(axis.text.x = element_text(angle = 45,hjust = 1)) +
-        facet_wrap(~Region, scales = "free_y")
+        facet_wrap(~Region)
 
       if (nmod > 5) {
         q <- q +
@@ -1062,7 +1062,7 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
       scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
       theme_lsd(base_size = 14) +
       theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-      facet_wrap(~Region, scales ="free_y")
+      facet_wrap(~Region)
 
     if (nmod > 5) {
       q <- q +

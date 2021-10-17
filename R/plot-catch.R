@@ -153,7 +153,7 @@ plot_catch <- function(object,
   ph <- mcmc$pred_death_handling_jryt
   dimnames(ph) <- list("Iteration" = 1:n_iter, "Rule" = rules, "Region" = regions, "Year" = pyears, "Season" = seasons)
   ph <- melt(ph, value.name = "Catch") %>%
-    mutate(Type = "Handling mortality", Data = "Expected")
+    mutate(Type = "Handling", Data = "Expected")
   phlist <- lapply(rules, function(x) {
     out <- ph %>% mutate(Rule = x)
     return(out)
@@ -232,7 +232,7 @@ plot_catch <- function(object,
     stat_summary(fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
     stat_summary(fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1) +
     geom_point(data = dcatch_sum, aes(x = Year, y = Catch), color = "red") +
-    geom_point(data = filter(pcatch_sum1, Year > data$last_yr, Type != "Handling mortality"), color = "blue") +
+    geom_point(data = filter(pcatch_sum1, Year > data$last_yr, Type != "Handling"), color = "blue") +
     xlab(xlab) + ylab(ylab) +
     scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
     scale_y_continuous(expand = expansion(mult = c(0, 0.05)), limits = c(0, NA)) +

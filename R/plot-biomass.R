@@ -1718,7 +1718,7 @@ plot_biomass <- function(object,
   p <- plot_vulnerable_biomass(object, show_proj = FALSE)
   ggsave(paste0(figure_dir, "biomass_vuln.png"), p, width = 12)
 
-  ## vulnerable biomass with projection
+  # vulnerable biomass with projection
   p <- plot_vulnerable_biomass(object, show_proj = TRUE, show_map = FALSE)
   ggsave(paste0(figure_dir, "biomass_vuln_v2.png"), p, width = 12)
 
@@ -1760,5 +1760,5 @@ plot_biomass <- function(object,
 
   # Plot projected biomass
   p <- plot_vulnref_AW_proj(object)
-  ggsave(paste0(figure_dir, "biomass_vulnref_proj.png"), p, width = 12)
+  ggsave(paste0(figure_dir, "biomass_vulnref_proj.png"), p, width = 14)
 }

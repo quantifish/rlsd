@@ -44,14 +44,24 @@ plot_vulnref_AW_proj <- function(object,
 
   if (length(mcmc) > 0 & show_mcmc) {
     n_iter <- nrow(mcmc[[1]])
-    vb <- mcmc$biomass_vulnref_AW_jyr
-    dimnames(vb) <- list(Iteration = 1:n_iter, Rule = 1:n_rules, Year = data$first_yr:data$last_proj_yr, Region = regions)
-    vb <- melt(vb, value.name = "VB")
+
+    vb2 <- mcmc$biomass_vulnref_AW_jyr
+    dimnames(vb2) <- list(Iteration = 1:n_iter, Rule = 1:n_rules, Year = data$first_yr:data$last_proj_yr, Region = regions)
+    vb2 <- melt(vb2, value.name = "VB") %>%
+      mutate(Region = as.character(Region))
+
+    vb3 <- vb2 %>%
+      group_by(Iteration, Rule, Year) %>%
+      summarise(VB = sum(VB, na.rm = TRUE)) %>%
+      mutate(Region = "Total")
+
+    vb <- bind_rows(vb2, vb3)
 
     Bref <- mcmc$Bref_jr
     dimnames(Bref) <- list("Iteration" = 1:n_iter, "Rule" = 1:n_rules, "Region" = regions2)
     Bref <- melt(Bref)
-    Bref <- unique(Bref %>% select(.data$Region, .data$value)) %>% filter(Region %in% regions)
+    Bref <- unique(Bref %>% select(.data$Region, .data$value)) %>%
+      filter(.data$Region == "Total")
   }
 
   if (!show_proj) {
@@ -59,7 +69,7 @@ plot_vulnref_AW_proj <- function(object,
     if (length(map) > 0 & show_map) vb1 <- vb1 %>% filter(.data$Year <= data$last_yr)
   }
 
-  vb <- vb %>% filter(.data$Region %in% regions, .data$Year > data$season_change_yr)
+  vb <- vb %>% filter(.data$Year > data$season_change_yr)
 
   p <- ggplot(data = vb, aes(x = .data$Year, y = .data$VB, colour = factor(.data$Rule), fill = factor(.data$Rule)))
 

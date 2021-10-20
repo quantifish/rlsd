@@ -684,7 +684,7 @@ plot_compare_ssb <- function(object_list,
           stat_summary(data = ssb0 %>% filter(type == "Soft limit"), fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model)) +
           stat_summary(data = ssb0 %>% filter(type == "Hard limit"), fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
           stat_summary(data = ssb0 %>% filter(type == "Hard limit"), fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model)) +
-          geom_label(data = labs %>% filter(type != "SSB0"), aes(x = min(ssb$Year)+10, y = value, label = type)) +
+          geom_label(data = labs %>% filter(type != "SSB0") %>% filter(Region == 1), aes(x = min(ssb$Year)+10, y = value, label = type)) +
           #stat_summary(data = ssb0 %>% filter(type == "SSB0"), fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
           #stat_summary(data = ssb0 %>% filter(type == "SSB0"), fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model)) +
           stat_summary(data = ssb, fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
@@ -696,7 +696,7 @@ plot_compare_ssb <- function(object_list,
           theme_lsd(base_size = 14) +
           facet_wrap(~Region) +
           theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-          geom_label(data = labs2 %>% filter(type != "SSB0") %>% mutate(value = value/1000), mapping = aes(x = Year, y = value, label = type), nudge_x = -5) +
+          # geom_label(data = labs %>% filter(type != "SSB0") %>% mutate(value = value/1000), mapping = aes(x = Year, y = value, label = type), nudge_x = -5) +
           coord_cartesian(clip = "off")
         
         if (nmod > 5) {
@@ -933,7 +933,7 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
         #stat_summary(data=vb, fun.min = function(x) quantile(x, 0.25), fun.max = function(x) quantile(x, 0.75), geom = "ribbon", alpha=0.45, colour = NA) +
         stat_summary(data = vb %>% filter(Year %in% years), fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75) +
         stat_summary(data = vb %>% filter(Year %in% years), fun = function(x) quantile(x, 0.5), geom = "point", size = 1.5, alpha = 0.75) +
-        geom_hline(data = Bref %>% filter(Region == 1), aes(yintercept = value), lwd = 1.1, color = "forestgreen") +
+        geom_hline(data = Bref, aes(yintercept = value), lwd = 1.1, color = "forestgreen") +
         geom_label(data = Bref %>% filter(Region == 1), label = "Reference", aes(x = min(vb$Year) + 10, y = value), size = 5, color = "forestgreen", fill = "white") +
         scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
         xlab("Fishing year") + ylab("Adjusted vulnerable biomass (tonnes)") +
@@ -1119,7 +1119,7 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
         #stat_summary(data = vb, fun.min = function(x) quantile(x, 0.25), fun.max = function(x) quantile(x, 0.75), geom = "ribbon", alpha=0.45, colour = NA) +
         stat_summary(data = vb %>% filter(Year %in% years), fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75) +
         stat_summary(data = vb %>% filter(Year %in% years), fun = function(x) quantile(x, 0.5), geom = "point", size = 1.5, alpha = 0.75) +
-        geom_hline(data = Bref %>% filter(Region == 1), aes(yintercept = value), lwd = 1.2, color = "forestgreen") +
+        geom_hline(data = Bref, aes(yintercept = value), lwd = 1.2, color = "forestgreen") +
         geom_label(data = Bref %>% filter(Region == 1), label = "Reference", aes(x = min(vb$Year) + 10, y = value), size = 5, color = "forestgreen", fill = "white") +
         #scale_y_continuous(expand = expansion(mult = c(0, 0.05)), limits = c(0, NA)) +
         xlab("Fishing year") + ylab("Adjusted vulnerable biomass (tonnes)") +
@@ -1158,7 +1158,7 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
         geom_vline(aes(xintercept = max(years) + 0.5), linetype = 2) +
         stat_summary(data = vb %>% group_by(Iteration, Year, Model,) %>% summarise(value = sum(value)), fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
         geom_hline(data = Bref, aes(yintercept = value), lwd = 1.2, color = "forestgreen") +
-        geom_label(data = Bref %>% filter(Region == 1), label = "Reference", aes(x = min(vb$Year) + 10, y = value), size = 5, color = "forestgreen", fill = "white") +
+        geom_label(data = Bref, label = "Reference", aes(x = min(vb$Year) + 10, y = value), size = 5, color = "forestgreen", fill = "white") +
         #stat_summary(data = vb %>% group_by(Iteration, Year, Model) %>% summarise(value = sum(value)), fun.min = function(x) quantile(x, 0.25), fun.max = function(x) quantile(x, 0.75), geom = "ribbon", alpha=0.45, colour = NA) +
         stat_summary(data = vb %>% group_by(Iteration, Year, Model) %>% summarise(value = sum(value)), fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75) +
         stat_summary(data = vb %>% group_by(Iteration, Year, Model) %>% summarise(value = sum(value)), fun = function(x) quantile(x, 0.5), geom = "point", size = 1.5, alpha = 0.75) +
@@ -1185,7 +1185,7 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
           #stat_summary(data = vb, fun.min = function(x) quantile(x, 0.25), fun.max = function(x) quantile(x, 0.75), geom = "ribbon", alpha=0.45, colour = NA) +
           stat_summary(data = vb %>% filter(Year %in% years), fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75) +
           stat_summary(data = vb %>% filter(Year %in% years), fun = function(x) quantile(x, 0.5), geom = "point", size = 1.5, alpha = 0.75) +
-          geom_hline(data = Bref %>% filter(Region == 1), aes(yintercept = value), lwd = 1.2, color = "forestgreen") +
+          geom_hline(data = Bref %>% filter(Region != "Total"), aes(yintercept = value), lwd = 1.2, color = "forestgreen") +
           geom_label(data = Bref %>% filter(Region == 1), label = "Reference", aes(x = min(vb$Year) + 10, y = value), size = 5, color = "forestgreen", fill = "white") +
           #scale_y_continuous(expand = expansion(mult = c(0, 0.05)), limits = c(0, NA)) +
           xlab("Fishing year") + ylab("Adjusted vulnerable biomass (tonnes)") +

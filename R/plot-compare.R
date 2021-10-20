@@ -657,7 +657,7 @@ plot_compare_ssb <- function(object_list,
         stat_summary(fun = function(x) quantile(x, 0.5), geom = "point", size = 1.5, alpha = 0.75, aes(color = Model)) +
         geom_label(data = labs %>% filter(type != "SSB0"), aes(x = min(ssb$Year)+10, y = value, label = type)) +
         labs(x = "Fishing year", y = "Spawning stock biomass (tonnes)") +
-        scale_x_continuous(breaks = seq(0, 1e6, 5), minor_breaks = seq(0, 1e6, 1), expand = expansion(mult = c(0,0.05))) +
+        scale_x_continuous(breaks = seq(0, 1e6, 5), minor_breaks = seq(0, 1e6, 1), expand = expansion(mult = c(0,0.01))) +
         scale_y_continuous(expand = expansion(mult = c(0, 0.05)), limits = c(0, NA)) +
         theme_lsd(base_size = 14) +
         theme(axis.text.x = element_text(angle = 45, hjust = 1))
@@ -691,7 +691,7 @@ plot_compare_ssb <- function(object_list,
           stat_summary(data = ssb, fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model)) +
           stat_summary(data = ssb, fun = function(x) quantile(x, 0.5), geom = "point", size = 1.5, alpha = 0.75, aes(color = Model)) +
           labs(x = "Fishing year", y = "Spawning stock biomass (tonnes)") +
-          scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1), expand = expansion(mult = c(0, 0.05))) +
+          scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1), expand = expansion(mult = c(0, 0.01))) +
           scale_y_continuous(expand = expansion(mult = c(0, 0.05)), limits = c(0, NA)) +
           theme_lsd(base_size = 14) +
           facet_wrap(~Region) +
@@ -833,7 +833,7 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
     stat_summary(data = vb %>% filter(Year %in% years) %>% group_by(Iteration, Year, Model) %>% summarise(value = sum(value)), fun = function(x) quantile(x, 0.5), geom = "point", size = 1.5, alpha = 0.75) +
     scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
     xlab("Fishing year") + ylab("Adjusted vulnerable biomass (tonnes)") +
-    scale_x_continuous(breaks = seq(0, 1e6, 5), minor_breaks = seq(0, 1e6, 1)) +
+    scale_x_continuous(breaks = seq(0, 1e6, 5), minor_breaks = seq(0, 1e6, 1), expand = expansion(mult = c(0,0.01))) +
     theme_lsd(base_size = 14) +
     theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
@@ -865,7 +865,7 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
       # guides(colour = guide_legend(override.aes = list(colour = cols_all, linetype = lty_all))) +
       scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
       labs(x = "Fishing year", y = "Adjusted vulnerable biomass (tonnes)") +
-      scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
+      scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1), expand = expansion(mult = c(0,0.01))) +
       theme_lsd(base_size = 14) +
       theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
       facet_wrap(~Region)
@@ -905,7 +905,7 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
       # scale_linetype(guide=FALSE) +
       expand_limits(y = 0) +
       xlab("Fishing year") + ylab("Adjusted vulnerable biomass (tonnes)") +
-      scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
+      scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1), expand = expansion(mult = c(0, 0.01))) +
       scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
       theme_lsd(base_size = 14) +
       theme(axis.text.x = element_text(angle = 45, hjust = 1))
@@ -937,7 +937,7 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
         geom_label(data = Bref %>% filter(Region == 1), label = "Reference", aes(x = min(vb$Year) + 10, y = value), size = 5, color = "forestgreen", fill = "white") +
         scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
         xlab("Fishing year") + ylab("Adjusted vulnerable biomass (tonnes)") +
-        scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
+        scale_x_continuous(breaks = seq(0, 1e6, 5), minor_breaks = seq(0, 1e6, 1), expand = expansion(mult = c(0,0.01))) +
         theme_lsd(base_size = 14) +
         theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
         facet_wrap(~Region)
@@ -976,7 +976,7 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
     stat_summary(data = relvb %>% filter(Year %in% years) %>% group_by(Iteration, Year, Model) %>% summarise(value = median(RelVB)), fun = function(x) quantile(x, 0.5), geom = "point", size = 1.5, alpha = 0.75) +
     scale_y_continuous(expand = expansion(mult = c(0, 0.05)), limits = c(0, NA)) +
     xlab("Fishing year") + ylab("Relative adjusted vulnerable biomass (tonnes)") +
-    scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
+    scale_x_continuous(breaks = seq(0, 1e6, 5), minor_breaks = seq(0, 1e6, 1), expand = expansion(mult = c(0,0.01))) +
     theme_lsd(base_size = 14) +
     theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
@@ -1003,7 +1003,7 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
       # scale_linetype(guide=FALSE) +
       #scale_y_continuous(expand = expansion(mult = c(0, 0.05)), limits = c(0, NA)) +
       xlab("Fishing year") + ylab("Relative adjusted vulnerable biomass (tonnes)") +
-      scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
+      scale_x_continuous(breaks = seq(0, 1e6, 5), minor_breaks = seq(0, 1e6, 1), expand = expansion(mult = c(0,0.01))) +
       scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
       theme_lsd(base_size = 14) +
       theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
@@ -1037,7 +1037,7 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
     stat_summary(data = vb %>% group_by(Iteration, Year, Model) %>% summarise(value = sum(value)), fun = function(x) quantile(x, 0.5), geom = "point", size = 1.5, alpha = 0.75) +
     scale_y_continuous(expand = expansion(mult = c(0, 0.05)), limits = c(0, NA)) +
     xlab("Fishing year") + ylab("Adjusted vulnerable biomass (tonnes)") +
-    scale_x_continuous(breaks = seq(0, 1e6, 5), minor_breaks = seq(0, 1e6, 1)) +
+    scale_x_continuous(breaks = seq(0, 1e6, 5), minor_breaks = seq(0, 1e6, 1), expand = expansion(mult = c(0, 0.01))) +
     theme_lsd(base_size = 14) +
     theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
@@ -1060,7 +1060,7 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
       stat_summary(data = vb, fun = function(x) quantile(x, 0.5), geom = "point", size = 1.5, alpha = 0.75) +
       scale_y_continuous(expand = expansion(mult = c(0, 0.05)), limits = c(0, NA)) +
       labs(x = "Fishing year", y = "Adjusted vulnerable biomass (tonnes)") +
-      scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
+      scale_x_continuous(breaks = seq(0, 1e6, 5), minor_breaks = seq(0, 1e6, 1), expand = expansion(mult = c(0, 0.01))) +
       theme_lsd(base_size = 14) +
       theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
       facet_wrap(~Region)
@@ -1097,7 +1097,7 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
       stat_summary(data = vb %>% group_by(Iteration, Year, Model) %>% summarise(value = sum(value)), fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75) +
       stat_summary(data = vb %>% group_by(Iteration, Year, Model) %>% summarise(value = sum(value)), fun = function(x) quantile(x, 0.5), geom = "point", size = 1.5, alpha = 0.75) +
       xlab("Fishing year") + ylab("Adjusted vulnerable biomass (tonnes)") +
-      scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
+      scale_x_continuous(breaks = seq(0, 1e6, 5), minor_breaks = seq(0, 1e6, 1), expand = expansion(mult = c(0,0.01))) +
       scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
       theme_lsd(base_size = 14) +
       theme(axis.text.x = element_text(angle = 45,hjust = 1))
@@ -1123,7 +1123,7 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
         geom_label(data = Bref %>% filter(Region == 1), label = "Reference", aes(x = min(vb$Year) + 10, y = value), size = 5, color = "forestgreen", fill = "white") +
         #scale_y_continuous(expand = expansion(mult = c(0, 0.05)), limits = c(0, NA)) +
         xlab("Fishing year") + ylab("Adjusted vulnerable biomass (tonnes)") +
-        scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
+        scale_x_continuous(breaks = seq(0, 1e6, 5), minor_breaks = seq(0, 1e6, 1), expand = expansion(mult = c(0, 0.01))) +
         scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
         theme_lsd(base_size = 14) +
         theme(axis.text.x = element_text(angle = 45,hjust = 1)) +
@@ -1163,7 +1163,7 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
         stat_summary(data = vb %>% group_by(Iteration, Year, Model) %>% summarise(value = sum(value)), fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75) +
         stat_summary(data = vb %>% group_by(Iteration, Year, Model) %>% summarise(value = sum(value)), fun = function(x) quantile(x, 0.5), geom = "point", size = 1.5, alpha = 0.75) +
         xlab("Fishing year") + ylab("Adjusted vulnerable biomass (tonnes)") +
-        scale_x_continuous(breaks = seq(0, 1e6, 5), minor_breaks = seq(0, 1e6, 1)) +
+        scale_x_continuous(breaks = seq(0, 1e6, 5), minor_breaks = seq(0, 1e6, 1), expand = expansion(mult = c(0,0.01))) +
         scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
         theme_lsd(base_size = 14) +
         theme(axis.text.x = element_text(angle = 45,hjust = 1))
@@ -1189,7 +1189,7 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
           geom_label(data = Bref %>% filter(Region == 1), label = "Reference", aes(x = min(vb$Year) + 10, y = value), size = 5, color = "forestgreen", fill = "white") +
           #scale_y_continuous(expand = expansion(mult = c(0, 0.05)), limits = c(0, NA)) +
           xlab("Fishing year") + ylab("Adjusted vulnerable biomass (tonnes)") +
-          scale_x_continuous(breaks = seq(0, 1e6, 5), minor_breaks = seq(0, 1e6, 1)) +
+          scale_x_continuous(breaks = seq(0, 1e6, 5), minor_breaks = seq(0, 1e6, 1), expand = expansion(mult = c(0,0.01))) +
           scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
           theme_lsd(base_size = 14) +
           theme(axis.text.x = element_text(angle = 45,hjust = 1)) +
@@ -1223,7 +1223,7 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
         stat_summary(data = vb %>% group_by(Iteration, Year, Model) %>% summarise(value = sum(value)), fun = function(x) quantile(x, 0.5), geom = "point", size = 1.5, alpha = 0.75) +
         scale_y_continuous(expand = expansion(mult = c(0, 0.05)), limits = c(0, NA)) +
         xlab("Fishing year") + ylab("Adjusted vulnerable biomass (tonnes)") +
-        scale_x_continuous(breaks = seq(0, 1e6, 5), minor_breaks = seq(0, 1e6, 1)) +
+        scale_x_continuous(breaks = seq(0, 1e6, 5), minor_breaks = seq(0, 1e6, 1), expand = expansion(mult = c(0,0.01))) +
         theme_lsd(base_size = 14) +
         theme(axis.text.x = element_text(angle = 45, hjust = 1))
       
@@ -1246,7 +1246,7 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
           stat_summary(data = vb, fun = function(x) quantile(x, 0.5), geom = "point", size = 1.5, alpha = 0.75) +
           scale_y_continuous(expand = expansion(mult = c(0, 0.05)), limits = c(0, NA)) +
           labs(x = "Fishing year", y = "Adjusted vulnerable biomass (tonnes)") +
-          scale_x_continuous(breaks = seq(0, 1e6, 5), minor_breaks = seq(0, 1e6, 1)) +
+          scale_x_continuous(breaks = seq(0, 1e6, 5), minor_breaks = seq(0, 1e6, 1), expand = expansion(mult = c(0, 0.01))) +
           theme_lsd(base_size = 14) +
           theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
           facet_wrap(~Region)
@@ -1326,7 +1326,7 @@ plot_compare_recruitment <- function(object_list, object_names, figure_dir = "co
     stat_summary(fun = function(x) quantile(x, 0.5), geom = "point", size = 1.5, alpha = 0.75) +
     scale_y_continuous(expand = expansion(mult = c(0, 0.05)), limits = c(0, NA)) +
     labs(x = "Fishing year", y = "Recruitment (millions of individuals)") +
-    scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
+    scale_x_continuous(breaks = seq(0, 1e6, 5), minor_breaks = seq(0, 1e6, 1)) +
     theme_lsd(base_size = 14) +
     theme(axis.text.x = element_text(angle = 45, hjust = 1))
 

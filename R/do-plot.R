@@ -117,7 +117,7 @@ do_plot <- function(object, map = FALSE, mcmc = FALSE, figure_dir = "figure/") {
     plot_F(object, figure_dir = figure_dir, ref = NULL)
     print("plotting catch")
     # plot_catch(object, figure_dir = figure_dir, show_proj = FALSE)
-    plot_catch_save(figure_dir = "figure/")
+    plot_catch_save(object, figure_dir = figure_dir)
     plot_catch_rule(object, figure_dir = figure_dir)
     print("plotting CPUE")
     plot_cpue(object, figure_dir = figure_dir)

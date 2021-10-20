@@ -301,10 +301,13 @@ plot_catch <- function(object,
 
 
 #' Save catch plots
+#' 
+#' @param object and LSD object
+#' @param figure_dir the directory to save to
 #'
 #' @export
 #'
-plot_catch_save <- function(figure_dir = "figure/") {
+plot_catch_save <- function(object, figure_dir = "figure/") {
   p <- plot_catch(object, show_proj = FALSE)
   ggsave(paste0(figure_dir, "catch.png"), p[[1]], width = 10, height = 8)
   ggsave(paste0(figure_dir, "catch_sums.png"), p[[2]])

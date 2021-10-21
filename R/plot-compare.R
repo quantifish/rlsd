@@ -1147,12 +1147,11 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
 
   }
   } else {
-    by.Region <- NA
-    for (i in 1:length(data_list)) {
-      by.Region[i] <- data_list[[i]]$n_area > 1
-    }
+
     
     if (any(Bref$value > 0)) {
+      
+
       # Vulnerable biomass
       p <- ggplot(data = vb %>% group_by(Iteration, Year, Model) %>% summarise(value = sum(value)), aes(x = Year, y = value, color = Model, fill = Model)) +
         geom_vline(aes(xintercept = max(years) + 0.5), linetype = 2) +
@@ -1166,15 +1165,14 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
         theme_lsd(base_size = 14) +
         theme(axis.text.x = element_text(angle = 45,hjust = 1))
       
-      if(sum(by.Region)>1){
+      if(any(Bref$Region == "Total")){
         p <- p + 
           geom_hline(data = Bref %>% filter(Region == "Total"), aes(yintercept = value), lwd = 1.2, color = "forestgreen") +
           geom_label(data = Bref %>% filter(Region == "Total"), label = "Reference", aes(x = min(vb$Year) + 10, y = value), size = 5, color = "forestgreen", fill = "white") 
       } else{
         p <- p + 
-          geom_hline(data = Bref, aes(yintercept = value), lwd = 1.2, color = "forestgreen") +
-          geom_label(data = Bref %>% filter(Region == 1), label = "Reference", aes(x = min(vb$Year) + 10, y = value), size = 5, color = "forestgreen", fill = "white") 
-          
+          geom_hline(data = Bref  , aes(yintercept = value), lwd = 1.2, color = "forestgreen") +
+          geom_label(data = Bref , label = "Reference", aes(x = min(vb$Year) + 10, y = value), size = 5, color = "forestgreen", fill = "white") 
       }
       
       if (nmod > 5) {

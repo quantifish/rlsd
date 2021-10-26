@@ -38,12 +38,23 @@ plot_refpoints <- function(object, object1, figure_dir){
     dplyr::summarise(Catch = sum(Catch)) %>%
     dplyr::mutate("CatchType" = "SL")
 
+  slcatch2_t <- reshape2::melt(slcatch, value.name = "Catch") %>% 
+    dplyr::group_by(Iteration, Year, Region, Season, RuleNum) %>%
+    dplyr::summarise(Catch = sum(Catch)) %>%
+    dplyr::mutate("CatchType" = "SL")
+
   nslcatch <- mcmc1$pred_catch_nsl_jryt
   dimnames(nslcatch) <- list("Iteration"=1:n_iter1, "RuleNum"=1:dim(nslcatch)[2], "Region"=regions, "Year"=pyears1, "Season"=seasons)
   nslcatch2 <- reshape2::melt(nslcatch, value.name = "Catch") %>% 
     dplyr::group_by(Iteration, Year, Region, RuleNum) %>%
     dplyr::summarise(Catch = sum(Catch)) %>%
-    dplyr::mutate("CatchType" = "NSL")    
+    dplyr::mutate("CatchType" = "NSL")  
+
+  nslcatch2_t <- reshape2::melt(nslcatch, value.name = "Catch") %>% 
+    dplyr::group_by(Iteration, Year, Region, Season, RuleNum) %>%
+    dplyr::summarise(Catch = sum(Catch)) %>%
+    dplyr::mutate("CatchType" = "NSL")   
+
  } else {
   slcatch <- mcmc1$pred_catch_sl_ryt
   dimnames(slcatch) <- list("Iteration"=1:n_iter1, "Region"=regions, "Year"=pyears1, "Season"=seasons)
@@ -52,10 +63,20 @@ plot_refpoints <- function(object, object1, figure_dir){
     dplyr::summarise(Catch = sum(Catch)) %>%
     dplyr::mutate("CatchType" = "SL")
 
+  slcatch2_t <- reshape2::melt(slcatch, value.name = "Catch") %>% 
+    dplyr::group_by(Iteration, Year, Region, Season) %>%
+    dplyr::summarise(Catch = sum(Catch)) %>%
+    dplyr::mutate("CatchType" = "SL")
+
   nslcatch <- mcmc1$pred_catch_nsl_ryt
   dimnames(nslcatch) <- list("Iteration"=1:n_iter1, "Region"=regions, "Year"=pyears1, "Season"=seasons)
   nslcatch2 <- reshape2::melt(nslcatch, value.name = "Catch") %>% 
     dplyr::group_by(Iteration, Year, Region) %>%
+    dplyr::summarise(Catch = sum(Catch)) %>%
+    dplyr::mutate("CatchType" = "NSL") 
+
+  nslcatch2_t <- reshape2::melt(nslcatch, value.name = "Catch") %>% 
+    dplyr::group_by(Iteration, Year, Region, Season) %>%
     dplyr::summarise(Catch = sum(Catch)) %>%
     dplyr::mutate("CatchType" = "NSL")    
  }
@@ -64,13 +85,21 @@ plot_refpoints <- function(object, object1, figure_dir){
     tidyr::pivot_wider(names_from = CatchType, values_from = Catch) %>%
     dplyr::mutate(Catch = SL + NSL)
 
+  pcatch_t <- rbind.data.frame(slcatch2_t, nslcatch2_t) %>%
+    tidyr::pivot_wider(names_from = CatchType, values_from = Catch) %>%
+    dplyr::mutate(Catch = SL + NSL)
+
   rm(slcatch)
   rm(nslcatch)
   gc()
 
   catch <- pcatch
+  catch_t <- pcatch_t %>%
+    filter(Season == "AW") %>%
+    ungroup() %>%
+    select(-Season) %>%
+    rename(SL_AW = SL, NSL_AW = NSL, Catch_AW = Catch)
   gc()
-  
 
   vb <- mcmc1$biomass_vulnref_AW_jyr
   dimnames(vb) <- list("Iteration" = 1:n_iter1, "RuleNum" = 1:dim(vb)[2], "Year" = pyears1, "Region" = regions)
@@ -188,10 +217,14 @@ if(any(grepl("B0now_r", names(mcmc1)))){
 
 
   catch$Region <- factor(catch$Region)
-  info1x <- full_join(catch, relb2)
+  catch_t$Region <- factor(catch_t$Region)
+  info1x <- full_join(catch, relb2) %>%
+    full_join(catch_t) %>%
+    select(-c(SL_AW, NSL_AW))
   info1 <- info1x %>%
       filter(Region %in% regions) %>%
-      mutate(Region = paste0("Region ", Region))
+      mutate(Region = paste0("Region ", Region)) %>%
+      mutate(U = Catch_AW / VB)
 
   if(length(regions) > 1){
     b0_total <- info1x %>%
@@ -203,11 +236,13 @@ if(any(grepl("B0now_r", names(mcmc1)))){
       dplyr::summarise(SL = sum(SL),
                        NSL = sum(NSL),
                        Catch = sum(Catch),
+                       Catch_AW = sum(Catch_AW),
                        # CatchResidual = sum(CatchResidual),
                        SSB = sum(SSB),
                        VB = sum(VB),
                        TB = sum(TB),
-                       Recruitment = sum(Recruitment)) %>%
+                       Recruitment = sum(Recruitment),
+                       U = Catch_AW / VB) %>%
       dplyr::mutate(Region = "Total") %>%
       dplyr::full_join(b0_total) %>%
       dplyr::mutate(RelVBdata = VB / VB0now) %>%
@@ -225,21 +260,39 @@ if(any(grepl("B0now_r", names(mcmc1)))){
  if(any(grepl("B0now_r", names(mcmc1)))){
   status_check <- info1 %>%
     dplyr::filter(Year == max(years1)+1) %>%
-    tidyr::pivot_longer(cols=c(Catch, SSB,SSB0now,SSB0,RelSSB,RelSSBdata,VB,VB0now,VB0,RelVB,RelVBdata,TB,TB0now,TB0,RelTB, RelTBdata), names_to = "Variable", values_to = "Value") %>%
-    dplyr::group_by(Region, Variable) %>%
+    tidyr::pivot_longer(cols=c(Catch, Catch_AW, SSB,SSB0now,SSB0,RelSSB,RelSSBdata,VB,VB0now,VB0,RelVB,RelVBdata,TB,TB0now,TB0,RelTB, RelTBdata, U), names_to = "Variable", values_to = "Value") %>%
+    dplyr::group_by(RuleNum, Region, Variable) %>%
     dplyr::summarise(P5 = quantile(Value, 0.05),
                      P50 = quantile(Value, 0.5),
                      Mean = mean(Value),
                      P95 = quantile(Value, 0.95))
+
+  proj_check <- info1 %>%
+    dplyr::filter(Year == max(years1)+5) %>%
+    tidyr::pivot_longer(cols=c(Catch, Catch_AW, SSB,SSB0now,SSB0,RelSSB,RelSSBdata,VB,VB0now,VB0,RelVB,RelVBdata,TB,TB0now,TB0,RelTB, RelTBdata, U), names_to = "Variable", values_to = "Value") %>%
+    dplyr::group_by(RuleNum, Region, Variable) %>%
+    dplyr::summarise(Proj_P5 = quantile(Value, 0.05),
+                     Proj_P50 = quantile(Value, 0.5),
+                     Proj_Mean = mean(Value),
+                     Proj_P95 = quantile(Value, 0.95))
  } else {
   status_check <- info1 %>%
     dplyr::filter(Year == max(years1)+1) %>%
-    tidyr::pivot_longer(cols=c(Catch, SSB,SSB0,RelSSB,VB,TB,TB0,RelTB), names_to = "Variable", values_to = "Value") %>%
-    dplyr::group_by(Region, Variable) %>%
+    tidyr::pivot_longer(cols=c(Catch, Catch_AW, SSB,SSB0,RelSSB,VB,TB,TB0,RelTB, U), names_to = "Variable", values_to = "Value") %>%
+    dplyr::group_by(RuleNum, Region, Variable) %>%
     dplyr::summarise(P5 = quantile(Value, 0.05),
                      P50 = quantile(Value, 0.5),
                      Mean = mean(Value),
                      P95 = quantile(Value, 0.95)) 
+
+  proj_check <- info1 %>%
+    dplyr::filter(Year == max(years1)+5) %>%
+    tidyr::pivot_longer(cols=c(Catch, Catch_AW, SSB,SSB0,RelSSB,VB,TB,TB0,RelTB, U), names_to = "Variable", values_to = "Value") %>%
+    dplyr::group_by(RuleNum, Region, Variable) %>%
+    dplyr::summarise(Proj_P5 = quantile(Value, 0.05),
+                     Proj_P50 = quantile(Value, 0.5),
+                     Proj_Mean = mean(Value),
+                     Proj_P95 = quantile(Value, 0.95)) 
  }
 
   # write.csv(status_check, file.path(figure_dir, "Current_status_check.csv"))
@@ -311,6 +364,11 @@ if(any(grepl("B0now_r", names(mcmc1)))){
     dplyr::summarise(Catch = sum(Catch)) %>%
     dplyr::mutate("CatchType" = "SL")
 
+  slcatch2_t <- reshape2::melt(slcatch, value.name = "Catch") %>% 
+    dplyr::group_by(Iteration, Year, Region, Season, RuleNum) %>%
+    dplyr::summarise(Catch = sum(Catch)) %>%
+    dplyr::mutate("CatchType" = "SL")
+
   gc()
 
   nslcatch <- mcmc$pred_catch_nsl_jryt
@@ -320,9 +378,18 @@ if(any(grepl("B0now_r", names(mcmc1)))){
     dplyr::summarise(Catch = sum(Catch)) %>%
     dplyr::mutate("CatchType" = "NSL")
 
+  nslcatch2_t <- reshape2::melt(nslcatch, value.name = "Catch") %>% 
+    dplyr::group_by(Iteration, Year, Region, Season, RuleNum) %>%
+    dplyr::summarise(Catch = sum(Catch)) %>%
+    dplyr::mutate("CatchType" = "NSL")
+
   gc()    
   
   pcatch <- rbind.data.frame(slcatch2, nslcatch2) %>%
+    tidyr::pivot_wider(names_from = CatchType, values_from = Catch) %>%
+    dplyr::mutate(Catch = SL + NSL)
+
+  pcatch_t <- rbind.data.frame(slcatch2_t, nslcatch2_t) %>%
     tidyr::pivot_wider(names_from = CatchType, values_from = Catch) %>%
     dplyr::mutate(Catch = SL + NSL)
 
@@ -337,6 +404,11 @@ if(any(grepl("B0now_r", names(mcmc1)))){
   gc()
 
   catch <- pcatch
+  catch_t <- pcatch_t %>%
+    filter(Season == "AW") %>%
+    ungroup() %>%
+    select(-Season) %>%
+    rename(SL_AW = SL, NSL_AW = NSL, Catch_AW = Catch)
 
   sub <- catch %>% left_join(rule_type) %>% filter(Iteration == 1)
   p <- ggplot(sub %>% filter(Iteration == 1)) +
@@ -346,6 +418,7 @@ if(any(grepl("B0now_r", names(mcmc1)))){
   ggsave(file.path(figure_dir, "Catch_check.png"), p, height = 10, width = 15)
 
   rm(pcatch)
+  rm(pcatch_t)
   gc()
   
 
@@ -506,7 +579,10 @@ if(any(grepl("B0now_r", names(mcmc1)))){
   rm(reltb)
 
   catch$Region <- factor(catch$Region)
-  info <- full_join(catch, relb1)
+  catch_t$Region <- factor(catch_t$Region)
+  info <- full_join(catch, relb1) %>%
+    full_join(catch_t) %>%
+    select(-c(SL_AW, NSL_AW))
   gc()
 
   cpue2$Region <- factor(cpue2$Region)
@@ -522,7 +598,8 @@ if(any(grepl("B0now_r", names(mcmc1)))){
   
   info <- infox %>%
     filter(Region %in% regions) %>%
-    mutate(Region = paste0("Region ", Region))
+    mutate(Region = paste0("Region ", Region)) %>%
+    mutate(U = Catch_AW / VB)
   gc()
 
   ### doesn't make sense to calculate total by rule, since not using total by rule
@@ -612,7 +689,7 @@ if(any(grepl("B0now_r", names(mcmc1)))){
   #####################
     summary <- cinfo %>%
       dplyr::filter(Region != "Total") %>%
-      tidyr::pivot_longer(cols=c(Catch,CPUE,SSB,SSB0now,SSB0,RelSSB,RelSSBdata,VB,VB0now,VB0,RelVB,RelVBdata,TB,TB0,TB0now, RelTB, RelTBdata), names_to = "Variable", values_to = "Value") %>% #CPUE,F)
+      tidyr::pivot_longer(cols=c(Catch,Catch_AW, CPUE,SSB,SSB0now,SSB0,RelSSB,RelSSBdata,VB,VB0now,VB0,RelVB,RelVBdata,TB,TB0,TB0now, RelTB, RelTBdata, U), names_to = "Variable", values_to = "Value") %>% #CPUE,F)
       dplyr::group_by(Region, RuleNum, Variable) %>%
       dplyr::summarise(P5 = quantile(Value, 0.05),
                        P50 = quantile(Value, 0.5),
@@ -741,10 +818,12 @@ if(any(grepl("B0now_r", names(mcmc1)))){
     max_info3 <- data.frame(max_info2) %>%
       dplyr::group_by(Iteration, Year, RuleType, Constraint, CVConstraint) %>%
       dplyr::summarise(Catch = sum(Catch),
+                       Catch_AW = sum(Catch_AW),
                        VB = sum(VB),
                        SSB = sum(SSB),
                        TB = sum(TB),
-                       CPUE = mean(CPUE)) %>%
+                       CPUE = mean(CPUE),
+                       U = Catch_AW / VB) %>%
       dplyr::left_join(vb0now %>% dplyr::filter(Region == "Total")) %>%
       dplyr::left_join(ssb0now %>% dplyr::filter(Region == "Total")) %>%
       dplyr::left_join(tb0now %>% dplyr::filter(Region == "Total")) %>%
@@ -814,10 +893,12 @@ if(any(grepl("B0now_r", names(mcmc1)))){
     average_info_t <- average_info %>%
       dplyr::group_by(Iteration, Year, RuleType) %>%
       dplyr::summarise(Catch = sum(Catch), 
+                       Catch_AW = sum(Catch_AW),
                        VB = sum(VB),
                        SSB = sum(SSB),
                        TB = sum(TB),
-                       CPUE = mean(CPUE)) %>%
+                       CPUE = mean(CPUE),
+                       U = Catch_AW / VB) %>%
       dplyr::left_join(vb0now %>% dplyr::filter(Region == "Total")) %>%
       dplyr::left_join(ssb0now %>% dplyr::filter(Region == "Total")) %>%
       dplyr::left_join(tb0now %>% dplyr::filter(Region == "Total")) %>%
@@ -883,6 +964,8 @@ if(any(grepl("B0now_r", names(mcmc1)))){
 
   ## last assessment year
   curr <- info1 %>%
+    dplyr::filter(RuleNum == 1) %>%
+    dplyr::select(-RuleNum) %>%
     dplyr::filter(Year == max(years)+1) %>%
     tidyr::pivot_longer(cols = c(unique(status_check$Variable)), names_to = "Variable", values_to = "Value") %>%
     ungroup() %>%
@@ -892,6 +975,20 @@ if(any(grepl("B0now_r", names(mcmc1)))){
     dplyr::group_by(Region, Variable, RuleType) %>%
     dplyr::summarise(P_above_mean = length(which(Current >= Mean))/length(Current),
                      P_above_med = length(which(Current >= P50))/length(Current))
+
+  proj <- info1 %>%
+    dplyr::filter(RuleNum == 1) %>%
+    dplyr::select(-RuleNum) %>%
+    dplyr::filter(Year == max(years)+5) %>%
+    tidyr::pivot_longer(cols = c(unique(status_check$Variable)), names_to = "Variable", values_to = "Value") %>%
+    ungroup() %>%
+    dplyr::select(Region, Variable, Value)  %>%
+    dplyr::rename(Proj = Value) %>%
+    dplyr::left_join(sum %>% dplyr::select(Region, RuleType, Variable, Mean, P50)) %>%
+    dplyr::group_by(Region, Variable, RuleType) %>%
+    dplyr::summarise(P_above_mean_proj = length(which(Proj >= Mean))/length(Proj),
+                     P_above_med_proj = length(which(Proj >= P50))/length(Proj))
+
   # write.csv(curr, file.path(figure_dir, "P_above_ref.csv"))
 
   # if(any(grepl("B0now_r", names(mcmc1)))){
@@ -906,16 +1003,26 @@ if(any(grepl("B0now_r", names(mcmc1)))){
   #   dplyr::summarise(P_above_mean = length(which(Current >= Mean))/length(Current),
   #                    P_above_med = length(which(Current >= P50))/length(Current))
   # }
-    sum_curr <- full_join(sum, curr)
+    sum_curr <- full_join(sum, curr) %>%
+      full_join(proj)
     status_check <- status_check %>%
+      ungroup() %>%
+      filter(RuleNum == 1) %>%
+      dplyr::select(-RuleNum) %>%
       dplyr::rename(Current_P5 = P5, Current_P50 = P50, Current_Mean = Mean, Current_P95 = P95)
-    sum_status <- full_join(sum_curr, status_check)
+    proj_check <- proj_check %>%
+      ungroup() %>%
+      filter(RuleNum == 1) %>%
+      dplyr::select(-RuleNum)
+
+    sum_status <- full_join(sum_curr, status_check) %>%
+    left_join(proj_check)
 
     msy_info_sub <- msy_info %>% 
       dplyr::select(Region, RuleNum, CV, Prisk, Pcatch, AvgTotalCatch, par2, RuleType) %>%
       unique()
 
-    sum_info <- left_join(sum_status, msy_info_sub)
+    sum_info <- full_join(sum_status, msy_info_sub)
     write.csv(sum_info, file.path(figure_dir, "Reference_level_info.csv"), row.names = FALSE)
 
   msy_toUse <- max_info %>% select(RuleType, Constraint, CVConstraint, Variable, P5, P50, Mean, P95, Region)

@@ -114,9 +114,19 @@ plot_compare_lfs <- function(object_list,
     # guides(shape = "none", colour = "none") +
     # scale_shape_manual(values = c(0, 4)) +
     # scale_colour_manual(values = rev(ggplotColours(n = length(sources)))) +
-    scale_color_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
+    # scale_color_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
     scale_x_continuous(minor_breaks = seq(0, 1e6, 2), limits = c(min(elf$lower), max(elf$upper))) +
     theme_lsd()
+
+    if (nmod > 5) {
+      p <- p +
+        scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
+        scale_color_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod)))
+    } else{
+      p <- p +
+        scale_fill_brewer(palette = "Set1") +
+        scale_color_brewer(palette = "Set1")
+    }
 
   if (data$n_area == 1) {
     p <- p + facet_grid(Year + Season + Source ~ Sex, scales = "free_y")

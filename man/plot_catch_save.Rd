@@ -4,7 +4,12 @@
 \alias{plot_catch_save}
 \title{Save catch plots}
 \usage{
-plot_catch_save(figure_dir = "figure/")
+plot_catch_save(object, figure_dir = "figure/")
+}
+\arguments{
+\item{object}{and LSD object}
+
+\item{figure_dir}{the directory to save to}
 }
 \description{
 Save catch plots

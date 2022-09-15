@@ -21,13 +21,14 @@ Imports:
 Depends:
     dplyr,
     ggplot2,
-    loo
+    loo,
+    forcats
 Suggests:
     roxygen2,
     testthat,
     bayesplot
 License: MIT + file LICENSE
-RoxygenNote: 7.1.2
+RoxygenNote: 7.2.1
 Collate:
     'TACC.R'
     'create-rules.R'

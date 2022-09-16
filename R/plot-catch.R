@@ -17,8 +17,8 @@ plot_catch_rule <- function(object,
                             xlab = "Fishing year",
                             ylab = "Catch (tonnes)",
                             figure_dir = "figure/",
-                            save_plot = TRUE)
-{
+                            save_plot = TRUE) {
+
   data <- object@data
   mcmc <- object@mcmc
 
@@ -87,8 +87,8 @@ plot_catch <- function(object,
                        show_proj = FALSE,
                        scales = "free",
                        xlab = "Fishing year",
-                       ylab = "Catch (tonnes)")
-{
+                       ylab = "Catch (tonnes)") {
+
   data <- object@data
   mcmc <- object@mcmc
 
@@ -174,7 +174,7 @@ plot_catch <- function(object,
     pcatch <- filter(pcatch, Year <= data$last_yr)
   }
 
-  # This simply sets up factor order in plot
+  # This sets up factor order in plot
   ord1 <- c("NSL", "SL", "Handling")
   ord2 <- c(YR, "AW", "SS")
   pcatch$Type <- factor(pcatch$Type, levels = ord1)
@@ -289,9 +289,9 @@ plot_catch <- function(object,
     scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1)))
 
   # add msy
-    p4 <- p4 +
-      stat_summary(aes(x = Year, y = MSY), fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.125, colour = "black", fill = "black" ) +
-      stat_summary(aes(x = Year, y = MSY), fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1) +
+  p4 <- p4 +
+    stat_summary(aes(x = Year, y = MSY), fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.125, colour = "black", fill = "black" ) +
+    stat_summary(aes(x = Year, y = MSY), fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1) +
     geom_label_repel(data = dcatch2, aes(x = Year, y = MSY, label = Label), fill = "black", size = 5, color = 'white', force = 10, segment.color = '#bbbbbb', min.segment.length = unit(0, "lines"))
 
   p4 <- p4 + facet_grid(Region ~ ., scales = "free")
@@ -301,10 +301,9 @@ plot_catch <- function(object,
 
 
 #' Save catch plots
-#' 
+#'
 #' @param object and LSD object
 #' @param figure_dir the directory to save to
-#'
 #' @export
 #'
 plot_catch_save <- function(object, figure_dir = "figure/") {

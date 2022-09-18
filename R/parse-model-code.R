@@ -31,7 +31,6 @@ parse_model_code <- function(base = "base_lsd", ctl = "lsd.ctl", save = FALSE) {
                        d$ctl_q_puerulus,
                        d$ctl_q_drift,
                        d$ctl_init_erate,
-                       d$ctl_F,
                        d$ctl_move,
                        d$ctl_cpue_pow)) # BUG - needs its own ctl
 

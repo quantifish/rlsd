@@ -311,10 +311,10 @@ plot_cpue <- function(object,
     }
     if (data$n_area > 1) {
         p <- p + facet_wrap(Season ~ Region+CPUE_name, scales = "free", ncol = data$n_area)
-        ggsave(paste0(figure_dir, "cpue.png"), p, height = 10)
+        ggsave(paste0(figure_dir, "cpue.png"), p, height = 10, width = 15)
     } else {
         p <- p + facet_grid(Season ~ CPUE_name, scales = "free")
-        ggsave(paste0(figure_dir, "cpue.png"), p, height = 9)
+        ggsave(paste0(figure_dir, "cpue.png"), p, height = 9, width = 12)
     }
 
     ## separate by series
@@ -341,9 +341,9 @@ plot_cpue <- function(object,
         }
         if (length(unique(ocr_yrs$Region)) > 1) {
             p <- p + facet_wrap(~Region, scales = "free", ncol = data$n_area)
-            ggsave(paste0(figure_dir, "cpue_CR.png"), p, width = 9, height = 10)
+            ggsave(paste0(figure_dir, "cpue_CR.png"), p, width = 15, height = 10)
         } else {
-            ggsave(paste0(figure_dir, "cpue_CR.png"), p, height = 9)
+            ggsave(paste0(figure_dir, "cpue_CR.png"), p, height = 9, width = 12)
         }
     }
 
@@ -381,10 +381,10 @@ plot_cpue <- function(object,
     }
     if (length(unique(ocpue_fsu$Region)) > 1) {
         p <- p + facet_wrap(Region~Season, scales = "free", ncol = data$n_area)
-        ggsave(paste0(figure_dir, "cpue_FSU.png"), p, width = 9, height = 10)
+        ggsave(paste0(figure_dir, "cpue_FSU.png"), p, width = 15, height = 10)
     } else {
         p <- p + facet_wrap(~Season, scales = "free", ncol = data$n_area)
-        ggsave(paste0(figure_dir, "cpue_FSU.png"), p, height = 9)
+        ggsave(paste0(figure_dir, "cpue_FSU.png"), p, height = 9, width = 12)
     }
 
     # CELR
@@ -412,10 +412,10 @@ plot_cpue <- function(object,
     }
     if (length(unique(ocpue_celr$Region)) > 1) {
         p <- p + facet_wrap(Region~Season, scales = "free", ncol = data$n_area)
-        ggsave(paste0(figure_dir, "cpue_CELR.png"), p, height = 10)
+        ggsave(paste0(figure_dir, "cpue_CELR.png"), p, height = 10, width = 15)
     } else {
         p <- p + facet_wrap(~Season, scales = "free", ncol = data$n_area)
-        ggsave(paste0(figure_dir, "cpue_CELR.png"), p, height = 9)
+        ggsave(paste0(figure_dir, "cpue_CELR.png"), p, height = 9, width = 12)
     }
 
     # Logbook
@@ -443,10 +443,10 @@ plot_cpue <- function(object,
     }
     if (length(unique(ocpue_lb$Region)) > 1) {
         p <- p + facet_wrap(Region~Season, scales = "free", ncol = data$n_area)
-        ggsave(paste0(figure_dir, "cpue_Logbook.png"), p, height = 10)
+        ggsave(paste0(figure_dir, "cpue_Logbook.png"), p, height = 10, width = 15)
     } else {
         p <- p + facet_wrap(~Season, scales = "free", ncol = data$n_area)
-        ggsave(paste0(figure_dir, "cpue_Logbook.png"), p, height = 9)
+        ggsave(paste0(figure_dir, "cpue_Logbook.png"), p, height = 9, width = 12)
     }
 
     # CPUE residuals
@@ -468,7 +468,7 @@ plot_cpue <- function(object,
     } else {
         p <- p + facet_grid(Season ~ CPUE_name, scales = "free")
     }
-    ggsave(paste0(figure_dir, "cpue_resid.png"), p, height = 9)
+    ggsave(paste0(figure_dir, "cpue_resid.png"), p, height = 9, width = 12)
 
     ## separate by series
     ### CR
@@ -491,7 +491,7 @@ plot_cpue <- function(object,
         if (length(unique(rcr_yrs$Region)) > 1) {
             p <- p + facet_wrap( ~ Region, scales = "free", ncol = data$n_area)
         }
-        ggsave(paste0(figure_dir, "cpue_resid_CR.png"), p, height = 9)
+        ggsave(paste0(figure_dir, "cpue_resid_CR.png"), p, height = 9, width = 12)
     }
 
     ### FSU
@@ -520,7 +520,7 @@ plot_cpue <- function(object,
     } else {
         p <- p + facet_wrap( ~ Season, scales = "free", ncol = data$n_area)
     }
-    ggsave(paste0(figure_dir, "cpue_resid_FSU.png"), p, height = 9)
+    ggsave(paste0(figure_dir, "cpue_resid_FSU.png"), p, height = 9, width = 12)
 
     ### CELR
     # dfilter <- expand.grid("Year" = 1989:max(ocpue$Year), "Season" = c("AW","SS"))
@@ -546,7 +546,7 @@ plot_cpue <- function(object,
     } else {
         p <- p + facet_wrap( ~ Season, scales = "free", ncol = data$n_area)
     }
-    ggsave(paste0(figure_dir, "cpue_resid_CELR.png"), p, height = 9)
+    ggsave(paste0(figure_dir, "cpue_resid_CELR.png"), p, height = 9, width = 12)
 
     ### Logbook
     # dfilter <- expand.grid("Year" = 1989:max(ocpue$Year), "Season" = c("AW","SS"))
@@ -572,7 +572,7 @@ plot_cpue <- function(object,
     } else {
         p <- p + facet_wrap( ~ Season, scales = "free", ncol = data$n_area)
     }
-    ggsave(paste0(figure_dir, "cpue_resid_Logbook.png"), p, height = 9)
+    ggsave(paste0(figure_dir, "cpue_resid_Logbook.png"), p, height = 9, width = 12)
 
 
 }

@@ -1550,7 +1550,7 @@ plot_compare_cpue <- function(object_list,
     if(any(names(data_list[[x]]) == "data_cpue_type_i")) {
       pcpue1 <- bind_cols(pcpue1, "CPUE_type" = rep(data_list[[x]]$data_cpue_type_i, each = n_iter))
     } else {
-      pcpue1 <- bind_cols(pcpue1, "CPUE_type" = rep(1, each = n_iter))
+      pcpue1 <- bind_cols(pcpue1, "CPUE_type" = 1)
     }
     pcpue1$Model <- object_names[[x]]
     return(pcpue1)

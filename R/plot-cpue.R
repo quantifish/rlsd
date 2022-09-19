@@ -130,7 +130,7 @@ plot_cpue <- function(object,
             pcpue1 <- bind_cols(pcpue1, "CPUE_type" = 1)
         }
         pcpue1 <- pcpue1 %>%
-            full_join(pq, by = c("Iteration", "Year")) %>%
+            full_join(pq1, by = c("Iteration", "Year")) %>%
             select(-q)
         pcpue1$SD <- NA
 
@@ -145,7 +145,7 @@ plot_cpue <- function(object,
             rcpue1 <- bind_cols(rcpue1, "CPUE_type" = 1)
         }
         rcpue1 <- rcpue1 %>%
-            full_join(pq, by = c("Iteration", "Year")) %>%
+            full_join(pq1, by = c("Iteration", "Year")) %>%
             select(-q)
     } else {
         pcpue1 <- NULL

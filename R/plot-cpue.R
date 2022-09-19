@@ -208,7 +208,7 @@ plot_cpue <- function(object,
         ocpue <- bind_cols(ocpue, "CPUE_type" = 1)
     }
     ocpue <- ocpue %>%
-        mutate(CPUE_name = case_when(Year <= 1979 ~ "CR",
+        mutate(CPUE_name = case_when(Year < 1979 ~ "CR",
                                      Year >= 1979 & Year <= 1989 & CPUE_type == 1 ~ "FSU",
                                      Year == 1989 & CPUE_type == 1 & Season == "SS" ~ "CELR",
                                      Year <= 2019 & Year > 1989 & CPUE_type == 1 ~ "CELR",
@@ -216,7 +216,7 @@ plot_cpue <- function(object,
     ocpue$CPUE_name <- factor(ocpue$CPUE_name, levels = unique(ocpue$CPUE_name))
 
     pcpue <- pcpue %>%
-        mutate(CPUE_name = case_when(Year <= 1979 ~ "CR",
+        mutate(CPUE_name = case_when(Year < 1979 ~ "CR",
                                      Year >= 1979 & Year <= 1989 & CPUE_type == 1 ~ "FSU",
                                      Year == 1989 & CPUE_type == 1 & Season == "SS" ~ "CELR",
                                      Year <= 2019 & Year > 1989 & CPUE_type == 1 ~ "CELR",
@@ -224,7 +224,7 @@ plot_cpue <- function(object,
     pcpue$CPUE_name <- factor(pcpue$CPUE_name, levels = unique(pcpue$CPUE_name))
 
     rcpue <- rcpue %>%
-        mutate(CPUE_name = case_when(Year <= 1979 ~ "CR",
+        mutate(CPUE_name = case_when(Year < 1979 ~ "CR",
                                      Year >= 1979 & Year <= 1989 & CPUE_type == 1 ~ "FSU",
                                      Year == 1989 & CPUE_type == 1 & Season == "SS" ~ "CELR",
                                      Year <= 2019 & Year > 1989 & CPUE_type == 1 ~ "CELR",
@@ -232,7 +232,7 @@ plot_cpue <- function(object,
     rcpue$CPUE_name <- factor(rcpue$CPUE_name, levels = unique(rcpue$CPUE_name))
 
     pcpue1 <- pcpue1 %>%
-        mutate(CPUE_name = case_when(Year <= 1979 ~ "CR",
+        mutate(CPUE_name = case_when(Year < 1979 ~ "CR",
                                      Year >= 1979 & Year <= 1989 & CPUE_type == 1 ~ "FSU",
                                      Year == 1989 & CPUE_type == 1 & Season == "SS" ~ "CELR",
                                      Year <= 2019 & Year > 1989 & CPUE_type == 1 ~ "CELR",
@@ -240,7 +240,7 @@ plot_cpue <- function(object,
     pcpue1$CPUE_name <- factor(pcpue1$CPUE_name, levels = unique(pcpue1$CPUE_name))
 
     rcpue1 <- rcpue1 %>%
-        mutate(CPUE_name = case_when(Year <= 1979 ~ "CR",
+        mutate(CPUE_name = case_when(Year < 1979 ~ "CR",
                                      Year >= 1979 & Year <= 1989 & CPUE_type == 1 ~ "FSU",
                                      Year == 1989 & CPUE_type == 1 & Season == "SS" ~ "CELR",
                                      Year <= 2019 & Year > 1989 & CPUE_type == 1 ~ "CELR",
@@ -313,7 +313,7 @@ plot_cpue <- function(object,
         p <- p + facet_wrap(Season ~ Region+CPUE_name, scales = "free", ncol = data$n_area)
         ggsave(paste0(figure_dir, "cpue.png"), p, width = 9, height = 10)
     } else {
-        p <- p + facet_wrap(Season ~ CPUE_name, scales = "free")
+        p <- p + facet_grid(Season ~ CPUE_name, scales = "free")
         ggsave(paste0(figure_dir, "cpue.png"), p, height = 9)
     }
 

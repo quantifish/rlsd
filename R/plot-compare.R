@@ -138,7 +138,7 @@ plot_compare_lfs <- function(object_list,
 }
 
 
-#' Compare vulnerable biomass from multiple models
+#' Compare spawning biomass from multiple models
 #'
 #' @param object_list list of 'lsd.rds' files from multiple models
 #' @param object_names vector of model names associated with each of the output files in object_list
@@ -229,9 +229,9 @@ plot_compare_ssb <- function(object_list,
   pyears <- unique(unlist(pyears_list))
 
   mods <- unique(ssb$Model)
-  mod_num <- sapply(1:length(mods), function(m) as.numeric(strsplit(as.character(mods[m]), "_")[[1]][1]))
-  ssb$Model <- factor(ssb$Model, levels = unique(mods)[order(mod_num)])
-  ssb0$Model <- factor(ssb0$Model, levels = unique(mods)[order(mod_num)])
+  # mod_num <- sapply(1:length(mods), function(m) as.numeric(strsplit(as.character(mods[m]), "_")[[1]][1]))
+  ssb$Model <- factor(ssb$Model, levels = unique(mods)) #[order(mod_num)])
+  ssb0$Model <- factor(ssb0$Model, levels = unique(mods)) #[order(mod_num)])
 
   if(save_plot){
   p1 <- ggplot(ssb %>% filter(Year %in% years) %>% group_by(Iteration, Year, Model) %>% summarise(value = sum(value)), aes(x = Year, y = value)) +
@@ -314,7 +314,7 @@ plot_compare_ssb <- function(object_list,
     #stat_summary(data = ssb0 %>% filter(type == "SSB0") %>% group_by(Iteration, Year, Model) %>% summarise(value = sum(value)), fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
     #stat_summary(data = ssb0 %>% filter(type == "SSB0") %>% group_by(Iteration, Year, Model) %>% summarise(value = sum(value)), fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model)) +
     stat_summary(fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
-    stat_summary(fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model, linetype = Model)) +
+    stat_summary(fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model)) + #, linetype = Model)) +
     stat_summary(fun = function(x) quantile(x, 0.5), geom = "point", size = 1.5, alpha = 0.75, aes(color = Model)) +
     #geom_label(data = labs, aes(x = Year, y = value, label = type), nudge_x = -5) +
     labs(x = "Fishing year", y = "Spawning stock biomass (tonnes)") +
@@ -663,7 +663,7 @@ plot_compare_ssb <- function(object_list,
         #stat_summary(data = ssb0 %>% filter(type == "SSB0") %>% group_by(Iteration, Year, Model) %>% summarise(value = sum(value)), fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
         #stat_summary(data = ssb0 %>% filter(type == "SSB0") %>% group_by(Iteration, Year, Model) %>% summarise(value = sum(value)), fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model)) +
         stat_summary(fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
-        stat_summary(fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model, linetype = Model)) +
+        stat_summary(fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model)) + #, linetype = Model)) +
         stat_summary(fun = function(x) quantile(x, 0.5), geom = "point", size = 1.5, alpha = 0.75, aes(color = Model)) +
         geom_label(data = labs %>% filter(type != "SSB0") %>% group_by(type) %>% summarise(value = sum(value)), aes(x = min(ssb$Year)+10, y = value, label = type)) +
         labs(x = "Fishing year", y = "Spawning stock biomass (tonnes)") +
@@ -825,8 +825,8 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
   vb0$Model <- factor(vb0$Model)
 
   mods <- unique(vb$Model)
-  mod_num <- sapply(1:length(mods), function(m) as.numeric(strsplit(as.character(mods[m]), "_")[[1]][1]))
-  vb$Model <- factor(vb$Model, levels = unique(mods)[order(mod_num)])
+  # mod_num <- sapply(1:length(mods), function(m) as.numeric(strsplit(as.character(mods[m]), "_")[[1]][1]))
+  vb$Model <- factor(vb$Model, levels = unique(mods)) #[order(mod_num)])
 
   nmod <- length(unique(vb$Model))
   years <- unique(unlist(years_list))
@@ -1323,9 +1323,9 @@ plot_compare_recruitment <- function(object_list, object_names, figure_dir = "co
   years <- unique(unlist(years_list))
 
   nmod <- length(unique(recruits$Model))
-  mods <- unique(recruits$Model)
-  mod_num <- sapply(1:length(mods), function(m) as.numeric(strsplit(as.character(mods[m]), "_")[[1]][1]))
-  recruits$Model <- factor(recruits$Model, levels = object_names)
+  mods <- unique(object_names)
+  # mod_num <- sapply(1:length(mods), function(m) as.numeric(strsplit(as.character(mods[m]), "_")[[1]][1]))
+  recruits$Model <- factor(recruits$Model, levels = mods)
 
 
 
@@ -1547,6 +1547,11 @@ plot_compare_cpue <- function(object_list,
     pcpue1 <- melt(pcpue1, value.name = "CPUE") %>%
       dplyr::select(Iteration, CPUE) %>%
       mutate(Data = "Expected", Type = "CPUE", Region = rep(data_list[[x]]$data_cpue_area_i, each = n_iter), Year = rep(data_list[[x]]$data_cpue_year_i, each = n_iter), Season = seasons[rep(data_list[[x]]$data_cpue_season_i, each = n_iter)])
+    if(any(names(data_list[[x]]) == "data_cpue_type_i")) {
+      pcpue1 <- bind_cols(pcpue1, "CPUE_type" = rep(data_list[[x]]$data_cpue_type_i, each = n_iter))
+    } else {
+      pcpue1 <- bind_cols(pcpue1, "CPUE_type" = rep(1, each = n_iter))
+    }
     pcpue1$Model <- object_names[[x]]
     return(pcpue1)
   })
@@ -1563,16 +1568,26 @@ plot_compare_cpue <- function(object_list,
                        qtype = data_list[[x]]$data_cpue_q_i,
                        SD = sqrt(data_list[[x]]$cov_cpue_sd_i^2 + data_list[[x]]$cov_cpue_process_error_i^2) * 1.0 / data_list[[x]]$cpue_like_wt[data_list[[x]]$data_cpue_q_i],
                        Model = object_names[x])
+    if(any(names(data_list[[x]]) == "data_cpue_type_i")) {
+      df <- bind_cols(df, "CPUE_type" = data_list[[x]]$data_cpue_type_i)
+    } else {
+      df <- bind_cols(df, "CPUE_type" = 1)
+    }
     return(df)
   })
   ocpue <- do.call(rbind, ocpue)
 
   # CELR
-  dfilter <- expand.grid("Year" = 1989:max(ocpue$Year), "Season" = c("AW","SS"))
+  dfilter <- expand.grid("Year" = 1989:min(c(max(ocpue$Year),2019)), "Season" = c("AW","SS"))
   dfilter <- dfilter[-which(dfilter$Year == 1989 & dfilter$Season == "AW"),]
-  dfilter <- dfilter[-which(dfilter$Year == max(ocpue$Year) & dfilter$Season == "SS"),]
-  ocr_yrs <- ocpue %>% right_join(dfilter) %>% mutate(Region = paste0("Region ", Region))
-  pcr_yrs <- pcpue %>% right_join(dfilter) %>% mutate(Region = paste0("Region ", Region))
+  dfilter <- dfilter[-which(dfilter$Year == 2019 & dfilter$Season == "SS"),]
+
+  ocr_yrs <- ocpue %>% right_join(dfilter) %>% 
+    filter(CPUE_type == 1) %>%
+    mutate(Region = paste0("Region ", Region))
+  pcr_yrs <- pcpue %>% right_join(dfilter) %>% 
+    filter(CPUE_type == 1) %>%
+    mutate(Region = paste0("Region ", Region))
 
   ocr_yrs$Model <- factor(ocr_yrs$Model, levels = object_names)
   pcr_yrs$Model <- factor(pcr_yrs$Model, levels = object_names)
@@ -1581,7 +1596,7 @@ plot_compare_cpue <- function(object_list,
     geom_linerange(aes(x = Year, ymin = exp(log(CPUE) - SD), ymax = exp(log(CPUE) + SD), color = Model), alpha = 0.75) +
     scale_x_continuous(breaks = pretty(c(min(ocr_yrs$Year), max(ocr_yrs$Year)))) +
     scale_y_continuous(expand = expansion(mult = c(0, 0.05)), limits = c(0, NA)) +
-    labs(x = xlab, y = ylab) +
+    xlab(xlab) + ylab(paste0(ylab, " (CELR)")) +
     theme_lsd()
 
   if (!is.null(pcpue)) {
@@ -1608,8 +1623,54 @@ plot_compare_cpue <- function(object_list,
     if (save_plot) ggsave(paste0(figure_dir, "cpue_CELR.png"), p, height = 9)
   }
 
+
+  ## LOGBOOK
+  ocr_yrs <- ocpue %>% 
+    filter(CPUE_type == 2) %>%
+    mutate(Region = paste0("Region ", Region))
+  pcr_yrs <- pcpue %>%
+    filter(CPUE_type == 2) %>%
+    mutate(Region = paste0("Region ", Region))
+
+if(nrow(ocr_yrs) > 0){
+  ocr_yrs$Model <- factor(ocr_yrs$Model, levels = unique(ocr_yrs$Model))
+  pcr_yrs$Model <- factor(pcr_yrs$Model, levels = unique(pcr_yrs$Model))
+  p <- ggplot(data = ocr_yrs) +
+    geom_point(aes(x = Year, y = CPUE, color = Model), alpha = 0.75) +
+    geom_linerange(aes(x = Year, ymin = exp(log(CPUE) - SD), ymax = exp(log(CPUE) + SD), color = Model), alpha = 0.75) +
+    scale_x_continuous(breaks = pretty(c(min(ocr_yrs$Year), max(ocr_yrs$Year)))) +
+    scale_y_continuous(expand = expansion(mult = c(0, 0.05)), limits = c(0, NA)) +
+    xlab(xlab) + ylab(paste0(ylab, " (Logbook)")) +
+    theme_lsd()
+
+  if (!is.null(pcpue)) {
+    p <- p + stat_summary(data = pcr_yrs, aes(x = .data$Year, y = .data$CPUE, fill = .data$Model), fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
+      # stat_summary(data = pcr_yrs, aes(x = Year, y = CPUE, fill = Model), fun.min = function(x) quantile(x, 0.25), fun.max = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
+      stat_summary(data = pcr_yrs, aes(x = .data$Year, y = .data$CPUE, color = .data$Model), fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1)
+  }
+
+  if (nmod > 5) {
+    p <- p +
+      scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
+      scale_color_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod)))
+  } else {
+    p <- p +
+      scale_fill_brewer(palette = "Set1") +
+      scale_color_brewer(palette = "Set1")
+  }
+
+  if (length(unique(ocr_yrs$Region)) > 1) {
+    p <- p + facet_wrap(Region~Season, scales = "free", ncol = n_area)
+    if (save_plot) ggsave(paste0(figure_dir, "cpue_Logbook.png"), p, width = 9, height = 10)
+  } else {
+    p <- p + facet_wrap(~Season, scales = "free", ncol = n_area)
+    if (save_plot) ggsave(paste0(figure_dir, "cpue_Logbook.png"), p, height = 9)
+  }
+}
+
   if (!save_plot) return(p)
 }
+
 
 
 #' Compare catchability coefficient q from multiple models
@@ -1691,6 +1752,7 @@ plot_compare_q <- function(object_list, object_names, figure_dir = "compare_figu
 
   nmod <- length(unique(q$Model))
   years <- unique(unlist(years_list))
+  q$Model <- factor(q$Model, levels = object_names)
 
   p <- ggplot(data = q %>% filter(Year %in% years), aes(x = Year, y = value, colour = Model, fill = Model)) +
     stat_summary(fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +

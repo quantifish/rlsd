@@ -49,11 +49,18 @@ plot_data_extent <- function(object,
     mutate(N = scalar / 2)
 
   # Abundance Index
-  ocpue <- data.frame(Region = d$data_cpue_area_i, Year = d$data_cpue_year_i, Source = d$data_cpue_q_i, Season = seasons[d$data_cpue_season_i], CPUE = d$data_cpue_i, Type = "CPUE", N = d$cov_cpue_sd_i) %>%
+  ocpue <- data.frame(Region = d$data_cpue_area_i, Year = d$data_cpue_year_i, Source = d$data_cpue_q_i, Season = seasons[d$data_cpue_season_i], Series = d$data_cpue_type_i, CPUE = d$data_cpue_i, Type = "CPUE", N = d$cov_cpue_sd_i) %>%
+    mutate(DataType = case_when(Year < 1979 ~ "CR",
+                                     Year >= 1979 & Year <= 1989 & Series == 1 ~ "FSU",
+                                     Year == 1989 & Series == 1 & Season == "SS" ~ "CELR",
+                                     Year <= 2019 & Year > 1989 & Series == 1 ~ "CELR",
+                                     Series == 2 ~ "Logbook" )) %>%
+    mutate(Series = ifelse(Series == 1, "CR/FSU/CELR", "Logbook")) %>%
     select(-CPUE) %>%
-    mutate(DataType = "CPUE", DataSource = paste(DataType, Season, Type)) %>%
-    mutate(DataType = paste(DataType, Source)) %>%
-    select(-Source) %>%
+    # mutate(DataType = "CPUE", DataSource = paste(DataType, Season, Series, Type)) %>%
+    # mutate(DataType = paste(DataType, Source)) %>%
+    mutate(DataSource = paste("CPUE", Series, Season)) %>%
+    select(-c(Source, Series)) %>%
     mutate(N = N / max(N) * scalar)
 
   # Observed LF

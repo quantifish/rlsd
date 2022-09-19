@@ -107,18 +107,30 @@ plot_cpue <- function(object,
     pyears <- data$first_yr:data$last_proj_yr
     poffset <- data$data_offset_cpue_ry
 
+    # if(any(names(data) == "data_cpue_type_i")){
+    #     series <- data.frame("qtype" = data$data_cpue_q_i, "year" = data$data_cpue_year_i, "season" = data$data_cpue_season_i, "CPUE_type" = data$data_cpue_type_i)
+    # } else {
+    #     series <- data.frame("qtype" = data$data_cpue_q_i, "year" = data$data_cpue_year_i, "season" = data$data_cpue_season_i, "CPUE_type" = 1)
+    # }
+
     if (length(map) > 0) {
         pq1 <- map$par_q_cpue_qy
         dimnames(pq1) <- list("Iteration" = 1, "qtype" = 1:n_q, "Year" = pyears)
-        pq1 <- melt(pq1, value.name = "q") %>%
+        pq1 <- melt(pq1, value.name = "q")  %>%
           filter(Year <= max(years))
 
         pcpue1 <- map$pred_cpue_i
         dimnames(pcpue1) <- list("Iteration" = 1, "I" = 1:data$n_cpue)
         pcpue1 <- melt(pcpue1, value.name = "CPUE") %>%
             select(Iteration, CPUE) %>%
-            mutate(Data = "Expected", Type = "CPUE", Region = data$data_cpue_area_i, Year = data$data_cpue_year_i, Season = seasons[data$data_cpue_season_i])  %>%
-            full_join(pq1, by = c("Iteration", "Year")) %>%
+            mutate(Data = "Expected", Type = "CPUE", Region = data$data_cpue_area_i, Year = data$data_cpue_year_i, Season = seasons[data$data_cpue_season_i])
+        if(any(names(data) == "data_cpue_type_i")){
+            pcpue1 <- bind_cols(pcpue1, "CPUE_type" = data$data_cpue_type_i)
+        } else {
+            pcpue1 <- bind_cols(pcpue1, "CPUE_type" = 1)
+        }
+        pcpue1 <- pcpue1 %>%
+            full_join(pq, by = c("Iteration", "Year")) %>%
             select(-q)
         pcpue1$SD <- NA
 
@@ -126,8 +138,14 @@ plot_cpue <- function(object,
         dimnames(rcpue1) <- list("Iteration" = 1, "I" = 1:data$n_cpue)
         rcpue1 <- melt(rcpue1, value.name = "CPUE") %>%
             select(Iteration, CPUE) %>%
-            mutate(Data = "Residual", Type = "CPUE", Region = data$data_cpue_area_i, Year = data$data_cpue_year_i, Season = seasons[data$data_cpue_season_i]) %>%
-            full_join(pq1, by = c("Iteration", "Year")) %>%
+            mutate(Data = "Residual", Type = "CPUE", Region = data$data_cpue_area_i, Year = data$data_cpue_year_i, Season = seasons[data$data_cpue_season_i])
+        if(any(names(data) == "data_cpue_type_i")){
+            rcpue1 <- bind_cols(rcpue1, "CPUE_type" = data$data_cpue_type_i)
+        } else {
+            rcpue1 <- bind_cols(rcpue1, "CPUE_type" = 1)
+        }
+        rcpue1 <- rcpue1 %>%
+            full_join(pq, by = c("Iteration", "Year")) %>%
             select(-q)
     } else {
         pcpue1 <- NULL
@@ -144,7 +162,13 @@ plot_cpue <- function(object,
         dimnames(pcpue) <- list("Iteration" = 1:n_iter, "I" = 1:data$n_cpue)
         pcpue <- melt(pcpue, value.name = "CPUE") %>%
             select(Iteration, CPUE) %>%
-            mutate(Data = "Expected", Type = "CPUE", Region = rep(data$data_cpue_area_i, each = n_iter), Year = rep(data$data_cpue_year_i, each = n_iter), Season = seasons[rep(data$data_cpue_season_i, each = n_iter)]) %>%
+            mutate(Data = "Expected", Type = "CPUE", Region = rep(data$data_cpue_area_i, each = n_iter), Year = rep(data$data_cpue_year_i, each = n_iter), Season = seasons[rep(data$data_cpue_season_i, each = n_iter)])
+        if(any(names(data) == "data_cpue_type_i")){
+            pcpue <- bind_cols(pcpue, "CPUE_type" = rep(data$data_cpue_type_i, each = n_iter))
+        } else {
+            pcpue <- bind_cols(pcpue, "CPUE_type" = 1)
+        }
+        pcpue <- pcpue %>%
             full_join(pq, by = c("Iteration", "Year")) %>%
             select(-q)
         pcpue$SD <- NA
@@ -153,7 +177,13 @@ plot_cpue <- function(object,
         dimnames(rcpue) <- list("Iteration" = 1:n_iter, "I" = 1:data$n_cpue)
         rcpue <- melt(rcpue, value.name = "CPUE") %>%
             select(Iteration, CPUE) %>%
-            mutate(Data = "Residual", Type = "CPUE", Region = rep(data$data_cpue_area_i, each = n_iter), Year = rep(data$data_cpue_year_i, each = n_iter), Season = seasons[rep(data$data_cpue_season_i, each = n_iter)]) %>%
+            mutate(Data = "Residual", Type = "CPUE", Region = rep(data$data_cpue_area_i, each = n_iter), Year = rep(data$data_cpue_year_i, each = n_iter), Season = seasons[rep(data$data_cpue_season_i, each = n_iter)])
+        if(any(names(data) == "data_cpue_type_i")){
+            rcpue <- bind_cols(rcpue, "CPUE_type" = rep(data$data_cpue_type_i, each = n_iter))
+        } else {
+            rcpue <- bind_cols(rcpue, "CPUE_type" = 1)
+        }
+        rcpue <- rcpue %>%
             full_join(pq, by = c("Iteration", "Year")) %>%
             select(-q)
     } else {
@@ -172,52 +202,96 @@ plot_cpue <- function(object,
         qtype = data$data_cpue_q_i,
         SD = sqrt(data$cov_cpue_sd_i^2 + data$cov_cpue_process_error_i^2) * 1.0 / data$cpue_like_wt[data$data_cpue_q_i]
     )
-
-    if (!is.null(pcpue)) {
-        pcpue <- mutate(pcpue, QY = paste(Year, qtype))
-        ocpue <- mutate(ocpue, QY = paste(Year, qtype))
-        rcpue <- mutate(rcpue, QY = paste(Year, qtype))
-        pcpue <- filter(pcpue, QY %in% ocpue$QY)
-        rcpue <- filter(rcpue, QY %in% ocpue$QY)
+    if(any(names(data) == "data_cpue_type_i")){
+        ocpue <- bind_cols(ocpue, "CPUE_type" = data$data_cpue_type_i)
+    } else {
+        ocpue <- bind_cols(ocpue, "CPUE_type" = 1)
     }
-    if (!is.null(pcpue1)) {
-        pcpue1 <- pcpue1 %>%
-            mutate(QY = paste(Year, qtype)) %>%
-            filter(QY %in% ocpue$QY)
-    }
-    if (!is.null(rcpue1)) {
-        rcpue1 <- rcpue1 %>%
-            mutate(QY = paste(Year, qtype)) %>%
-            filter(QY %in% ocpue$QY)
-    }
-
     ocpue <- ocpue %>%
-        mutate("Region_q" = paste("Region", Region, "q", qtype)) %>%
-        mutate(qtype = as.character(qtype))
-    ocpue$qtype <- factor(ocpue$qtype, levels = rev(unique(ocpue$qtype)))
+        mutate(CPUE_name = case_when(Year <= 1979 ~ "CR",
+                                     Year >= 1979 & Year <= 1989 & CPUE_type == 1 ~ "FSU",
+                                     Year == 1989 & CPUE_type == 1 & Season == "SS" ~ "CELR",
+                                     Year <= 2019 & Year > 1989 & CPUE_type == 1 ~ "CELR",
+                                     CPUE_type == 2 ~ "Logbook" ))
+    ocpue$CPUE_name <- factor(ocpue$CPUE_name, levels = unique(ocpue$CPUE_name))
 
-    pcpue <- pcpue %>% mutate("Region_q" = paste("Region", Region, "q", qtype)) %>%
-        filter(Region_q %in% ocpue$Region_q) %>%
-        mutate(qtype = as.character(qtype))
-    pcpue$qtype <- factor(pcpue$qtype, levels = rev(unique(pcpue$qtype)))
+    pcpue <- pcpue %>%
+        mutate(CPUE_name = case_when(Year <= 1979 ~ "CR",
+                                     Year >= 1979 & Year <= 1989 & CPUE_type == 1 ~ "FSU",
+                                     Year == 1989 & CPUE_type == 1 & Season == "SS" ~ "CELR",
+                                     Year <= 2019 & Year > 1989 & CPUE_type == 1 ~ "CELR",
+                                     CPUE_type == 2 ~ "Logbook" ))
+    pcpue$CPUE_name <- factor(pcpue$CPUE_name, levels = unique(pcpue$CPUE_name))
 
-    rcpue <- rcpue %>% mutate("Region_q" = paste("Region", Region, "q", qtype)) %>%
-        filter(Region_q %in% ocpue$Region_q) %>%
-        mutate(qtype = as.character(qtype))
-    rcpue$qtype <- factor(rcpue$qtype, levels = rev(unique(rcpue$qtype)))
+    rcpue <- rcpue %>%
+        mutate(CPUE_name = case_when(Year <= 1979 ~ "CR",
+                                     Year >= 1979 & Year <= 1989 & CPUE_type == 1 ~ "FSU",
+                                     Year == 1989 & CPUE_type == 1 & Season == "SS" ~ "CELR",
+                                     Year <= 2019 & Year > 1989 & CPUE_type == 1 ~ "CELR",
+                                     CPUE_type == 2 ~ "Logbook" ))
+    rcpue$CPUE_name <- factor(rcpue$CPUE_name, levels = unique(rcpue$CPUE_name))
 
-    if (!is.null(pcpue1)) {
-        pcpue1 <- pcpue1 %>% mutate("Region_q" = paste("Region", Region, "q", qtype)) %>%
-            filter(Region_q %in% ocpue$Region_q) %>%
-            mutate(qtype = as.character(qtype))
-        pcpue1$qtype <- factor(pcpue1$qtype, levels = rev(unique(pcpue1$qtype)))
-    }
-    if (!is.null(rcpue1)) {
-        rcpue1 <- rcpue1 %>% mutate("Region_q" = paste("Region", Region, "q", qtype)) %>%
-            filter(Region_q %in% ocpue$Region_q) %>%
-            mutate(qtype = as.character(qtype))
-        rcpue1$qtype <- factor(rcpue1$qtype, levels = rev(unique(rcpue1$qtype)))
-    }
+    pcpue1 <- pcpue1 %>%
+        mutate(CPUE_name = case_when(Year <= 1979 ~ "CR",
+                                     Year >= 1979 & Year <= 1989 & CPUE_type == 1 ~ "FSU",
+                                     Year == 1989 & CPUE_type == 1 & Season == "SS" ~ "CELR",
+                                     Year <= 2019 & Year > 1989 & CPUE_type == 1 ~ "CELR",
+                                     CPUE_type == 2 ~ "Logbook" ))
+    pcpue1$CPUE_name <- factor(pcpue1$CPUE_name, levels = unique(pcpue1$CPUE_name))
+
+    rcpue1 <- rcpue1 %>%
+        mutate(CPUE_name = case_when(Year <= 1979 ~ "CR",
+                                     Year >= 1979 & Year <= 1989 & CPUE_type == 1 ~ "FSU",
+                                     Year == 1989 & CPUE_type == 1 & Season == "SS" ~ "CELR",
+                                     Year <= 2019 & Year > 1989 & CPUE_type == 1 ~ "CELR",
+                                     CPUE_type == 2 ~ "Logbook" ))
+    rcpue1$CPUE_name <- factor(rcpue1$CPUE_name, levels = unique(rcpue1$CPUE_name))
+
+    # if (!is.null(pcpue)) {
+    #     pcpue <- mutate(pcpue, QY = paste(Year, qtype))
+    #     ocpue <- mutate(ocpue, QY = paste(Year, qtype))
+    #     rcpue <- mutate(rcpue, QY = paste(Year, qtype))
+    #     pcpue <- filter(pcpue, QY %in% ocpue$QY)
+    #     rcpue <- filter(rcpue, QY %in% ocpue$QY)
+    # }
+    # if (!is.null(pcpue1)) {
+    #     pcpue1 <- pcpue1 %>%
+    #         mutate(QY = paste(Year, qtype)) %>%
+    #         filter(QY %in% ocpue$QY)
+    # }
+    # if (!is.null(rcpue1)) {
+    #     rcpue1 <- rcpue1 %>%
+    #         mutate(QY = paste(Year, qtype)) %>%
+    #         filter(QY %in% ocpue$QY)
+    # }
+
+    # ocpue <- ocpue %>%
+    #     mutate("Region_q" = paste("Region", Region, "q", qtype)) %>%
+    #     mutate(qtype = as.character(qtype))
+    # ocpue$qtype <- factor(ocpue$qtype, levels = rev(unique(ocpue$qtype)))
+
+    # pcpue <- pcpue %>% mutate("Region_q" = paste("Region", Region, "q", qtype)) %>%
+    #     filter(Region_q %in% ocpue$Region_q) %>%
+    #     mutate(qtype = as.character(qtype))
+    # pcpue$qtype <- factor(pcpue$qtype, levels = rev(unique(pcpue$qtype)))
+
+    # rcpue <- rcpue %>% mutate("Region_q" = paste("Region", Region, "q", qtype)) %>%
+    #     filter(Region_q %in% ocpue$Region_q) %>%
+    #     mutate(qtype = as.character(qtype))
+    # rcpue$qtype <- factor(rcpue$qtype, levels = rev(unique(rcpue$qtype)))
+
+    # if (!is.null(pcpue1)) {
+    #     pcpue1 <- pcpue1 %>% mutate("Region_q" = paste("Region", Region, "q", qtype)) %>%
+    #         filter(Region_q %in% ocpue$Region_q) %>%
+    #         mutate(qtype = as.character(qtype))
+    #     pcpue1$qtype <- factor(pcpue1$qtype, levels = rev(unique(pcpue1$qtype)))
+    # }
+    # if (!is.null(rcpue1)) {
+    #     rcpue1 <- rcpue1 %>% mutate("Region_q" = paste("Region", Region, "q", qtype)) %>%
+    #         filter(Region_q %in% ocpue$Region_q) %>%
+    #         mutate(qtype = as.character(qtype))
+    #     rcpue1$qtype <- factor(rcpue1$qtype, levels = rev(unique(rcpue1$qtype)))
+    # }
 
     # Plot CPUE
     p <- ggplot(data = ocpue) +
@@ -228,18 +302,18 @@ plot_cpue <- function(object,
         xlab(xlab) + ylab(ylab) +
         theme_lsd()
     if (!is.null(pcpue)) {
-        p <- p + stat_summary(data = filter(pcpue, pcpue$QY %in% ocpue$QY), aes(x = Year, y = CPUE), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
-            stat_summary(data = filter(pcpue, pcpue$QY %in% ocpue$QY), aes(x = Year, y = CPUE), fun = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
-            stat_summary(data = filter(pcpue, pcpue$QY %in% ocpue$QY), aes(x = Year, y = CPUE), fun = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1)
+        p <- p + stat_summary(data = pcpue, aes(x = Year, y = CPUE), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
+            stat_summary(data = pcpue, aes(x = Year, y = CPUE), fun = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
+            stat_summary(data = pcpue, aes(x = Year, y = CPUE), fun = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1)
     }
     if (!is.null(pcpue1)) {
         p <- p + geom_line(data = pcpue1, aes(x = Year, y = CPUE), linetype = 2)
     }
     if (data$n_area > 1) {
-        p <- p + facet_wrap(Season ~ Region_q, scales = "free", ncol = data$n_area)
+        p <- p + facet_wrap(Season ~ Region+CPUE_name, scales = "free", ncol = data$n_area)
         ggsave(paste0(figure_dir, "cpue.png"), p, width = 9, height = 10)
     } else {
-        p <- p + facet_wrap(qtype ~ Season, scales = "free", ncol = 2)
+        p <- p + facet_wrap(Season ~ CPUE_name, scales = "free")
         ggsave(paste0(figure_dir, "cpue.png"), p, height = 9)
     }
 
@@ -276,48 +350,36 @@ plot_cpue <- function(object,
     # FSU
     # dfilter <- expand.grid("Year" = 1979:1989, "Season" = c("AW","SS"))
     # dfilter <- dfilter[-which(dfilter$Year == 1989 & dfilter$Season == "SS"),]
-    ocpue <- ocpue %>% 
-        mutate(Flag = case_when(Year %in% 1979:1988 ~ 1,
-                                    Year == 1979 & Season == "AW" ~ 1,
-                                    Year %in% 1990:2018 ~ 2,
-                                    Year == 1989 & Season == "SS" ~ 2,
-                                    Year == 2019 & Season == "AW" ~ 2)) %>%
+    ocpue_fsu <- ocpue %>% 
+        filter(CPUE_name == "FSU") %>%
         mutate(Region = paste0("Region ", Region))
-    pcpue <- pcpue %>%
-        mutate(Flag = case_when(Year %in% 1979:1988 ~ 1,
-                                    Year == 1979 & Season == "AW" ~ 1,
-                                    Year %in% 1990:2018 ~ 2,
-                                    Year == 1989 & Season == "SS" ~ 2,
-                                    Year == 2019 & Season == "AW" ~ 2)) %>%
+    pcpue_fsu <- pcpue %>%
+        filter(CPUE_name == "FSU") %>%
         mutate(Region = paste0("Region ", Region))
-    pcpue1 <- pcpue1 %>%
-        mutate(Flag = case_when(Year %in% 1979:1988 ~ 1,
-                                    Year == 1979 & Season == "AW" ~ 1,
-                                    Year %in% 1990:2018 ~ 2,
-                                    Year == 1989 & Season == "SS" ~ 2,
-                                    Year == 2019 & Season == "AW" ~ 2)) %>%
+    pcpue1_fsu <- pcpue1 %>%
+        filter(CPUE_name == "FSU") %>%
         mutate(Region = paste0("Region ", Region))
 
-    ocr_yrs <- ocpue %>% filter(Flag == 1) #ocpue %>% right_join(dfilter) %>% mutate(Region = paste0("Region ", Region))
-    pcr_yrs <- pcpue %>% filter(Flag == 1) #right_join(dfilter) %>% mutate(Region = paste0("Region ", Region))
-    p1cr_yrs <- pcpue1 %>%  filter(Flag == 1) #right_join(dfilter) %>% mutate(Region = paste0("Region ", Region))
-    p <- ggplot(data = ocr_yrs) +
+    # ocr_yrs <- ocpue %>% filter(Flag == 1) #ocpue %>% right_join(dfilter) %>% mutate(Region = paste0("Region ", Region))
+    # pcr_yrs <- pcpue %>% filter(Flag == 1) #right_join(dfilter) %>% mutate(Region = paste0("Region ", Region))
+    # p1cr_yrs <- pcpue1 %>%  filter(Flag == 1) #right_join(dfilter) %>% mutate(Region = paste0("Region ", Region))
+    p <- ggplot(data = ocpue_fsu) +
         geom_point(aes(x = Year, y = CPUE), color = "red", alpha = 0.75) +
         geom_linerange(aes(x = Year, ymin = exp(log(CPUE) - SD), ymax = exp(log(CPUE) + SD)), color = "red", alpha = 0.75) +
-        scale_x_continuous(breaks = pretty(c(min(ocr_yrs$Year), max(ocr_yrs$Year)))) +
+        scale_x_continuous(breaks = pretty(c(min(ocpue_fsu$Year), max(ocpue_fsu$Year)))) +
         scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
         expand_limits(y = 0) +
         xlab(xlab) + ylab(ylab) +
         theme_lsd()
-    if (!is.null(pcpue)) {
-        p <- p + stat_summary(data = pcr_yrs %>% filter(QY %in% ocpue$QY), aes(x = Year, y = CPUE), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
-            stat_summary(data = pcr_yrs %>% filter(QY %in% ocpue$QY), aes(x = Year, y = CPUE), fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
-            stat_summary(data = pcr_yrs %>% filter(QY %in% ocpue$QY), aes(x = Year, y = CPUE), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1)
+    if (!is.null(pcpue_fsu)) {
+        p <- p + stat_summary(data = pcpue_fsu, aes(x = Year, y = CPUE), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
+            stat_summary(data = pcpue_fsu, aes(x = Year, y = CPUE), fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
+            stat_summary(data = pcpue_fsu, aes(x = Year, y = CPUE), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1)
     }
-    if (!is.null(pcpue1)) {
-        p <- p + geom_line(data = p1cr_yrs, aes(x = Year, y = CPUE), linetype = 2)
+    if (!is.null(pcpue1_fsu)) {
+        p <- p + geom_line(data = pcpue1_fsu, aes(x = Year, y = CPUE), linetype = 2)
     }
-    if (length(unique(ocr_yrs$Region)) > 1) {
+    if (length(unique(ocpue_fsu$Region)) > 1) {
         p <- p + facet_wrap(Region~Season, scales = "free", ncol = data$n_area)
         ggsave(paste0(figure_dir, "cpue_FSU.png"), p, width = 9, height = 10)
     } else {
@@ -329,31 +391,62 @@ plot_cpue <- function(object,
     # dfilter <- expand.grid("Year" = 1989:max(ocpue$Year), "Season" = c("AW","SS"))
     # dfilter <- dfilter[-which(dfilter$Year == 1989 & dfilter$Season == "AW"),]
     # dfilter <- dfilter[-which(dfilter$Year >=2019 & dfilter$Season == "SS"),]
-    ocr_yrs <- ocpue %>% filter(Flag == 2) #right_join(dfilter) %>% mutate(Region = paste0("Region ", Region))
-    pcr_yrs <- pcpue %>% filter(Flag == 2) #right_join(dfilter) %>% mutate(Region = paste0("Region ", Region))
-    p1cr_yrs <- pcpue1 %>% filter(Flag == 2) #right_join(dfilter) %>% mutate(Region = paste0("Region ", Region))
-    p <- ggplot(data = ocr_yrs) +
+    ocpue_celr <- ocpue %>% filter(CPUE_name == "CELR") #right_join(dfilter) %>% mutate(Region = paste0("Region ", Region))
+    pcpue_celr <- pcpue %>% filter(CPUE_name == "CELR") #right_join(dfilter) %>% mutate(Region = paste0("Region ", Region))
+    pcpue1_celr <- pcpue1 %>% filter(CPUE_name == "CELR") #right_join(dfilter) %>% mutate(Region = paste0("Region ", Region))
+    p <- ggplot(data = ocpue_celr) +
         geom_point(aes(x = Year, y = CPUE), color = "red", alpha = 0.75) +
         geom_linerange(aes(x = Year, ymin = exp(log(CPUE) - SD), ymax = exp(log(CPUE) + SD)), color = "red", alpha = 0.75) +
-        scale_x_continuous(breaks = pretty(c(min(ocr_yrs$Year), max(ocr_yrs$Year)))) +
+        scale_x_continuous(breaks = pretty(c(min(ocpue_celr$Year), max(ocpue_celr$Year)))) +
         scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
         expand_limits(y = 0) +
         xlab(xlab) + ylab(ylab) +
         theme_lsd()
-    if (!is.null(pcpue)) {
-        p <- p + stat_summary(data = pcr_yrs %>% filter(QY %in% ocpue$QY), aes(x = Year, y = CPUE), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
-            stat_summary(data = pcr_yrs %>% filter(QY %in% ocpue$QY), aes(x = Year, y = CPUE), fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
-            stat_summary(data = pcr_yrs %>% filter(QY %in% ocpue$QY), aes(x = Year, y = CPUE), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1)
+    if (!is.null(pcpue_celr)) {
+        p <- p + stat_summary(data = pcpue_celr, aes(x = Year, y = CPUE), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
+            stat_summary(data = pcpue_celr, aes(x = Year, y = CPUE), fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
+            stat_summary(data = pcpue_celr, aes(x = Year, y = CPUE), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1)
     }
-    if (!is.null(pcpue1)) {
-        p <- p + geom_line(data = p1cr_yrs, aes(x = Year, y = CPUE), linetype = 2)
+    if (!is.null(pcpue1_celr)) {
+        p <- p + geom_line(data = pcpue1_celr, aes(x = Year, y = CPUE), linetype = 2)
     }
-    if (length(unique(ocr_yrs$Region)) > 1) {
+    if (length(unique(ocpue_celr$Region)) > 1) {
         p <- p + facet_wrap(Region~Season, scales = "free", ncol = data$n_area)
         ggsave(paste0(figure_dir, "cpue_CELR.png"), p, width = 9, height = 10)
     } else {
         p <- p + facet_wrap(~Season, scales = "free", ncol = data$n_area)
         ggsave(paste0(figure_dir, "cpue_CELR.png"), p, height = 9)
+    }
+
+    # Logbook
+    # dfilter <- expand.grid("Year" = 1989:max(ocpue$Year), "Season" = c("AW","SS"))
+    # dfilter <- dfilter[-which(dfilter$Year == 1989 & dfilter$Season == "AW"),]
+    # dfilter <- dfilter[-which(dfilter$Year >=2019 & dfilter$Season == "SS"),]
+    ocpue_lb <- ocpue %>% filter(CPUE_name == "Logbook") #right_join(dfilter) %>% mutate(Region = paste0("Region ", Region))
+    pcpue_lb <- pcpue %>% filter(CPUE_name == "Logbook") #right_join(dfilter) %>% mutate(Region = paste0("Region ", Region))
+    pcpue1_lb <- pcpue1 %>% filter(CPUE_name == "Logbook") #right_join(dfilter) %>% mutate(Region = paste0("Region ", Region))
+    p <- ggplot(data = ocpue_lb) +
+        geom_point(aes(x = Year, y = CPUE), color = "red", alpha = 0.75) +
+        geom_linerange(aes(x = Year, ymin = exp(log(CPUE) - SD), ymax = exp(log(CPUE) + SD)), color = "red", alpha = 0.75) +
+        scale_x_continuous(breaks = pretty(c(min(ocpue_lb$Year), max(ocpue_lb$Year)))) +
+        scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
+        expand_limits(y = 0) +
+        xlab(xlab) + ylab(ylab) +
+        theme_lsd()
+    if (!is.null(pcpue_lb)) {
+        p <- p + stat_summary(data = pcpue_lb, aes(x = Year, y = CPUE), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
+            stat_summary(data = pcpue_lb, aes(x = Year, y = CPUE), fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
+            stat_summary(data = pcpue_lb, aes(x = Year, y = CPUE), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1)
+    }
+    if (!is.null(pcpue1_lb)) {
+        p <- p + geom_line(data = pcpue1_lb, aes(x = Year, y = CPUE), linetype = 2)
+    }
+    if (length(unique(ocpue_lb$Region)) > 1) {
+        p <- p + facet_wrap(Region~Season, scales = "free", ncol = data$n_area)
+        ggsave(paste0(figure_dir, "cpue_Logbook.png"), p, width = 9, height = 10)
+    } else {
+        p <- p + facet_wrap(~Season, scales = "free", ncol = data$n_area)
+        ggsave(paste0(figure_dir, "cpue_Logbook.png"), p, height = 9)
     }
 
     # CPUE residuals
@@ -371,9 +464,9 @@ plot_cpue <- function(object,
             scale_x_continuous(breaks = seq(0, 1e6, 5), minor_breaks = seq(0, 1e6, 1))
     }
     if (data$n_area > 1) {
-        p <- p + facet_wrap(Season ~ Region_q, scales = "free", ncol = data$n_area)
+        p <- p + facet_wrap(Season ~ Region+CPUE_name, scales = "free", ncol = data$n_area)
     } else {
-        p <- p + facet_wrap(qtype ~ Season, scales = "free", ncol = 2)
+        p <- p + facet_grid(Season ~ CPUE_name, scales = "free")
     }
     ggsave(paste0(figure_dir, "cpue_resid.png"), p, height = 9, width = 9)
 
@@ -404,19 +497,14 @@ plot_cpue <- function(object,
     ### FSU
     # dfilter <- expand.grid("Year" = 1979:1989, "Season" = c("AW","SS"))
     # dfilter <- dfilter[-which(dfilter$Year == 1989 & dfilter$Season == "SS"),]
-    rcpue <- rcpue %>%
-        mutate(Flag = case_when(Year %in% 1979:1988 ~ 1,
-                                    Year == 1979 & Season == "AW" ~ 1,
-                                    Year %in% 1990:2018 ~ 2,
-                                    Year == 1989 & Season == "SS" ~ 2,
-                                    Year == 2019 & Season == "AW" ~ 2)) %>%
+    rcpue_fsu <- rcpue %>%
+        filter(CPUE_name == "FSU") %>%
         mutate(Region = paste0("Region ", Region))
 
-    rcr_yrs <- rcpue %>% filter(Flag == 1) #right_join(dfilter) %>% mutate(Region = paste0("Region ", Region))
-    p <- ggplot(rcr_yrs) +
+    p <- ggplot(rcpue_fsu) +
         geom_hline(yintercept = 0, alpha = 0.2) +
         # expand_limits(y = 0) +
-        # scale_x_continuous(breaks = pretty(c(min(rcr_yrs$Year),max(rcr_yrs$Year)))) +
+        # scale_x_continuous(breaks = pretty(c(min(rcpue_fsu$Year),max(rcpue_fsu$Year)))) +
         xlab(xlab) + ylab("Standardised residual") +
         theme_lsd() +
         theme(legend.position = "none")
@@ -427,7 +515,7 @@ plot_cpue <- function(object,
         p <- p + geom_point(aes(x = Year, y = CPUE, color = Season)) +
             scale_x_continuous(breaks = seq(0, 1e6, 5), minor_breaks = seq(0, 1e6, 1))
     }
-    if (length(unique(rcr_yrs$Region)) > 1) {
+    if (length(unique(rcpue_fsu$Region)) > 1) {
         p <- p + facet_wrap(Region ~ Season, scales = "free", ncol = data$n_area)
     } else {
         p <- p + facet_wrap( ~ Season, scales = "free", ncol = data$n_area)
@@ -438,11 +526,11 @@ plot_cpue <- function(object,
     # dfilter <- expand.grid("Year" = 1989:max(ocpue$Year), "Season" = c("AW","SS"))
     # dfilter <- dfilter[-which(dfilter$Year==1989 & dfilter$Season == "AW"),]
     # dfilter <- dfilter[-which(dfilter$Year == max(ocpue$Year) & dfilter$Season == "SS"),]
-    rcr_yrs <- rcpue %>% filter(Flag == 2) #right_join(dfilter) %>% mutate(Region = paste0("Region ", Region))
-    p <- ggplot(rcr_yrs) +
+    rcpue_celr <- rcpue %>% filter(CPUE_name == "CELR") #right_join(dfilter) %>% mutate(Region = paste0("Region ", Region))
+    p <- ggplot(rcpue_celr) +
         geom_hline(yintercept = 0, alpha = 0.2) +
         # expand_limits(y = 0) +
-        # scale_x_continuous(breaks = pretty(c(min(rcr_yrs$Year),max(rcr_yrs$Year)))) +
+        # scale_x_continuous(breaks = pretty(c(min(rcpue_celr$Year),max(rcpue_celr$Year)))) +
         xlab(xlab) + ylab("Standardised residual") +
         theme_lsd() +
         theme(legend.position = "none")
@@ -453,12 +541,39 @@ plot_cpue <- function(object,
         p <- p + geom_point(aes(x = Year, y = CPUE, color = Season)) +
             scale_x_continuous(breaks = seq(0, 1e6, 5), minor_breaks = seq(0, 1e6, 1))
     }
-    if (length(unique(rcr_yrs$Region)) > 1) {
+    if (length(unique(rcpue_celr$Region)) > 1) {
         p <- p + facet_wrap(Region ~ Season, scales = "free", ncol = data$n_area)
     } else {
         p <- p + facet_wrap( ~ Season, scales = "free", ncol = data$n_area)
     }
     ggsave(paste0(figure_dir, "cpue_resid_CELR.png"), p, height = 9, width = 9)
+
+    ### Logbook
+    # dfilter <- expand.grid("Year" = 1989:max(ocpue$Year), "Season" = c("AW","SS"))
+    # dfilter <- dfilter[-which(dfilter$Year==1989 & dfilter$Season == "AW"),]
+    # dfilter <- dfilter[-which(dfilter$Year == max(ocpue$Year) & dfilter$Season == "SS"),]
+    rcpue_lb <- rcpue %>% filter(CPUE_name == "Logbook") #right_join(dfilter) %>% mutate(Region = paste0("Region ", Region))
+    p <- ggplot(rcpue_lb) +
+        geom_hline(yintercept = 0, alpha = 0.2) +
+        # expand_limits(y = 0) +
+        # scale_x_continuous(breaks = pretty(c(min(rcpue_lb$Year),max(rcpue_lb$Year)))) +
+        xlab(xlab) + ylab("Standardised residual") +
+        theme_lsd() +
+        theme(legend.position = "none")
+    if (n_iter > 10) {
+        p <- p + geom_violin(aes(x = as.factor(Year), y = CPUE, colour = Season, fill = Season)) +
+            scale_x_discrete(breaks = seq(0, 1e6, 5))
+    } else {
+        p <- p + geom_point(aes(x = Year, y = CPUE, color = Season)) +
+            scale_x_continuous(breaks = seq(0, 1e6, 5), minor_breaks = seq(0, 1e6, 1))
+    }
+    if (length(unique(rcpue_lb$Region)) > 1) {
+        p <- p + facet_wrap(Region ~ Season, scales = "free", ncol = data$n_area)
+    } else {
+        p <- p + facet_wrap( ~ Season, scales = "free", ncol = data$n_area)
+    }
+    ggsave(paste0(figure_dir, "cpue_resid_Logbook.png"), p, height = 9, width = 9)
+
 
 }
 

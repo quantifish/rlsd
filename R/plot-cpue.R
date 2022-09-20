@@ -332,9 +332,9 @@ plot_cpue <- function(object,
             xlab(xlab) + ylab(ylab) +
             theme_lsd()
         if (!is.null(pcpue)) {
-            p <- p + stat_summary(data = pcr_yrs %>% filter(QY %in% ocpue$QY), aes(x = Year, y = CPUE), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
-                stat_summary(data = pcr_yrs %>% filter(QY %in% ocpue$QY), aes(x = Year, y = CPUE), fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
-                stat_summary(data = pcr_yrs %>% filter(QY %in% ocpue$QY), aes(x = Year, y = CPUE), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1)
+            p <- p + stat_summary(data = pcr_yrs, aes(x = Year, y = CPUE), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
+                stat_summary(data = pcr_yrs, aes(x = Year, y = CPUE), fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
+                stat_summary(data = pcr_yrs, aes(x = Year, y = CPUE), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1)
         }
         if (!is.null(pcpue1)) {
             p <- p + geom_line(data = p1cr_yrs, aes(x = Year, y = CPUE), linetype = 2)

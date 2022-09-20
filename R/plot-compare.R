@@ -544,7 +544,7 @@ plot_compare_ssb <- function(object_list,
     stat_summary(fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(x = Year, y = RelSSB, fill = Model)) +
     stat_summary(fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(x = Year, y = RelSSB, color = Model)) +
     stat_summary(fun = function(x) quantile(x, 0.5), geom = "point", size = 1.5, alpha = 0.75, aes(x = Year, y = RelSSB, color = Model)) +
-    labs("Year", y = "Relative spawning biomass") +
+    labs(x = "Fishing year", y = "Relative spawning biomass") +
     theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
   if (nmod > 5) {

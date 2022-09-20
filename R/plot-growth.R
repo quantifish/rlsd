@@ -93,7 +93,7 @@ plot_tag_residuals <- function(object,
         labs(x = "Statistical area", y = ylab, colour = "Morph", fill = "Morph") +
         geom_hline(yintercept = 0, alpha = 0.8) +
         theme_lsd() +
-        guides(alpha=FALSE) +
+        guides(alpha=FALSE, color = FALSE, fill = FALSE) +
         coord_cartesian(ylim = ylim)
     ggsave(paste0(figure_dir, "tag_residuals_area.png"), p)
     
@@ -103,7 +103,7 @@ plot_tag_residuals <- function(object,
         labs(x = "Release year", y = ylab, fill = "Morph") +
         geom_hline(yintercept = 0, alpha = 0.8) +
         theme_lsd() +
-        guides(alpha=FALSE) +
+        guides(alpha=FALSE, color = FALSE, fill = FALSE) +
         coord_cartesian(ylim = ylim) +
        theme(axis.text.x = element_text(angle = 45,hjust = 1))
     ggsave(paste0(figure_dir, "tag_residuals_year.png"), p, width = 12)
@@ -126,7 +126,7 @@ plot_tag_residuals <- function(object,
         labs(x = "Initial size (mm)", y = ylab, colour = "Morph", fill = "Morph") +
         geom_hline(yintercept = 0, alpha = 0.8) +
         theme_lsd() +
-        guides(alpha=FALSE) +
+        guides(alpha=FALSE, color = FALSE, fill = FALSE) +
         scale_x_discrete(breaks = seq(0, 1e6, 10)) +
         coord_cartesian(ylim = ylim)
     ggsave(paste0(figure_dir, "tag_residuals_size.png"), p, height = 8)

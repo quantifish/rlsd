@@ -246,7 +246,7 @@ plot_compare_ssb <- function(object_list,
     stat_summary(data = ssb %>% filter(Year %in% years) %>% group_by(Iteration, Year, Model) %>% summarise(value = sum(value)), fun = function(x) quantile(x, 0.5), geom = "point", size = 1.5, alpha = 0.75, aes(color = Model)) +
     #geom_label(data = labs, aes(x = Year, y = value, label = type), nudge_x = -5) +
     labs(x = "Fishing year", y = "Spawning stock biomass (tonnes)") +
-    scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
+    scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1), expand = expansion(mult = c(0,0.01))) +
     scale_y_continuous(expand = expansion(mult = c(0, 0.05)), limits = c(0, NA)) +
     theme_lsd(base_size = 14) +
     theme(axis.text.x = element_text(angle = 45,hjust = 1)) +
@@ -279,7 +279,7 @@ plot_compare_ssb <- function(object_list,
       stat_summary(data = ssb %>% filter(Year %in% years) , fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model)) +
       stat_summary(data = ssb %>% filter(Year %in% years) , fun = function(x) quantile(x, 0.5), geom = "point", lwd = 1.5, alpha = 0.75, aes(color = Model)) +
       labs(x = "Fishing year", y = "Spawning stock biomass (tonnes)") +
-      scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
+      # scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
       scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1), expand = expansion(mult = c(0,0.01))) +
       theme_lsd(base_size = 14) +
       theme(axis.text.x = element_text(angle = 45, hjust = 1)) +

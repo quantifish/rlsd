@@ -310,10 +310,10 @@ plot_cpue <- function(object,
         p <- p + geom_line(data = pcpue1, aes(x = Year, y = CPUE), linetype = 2)
     }
     if (data$n_area > 1) {
-        p <- p + facet_wrap(Season ~ Region+CPUE_name, scales = "free", ncol = data$n_area)
+        p <- p + facet_wrap(CPUE_Name ~ Region+Season, scales = "free", ncol = length(unique(ocpue$CPUE_name)))
         ggsave(paste0(figure_dir, "cpue.png"), p, height = 10, width = 15)
     } else {
-        p <- p + facet_grid(Season ~ CPUE_name, scales = "free")
+        p <- p + facet_wrap(Season ~ CPUE_name, scales = "free", ncol = length(unique(ocpue$CPUE_name)))
         ggsave(paste0(figure_dir, "cpue.png"), p, height = 9, width = 12)
     }
 

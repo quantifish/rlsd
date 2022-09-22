@@ -31,7 +31,7 @@ plot_lfs <- function(object,
 
     w <- data.frame(LF = 1:data$n_lf,
                     Year = data$data_lf_year_i, Season = data$data_lf_season_i,
-                    Source = data$data_lf_source_i, Region = data$data_lf_area_i)
+                    Region = data$data_lf_area_i, Sex = data$data_lf_sex_i)
 
     # 1. Minimum legal size by region, year and sex. These get plotted as vertical lines on each panel.
     # 2. Bin limits
@@ -41,74 +41,75 @@ plot_lfs <- function(object,
     dimnames(mls) <- list("Year" = data$first_yr:data$last_proj_yr, "Season" = seasons, "Region" = regions, "Sex" = sex)
     mls <- reshape2::melt(mls, id.var = "Year", variable.name = "Sex", value.name = "MLS")
 
-    lim <- array(NA, dim = c(length(regions), length(sex), 2))
-    lim[,,] <- data$data_lf_bin_limits_rsi
-    dimnames(lim) <- list("Region" = regions, "Sex" = sex, "Limit" = c("lower","upper"))
-    lim <- reshape2::melt(lim, variable.name = "Sex") %>%
-        mutate(value = bins[value]) %>%
-        tidyr::spread(Limit, value)
+    lim <- data$data_lf_bin_limits_i
+    colnames(lim) <- c("Min", "Max")
+    lim <- data.frame(lim) %>%
+        mutate(LF = 1:data$n_lf) %>%
+        mutate(lower = bins[Min],
+               upper = bins[Max]) %>%
+        select("LF", "lower", "upper")
+    #----------------------------------------------
 
-    rawN <- data$data_lf_N_is
-    dimnames(rawN) <- list("LF" = 1:data$n_lf, "Sex" = sex)
-    rawN <- reshape2::melt(rawN, value.name = "rawN") %>%
-        mutate(Iteration = 1)
+    # rawN <- data$data_lf_N_is
+    # dimnames(rawN) <- list("LF" = 1:data$n_lf, "Sex" = sex)
+    # rawN <- reshape2::melt(rawN, value.name = "rawN") %>%
+    #     mutate(Iteration = 1)
 
-    rawW <- data$data_lf_weight_is
-    dimnames(rawW) <- list("LF" = 1:data$n_lf, "Sex" = sex)
+    rawW <- data$data_lf_weight_il
+    dimnames(rawW) <- list("LF" = 1:data$n_lf, "Size" = bins)
     rawW <- reshape2::melt(rawW, value.name = "rawW") %>%
       mutate(Iteration = 1)
 
-    effN <- mcmc$pred_lf_effN_is
-    dimnames(effN) <- list("Iteration" = 1:n_iter, "LF" = 1:data$n_lf, "Sex" = sex)
-    effN <- reshape2::melt(effN, value.name = "effN")
+    # effN <- mcmc$pred_lf_effN_is
+    # dimnames(effN) <- list("Iteration" = 1:n_iter, "LF" = 1:data$n_lf, "Sex" = sex)
+    # effN <- reshape2::melt(effN, value.name = "effN")
 
-    allN <- left_join(rawN, effN)
+    # allN <- left_join(rawN, effN)
 
-    elf <- allN %>%
-        left_join(w, by = "LF") %>%
-        mutate(Source = sources[Source], Season = factor(seasons[Season])) %>%
-        left_join(mls, by = c("Region","Year","Season","Sex")) %>%
-        left_join(lim, by = c("Region","Sex")) %>%
-        select(-Iteration) %>%
-        #filter(rawN > 0) %>%
-        mutate(effN = paste0("n: ", sprintf("%.2f", effN))) %>%
-        mutate(rawN = paste0("N: ", sprintf("%.0f", rawN)))
-    head(elf)
+    # elf <- allN %>%
+    #     left_join(w, by = "LF") %>%
+    #     mutate(Source = sources[Source], Season = factor(seasons[Season])) %>%
+    #     left_join(mls, by = c("Region","Year","Season","Sex")) %>%
+    #     left_join(lim, by = c("Region","Sex")) %>%
+    #     select(-Iteration) %>%
+    #     #filter(rawN > 0) %>%
+    #     mutate(effN = paste0("n: ", sprintf("%.2f", effN))) %>%
+    #     mutate(rawN = paste0("N: ", sprintf("%.0f", rawN)))
+    # head(elf)
 
     elf2 <- rawW %>%
         left_join(w, by = "LF") %>%
-        mutate(Source = sources[Source], Season = factor(seasons[Season])) %>%
+        mutate(Season = seasons[Season], Sex = sex[Sex]) %>%
         left_join(mls, by = c("Region","Year","Season","Sex")) %>%
-        left_join(lim, by = c("Region","Sex")) %>%
+        left_join(lim, by = c("LF")) %>%
         select(-Iteration)
 
     # Observed LF
-    dlf <- mcmc$data_lf_out_isl
-    dimnames(dlf) <- list("Iteration" = 1:n_iter, "LF" = 1:data$n_lf, "Sex" = sex, "Bin" = 1:length(bins))
+    dlf <- mcmc$data_lf_obs2_il
+    dimnames(dlf) <- list("Iteration" = 1:n_iter, "LF" = 1:data$n_lf, "Size" = bins)
     dlf <- reshape2::melt(dlf) %>%
         left_join(w, by = "LF") %>%
-        mutate(Source = sources[Source], Source = factor(Source)) %>%
-        mutate(Season = seasons[Season], Size = bins[Bin]) %>%
         filter(Iteration == 1, value >= 0) %>%
         select(-Iteration) %>%
-        left_join(lim, by = c("Sex", "Region"))
-    head(dlf)
+        left_join(lim, by = c("LF")) %>%
+        mutate(Season = seasons[Season], Sex = sex[Sex])
+    # head(dlf)
 
     # Predicted LF
-    plf <- mcmc$pred_lf_isl
+    plf <- mcmc$pred_lf_il
     dimnames(plf) <- list("Iteration" = 1:n_iter, "LF" = 1:data$n_lf,
-                          "Sex" = sex, "Size" = bins)
+                          "Size" = bins)
     plf <- reshape2::melt(plf) %>%
         left_join(w, by = "LF") %>%
-        mutate(Source = sources[Source], Season = seasons[Season]) %>%
-        left_join(lim, by = c("Sex", "Region"))
-    head(plf)
+        left_join(lim, by = c("LF")) %>%
+        mutate(Season = seasons[Season], Sex = sex[Sex]) 
+    # head(plf)
 
     # Give each Region/Year/Season its own plot number, the number of
     # rows in this object is the number of plot panels that will be
     # generated in total
     n2 <- plf %>%
-        distinct(Region, Year, Season, Source) %>%
+        distinct(Region, Year, Season) %>%
         mutate(Plot = 1:nrow(.))
     sq <- seq(1, nrow(n2), n_panel)
 
@@ -119,28 +120,28 @@ plot_lfs <- function(object,
 
     # Plot observed only - by sex and source
     p <- ggplot(data = filter(dlf, value > 0)) +
-            geom_point(aes(x = Year, y = Size, size = value, colour = Source), alpha = 0.7) +
+            geom_point(aes(x = Year, y = Size, size = value), alpha = 0.5) +
             guides(size = guide_legend(title = "Proportion")) +
             theme_lsd()
     if (data$n_area == 1) {
-        p <- p + facet_grid(Sex ~ Source, scales = "fixed")
+        p <- p + facet_grid(Sex ~ ., scales = "fixed")
     } else{
-        p <- p + facet_grid(Sex ~ Region + Source, scales = "fixed")
+        p <- p + facet_grid(Sex ~ Region, scales = "fixed")
     }
     ggsave(paste0(figure_dir, "lf_observed.png"), p, width = 12)
 
   # observed by sex, year, source and area
-    dlfw <- right_join(dlf, elf2, by = c("LF","Sex","Year","Source","Region","Season","lower","upper"))
+    dlfw <- right_join(dlf, elf2, by = c("LF","Sex","Year","Size","Region","Season","lower","upper"))
 
     for (i in 1:data$n_area) {
         p <- ggplot(data = filter(dlfw, Region %in% i, Size >= lower & Size <= upper),
-                  aes(x = Size, y = fct_rev(paste(Year, Season)), height = value, fill = Source, alpha = rawW)) +
+                  aes(x = Size, y = fct_rev(paste(Year, Season)), height = value, alpha = rawW)) +
         ggridges::geom_density_ridges(stat = "identity", scale = 3.5) +
         xlab(xlab) + ylab(ylab) +
         guides(shape = FALSE, colour = FALSE) +
 
-        scale_colour_manual(values = rev(ggplotColours(n = length(sources)))) +
-        scale_x_continuous(minor_breaks = seq(0, 1e6, 2), limits = c(30, max(elf$upper)),
+        # scale_colour_manual(values = rev(ggplotColours(n = length(sources)))) +
+        scale_x_continuous(minor_breaks = seq(0, 1e6, 2), limits = c(30, max(dlfw$upper)),
                            expand = c(0, 0)) +
         scale_y_discrete(expand = c(0, 0)) +
         theme_lsd() +
@@ -156,13 +157,13 @@ plot_lfs <- function(object,
     for (i in 1:data$n_area) {
       for (j in unique(dlfw$Season)) {
         p <- ggplot(data = filter(dlfw, Region %in% i, Season == j, Size >= lower & Size <= upper),
-                    aes(x = Size, y = fct_rev(paste(Year)), height = value, fill = Source, alpha = rawW)) +
+                    aes(x = Size, y = fct_rev(paste(Year)), height = value, alpha = rawW)) +
           ggridges::geom_density_ridges(stat = "identity", scale = 3.5) +
           xlab(xlab) + ylab(ylab) +
           guides(shape = FALSE, colour = FALSE) +
 
-          scale_colour_manual(values = rev(ggplotColours(n = length(sources)))) +
-          scale_x_continuous(minor_breaks = seq(0, 1e6, 2), limits = c(30, max(elf$upper)),
+          # scale_colour_manual(values = rev(ggplotColours(n = length(sources)))) +
+          scale_x_continuous(minor_breaks = seq(0, 1e6, 2), limits = c(30, max(dlfw$upper)),
                              expand = c(0, 0)) +
           scale_y_discrete(expand = c(0, 0)) +
           theme_lsd() +

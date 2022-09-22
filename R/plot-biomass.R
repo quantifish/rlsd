@@ -121,15 +121,6 @@ plot_ssb <- function(object,
       group_by(Iteration, Region, value, Year) %>%
       ungroup() %>%
       mutate(Rule = 1, type = "Soft limit", value = value * 0.2)
-
-    SSBref <- mcmc$SSBref_jr
-    dimnames(SSBref) <- list("Iteration" = 1:n_iter, "Rule" = 1:n_rules, "Region" = regions2)
-    SSBref <- melt(SSBref) %>%
-      filter(Region != "Total") %>%
-      left_join(expand.grid(Iteration = 1:n_iter, Year = pyears), by = "Iteration") %>%
-      group_by(Iteration, Region, Rule, value, Year) %>%
-      ungroup() %>%
-      mutate(type = "Reference")
   }
 
   # spawning stock biomass
@@ -137,13 +128,13 @@ plot_ssb <- function(object,
     ssb_in <- ssb %>%
       mutate(type = "SSB") %>%
       rename(value = SSB) %>%
-      rbind(soft_limit, hard_limit, SSBref)
+      rbind(soft_limit, hard_limit)
     if (length(map) > 0 & show_map) ssb1_in <- ssb1 %>% mutate(type = "SSB")
   } else {
     ssb_in <- ssb %>%
       mutate(type = "SSB") %>%
       rename(value = SSB) %>%
-      rbind(soft_limit, hard_limit, SSBref) %>%
+      rbind(soft_limit, hard_limit) %>%
       filter(Year <= data$last_yr)
     if (length(map) > 0 & show_map) ssb1_in <- filter(ssb1, Year <= data$last_yr) %>% mutate(type = "SSB")
   }

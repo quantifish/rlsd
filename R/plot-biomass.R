@@ -848,7 +848,6 @@ plot_total_biomass <- function(object,
     biomass_total_ytrs2 <- NULL
     biomass_total_yts2 <- NULL
   }
-  }
 
 
 
@@ -942,7 +941,7 @@ plot_vulnref_rel <- function(object,
   n_rules <- data$n_rules
 
   if (length(map) > 0 & show_map) {
-    if ("biomass_vuln_jytrs" %in% names(map)) {
+    # if ("biomass_vuln_jytrs" %in% names(map)) {
       biomass_vuln_jytrs1 <- map$biomass_vuln_jytrs
       dimnames(biomass_vuln_jytrs1) <- list("Iteration" = 1, "Rule" = 1:n_rules, "Year" = pyears, "Season" = seasons, "Region" = regions, Sex = sex)
       biomass_vuln_ytr1 <- melt(biomass_vuln_jytrs1) %>%
@@ -973,38 +972,38 @@ plot_vulnref_rel <- function(object,
       biomass_total_yts1 <- biomass_total_jytrs1 %>%
         group_by(Iteration, Year, Season, Sex) %>%
         summarise(value = sum(value))
-    } else {
-      biomass_vuln_jytrs1 <- map$biomass_vuln_jytrs
-      dimnames(biomass_vuln_jytrs1) <- list("Iteration" = 1, "Rule" = 1:n_rules, "Year" = pyears, "Season" = seasons, "Region" = regions, Sex = sex)
-      biomass_vuln_ytr1 <- melt(biomass_vuln_jytrs1) %>%
-        filter(value > 0) %>%
-        mutate(Season = as.character(Season), Season = ifelse(Year >= data$season_change_yr, Season, YR)) %>%
-        group_by(Iteration, Rule, Year, Season, Region) %>%
-        summarise(value = sum(value))
+    # } else {
+    #   biomass_vuln_jytrs1 <- map$biomass_vuln_jytrs
+    #   dimnames(biomass_vuln_jytrs1) <- list("Iteration" = 1, "Rule" = 1:n_rules, "Year" = pyears, "Season" = seasons, "Region" = regions, Sex = sex)
+    #   biomass_vuln_ytr1 <- melt(biomass_vuln_jytrs1) %>%
+    #     filter(value > 0) %>%
+    #     mutate(Season = as.character(Season), Season = ifelse(Year >= data$season_change_yr, Season, YR)) %>%
+    #     group_by(Iteration, Rule, Year, Season, Region) %>%
+    #     summarise(value = sum(value))
 
-      biomass_vulnref_jytr1 <- map$biomass_vulnref_ytr
-      dimnames(biomass_vulnref_jytr1) <- list("Iteration" = 1, "Year" = pyears, "Season" = seasons, "Region" = regions)
-      biomass_vulnref_jytr1 <- melt(biomass_vulnref_jytr1) %>%
-        filter(value > 0) %>%
-        mutate(Season = as.character(Season), Season = ifelse(Year >= data$season_change_yr, Season, YR))
+    #   biomass_vulnref_jytr1 <- map$biomass_vulnref_ytr
+    #   dimnames(biomass_vulnref_jytr1) <- list("Iteration" = 1, "Year" = pyears, "Season" = seasons, "Region" = regions)
+    #   biomass_vulnref_jytr1 <- melt(biomass_vulnref_jytr1) %>%
+    #     filter(value > 0) %>%
+    #     mutate(Season = as.character(Season), Season = ifelse(Year >= data$season_change_yr, Season, YR))
 
-      biomass_vulnref_yt1 <- biomass_vulnref_jytr1 %>%
-        group_by(Iteration, Year, Season) %>%
-        summarise(value = sum(value))
+    #   biomass_vulnref_yt1 <- biomass_vulnref_jytr1 %>%
+    #     group_by(Iteration, Year, Season) %>%
+    #     summarise(value = sum(value))
 
-      biomass_cpue_ryt1 <- map$biomass_cpue_ryt
-      dimnames(biomass_cpue_ryt1) <- list("Iteration" = 1, "Region" = regions, "Year" = years, "Season" = seasons)
-      biomass_cpue_ryt1 <- melt(biomass_cpue_ryt1)
+    #   biomass_cpue_ryt1 <- map$biomass_cpue_ryt
+    #   dimnames(biomass_cpue_ryt1) <- list("Iteration" = 1, "Region" = regions, "Year" = years, "Season" = seasons)
+    #   biomass_cpue_ryt1 <- melt(biomass_cpue_ryt1)
 
-      biomass_total_jytrs1 <- map$biomass_total_ytrs
-      dimnames(biomass_total_jytrs1) <- list("Iteration" = 1, "Year" = pyears, "Season" = seasons, "Region" = regions, "Sex" = c(sex,"Total"))
-      biomass_total_jytrs1 <- melt(biomass_total_jytrs1) %>%
-        filter(value > 0)
+    #   biomass_total_jytrs1 <- map$biomass_total_ytrs
+    #   dimnames(biomass_total_jytrs1) <- list("Iteration" = 1, "Year" = pyears, "Season" = seasons, "Region" = regions, "Sex" = c(sex,"Total"))
+    #   biomass_total_jytrs1 <- melt(biomass_total_jytrs1) %>%
+    #     filter(value > 0)
 
-      biomass_total_yts1 <- biomass_total_jytrs1 %>%
-        group_by(Iteration, Year, Season, Sex) %>%
-        summarise(value = sum(value))
-    }
+    #   biomass_total_yts1 <- biomass_total_jytrs1 %>%
+    #     group_by(Iteration, Year, Season, Sex) %>%
+    #     summarise(value = sum(value))
+    # }
   } else {
     biomass_vuln_jytrs1 <- NULL
     biomass_vulnref_jytr1 <- NULL

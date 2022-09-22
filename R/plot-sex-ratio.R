@@ -27,66 +27,62 @@ plot_sex_ratio <- function(object, scales = "free",
     n_iter <- nrow(mcmc[[1]])
 
     if (length(map) > 0) {
-        w <- data.frame(LF = 1:data$n_lf,
-                        Year = data$data_lf_year_i,
-                        Season = data$data_lf_season_i,
-                        Source = data$data_lf_source_i,
-                        Region = data$data_lf_area_i,
+        w <- data.frame(SexR = 1:data$n_sexr,
+                        Year = data$data_sexr_year_i,
+                        Season = data$data_sexr_season_i,
+                        Region = data$data_sexr_area_i,
                         Sigma = map$sigma_sex_ratio_i[1,])
 
         # Observed sex-ratio's
-        osexr <- map$data_sex_ratio_out_is
-        dimnames(osexr) <- list("Iteration" = 1, "LF" = 1:data$n_lf, "Sex" = sex)
+        # osexr <- map$data_sex_ratio_out_is
+        osexr <- data$data_sexr_obs_is
+        dimnames(osexr) <- list("SexR" = 1:data$n_sexr, "Sex" = sex)
         osexr <- melt(osexr) %>%
-            left_join(w, by = "LF") %>%
+            left_join(w, by = "SexR") %>%
             mutate(EffN = 1 / Sigma, SD = sqrt(value * (1 - value) / EffN)) %>%
-            mutate(Source = sources[Source], Source = factor(Source), Season = seasons[Season]) %>%
-            filter(Iteration == 1) %>%
-            select(-Iteration)
+            mutate(Source = "Standardised", Source = factor(Source), Season = seasons[Season])
 
         # Predicted sex-ratio's
         psexr1 <- map$pred_sex_ratio_is
-        dimnames(psexr1) <- list("Iteration" = 1, "LF" = 1:data$n_lf, "Sex" = sex)
+        dimnames(psexr1) <- list("Iteration" = 1, "SexR" = 1:data$n_sexr, "Sex" = sex)
         psexr1 <- melt(psexr1) %>%
-            left_join(w, by = "LF") %>%
-            mutate(Source = sources[Source], Season = seasons[Season])
+            left_join(w, by = "SexR") %>%
+            mutate(Source = "Standardised", Season = seasons[Season])
 
         rsexr1 <- map$resid_sex_ratio_is
-        dimnames(rsexr1) <- list("Iteration" = 1, "LF" = 1:data$n_lf, "Sex" = sex)
+        dimnames(rsexr1) <- list("Iteration" = 1, "SexR" = 1:data$n_sexr, "Sex" = sex)
         rsexr1 <- melt(rsexr1) %>%
-            left_join(w, by = "LF") %>%
-            mutate(Source = sources[Source], Season = seasons[Season])
+            left_join(w, by = "SexR") %>%
+            mutate(Source = "Standardised", Season = seasons[Season])
     }
 
     if (length(mcmc) > 0) {
-        w <- data.frame(LF = 1:data$n_lf,
-                        Year = data$data_lf_year_i,
-                        Season = data$data_lf_season_i,
-                        Source = data$data_lf_source_i,
-                        Region = data$data_lf_area_i,
-                        Sigma = mcmc$sigma_sex_ratio_i[1,])
+         w <- data.frame(SexR = 1:data$n_sexr,
+                        Year = data$data_sexr_year_i,
+                        Season = data$data_sexr_season_i,
+                        Region = data$data_sexr_area_i,
+                        Sigma = map$sigma_sex_ratio_i[1,])
 
         # Observed sex-ratio's
-        osexr <- mcmc$data_sex_ratio_out_is
-        dimnames(osexr) <- list("Iteration" = 1:n_iter, "LF" = 1:data$n_lf, "Sex" = sex)
+        # osexr <- map$data_sex_ratio_out_is
+        osexr <- data$data_sexr_obs_is
+        dimnames(osexr) <- list("SexR" = 1:data$n_sexr, "Sex" = sex)
         osexr <- melt(osexr) %>%
-            left_join(w, by = "LF") %>%
+            left_join(w, by = "SexR") %>%
             mutate(EffN = 1 / Sigma, SD = sqrt(value * (1 - value) / EffN)) %>%
-            mutate(Source = sources[Source], Source = factor(Source), Season = seasons[Season]) %>%
-            filter(Iteration == 1) %>%
-            select(-Iteration)
+            mutate(Source = "Standardised", Source = factor(Source), Season = seasons[Season])
 
         psexr2 <- mcmc$pred_sex_ratio_is
-        dimnames(psexr2) <- list("Iteration" = 1:n_iter, "LF" = 1:data$n_lf, "Sex" = sex)
+        dimnames(psexr2) <- list("Iteration" = 1:n_iter, "SexR" = 1:data$n_sexr, "Sex" = sex)
         psexr2 <- melt(psexr2) %>%
-            left_join(w, by = "LF") %>%
-            mutate(Source = sources[Source], Season = seasons[Season])
+            left_join(w, by = "SexR") %>%
+            mutate(Source = "Standardised", Season = seasons[Season])
 
         rsexr2 <- mcmc$resid_sex_ratio_is
-        dimnames(rsexr2) <- list("Iteration" = 1:n_iter, "LF" = 1:data$n_lf, "Sex" = sex)
+        dimnames(rsexr2) <- list("Iteration" = 1:n_iter, "SexR" = 1:data$n_sexr, "Sex" = sex)
         rsexr2 <- melt(rsexr2) %>%
-            left_join(w, by = "LF") %>%
-            mutate(Source = sources[Source], Season = seasons[Season])
+            left_join(w, by = "SexR") %>%
+            mutate(Source = "Standardised", Season = seasons[Season])
     }
 
     # sex residuals
@@ -101,11 +97,11 @@ plot_sex_ratio <- function(object, scales = "free",
     if (n_iter > 10) {
         p <- p + geom_violin(aes(x = as.factor(.data$Year), y = .data$value, colour = .data$Source, fill = .data$Source, alpha = .data$Sigma)) +
             scale_x_discrete(breaks = seq(0, 1e6, 5)) +
-            scale_alpha(range = c(1, 0.5))
+            scale_alpha(range = c(1, 0.1))
     } else {
-        p <- p + geom_point(aes(x = .data$Year, y = .data$value, color = .data$Source, alpha = .data$Sigma), cex = 2) +
-            scale_x_continuous(breaks = seq(0, 1e6, 5), minor_breaks = seq(0, 1e6, 1)) +
-            scale_alpha(range = c(1, 0.5))
+        p <- p + geom_point(aes(x = .data$Year, y = .data$value, color = .data$Source, size = .data$Sigma), alpha = 0.75) + #, cex = 2) +
+            scale_x_continuous(breaks = seq(0, 1e6, 5), minor_breaks = seq(0, 1e6, 1)) #+
+            scale_alpha(range = c(1, 0.1))
     }
 
     if (data$n_area == 1) {

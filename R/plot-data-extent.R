@@ -70,15 +70,16 @@ plot_data_extent <- function(object,
   w <- data.frame(LF = 1:d$n_lf,
                   Year = d$data_lf_year_i,
                   Season = d$data_lf_season_i,
-                  Source = d$data_lf_source_i,
+                  # Source = d$data_lf_source_i,
                   Region = d$data_lf_area_i,
-                  N = rowSums(d$data_lf_N_is))
+                  N = rowSums(d$data_lf_weight_il)) %>%
+    mutate(Source = ifelse(is.null(d$data_lf_source_i), "Standardised", d$data_lf_source_i))
 
-  dlf <- mcmc$data_lf_out_isl
+  dlf <- mcmc$pred_lf_isl
   dimnames(dlf) <- list("Iteration" = 1:n_iter, "LF" = 1:d$n_lf, "Sex" = sex, "Size" = bins)
   dlf <- melt(dlf) %>%
     left_join(w, by = "LF") %>%
-    mutate(Type = factor(Source), Type = sources[Source]) %>%
+    mutate(Type = factor(Source)) %>%
     mutate(Season = factor(Season), Season = seasons[Season]) %>%
     filter(Iteration == 1, value >= 0) %>%
     select(-c(Iteration, LF, Size, value)) %>%

@@ -100,8 +100,7 @@ plot_sex_ratio <- function(object, scales = "free",
             scale_alpha(range = c(1, 0.1))
     } else {
         p <- p + geom_point(aes(x = .data$Year, y = .data$value, color = .data$Source, size = .data$Sigma), alpha = 0.75) + #, cex = 2) +
-            scale_x_continuous(breaks = seq(0, 1e6, 5), minor_breaks = seq(0, 1e6, 1)) #+
-            scale_alpha(range = c(1, 0.1))
+            scale_x_continuous(breaks = seq(0, 1e6, 5), minor_breaks = seq(0, 1e6, 1))
     }
 
     if (data$n_area == 1) {

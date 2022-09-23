@@ -42,32 +42,32 @@ plot_maturation <- function(object,
         mutate(Maturity = factor(1))
     }
 
-    dmat1 <- data$data_lf_in[,(length(bins) + 1):(2 * length(bins))]
-    dmat1 <- data.frame(dmat1)
-    names(dmat1) <- bins
-    dmat1$Year <- data$data_lf_year_i
-    dmat1$Season <- data$data_lf_season_i
-    dmat1$Source <- data$data_lf_source_i
-    dmat1 <- melt(dmat1, id.vars = list("Year", "Season", "Source")) %>%
-        mutate(Sex = 2)
-    dmat2 <- data$data_lf_in[,(2 * length(bins) + 1):ncol(data$data_lf_in)]
-    dmat2 <- data.frame(dmat2)
-    names(dmat2) <- bins
-    dmat2$Year <- data$data_lf_year_i
-    dmat2$Season <- data$data_lf_season_i
-    dmat2$Source <- data$data_lf_source_i
-    dmat2 <- melt(dmat2, id.vars = list("Year", "Season", "Source")) %>%
-        mutate(Sex = 3)
-    dmat3 <- rbind(dmat1, dmat2) %>%
-        group_by(Year, Season, Source, variable) %>%
-        summarize(sum = sum(value))
-    dmat4 <- rbind(dmat1, dmat2) %>%
-        filter(Sex == 3) %>%
-        group_by(Year, Season, Source, variable) %>%
-        summarize(value = sum(value)) %>%
-        select(Year, Season, Source, variable, value)
-    dmat5 <- full_join(dmat3, dmat4, by = c("Year", "Season", "Source", "variable")) %>%
-        mutate(value = value / sum, Size = as.numeric(as.character(variable)))
+    # dmat1 <- data$data_lf_in[,(length(bins) + 1):(2 * length(bins))]
+    # dmat1 <- data.frame(dmat1)
+    # names(dmat1) <- bins
+    # dmat1$Year <- data$data_lf_year_i
+    # dmat1$Season <- data$data_lf_season_i
+    # dmat1$Source <- data$data_lf_source_i
+    # dmat1 <- melt(dmat1, id.vars = list("Year", "Season", "Source")) %>%
+    #     mutate(Sex = 2)
+    # dmat2 <- data$data_lf_in[,(2 * length(bins) + 1):ncol(data$data_lf_in)]
+    # dmat2 <- data.frame(dmat2)
+    # names(dmat2) <- bins
+    # dmat2$Year <- data$data_lf_year_i
+    # dmat2$Season <- data$data_lf_season_i
+    # dmat2$Source <- data$data_lf_source_i
+    # dmat2 <- melt(dmat2, id.vars = list("Year", "Season", "Source")) %>%
+    #     mutate(Sex = 3)
+    # dmat3 <- rbind(dmat1, dmat2) %>%
+    #     group_by(Year, Season, Source, variable) %>%
+    #     summarize(sum = sum(value))
+    # dmat4 <- rbind(dmat1, dmat2) %>%
+    #     filter(Sex == 3) %>%
+    #     group_by(Year, Season, Source, variable) %>%
+    #     summarize(value = sum(value)) %>%
+    #     select(Year, Season, Source, variable, value)
+    # dmat5 <- full_join(dmat3, dmat4, by = c("Year", "Season", "Source", "variable")) %>%
+    #     mutate(value = value / sum, Size = as.numeric(as.character(variable)))
 
 #    p <- ggplot() +
 #        stat_summary(data = dmat5, aes(x = Size, y = value), fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.05, fill = "red", colour = NA) +
@@ -89,12 +89,12 @@ plot_maturation <- function(object,
         ylab(ylab) +
         theme_lsd()
 
-    if (empirical) {
-      p <- p +
-        stat_summary(data = dmat5, aes(x = Size, y = value), fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.05, fill = "red", colour = NA) +
-        stat_summary(data = dmat5, aes(x = Size, y = value), fun.ymin = function(x) quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.1, fill = "red", colour = NA) +
-        stat_summary(data = dmat5, aes(x = Size, y = value), fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.2, colour = "red")
-    }
+    # if (empirical) {
+    #   p <- p +
+    #     stat_summary(data = dmat5, aes(x = Size, y = value), fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.05, fill = "red", colour = NA) +
+    #     stat_summary(data = dmat5, aes(x = Size, y = value), fun.ymin = function(x) quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.1, fill = "red", colour = NA) +
+    #     stat_summary(data = dmat5, aes(x = Size, y = value), fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.2, colour = "red")
+    # }
 
     ggsave(paste0(figure_dir, "maturation.png"), p)
 }

@@ -4,13 +4,14 @@
 #'
 #' @param base the core model code
 #' @param funcs the model functions
-#' @param pars the model parameters
+#' @param params the model parameters
 #' @param ctl the .ctl file that will be input to the model. This is needed for switching parameters on/off.
 #' @param save should the full model be written to file or not
 #' @importFrom rstan read_rdump
 #' @export
 #'
-parse_model_code <- function(base = "base_lsd.stan", funcs = "functions.stan", pars = "parameters.stan",
+parse_model_code <- function(base = "base_lsd.stan",
+                             funcs = "functions.stan", params = "parameters.stan",
                              ctl = "lsd.ctl", save = FALSE) {
 
   d <- read_rdump(ctl)
@@ -37,9 +38,9 @@ parse_model_code <- function(base = "base_lsd.stan", funcs = "functions.stan", p
                        d$ctl_move,
                        d$ctl_cpue_pow))
 
-  code_base <- readLines(base)
-  code_funcs <- readLines(funcs)
-  code_param <- readLines(pars)
+  code_base <- readLines(con = base)
+  code_funcs <- readLines(con = funcs)
+  code_param <- readLines(con = params)
   code_param <- code_param[2:(length(code_param) - 1)]
 
   # Get the positions where the functions, fixed parameters, and estimated parameters should be inserted

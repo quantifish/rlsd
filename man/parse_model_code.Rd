@@ -7,7 +7,7 @@
 parse_model_code(
   base = "base_lsd.stan",
   funcs = "functions.stan",
-  pars = "parameters.stan",
+  params = "parameters.stan",
   ctl = "lsd.ctl",
   save = FALSE
 )
@@ -17,7 +17,7 @@ parse_model_code(
 
 \item{funcs}{the model functions}
 
-\item{pars}{the model parameters}
+\item{params}{the model parameters}
 
 \item{ctl}{the .ctl file that will be input to the model. This is needed for switching parameters on/off.}
 

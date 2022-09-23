@@ -4,10 +4,20 @@
 \alias{parse_model_code}
 \title{Parse model code}
 \usage{
-parse_model_code(base = "base_lsd", ctl = "lsd.ctl", save = FALSE)
+parse_model_code(
+  base = "base_lsd.stan",
+  funcs = "functions.stan",
+  params = "parameters.stan",
+  ctl = "lsd.ctl",
+  save = FALSE
+)
 }
 \arguments{
 \item{base}{the core model code}
+
+\item{funcs}{the model functions}
+
+\item{params}{the model parameters}
 
 \item{ctl}{the .ctl file that will be input to the model. This is needed for switching parameters on/off.}
 

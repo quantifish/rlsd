@@ -3,12 +3,16 @@
 #' This reads the core model code and combines it with the functions used by the model.
 #'
 #' @param base the core model code
+#' @param funcs the model functions
+#' @param params the model parameters
 #' @param ctl the .ctl file that will be input to the model. This is needed for switching parameters on/off.
 #' @param save should the full model be written to file or not
 #' @importFrom rstan read_rdump
 #' @export
 #'
-parse_model_code <- function(base = "base_lsd", ctl = "lsd.ctl", save = FALSE) {
+parse_model_code <- function(base = "base_lsd.stan",
+                             funcs = "functions.stan", params = "parameters.stan",
+                             ctl = "lsd.ctl", save = FALSE) {
 
   d <- read_rdump(ctl)
 
@@ -31,24 +35,21 @@ parse_model_code <- function(base = "base_lsd", ctl = "lsd.ctl", save = FALSE) {
                        d$ctl_q_puerulus,
                        d$ctl_q_drift,
                        d$ctl_init_erate,
-                       d$ctl_F,
                        d$ctl_move,
-                       d$ctl_cpue_pow)) # BUG - needs its own ctl
+                       d$ctl_cpue_pow))
 
-  if (!grepl(".stan", base)) base <- paste0(base, ".stan")
-
-  code_base <- readLines(base)
-  funcs <- readLines("functions.stan")
-  code_param <- readLines("parameters.stan")
+  code_base <- readLines(con = base)
+  code_funcs <- readLines(con = funcs)
+  code_param <- readLines(con = params)
   code_param <- code_param[2:(length(code_param) - 1)]
 
-  # Get the positions where the functions, fixed parameters and estimated parameters should be inserted
+  # Get the positions where the functions, fixed parameters, and estimated parameters should be inserted
   i <- grep("__FUN__", code_base)
   j <- grep("__FIX__", code_base)
   k <- grep("__PAR__", code_base)
 
   code_full <- c(code_base[1:(i - 1)],
-                 funcs,
+                 code_funcs,
                  code_base[(i + 1):(j - 1)],
                  code_param[!pars],
                  code_base[(j + 1):(k - 1)],

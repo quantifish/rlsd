@@ -50,39 +50,21 @@ plot_lfs <- function(object,
         select("LF", "lower", "upper")
     #----------------------------------------------
 
-    # rawN <- data$data_lf_N_is
-    # dimnames(rawN) <- list("LF" = 1:data$n_lf, "Sex" = sex)
-    # rawN <- reshape2::melt(rawN, value.name = "rawN") %>%
-    #     mutate(Iteration = 1)
 
     rawW <- data$data_lf_weight_il
     dimnames(rawW) <- list("LF" = 1:data$n_lf, "Size" = bins)
     rawW <- reshape2::melt(rawW, value.name = "rawW") %>%
       mutate(Iteration = 1)
 
-    # effN <- mcmc$pred_lf_effN_is
-    # dimnames(effN) <- list("Iteration" = 1:n_iter, "LF" = 1:data$n_lf, "Sex" = sex)
-    # effN <- reshape2::melt(effN, value.name = "effN")
-
-    # allN <- left_join(rawN, effN)
-
-    # elf <- allN %>%
-    #     left_join(w, by = "LF") %>%
-    #     mutate(Source = sources[Source], Season = factor(seasons[Season])) %>%
-    #     left_join(mls, by = c("Region","Year","Season","Sex")) %>%
-    #     left_join(lim, by = c("Region","Sex")) %>%
-    #     select(-Iteration) %>%
-    #     #filter(rawN > 0) %>%
-    #     mutate(effN = paste0("n: ", sprintf("%.2f", effN))) %>%
-    #     mutate(rawN = paste0("N: ", sprintf("%.0f", rawN)))
-    # head(elf)
 
     elf2 <- rawW %>%
         left_join(w, by = "LF") %>%
         mutate(Season = seasons[Season], Sex = sex[Sex]) %>%
         left_join(mls, by = c("Region","Year","Season","Sex")) %>%
         left_join(lim, by = c("LF")) %>%
-        select(-Iteration)
+        select(-Iteration) %>%
+        group_by(Size, Year, Season, Region, Sex, MLS, lower, upper) %>%
+        mutate(rawW2 = max(rawW))
 
     # Observed LF
     dlf <- mcmc$data_lf_obs2_il
@@ -113,6 +95,13 @@ plot_lfs <- function(object,
         mutate(Plot = 1:nrow(.))
     sq <- seq(1, nrow(n2), n_panel)
 
+    elf2 <- elf2 %>%
+        left_join(n2)
+    plf <- plf %>%
+        left_join(n2)
+    dlf <- dlf %>%
+        left_join(n2)
+
     ggplotColours <- function(n = 6, h = c(0, 360) + 15) {
         if ((diff(h) %% 360) < 1) h[2] <- h[2] - 360/n
         hcl(h = (seq(h[1], h[2], length = n)), c = 100, l = 65)
@@ -132,13 +121,14 @@ plot_lfs <- function(object,
 
   # observed by sex, year, source and area
     dlfw <- right_join(dlf, elf2, by = c("LF","Sex","Year","Size","Region","Season","lower","upper"))
+    dlfw$Sex <- factor(dlfw$Sex, levels = sex )
 
     for (i in 1:data$n_area) {
         p <- ggplot(data = filter(dlfw, Region %in% i, Size >= lower & Size <= upper),
-                  aes(x = Size, y = fct_rev(paste(Year, Season)), height = value, alpha = rawW)) +
+                  aes(x = Size, y = fct_rev(paste(Year, Season)), height = value, alpha = rawW2)) +
         ggridges::geom_density_ridges(stat = "identity", scale = 3.5) +
         xlab(xlab) + ylab(ylab) +
-        guides(shape = FALSE, colour = FALSE) +
+        guides(shape = "none", colour = "none") +
 
         # scale_colour_manual(values = rev(ggplotColours(n = length(sources)))) +
         scale_x_continuous(minor_breaks = seq(0, 1e6, 2), limits = c(30, max(dlfw$upper)),
@@ -157,10 +147,10 @@ plot_lfs <- function(object,
     for (i in 1:data$n_area) {
       for (j in unique(dlfw$Season)) {
         p <- ggplot(data = filter(dlfw, Region %in% i, Season == j, Size >= lower & Size <= upper),
-                    aes(x = Size, y = fct_rev(paste(Year)), height = value, alpha = rawW)) +
+                    aes(x = Size, y = fct_rev(paste(Year)), height = value, alpha = rawW2)) +
           ggridges::geom_density_ridges(stat = "identity", scale = 3.5) +
           xlab(xlab) + ylab(ylab) +
-          guides(shape = FALSE, colour = FALSE) +
+          guides(shape = "none", colour = "none") +
 
           # scale_colour_manual(values = rev(ggplotColours(n = length(sources)))) +
           scale_x_continuous(minor_breaks = seq(0, 1e6, 2), limits = c(30, max(dlfw$upper)),
@@ -177,24 +167,24 @@ plot_lfs <- function(object,
     }
 
     for (i in 1:length(sq)) {
-        pq <- sq[i]:(sq[i] + n_panel - 1)
+        # pq <- sq[i]:(sq[i] + n_panel - 1)
+        pq <- (sq[i] - n_panel + 1):sq[i]
         p <- ggplot() +
-            geom_vline(data = filter(elf, LF %in% pq), aes(xintercept = MLS), linetype = "dashed") +
-            geom_label(data = filter(elf, LF %in% pq), aes(x = Inf, y = Inf, label = paste(rawN, "\n", effN)), hjust = 1, vjust = 1) +
-            stat_summary(data = filter(plf, LF %in% pq, Size >= lower & Size <= upper), aes(x = as.numeric(as.character(Size)), y = value), fun.min = function(x) stats::quantile(x, 0.05), fun.max = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
-            stat_summary(data = filter(plf, LF %in% pq, Size >= lower & Size <= upper), aes(x = as.numeric(as.character(Size)), y = value), fun.min = function(x) stats::quantile(x, 0.25), fun.max = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
-            stat_summary(data = filter(plf, LF %in% pq, Size >= lower & Size <= upper), aes(x = as.numeric(as.character(Size)), y = value), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1) +
-            geom_point(data = filter(dlf, LF %in% pq, Size >= lower & Size <= upper), aes(x = as.numeric(as.character(Size)), y = value, shape = Source, colour = Season)) +
+            geom_vline(data = filter(elf2, Plot %in% pq), aes(xintercept = MLS), linetype = "dashed") +
+            geom_label(data = filter(elf2, Plot %in% pq), aes(x = Inf, y = Inf, label = paste("w:", round(rawW2,2))), hjust = 1, vjust = 1) +
+            stat_summary(data = filter(plf, Plot %in% pq, Size >= lower & Size <= upper), aes(x = as.numeric(as.character(Size)), y = value), fun.min = function(x) stats::quantile(x, 0.05), fun.max = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
+            stat_summary(data = filter(plf, Plot %in% pq, Size >= lower & Size <= upper), aes(x = as.numeric(as.character(Size)), y = value), fun.min = function(x) stats::quantile(x, 0.25), fun.max = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
+            stat_summary(data = filter(plf, Plot %in% pq, Size >= lower & Size <= upper), aes(x = as.numeric(as.character(Size)), y = value), fun = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1) +
+            geom_point(data = filter(dlf, Plot %in% pq, Size >= lower & Size <= upper), aes(x = as.numeric(as.character(Size)), y = value, colour = Season)) +
             xlab(xlab) + ylab(ylab) +
-            guides(shape = FALSE, colour = FALSE) +
-            scale_colour_manual(values = rev(ggplotColours(n = length(sources)))) +
+            guides(shape = "none", colour = "none") +
             scale_x_continuous(minor_breaks = seq(0, 1e6, 2), limits = c(min(elf$lower), max(elf$upper))) +
             scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
             theme_lsd()
         if (data$n_area == 1) {
-            p <- p + facet_grid(Year + Season + Source ~ Sex, scales = "free_y")
+            p <- p + facet_grid(Year + Season~ Sex, scales = "free_y")
         } else {
-            p <- p + facet_grid(Region + Year + Season + Source ~ Sex, scales = "free_y")
+            p <- p + facet_grid(Region + Year + Season ~ Sex, scales = "free_y")
         }
         ggsave(paste0(figure_dir, "lf_", i, ".png"), p, height = 12, width = 9)
     }
@@ -222,7 +212,6 @@ plot_lfs_resid2 <- function(object, n_panel = 10, figure_dir = "figure/")
     seasons <- c("AW", "SS")
     bins <- data$size_midpoint_l
     regions <- 1:data$n_area
-    sources <- c("LB", "CS")
 
     w <- data.frame(LF = 1:data$n_lf, Year = data$data_lf_year_i, Season = data$data_lf_season_i,
                     Source = data$data_lf_source_i, Region = data$data_lf_area_i,

@@ -27,7 +27,6 @@ plot_lfs <- function(object,
     seasons <- c("AW", "SS")
     bins <- data$size_midpoint_l
     regions <- 1:data$n_area
-    sources <- c("LB", "CS")
 
     w <- data.frame(LF = 1:data$n_lf,
                     Year = data$data_lf_year_i, Season = data$data_lf_season_i,
@@ -213,30 +212,30 @@ plot_lfs_resid2 <- function(object, n_panel = 10, figure_dir = "figure/")
     bins <- data$size_midpoint_l
     regions <- 1:data$n_area
 
-    w <- data.frame(LF = 1:data$n_lf, Year = data$data_lf_year_i, Season = data$data_lf_season_i,
-                    Source = data$data_lf_source_i, Region = data$data_lf_area_i,
-                    Weight = data$data_lf_weight_i[,1], N = data$data_lf_N_is)
+   w <- data.frame(LF = 1:data$n_lf,
+                    Year = data$data_lf_year_i, Season = data$data_lf_season_i,
+                    Region = data$data_lf_area_i, Sex = data$data_lf_sex_i)
 
-        resid <- mcmc$resid_lf_isl
-    dimnames(resid) <- list("Iteration" = 1:n_iter, "LF" = 1:data$n_lf, "Sex" = sex, "Size" = bins)
+        resid <- mcmc$resid_lf_il
+    dimnames(resid) <- list("Iteration" = 1:n_iter, "LF" = 1:data$n_lf, "Size" = bins)
     resid <- reshape2::melt(resid) %>%
         left_join(w, by = "LF") %>%
-        mutate(Source = sources[Source], Season = seasons[Season])
+        mutate(Season = seasons[Season], Sex = sex[Sex])
 
     mls <- data$cov_mls_ytrs
     dimnames(mls) <- list("Year" = data$first_yr:data$last_proj_yr, "Season" = seasons, "Region" = regions, "Sex" = sex)
     mls <- reshape2::melt(mls, id.var = "Year", variable.name = "Sex", value.name = "MLS")
-    head(mls)
 
     # New residual plot
-    lim <- array(NA, dim = c(length(regions), length(sex), 2))
-    lim[,,] <- data$data_lf_bin_limits_rsi
-    dimnames(lim) <- list("Region" = regions, "Sex" = sex, "Limit" = c("lower","upper"))
-    lim <- reshape2::melt(lim, variable.name = "Sex") %>%
-        mutate(value = bins[value]) %>%
-        tidyr::spread(Limit, value)
+    lim <- data$data_lf_bin_limits_i
+    colnames(lim) <- c("Min", "Max")
+    lim <- data.frame(lim) %>%
+        mutate(LF = 1:data$n_lf) %>%
+        mutate(lower = bins[Min],
+               upper = bins[Max]) %>%
+        select("LF", "lower", "upper")
 
-    resid_lim <- left_join(resid, lim, by = c("Sex", "Region")) %>%
+    resid_lim <- left_join(resid, lim, by = c("LF")) %>%
       filter(Size > lower, Size < upper)
     n2 <- resid_lim %>%
         distinct(Region, Year, Season) %>%
@@ -246,15 +245,15 @@ plot_lfs_resid2 <- function(object, n_panel = 10, figure_dir = "figure/")
       left_join(mls, by = c("Sex", "Year", "Season", "Region"))
 
     for (i in 1:length(sq)) {
-      pq <- sq[i]:(sq[i] + n_panel - 1)
+      pq <- (sq[i] - n_panel + 1):sq[i]
       df <- resid_lim %>% filter(Plot %in% pq)
 
-      p <- ggplot(data = df, aes(x = as.numeric(as.character(Size)), y = value, colour = Source, fill = Source)) +
+      p <- ggplot(data = df, aes(x = as.numeric(as.character(Size)), y = value)) +
         geom_vline(aes(xintercept = MLS), linetype = "dashed") +
         geom_hline(yintercept = 0, linetype = "dashed") +
         stat_summary(fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
         stat_summary(fun.min = function(x) quantile(x, 0.25), fun.max = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
-        stat_summary(fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1) +
+        stat_summary(fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1) +
         scale_x_continuous(minor_breaks = seq(0, 1e6, 2), limits = c(min(lim$lower), max(lim$upper))) +
         xlab("Midpoint of size-class (mm)") + ylab("Standardised residuals") +
         theme_lsd()
@@ -286,18 +285,21 @@ plot_lfs_resid <- function(object, figure_dir = "figure/", ylim = c(-5, 5))
     seasons <- c("AW","SS")
     bins <- data$size_midpoint_l
     regions <- 1:data$n_area
-    sources <- c("LB", "CS")
 
-    w <- data.frame(LF = 1:data$n_lf, Year = data$data_lf_year_i, Season = data$data_lf_season_i,
-                    Source = data$data_lf_source_i, Region = data$data_lf_area_i,
-                    Weight = data$data_lf_weight_i[,1], N = data$data_lf_N_is)
+   w <- data.frame(LF = 1:data$n_lf,
+                    Year = data$data_lf_year_i, Season = data$data_lf_season_i,
+                    Region = data$data_lf_area_i, Sex = data$data_lf_sex_i)
 
-    resid <- mcmc$resid_lf_isl
-    dimnames(resid) <- list("Iteration" = 1:n_iter, "LF" = 1:data$n_lf, "Sex" = sex, "Size" = bins)
+    resid <- mcmc$resid_lf_il
+    dimnames(resid) <- list("Iteration" = 1:n_iter, "LF" = 1:data$n_lf, "Size" = bins)
     resid <- reshape2::melt(resid) %>%
         left_join(w, by = "LF") %>%
-        mutate(Source = sources[Source], Season = seasons[Season])
+        mutate(Season = seasons[Season], Sex = sex[Sex])
     head(resid)
+
+    rawW <- data$data_lf_weight_il
+    dimnames(rawW) <- list("LF" = 1:data$n_lf, "Size" = bins)
+    rawW <- reshape2::melt(rawW, value.name = "rawW")
 
     ## add fake data
     allyrs <- min(resid$Year):max(resid$Year)
@@ -307,53 +309,46 @@ plot_lfs_resid <- function(object, figure_dir = "figure/", ylim = c(-5, 5))
     if (min(resid$value) > ylim[1]) ylim <- c(min(resid$value), ylim[2])
     if (max(resid$value) < ylim[2]) ylim <- c(ylim[1], max(resid$value))
 
-    yrs <- unique(resid$Year)
-    size <- unique(resid$Size)
-    resid$WtYr <- resid$WtSz <- 0
-
-    yrwt <- sapply(1:length(yrs), function(x){
-        sub <- resid[which(resid$Year==yrs[x]),]
-        sumwt <- sum(sub$Weight)
-        return(sumwt)
-    })
-    names(yrwt) <- yrs
-    for(i in 1:length(yrs)){
-        resid$WtYr[which(resid$Year==yrs[i])] <- yrwt[which(names(yrwt)==yrs[i])]
-    }
-
-    szwt <- sapply(1:length(size), function(x){
-        sub <- resid[which(resid$Size==size[x]),]
-        sumwt <- sum(sub$Weight)
-        return(sumwt)
-    })
-    names(szwt) <- size
-    for(i in 1:length(size)){
-        resid$WtSz[which(resid$Size==size[i])] <- szwt[which(names(szwt)==size[i])]
-    }
+    resid <- resid %>%
+        mutate(Size = as.numeric(Size)) %>%
+        left_join(rawW, by = c("LF", "Size")) %>%
+        group_by(Year) %>%
+        mutate(WtYr = sum(rawW)) %>%
+        ungroup() %>%
+        group_by(Size) %>%
+        mutate(WtSz = sum(rawW)) 
 
         resid$Region <- sapply(1:nrow(resid), function(x) paste0("Region ", resid$Region[x]))
+        resid$Sex <- factor(resid$Sex, levels = sex)
+
         p <- ggplot(data = resid) +
-            geom_violin(aes(x = factor(Year), y = value, fill = Source, colour = Source, alpha = WtYr), scale="width") +
+            geom_violin(aes(x = factor(Year), y = value, alpha = WtYr, fill = Region, color = Region), scale="width") +
             xlab("Year") + ylab("Standardised residuals") +
             geom_hline(yintercept = 0, alpha = 0.8) +
             scale_x_discrete(breaks = rev(seq(max(years), by = -5))) +
+            guides(fill = 'none', color = "none") +
             theme_lsd() +
             scale_alpha(guide = "none") +
+            scale_color_brewer(palette = "Set1") +
+            scale_fill_brewer(palette = "Set1") +
             coord_cartesian(ylim = ylim)
         if(length(regions)>1) p <- p + facet_grid(Region~.)
 
-        ggsave(paste0(figure_dir, "lf_residuals_year_source.png"), p, width=12)
+        ggsave(paste0(figure_dir, "lf_residuals_year.png"), p, width=12)
 
         p <- ggplot(data = resid) +
-            geom_violin(aes(x = factor(Size), y = value, fill=Source, colour=Source, alpha=WtSz), scale="width") +
+            geom_violin(aes(x = factor(Size), y = value, fill = Region, color = Region, alpha=WtSz), scale="width") +
              xlab("Size (mm)") + ylab("Standardised residuals") +
             geom_hline(yintercept = 0, alpha = 0.8) +
             theme_lsd() +
+            scale_color_brewer(palette = "Set1") +
+            scale_fill_brewer(palette = "Set1") +
             scale_alpha(guide = "none")  +
+            guides(fill = "none", color = "none") +
             coord_cartesian(ylim = ylim)
         if(length(regions)>1) p <- p + facet_grid(Region~.)
 
-        ggsave(paste0(figure_dir, "lf_residuals_size_source.png"), p, width=16)
+        ggsave(paste0(figure_dir, "lf_residuals_size.png"), p, width=16)
 
         p <- ggplot(data = resid) +
             geom_violin(aes(x = factor(Size), y = value, fill=Season, colour=Season, alpha=WtSz), scale="width") +
@@ -361,62 +356,53 @@ plot_lfs_resid <- function(object, figure_dir = "figure/", ylim = c(-5, 5))
             geom_hline(yintercept = 0, alpha = 0.8) +
             theme_lsd() +
             scale_alpha(guide = "none") +
-            coord_cartesian(ylim = ylim)
-        if(length(regions)>1) p <- p + facet_grid(Region~.)
+            coord_cartesian(ylim = ylim) +
+            scale_color_brewer(palette = "Set1") +
+            scale_fill_brewer(palette = "Set1") +
+            guides(fill = "none", color = "none")
+
+        if(length(regions)>1){
+            p <- p + facet_grid(Region~Season)
+        } else {
+            p <- p + facet_grid(~Season)
+        }
 
         ggsave(paste0(figure_dir, "lf_residuals_size_season.png"), p, width=16)
 
-        p <- ggplot(data = resid) +
-            geom_violin(aes(x = factor(Year), y = value, alpha=WtYr), fill="tomato", colour="tomato", scale="width") +
-            xlab("Year") + ylab("Standardised residuals") +
-            scale_x_discrete(breaks = rev(seq(max(years), by = -5))) +
-            geom_hline(yintercept = 0, alpha = 0.8) +
-            theme_lsd() +
-            scale_alpha(guide = "none") +
-            coord_cartesian(ylim = ylim)
-        if(length(regions)>1) p <- p + facet_grid(Region~.)
-
-        ggsave(paste0(figure_dir, "lf_residuals_year.png"), p, width=10)
-
-        p <- ggplot(data = resid) +
-            geom_violin(aes(x = factor(Size), y = value, alpha=WtSz), fill="tomato", colour="tomato", scale="width") +
-            xlab("Size (mm)") + ylab("Standardised residuals") +
-            geom_hline(yintercept = 0, alpha = 0.8) +
-            theme_lsd() +
-            scale_alpha(guide = "none") +
-            coord_cartesian(ylim = ylim)
-        if(length(regions)>1) p <- p + facet_grid(Region~.)
-
-        ggsave(paste0(figure_dir, "lf_residuals_size.png"), p, width=16)
-
     	p <- ggplot(data = resid) +
-        	geom_violin(aes(x = factor(Year), y = value, fill=Source, colour=Source, alpha=WtYr), scale="width") +
+        	geom_violin(aes(x = factor(Year), y = value, fill=Region, color = Region, alpha=WtYr), scale="width") +
         	xlab("Year") + ylab("Standardised residuals") +
             scale_x_discrete(breaks = rev(seq(max(years), by = -5))) +
             geom_hline(yintercept = 0, alpha = 0.8) +
         	theme_lsd() +
+            guides(fill = "none", color = "none") +
             scale_alpha(guide = "none") +
-            coord_cartesian(ylim = ylim)
+            coord_cartesian(ylim = ylim) +
+            scale_color_brewer(palette = "Set1") +
+            scale_fill_brewer(palette = "Set1") 
         if(length(regions)>1){
             p <- p + facet_grid(Sex ~ Region, scales="free_y")
         } else {
             p <- p + facet_grid(Sex ~ ., scales = "free_y")
         }
-        ggsave(paste0(figure_dir, "lf_residuals_sex_year_source.png"), p, width=12)
+        ggsave(paste0(figure_dir, "lf_residuals_sex_year.png"), p, width=12)
 
     	p <- ggplot(data = resid) +
-        	geom_violin(aes(x = factor(Size), y = value, fill=Source, colour=Source, alpha=WtSz), scale="width") +
+        	geom_violin(aes(x = factor(Size), y = value, fill=Region, color = Region, alpha=WtSz), scale="width") +
         	xlab("Size (mm)") + ylab("Standardised residuals") +
             geom_hline(yintercept = 0, alpha = 0.8) +
         	theme_lsd() + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
             scale_alpha(guide = "none") +
-            coord_cartesian(ylim = ylim)
+            guides(fill = "none", color = "none") +
+            coord_cartesian(ylim = ylim) +
+            scale_color_brewer(palette = "Set1") +
+            scale_fill_brewer(palette = "Set1") 
         if(length(regions)>1){
             p <- p + facet_grid(Sex ~ Region, scales="free_y")
         } else {
             p <- p + facet_grid(Sex ~ ., scales = "free_y")
         }
-        ggsave(paste0(figure_dir, "lf_residuals_sex_size_source.png"), p, width=16)
+        ggsave(paste0(figure_dir, "lf_residuals_sex_size.png"), p, width=16)
 
         p <- ggplot(data = resid) +
             geom_violin(aes(x = factor(Size), y = value, fill=Season, colour=Season, alpha=WtSz), scale="width") +
@@ -424,22 +410,27 @@ plot_lfs_resid <- function(object, figure_dir = "figure/", ylim = c(-5, 5))
             geom_hline(yintercept = 0, alpha = 0.8) +
             theme_lsd() + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
             scale_alpha(guide = "none") +
-            coord_cartesian(ylim = ylim)
+            coord_cartesian(ylim = ylim) +
+            scale_color_brewer(palette = "Set1") +
+            scale_fill_brewer(palette = "Set1") 
         if(length(regions)>1){
-            p <- p + facet_grid(Sex ~ Region, scales="free_y")
+            p <- p + facet_grid(Sex ~ Region + Season, scales="free_y")
         } else {
-            p <- p + facet_grid(Sex ~ ., scales = "free_y")
+            p <- p + facet_grid(Sex ~ Season, scales = "free_y")
         }
         ggsave(paste0(figure_dir, "lf_residuals_sex_size_season.png"), p, width=16)
 
     	p <- ggplot(data = resid) +
-        	geom_violin(aes(x = factor(Year), y = value, alpha = WtYr), fill="tomato", colour="tomato", scale="width") +
+        	geom_violin(aes(x = factor(Year), y = value, color = Region, fill = Region, alpha = WtYr), scale="width") +
             scale_x_discrete(breaks = rev(seq(max(years), by = -5))) +
         	xlab("Year") + ylab("Standardised residuals") +
             geom_hline(yintercept = 0, alpha = 0.8) +
         	theme_lsd() +
             scale_alpha(guide = "none") +
-            coord_cartesian(ylim = ylim)
+            coord_cartesian(ylim = ylim) +
+            guides(fill = "none", color = "none") +
+            scale_color_brewer(palette = "Set1") +
+            scale_fill_brewer(palette = "Set1") 
         if(length(regions)>1){
             p <- p + facet_grid(Sex ~ Region, scales="free_y")
         } else {
@@ -447,18 +438,5 @@ plot_lfs_resid <- function(object, figure_dir = "figure/", ylim = c(-5, 5))
         }
         ggsave(paste0(figure_dir, "lf_residuals_sex_year.png"), p, width=10)
 
-    	p <- ggplot(data = resid) +
-        	geom_violin(aes(x = factor(Size), y = value, alpha = WtSz), fill="tomato", colour = "tomato", scale="width") +
-        	xlab("Size (mm)") + ylab("Standardised residuals") +
-            geom_hline(yintercept = 0, alpha = 0.8) +
-        	theme_lsd() + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
-            scale_alpha(guide = "none") +
-            coord_cartesian(ylim = ylim)
-        if(length(regions)>1){
-            p <- p + facet_grid(Sex ~ Region, scales="free_y")
-        } else {
-            p <- p + facet_grid(Sex ~ ., scales = "free_y")
-        }
-        ggsave(paste0(figure_dir, "lf_residuals_sex_size.png"), p, width = 16)
 
 }

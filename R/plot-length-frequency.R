@@ -177,7 +177,7 @@ plot_lfs <- function(object,
             geom_point(data = filter(dlf, Plot %in% pq, Size >= lower & Size <= upper), aes(x = as.numeric(as.character(Size)), y = value, colour = Season)) +
             xlab(xlab) + ylab(ylab) +
             guides(shape = "none", colour = "none") +
-            scale_x_continuous(minor_breaks = seq(0, 1e6, 2), limits = c(min(elf$lower), max(elf$upper))) +
+            scale_x_continuous(minor_breaks = seq(0, 1e6, 2), limits = c(min(elf2$lower), max(elf2$upper))) +
             scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
             theme_lsd()
         if (data$n_area == 1) {

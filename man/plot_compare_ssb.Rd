@@ -2,7 +2,7 @@
 % Please edit documentation in R/plot-compare.R
 \name{plot_compare_ssb}
 \alias{plot_compare_ssb}
-\title{Compare vulnerable biomass from multiple models}
+\title{Compare spawning biomass from multiple models}
 \usage{
 plot_compare_ssb(
   object_list,
@@ -21,5 +21,5 @@ plot_compare_ssb(
 \item{save_plot}{to save the plot to file or not}
 }
 \description{
-Compare vulnerable biomass from multiple models
+Compare spawning biomass from multiple models
 }

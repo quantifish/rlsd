@@ -25,7 +25,9 @@ plot_selectivity <- function(object,
     if (n_seasons == 2) seasons <- c("AW", "SS")
 
     w <- data$which_sel_rsyt
-    dimnames(w) <- list("Region" = object@regions, "Sex" = object@sex, "Year" = years, "Season" = seasons)
+    if(dim(w)[2] == 2) sex <- c("Male", "Female")
+    if(dim(w)[2] == 3) sex <- c("Male", "Immature female", "Mature female")
+    dimnames(w) <- list("Region" = object@regions, "Sex" = sex, "Year" = years, "Season" = seasons)
     w <- melt(w, value.name = "Selex")
 
     if (length(map) > 0) {
@@ -51,13 +53,13 @@ plot_selectivity <- function(object,
     }
 
     if (!is.null(sel2)) {
-        if(data$n_sel > 2 & length(unique(sel2$Year)) == 1) {
+        if(data$n_sel > 3 & length(unique(sel2$Year)) == 1) {
             p <- ggplot(data = sel2, aes(x = .data$Size, y = .data$Selectivity, col = .data$Season, fill = .data$Season))
         } else {
             p <- ggplot(data = sel2, aes(x = .data$Size, y = .data$Selectivity, col = .data$Year, fill = .data$Year))
         }
     } else if (!is.null(sel1)) {
-        if(data$n_sel > 2 & length(unique(sel2$Year)) == 1) {
+        if(data$n_sel > 3 & length(unique(sel2$Year)) == 1) {
             p <- ggplot(data = sel1, aes(x = .data$Size, y = .data$Selectivity, col = .data$Season, fill = .data$Season))
         } else {
             p <- ggplot(data = sel1, aes(x = .data$Size, y = .data$Selectivity, col = .data$Year, fill = .data$Year))
@@ -65,7 +67,7 @@ plot_selectivity <- function(object,
     }
 
     if (!is.null(sel2)) {
-        if(data$n_sel > 2 & length(unique(sel2$Year)) == 1) {
+        if(data$n_sel > 3 & length(unique(sel2$Year)) == 1) {
             p <- p + stat_summary(data = sel2, aes(x = .data$Size, y = .data$Selectivity, col = .data$Season), fun.min = function(x) quantile(x, 0.05), fun.max = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
                 stat_summary(data = sel2, aes(x = .data$Size, y = .data$Selectivity, col = .data$Season), fun.min = function(x) quantile(x, 0.25), fun.max = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
                 stat_summary(data = sel2, aes(x = .data$Size, y = .data$Selectivity, col = .data$Season), fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1)
@@ -75,7 +77,7 @@ plot_selectivity <- function(object,
                 stat_summary(data = sel2, aes(x = .data$Size, y = .data$Selectivity, col = .data$Year), fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1)
         }
     }
-    if (length(unique(sel2$Year)) == 1 & data$n_sel == 2) {
+    if (length(unique(sel2$Year)) == 1 & data$n_sel == 3) {
         p <- p + guides(colour = FALSE, fill = FALSE)
     }
     if (!is.null(sel1)) {

@@ -92,7 +92,7 @@ plot_lfs <- function(object,
     n2 <- plf %>%
         distinct(Region, Year, Season) %>%
         mutate(Plot = 1:nrow(.))
-    sq <- seq(1, nrow(n2), n_panel)
+    sq <- seq(nrow(n2), 1, -n_panel) #seq(1, nrow(n2), n_panel)
 
     elf2 <- elf2 %>%
         left_join(n2)

@@ -100,6 +100,7 @@ plot_lfs <- function(object,
 
     plf <- plf %>%
         left_join(n2)
+
     dlf <- dlf %>%
         left_join(n2)
     dlf$Sex <- factor(dlf$Sex, levels = sex )
@@ -173,12 +174,12 @@ plot_lfs <- function(object,
         # pq <- sq[i]:(sq[i] + n_panel - 1)
         pq <- (sq[i] - n_panel + 1):sq[i]
         p <- ggplot() +
-            geom_vline(data = filter(elf2, Plot %in% pq), aes(xintercept = MLS), linetype = "dashed") +
-            geom_label(data = filter(elf2, Plot %in% pq), aes(x = Inf, y = Inf, label = paste("w:", round(rawW2,2))), hjust = 1, vjust = 1) +
-            stat_summary(data = filter(plf, Plot %in% pq, Size >= lower & Size <= upper), aes(x = as.numeric(as.character(Size)), y = value), fun.min = function(x) stats::quantile(x, 0.05), fun.max = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
-            stat_summary(data = filter(plf, Plot %in% pq, Size >= lower & Size <= upper), aes(x = as.numeric(as.character(Size)), y = value), fun.min = function(x) stats::quantile(x, 0.25), fun.max = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
-            stat_summary(data = filter(plf, Plot %in% pq, Size >= lower & Size <= upper), aes(x = as.numeric(as.character(Size)), y = value), fun = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1) +
-            geom_point(data = filter(dlf, Plot %in% pq, Size >= lower & Size <= upper), aes(x = as.numeric(as.character(Size)), y = value, colour = Season)) +
+            geom_vline(data = filter(elf2, Plot %in% pq) %>% mutate(Sex = factor(Sex, levels = sex)), aes(xintercept = MLS), linetype = "dashed") +
+            geom_label(data = filter(elf2, Plot %in% pq) %>% mutate(Sex = factor(Sex, levels = sex)), aes(x = Inf, y = Inf, label = paste("w:", round(rawW2,2))), hjust = 1, vjust = 1) +
+            stat_summary(data = filter(plf, Plot %in% pq, Size >= lower & Size <= upper) %>% mutate(Sex = factor(Sex, levels = sex)), aes(x = as.numeric(as.character(Size)), y = value), fun.min = function(x) stats::quantile(x, 0.05), fun.max = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
+            stat_summary(data = filter(plf, Plot %in% pq, Size >= lower & Size <= upper) %>% mutate(Sex = factor(Sex, levels = sex)), aes(x = as.numeric(as.character(Size)), y = value), fun.min = function(x) stats::quantile(x, 0.25), fun.max = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
+            stat_summary(data = filter(plf, Plot %in% pq, Size >= lower & Size <= upper) %>% mutate(Sex = factor(Sex, levels = sex)), aes(x = as.numeric(as.character(Size)), y = value), fun = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1) +
+            geom_point(data = filter(dlf, Plot %in% pq, Size >= lower & Size <= upper) %>% mutate(Sex = factor(Sex, levels = sex)), aes(x = as.numeric(as.character(Size)), y = value, colour = Season)) +
             xlab(xlab) + ylab(ylab) +
             guides(shape = "none", colour = "none") +
             scale_x_continuous(minor_breaks = seq(0, 1e6, 2), limits = c(min(elf2$lower), max(elf2$upper))) +
@@ -250,7 +251,7 @@ plot_lfs_resid2 <- function(object, n_panel = 10, figure_dir = "figure/")
 
     for (i in 1:length(sq)) {
       pq <- (sq[i] - n_panel + 1):sq[i]
-      df <- resid_lim %>% filter(Plot %in% pq)
+      df <- resid_lim %>% filter(Plot %in% pq) %>% mutate(Sex = factor(Sex, levels = sex))
 
       p <- ggplot(data = df, aes(x = as.numeric(as.character(Size)), y = value)) +
         geom_vline(aes(xintercept = MLS), linetype = "dashed") +

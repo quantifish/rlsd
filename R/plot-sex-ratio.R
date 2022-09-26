@@ -129,8 +129,8 @@ plot_sex_ratio <- function(object, scales = "free",
 
     p <- p + geom_point(data = osexr, aes(x = .data$Year, y = .data$value), color = "tomato") +
         geom_linerange(data = osexr, aes(x = .data$Year, ymin = .data$value - .data$SD, ymax = .data$value + .data$SD), color = "tomato", alpha = 0.75) +
-        scale_y_continuous(expand = c(0, 0)) +
-        coord_cartesian(ylim = c(0, 1.1)) +
+        scale_y_continuous(expand = c(0,0)) +
+        coord_cartesian(ylim = c(0, 1)) +
         xlab(xlab) +
         ylab(ylab) +
         theme_lsd() +

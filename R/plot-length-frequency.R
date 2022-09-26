@@ -96,10 +96,14 @@ plot_lfs <- function(object,
 
     elf2 <- elf2 %>%
         left_join(n2)
+    elf2$Sex <- factor(elf2$Sex, levels = sex )
+
     plf <- plf %>%
         left_join(n2)
     dlf <- dlf %>%
         left_join(n2)
+    dlf$Sex <- factor(dlf$Sex, levels = sex )
+
 
     ggplotColours <- function(n = 6, h = c(0, 360) + 15) {
         if ((diff(h) %% 360) < 1) h[2] <- h[2] - 360/n

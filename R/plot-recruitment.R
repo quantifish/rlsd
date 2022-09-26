@@ -194,7 +194,7 @@ plot_recruitment_size <- function(object, xlab = "Size at recruitment (mm)", yla
     p <- ggplot(data = mcmc$recruitment_size_dist_l, aes(x = Size, y = value)) +
         geom_line() +
         geom_point() +
-        expand_limits(y = 0) +
+        scale_y_continuous(expand = expansion(mult = c(0, 0.1))) +
         xlab(xlab) +
         ylab(ylab) +
         theme_lsd()

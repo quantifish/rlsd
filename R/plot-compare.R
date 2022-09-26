@@ -1429,7 +1429,7 @@ plot_compare_selectivity <- function(object_list, object_names, figure_dir = "co
       inner_join(w, by = "Selex") %>%
       filter(Year <= max(years_list[[x]])) %>%
       mutate(Year = factor(Year)) %>%
-      mutate(Sex = ifelse(grepl("female", Sex), "Female", "Male")) %>%
+      # mutate(Sex = ifelse(grepl("female", Sex), "Female", "Male")) %>%
       distinct(Iteration, Sex, Size, Selectivity, Region, .keep_all = TRUE)
     sel2$Model <- object_names[[x]]
 

@@ -48,14 +48,22 @@ parse_model_code <- function(base = "base_lsd.stan",
   j <- grep("__FIX__", code_base)
   k <- grep("__PAR__", code_base)
 
+  # Fixed parameters
+  param_fix <- code_param[!pars]
+  #param_fix <- code_param[grep("par_R0_r", code_param)]
+
+  # Estimated parameters
+  param_est <- code_param[pars]
+
+  # Assemble the code
   code_full <- c(code_base[1:(i - 1)],
                  code_funcs,
                  code_base[(i + 1):(j - 1)],
-                 code_param[!pars],
+                 param_fix,
                  code_base[(j + 1):(k - 1)],
                  "parameters {",
                  "",
-                 code_param[pars],
+                 param_est,
                  "",
                  "}",
                  code_base[(k + 1):length(code_base)])

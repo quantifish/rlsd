@@ -70,22 +70,20 @@ plot_data_extent <- function(object,
   w <- data.frame(LF = 1:d$n_lf,
                   Year = d$data_lf_year_i,
                   Season = d$data_lf_season_i,
-                  # Source = d$data_lf_source_i,
+                  Sex = d$data_lf_sex_i,
                   Region = d$data_lf_area_i,
-                  N = rowSums(d$data_lf_weight_il)) %>%
-    mutate(Source = ifelse(is.null(d$data_lf_source_i), "Standardised", d$data_lf_source_i))
+                  N = rowSums(d$data_lf_weight_il))
 
-  dlf <- mcmc$pred_lf_isl
-  dimnames(dlf) <- list("Iteration" = 1:n_iter, "LF" = 1:d$n_lf, "Sex" = sex, "Size" = bins)
+  dlf <- mcmc$pred_lf_il
+  dimnames(dlf) <- list("Iteration" = 1:n_iter, "LF" = 1:d$n_lf, "Size" = bins)
   dlf <- melt(dlf) %>%
     left_join(w, by = "LF") %>%
-    mutate(Type = factor(Source)) %>%
     mutate(Season = factor(Season), Season = seasons[Season]) %>%
     filter(Iteration == 1, value >= 0) %>%
     select(-c(Iteration, LF, Size, value)) %>%
-    mutate(DataType = "LF", DataSource = paste(DataType, Season, Type)) %>%
-    select(-Sex, -Source) %>%
-    group_by(Year, Season, Region, Type, DataType, DataSource) %>%
+    mutate(DataType = "LF", DataSource = paste(DataType, Season)) %>%
+    select(-Sex) %>%
+    group_by(Year, Season, Region, DataType, DataSource) %>%
     summarise(N = sum(N)) %>%
     ungroup() %>%
     mutate(N = N / max(N) * scalar)

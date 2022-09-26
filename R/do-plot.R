@@ -13,7 +13,7 @@
 do_plot <- function(object, map = FALSE, mcmc = FALSE, figure_dir = "figure/") {
 
   # Data only plots
-  # plot_data_extent(object, figure_dir = figure_dir)
+  plot_data_extent(object, figure_dir = figure_dir)
 
   # MCMC diagnostic plots
   if (mcmc && nrow(object@mcmc[[1]]) > 10 && dim(object@mcmc$Bcurr_jr)[2] < 10) {

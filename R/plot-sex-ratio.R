@@ -23,7 +23,6 @@ plot_sex_ratio <- function(object, scales = "free",
 
     seasons <- c("AW", "SS")
     sex <- c("Male", "Immature female", "Mature female")
-    sources <- c("LB", "CS")
     n_iter <- nrow(mcmc[[1]])
 
     if (length(map) > 0) {
@@ -40,20 +39,20 @@ plot_sex_ratio <- function(object, scales = "free",
         osexr <- melt(osexr) %>%
             left_join(w, by = "SexR") %>%
             mutate(EffN = 1 / Sigma, SD = sqrt(value * (1 - value) / EffN)) %>%
-            mutate(Source = "Standardised", Source = factor(Source), Season = seasons[Season])
+            mutate(Season = seasons[Season])
 
         # Predicted sex-ratio's
         psexr1 <- map$pred_sex_ratio_is
         dimnames(psexr1) <- list("Iteration" = 1, "SexR" = 1:data$n_sexr, "Sex" = sex)
         psexr1 <- melt(psexr1) %>%
             left_join(w, by = "SexR") %>%
-            mutate(Source = "Standardised", Season = seasons[Season])
+            mutate(Season = seasons[Season])
 
         rsexr1 <- map$resid_sex_ratio_is
         dimnames(rsexr1) <- list("Iteration" = 1, "SexR" = 1:data$n_sexr, "Sex" = sex)
         rsexr1 <- melt(rsexr1) %>%
             left_join(w, by = "SexR") %>%
-            mutate(Source = "Standardised", Season = seasons[Season])
+            mutate(Season = seasons[Season])
     }
 
     if (length(mcmc) > 0) {
@@ -70,19 +69,19 @@ plot_sex_ratio <- function(object, scales = "free",
         osexr <- melt(osexr) %>%
             left_join(w, by = "SexR") %>%
             mutate(EffN = 1 / Sigma, SD = sqrt(value * (1 - value) / EffN)) %>%
-            mutate(Source = "Standardised", Source = factor(Source), Season = seasons[Season])
+            mutate(Season = seasons[Season])
 
         psexr2 <- mcmc$pred_sex_ratio_is
         dimnames(psexr2) <- list("Iteration" = 1:n_iter, "SexR" = 1:data$n_sexr, "Sex" = sex)
         psexr2 <- melt(psexr2) %>%
             left_join(w, by = "SexR") %>%
-            mutate(Source = "Standardised", Season = seasons[Season])
+            mutate(Season = seasons[Season])
 
         rsexr2 <- mcmc$resid_sex_ratio_is
         dimnames(rsexr2) <- list("Iteration" = 1:n_iter, "SexR" = 1:data$n_sexr, "Sex" = sex)
         rsexr2 <- melt(rsexr2) %>%
             left_join(w, by = "SexR") %>%
-            mutate(Source = "Standardised", Season = seasons[Season])
+            mutate(Season = seasons[Season])
     }
 
     # sex residuals
@@ -95,11 +94,11 @@ plot_sex_ratio <- function(object, scales = "free",
         theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
     if (n_iter > 10) {
-        p <- p + geom_violin(aes(x = as.factor(.data$Year), y = .data$value, colour = .data$Source, fill = .data$Source, alpha = .data$Sigma)) +
+        p <- p + geom_violin(aes(x = as.factor(.data$Year), y = .data$value, alpha = .data$Sigma), fill = "tomato", color = "tomato") +
             scale_x_discrete(breaks = seq(0, 1e6, 5)) +
             scale_alpha(range = c(1, 0.1))
     } else {
-        p <- p + geom_point(aes(x = .data$Year, y = .data$value, color = .data$Source, size = .data$Sigma), alpha = 0.75) + #, cex = 2) +
+        p <- p + geom_point(aes(x = .data$Year, y = .data$value, size = .data$Sigma), alpha = 0.75, color = "tomato") + #, cex = 2) +
             scale_x_continuous(breaks = seq(0, 1e6, 5), minor_breaks = seq(0, 1e6, 1))
     }
 
@@ -128,8 +127,8 @@ plot_sex_ratio <- function(object, scales = "free",
         p <- p + geom_line(data = psexr1, aes(x = .data$Year, y = .data$value), linetype = 2)
     }
 
-    p <- p + geom_point(data = osexr, aes(x = .data$Year, y = .data$value, color = .data$Source)) +
-        geom_linerange(data = osexr, aes(x = .data$Year, ymin = .data$value - .data$SD, ymax = .data$value + .data$SD, color = .data$Source), alpha = 0.75) +
+    p <- p + geom_point(data = osexr, aes(x = .data$Year, y = .data$value), color = "tomato") +
+        geom_linerange(data = osexr, aes(x = .data$Year, ymin = .data$value - .data$SD, ymax = .data$value + .data$SD), color = "tomato", alpha = 0.75) +
         scale_y_continuous(expand = c(0, 0)) +
         coord_cartesian(ylim = c(0, 1.1)) +
         xlab(xlab) +

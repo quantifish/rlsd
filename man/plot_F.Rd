@@ -8,9 +8,7 @@ plot_F(
   object,
   scales = "free",
   xlab = "Fishing year",
-  ylab = "Fishing mortality (F)",
   figure_dir = "figure/",
-  ref = "Fmsy",
   show_proj = FALSE
 )
 }
@@ -21,11 +19,7 @@ plot_F(
 
 \item{xlab}{the x axis label}
 
-\item{ylab}{the y axis label}
-
 \item{figure_dir}{the directory to save to}
-
-\item{ref}{which ref to plot}
 
 \item{show_proj}{show projection or not}
 }

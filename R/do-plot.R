@@ -122,7 +122,7 @@ do_plot <- function(object, map = FALSE, mcmc = FALSE, figure_dir = "figure/") {
   plot_catch_save(object, figure_dir = figure_dir)
   plot_catch_rule(object, figure_dir = figure_dir)
   print("plotting fishing mortality")
-  plot_F(object, figure_dir = figure_dir, ref = NULL)
+  plot_F(object, figure_dir = figure_dir)
   print("plotting recruitment")
   plot_recruitment_deviations(object, figure_dir = figure_dir)
   plot_recruitment(object, figure_dir = figure_dir)

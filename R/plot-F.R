@@ -23,8 +23,12 @@ plot_F <- function(object, scales = "free",
   file_names <- c("", "_V2")
 
   type_catch <- data$type_catch
-  if(type_catch == 1) ylab <- "Exploitation Rate (U)"
-  if(type_catch == 2) ylab <- "Fishing Mortality Rate (F)"
+  if(is.null(type_catch)){
+    ylab <- "Fishing mortality rate (F)"
+  } else {
+    if(type_catch == 1) ylab <- "Exploitation Rate (U)"
+    if(type_catch == 2) ylab <- "Fishing Mortality Rate (F)"
+  }
 
   for (i in 1:length(year_change)) {
     years <- year_change[i]:data$last_yr
@@ -35,33 +39,45 @@ plot_F <- function(object, scales = "free",
     rules <- 1:data$n_rules
 
     if (length(map) > 0) {
-      if(type_catch == 2){
+      if(is.null(type_catch)){
         F_jytrf1 <-   map$proj_F_jytrf
-        dimnames(F_jytrf1) <-   list("Iteration" =  1, "Rule" =  rules, "Year" =  data$first_yr:data$last_proj_yr, "Season" =  seasons, "Region" =  regions, "Fishery" =   c("SL", " NSL"))
+        dimnames(F_jytrf1) <-   list("Iteration" =  1, "Rule" =  rules, "Year" =  data$first_yr:data$last_proj_yr, "Season" =  seasons, "Region" =  regions, "Fishery" =   c("SL", "NSL"))
         F_jytrf1 <-   melt( F_jytrf1 )
         F_jytrf1 <-   F_jytrf1 %>%  filter (! (Season == "SS" &  Year < 1979))
-        F_jytrf1 <-   F_jytrf1 %>%  filter(  Year %  in%   pyears)
+        F_jytrf1 <-   F_jytrf1 %>%  filter(  Year %in%   pyears)
 
         if (  show_proj ==  FALSE) {
-          F_jytrf1 <-   F_jytrf1 %>%  filter(  .data$  Year %  in%   years)
-        }
-      }
-      if(type_catch == 1){
-        F_jytrf1 <-   map$proj_U_jytrf
-        dimnames(F_jytrf1) <-   list("Iteration" =  1, "Rule" =  rules, "Year" =  data$first_yr:data$last_proj_yr, "Season" =  seasons, "Region" =  regions, "Fishery" =   c("SL", "NSL"))
-        F_jytrf1 <-   melt(F_jytrf1) %>%
-          filter(Year %in%   pyears)
+          F_jytrf1 <-   F_jytrf1 %>%  filter(  .data$  Year %in%   years)
+        }        
+        } else {
+          if(type_catch == 2){
+            F_jytrf1 <-   map$proj_F_jytrf
+            dimnames(F_jytrf1) <-   list("Iteration" =  1, "Rule" =  rules, "Year" =  data$first_yr:data$last_proj_yr, "Season" =  seasons, "Region" =  regions, "Fishery" =   c("SL", "NSL"))
+            F_jytrf1 <-   melt( F_jytrf1 )
+            F_jytrf1 <-   F_jytrf1 %>%  filter (! (Season == "SS" &  Year < 1979))
+            F_jytrf1 <-   F_jytrf1 %>%  filter(  Year %in%   pyears)    
 
-        if (show_proj ==  FALSE) {
-          F_jytrf1 <-   F_jytrf1 %>%  filter(.data$Year %in% years)
-        }      
-      }
+            if (  show_proj ==  FALSE) {
+              F_jytrf1 <-   F_jytrf1 %>%  filter(  .data$  Year %in%   years)
+            }
+          }
+          if(type_catch == 1){
+            F_jytrf1 <-   map$proj_U_jytrf
+            dimnames(F_jytrf1) <-   list("Iteration" =  1, "Rule" =  rules, "Year" =  data$first_yr:data$last_proj_yr, "Season" =  seasons, "Region" =  regions, "Fishery" =   c("SL", "NSL"))
+            F_jytrf1 <-   melt(F_jytrf1) %>%
+              filter(Year %in%   pyears)    
+
+            if (show_proj ==  FALSE) {
+              F_jytrf1 <-   F_jytrf1 %>%  filter(.data$Year %in% years)
+            }      
+          }          
+        }
     }
 
     if (length(mcmc) > 0) {
       n_iter <- nrow(mcmc[[1]])
 
-      if(type_catch == 2){
+      if(is.null(type_catch)){
         F_jytrf2 <- mcmc$proj_F_jytrf
         dimnames(F_jytrf2) <- list("Iteration" = 1:n_iter, "Rule" = rules, "Year" = data$first_yr:data$last_proj_yr, "Season" = seasons, "Region" = regions, "Fishery" = c("SL", "NSL"))
         F_jytrf2 <- melt(F_jytrf2)
@@ -70,17 +86,29 @@ plot_F <- function(object, scales = "free",
 
         if (show_proj == FALSE) {
           F_jytrf2 <- F_jytrf2 %>% filter(.data$Year %in% years)
-        }
-      }
-      if(type_catch == 1){
-        F_jytrf2 <- mcmc$proj_U_jytrf
-        dimnames(F_jytrf2) <- list("Iteration" = 1:n_iter, "Rule" = rules, "Year" = data$first_yr:data$last_proj_yr, "Season" = seasons, "Region" = regions, "Fishery" = c("SL", "NSL"))
-        F_jytrf2 <- melt(F_jytrf2)
-        F_jytrf2 <- F_jytrf2 %>% filter(.data$Year %in% pyears) 
-
-        if (show_proj == FALSE) {
-          F_jytrf2 <- F_jytrf2 %>% filter(.data$Year %in% years)
         }        
+      } else {
+          if(type_catch == 2){
+            F_jytrf2 <- mcmc$proj_F_jytrf
+            dimnames(F_jytrf2) <- list("Iteration" = 1:n_iter, "Rule" = rules, "Year" = data$first_yr:data$last_proj_yr, "Season" = seasons, "Region" = regions, "Fishery" = c("SL", "NSL"))
+            F_jytrf2 <- melt(F_jytrf2)
+            F_jytrf2 <- F_jytrf2 %>% filter (! (Season=="SS" & Year<1979))
+            F_jytrf2 <- F_jytrf2 %>% filter(.data$Year %in% pyears)     
+
+            if (show_proj == FALSE) {
+              F_jytrf2 <- F_jytrf2 %>% filter(.data$Year %in% years)
+            }
+          }
+          if(type_catch == 1){
+            F_jytrf2 <- mcmc$proj_U_jytrf
+            dimnames(F_jytrf2) <- list("Iteration" = 1:n_iter, "Rule" = rules, "Year" = data$first_yr:data$last_proj_yr, "Season" = seasons, "Region" = regions, "Fishery" = c("SL", "NSL"))
+            F_jytrf2 <- melt(F_jytrf2)
+            F_jytrf2 <- F_jytrf2 %>% filter(.data$Year %in% pyears)     
+
+            if (show_proj == FALSE) {
+              F_jytrf2 <- F_jytrf2 %>% filter(.data$Year %in% years)
+            }        
+          }        
       }
     }
 

@@ -1411,7 +1411,7 @@ plot_compare_selectivity <- function(object_list, object_names, figure_dir = "co
   years_list <- lapply(1:length(object_list), function(x) data_list[[x]]$first_yr:data_list[[x]]$last_yr)
   pyears_list <- lapply(1:length(object_list), function(x) data_list[[x]]$first_yr:data_list[[x]]$last_proj_yr)
 
-  sex <- c("Male","Immature female" , "Mature female")
+  sex <- c("Male","Female" , "Female")
 
   slist <- lapply(1:length(object_list), function(x) {
     n_iter <- nrow(mcmc_list[[x]][[1]])
@@ -1475,15 +1475,15 @@ plot_compare_selectivity <- function(object_list, object_names, figure_dir = "co
   areas <- unique(sapply(1:length(data_list), function(x) data_list[[x]]$n_area))
   if (areas > 1) {
     if (length(unique(sel$Season)) > 1 & length(unique(sel$Year)) > 1) {
-      p <- p + facet_grid(Region + Year ~ Epoch + Sex)
+      p <- p + facet_grid(Region + Year + Epoch ~  Sex)
     } else {
-      p <- p + facet_grid(Region ~ Epoch + Sex)
+      p <- p + facet_grid(Region + Epoch ~ Sex)
     }
   } else {
     if (length(unique(sel$Season)) > 1 & length(unique(sel$Year)) > 1) {
-      p <- p + facet_grid(Year ~ Epoch + Sex)
+      p <- p + facet_grid(Year + Epoch ~  Sex)
     } else {
-      p <- p + facet_grid( ~ Epoch + Sex)
+      p <- p + facet_grid( Epoch ~  Sex)
     }
   }
 

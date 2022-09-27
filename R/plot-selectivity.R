@@ -23,10 +23,14 @@ plot_selectivity <- function(object,
     n_seasons <- data$n_season
     if (n_seasons == 1) seasons = "YR"
     if (n_seasons == 2) seasons <- c("AW", "SS")
+    if(data$n_sel == 2){
+        sex <- c("Male", "Female", "Female")
+    } else { 
+        sex <- c("Male", "Immature female", "Mature female") 
+    }
+
 
     w <- data$which_sel_rsyt
-    if(dim(w)[2] == 2) sex <- c("Male", "Female")
-    if(dim(w)[2] == 3) sex <- c("Male", "Immature female", "Mature female")
     dimnames(w) <- list("Region" = object@regions, "Sex" = sex, "Year" = years, "Season" = seasons)
     w <- melt(w, value.name = "Selex")
 

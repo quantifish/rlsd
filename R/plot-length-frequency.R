@@ -245,12 +245,12 @@ plot_lfs_resid2 <- function(object, n_panel = 10, figure_dir = "figure/")
     n2 <- resid_lim %>%
         distinct(Region, Year, Season) %>%
         mutate(Plot = 1:nrow(.))
-    sq <- seq(1, nrow(n2), n_panel)
+    sq <- seq(nrow(n2), 1, -n_panel) #seq(1, nrow(n2), n_panel)
     resid_lim <- left_join(resid_lim, n2, by = c("Year", "Season", "Region")) %>%
       left_join(mls, by = c("Sex", "Year", "Season", "Region"))
 
     for (i in 1:length(sq)) {
-      pq <- (sq[i] - n_panel + 1):sq[i]
+        pq <- (sq[i] - n_panel + 1):sq[i]
       df <- resid_lim %>% filter(Plot %in% pq) %>% mutate(Sex = factor(Sex, levels = sex))
 
       p <- ggplot(data = df, aes(x = as.numeric(as.character(Size)), y = value)) +

@@ -33,6 +33,7 @@ do_plot <- function(object, map = FALSE, mcmc = FALSE, figure_dir = "figure/") {
     posteriors <- object@mcmc_pars %>%
       filter(!.data$par %in% rm_post$par) %>%
       mutate(par = as.character(.data$par), type = "Posterior")
+
     priors <- object@mcmc_priors %>%
       filter(!.data$par %in% rm_prior$par) %>%
       mutate(par = as.character(gsub(pattern = "prior_", replacement = "par_", x = par)), type = "Prior")
@@ -47,11 +48,13 @@ do_plot <- function(object, map = FALSE, mcmc = FALSE, figure_dir = "figure/") {
       pq <- sq[i]:(sq[i] + n_panel - 1)
       d <- posteriors_trace %>% filter(.data$par %in% unique(posteriors_trace$par)[pq])
       npar <- length(unique(d$par))
+
       p <- ggplot(d) +
         geom_line(aes(x = as.integer(.data$iteration), y = .data$value, col = .data$chain)) +
         facet_wrap(~ .data$par, scales = "free_y", ncol = n_col) +
         labs(x = "Iteration", y = NULL, col = "Chain") +
         theme_lsd()
+
       ggsave(paste0(figure_dir, "par_trace_", i, ".png"), p, width = ifelse(npar > 1, 8, 4), height = 10) #npar + (npar %% 2)
     }
 
@@ -63,11 +66,14 @@ do_plot <- function(object, map = FALSE, mcmc = FALSE, figure_dir = "figure/") {
       pq <- sq[i]:(sq[i] + n_panel - 1)
       d <- posteriors %>% filter(.data$par %in% unique(posteriors$par)[pq])
       npar <- length(unique(d$par))
+
       p <- ggplot(data = d, aes(x = .data$value, fill = .data$chain)) +
         geom_histogram(aes(x = value), bins = 50) +
         facet_wrap(~ .data$par, scales = "free", ncol = n_col) +
+        scale_y_continuous(limits = c(0, NA), expand = expansion(mult = c(0, 0.05))) +
         labs(x = "Value", y = NULL, fill = "Chain") +
         theme_lsd()
+
       ggsave(paste0(figure_dir, "par_histogram_", i, ".png"), p, width = ifelse(npar > 1, 8, 4), height = 10) #npar + (npar %% 2)
     }
 
@@ -75,18 +81,20 @@ do_plot <- function(object, map = FALSE, mcmc = FALSE, figure_dir = "figure/") {
     print("plotting density")
     for (i in 1:length(sq)) {
       pq <- sq[i]:(sq[i] + n_panel - 1)
-      d <- rbind(posteriors, priors) %>%
-        filter(.data$par %in% unique(posteriors$par)[pq])
+      d <- rbind(posteriors, priors) %>% filter(.data$par %in% unique(posteriors$par)[pq])
       d$type <- factor(d$type, levels = c("Prior", "Posterior"))
       npar <- length(unique(d$par))
+
       p <- ggplot(d) +
         geom_density(aes(x = .data$value, fill = .data$type, colour = .data$type), alpha = 0.5, trim = TRUE) +
         facet_wrap(~ .data$par, scales = "free", ncol = n_col, nrow = 6) +
         labs(x = NULL, y = NULL, colour = NULL, fill = NULL) +
+        scale_y_continuous(limits = c(0, NA), expand = expansion(mult = c(0, 0.05))) +
         scale_colour_discrete(drop = TRUE, limits = c("Prior", "Posterior")) +
         scale_fill_discrete(drop = TRUE, limits = c("Prior", "Posterior")) +
         theme_lsd() +
         theme(legend.position = "top")
+
       ggsave(paste0(figure_dir, "par_density_", i, ".png"), p, width = ifelse(npar > 1, 8, 4), height = 10)
       #ggsave(paste0(figure_dir, "par_density_", i, ".png"), p, width = ifelse(npar > 1, 7, 3.5), height = npar + (npar %% 2))
     }
@@ -97,11 +105,13 @@ do_plot <- function(object, map = FALSE, mcmc = FALSE, figure_dir = "figure/") {
       pq <- sq[i]:(sq[i] + n_panel - 1)
       d <- posteriors %>% filter(.data$par %in% unique(posteriors$par)[pq])
       npar <- length(unique(d$par))
+
       p <- ggplot(d, aes(x = .data$value, colour = .data$chain)) +
         stat_ecdf() +
         facet_wrap(~ .data$par, scales = "free_x", ncol = n_col) +
         labs(x = "Value", y = NULL, colour = "Chain") +
         theme_lsd()
+
       ggsave(paste0(figure_dir, "par_cdf_", i, ".png"), p, width = ifelse(npar > 1, 7, 3.5), height = npar + (npar %% 2))
     }
 

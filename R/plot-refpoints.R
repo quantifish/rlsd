@@ -681,9 +681,9 @@ if(any(grepl("B0now_r", names(mcmc1)))){
       summarise(CV = sd(Catch)/mean(Catch),
                       Prisk = length(which(RelSSBdata <= 0.2))/length(RelSSBdata),
                       RiskConstraint = ifelse(Prisk >= 0.05, 1, 0),
-                      ExpectedCatchSL = sum(Value),
+                      ExpectedCatchSL = sum(par2),
                       ObsCatchSL = sum(SL),
-                      Pcatch = length(which(SL < 0.99 * Value))/length(SL),
+                      Pcatch = length(which(SL < 0.99 * par2))/length(SL),
                       AvgTotalCatch = sum(Catch)/max(Iteration),
                       Catch5 = quantile(Catch,0.05),
                       Catch95 = quantile(Catch,0.95)) %>%

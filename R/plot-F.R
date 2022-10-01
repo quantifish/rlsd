@@ -40,30 +40,42 @@ plot_F <- function(object, scales = "free",
     if (length(map) > 0) {
       if (is.null(type_catch)) {
         F_jytrf1 <- map$proj_F_jytrf
-        dimnames(F_jytrf1) <- list("Iteration" =  1, "Rule" =  rules, "Year" =  data$first_yr:data$last_proj_yr, "Season" =  seasons, "Region" =  regions, "Fishery" =   c("SL", "NSL"))
-        F_jytrf1 <- melt(F_jytrf1)
-        F_jytrf1 <- F_jytrf1 %>% filter(!(Season == "SS" & Year < 1979))
-        F_jytrf1 <- F_jytrf1 %>% filter(Year %in% pyears)
-        if (show_proj == FALSE) {
-          F_jytrf1 <- F_jytrf1 %>% filter(.data$Year %in% years)
-        }
-      } else {
-        if (type_catch == 2) {
-          F_jytrf1 <- map$proj_F_jytrf
+        if(dim(F_jytrf1)[2] == length(rules)){
           dimnames(F_jytrf1) <- list("Iteration" =  1, "Rule" =  rules, "Year" =  data$first_yr:data$last_proj_yr, "Season" =  seasons, "Region" =  regions, "Fishery" =   c("SL", "NSL"))
           F_jytrf1 <- melt(F_jytrf1)
-          F_jytrf1 <- F_jytrf1 %>% filter(!(Season == "SS" &  Year < 1979))
+          F_jytrf1 <- F_jytrf1 %>% filter(!(Season == "SS" & Year < 1979))
           F_jytrf1 <- F_jytrf1 %>% filter(Year %in% pyears)
           if (show_proj == FALSE) {
             F_jytrf1 <- F_jytrf1 %>% filter(.data$Year %in% years)
           }
+        } else {
+          F_jytrf1 <- NULL
+        }
+      } else {
+        if (type_catch == 2) {
+          F_jytrf1 <- map$proj_F_jytrf
+          if(dim(F_jytrf1)[2] == length(rules)){
+            dimnames(F_jytrf1) <- list("Iteration" =  1, "Rule" =  rules, "Year" =  data$first_yr:data$last_proj_yr, "Season" =  seasons, "Region" =  regions, "Fishery" =   c("SL", "NSL"))
+            F_jytrf1 <- melt(F_jytrf1)
+            F_jytrf1 <- F_jytrf1 %>% filter(!(Season == "SS" &  Year < 1979))
+            F_jytrf1 <- F_jytrf1 %>% filter(Year %in% pyears)
+            if (show_proj == FALSE) {
+              F_jytrf1 <- F_jytrf1 %>% filter(.data$Year %in% years)
+            }
+          } else {
+            F_jytrf1 <- NULL
+          }
         }
         if (type_catch == 1) {
           F_jytrf1 <- map$proj_U_jytrf
-          dimnames(F_jytrf1) <- list("Iteration" =  1, "Rule" =  rules, "Year" =  data$first_yr:data$last_proj_yr, "Season" =  seasons, "Region" =  regions, "Fishery" =   c("SL", "NSL"))
-          F_jytrf1 <- melt(F_jytrf1) %>% filter(Year %in% pyears)
-          if (show_proj ==  FALSE) {
-            F_jytrf1 <- F_jytrf1 %>% filter(.data$Year %in% years)
+          if(dim(F_jytrf1)[2] == length(rules)){
+            dimnames(F_jytrf1) <- list("Iteration" =  1, "Rule" =  rules, "Year" =  data$first_yr:data$last_proj_yr, "Season" =  seasons, "Region" =  regions, "Fishery" =   c("SL", "NSL"))
+            F_jytrf1 <- melt(F_jytrf1) %>% filter(Year %in% pyears)
+            if (show_proj ==  FALSE) {
+              F_jytrf1 <- F_jytrf1 %>% filter(.data$Year %in% years)
+            }
+          } else {
+            F_jytrf1 <- NULL
           }
         }
       }
@@ -115,7 +127,7 @@ plot_F <- function(object, scales = "free",
         stat_summary(aes(y = .data$value),fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1)
     }
 
-    if (length(map) > 0) {
+    if (!is.null(F_jytrf1)) {
       p <- p + geom_line(data = F_jytrf1, aes(x = .data$Year, y = .data$value), linetype = 2, colour = "black")
     }
 

@@ -312,15 +312,23 @@ if(any(grepl("B0now_r", names(mcmc1)))){
   rules <- data$mp_rule_parameters
   n_rules <- nrow(rules)
   rule_type <- data.frame(RuleType1 = rules[,1], RuleNum = 1:n_rules) %>%
-  mutate(RuleType = ifelse(RuleType1 == 1, "FixedCatch", "FixedF")) %>%
+  mutate(RuleType = case_when(RuleType1 == 0 ~ "FixedCatch",
+                              RuleType1 == 1 ~ "FixedU",
+                              RuleType1 == 2 ~ "FixedF")) %>%
   select(-RuleType1)
   fleets <- c("SL","NSL")
 
-  # projF <- mcmc$proj_F_jytrf
-  # dimnames(projF) <- list("Iteration"=1:n_iter, "RuleNum"=1:n_rules, "Year"=pyears, "Season"=seasons, "Region"=regions, "Fleet" = fleets)
-  # projF2 <- reshape2::melt(projF, value.name = "F") %>%
-  #   group_by(Iteration, RuleNum, Year, Region) %>%
-  #   summarise(F = sum(F))
+  projF <- mcmc$proj_F_jytrf
+  dimnames(projF) <- list("Iteration"=1:n_iter, "RuleNum"=1:n_rules, "Year"=pyears, "Season"=seasons, "Region"=regions, "Fleet" = fleets)
+  projF2 <- reshape2::melt(projF, value.name = "F") %>%
+    group_by(Iteration, RuleNum, Year, Region) %>%
+    summarise(F = sum(F))
+
+  projU <- mcmc$proj_U_jytrf
+  dimnames(projU) <- list("Iteration"=1:n_iter, "RuleNum"=1:n_rules, "Year"=pyears, "Season"=seasons, "Region"=regions, "Fleet" = fleets)
+  projU2 <- reshape2::melt(projU, value.name = "U") %>%
+    group_by(Iteration, RuleNum, Year, Region) %>%
+    summarise(U = sum(U))
 
   gc()
   # sub <- projF2 %>% filter(RuleNum > 22) %>% filter(Iteration == 1)
@@ -645,9 +653,9 @@ if(any(grepl("B0now_r", names(mcmc1)))){
 
   colnames(rules) <- "par1"
   ruledf <- data.frame(RuleNum = 1:nrow(rules), rules) %>%
-    mutate(RuleType = case_when(par1 == 0 ~ "FixedF",
-                                par1 == 1 ~ "FixedCatch",
-                                par1 == 2 ~ "FixedU"))
+    mutate(RuleType = case_when(par1 == 2 ~ "FixedF",
+                                par1 == 0 ~ "FixedCatch",
+                                par1 == 1 ~ "FixedU"))
 
   proj_in <- data$proj_catch_commercial_in_jryt
   dimnames(proj_in) <- list("RuleNum" = 1:n_rules, "Region" = regions, "Year" = projyears, "Season" = seasons)
@@ -678,15 +686,15 @@ if(any(grepl("B0now_r", names(mcmc1)))){
       left_join(ruledf) %>%
       filter(Region != "Total") %>%
       group_by(Region, RuleNum) %>%
-      summarise(CV = sd(Catch)/mean(Catch),
+      summarise(CV = sd(Catch, na.rm = TRUE)/mean(Catch, na.rm = TRUE),
                       Prisk = length(which(RelSSBdata <= 0.2))/length(RelSSBdata),
                       RiskConstraint = ifelse(Prisk >= 0.05, 1, 0),
                       ExpectedCatchSL = sum(par2),
-                      ObsCatchSL = sum(SL),
+                      ObsCatchSL = sum(SL, na.rm = TRUE),
                       Pcatch = length(which(SL < 0.99 * par2))/length(SL),
-                      AvgTotalCatch = sum(Catch)/max(Iteration),
-                      Catch5 = quantile(Catch,0.05),
-                      Catch95 = quantile(Catch,0.95)) %>%
+                      AvgTotalCatch = sum(Catch, na.rm = TRUE)/max(Iteration),
+                      Catch5 = quantile(Catch,0.05, na.rm = TRUE),
+                      Catch95 = quantile(Catch,0.95, na.rm = TRUE)) %>%
       left_join(ruledf) %>%
       # mutate(ExpectedCatchSL = replace(ExpectedCatchSL, RuleType != "FixedCatch", 0)) %>%
       mutate(CatchConstraint = ifelse(RuleType == "FixedCatch" & Pcatch > 0.05, 1, 0))
@@ -702,10 +710,10 @@ if(any(grepl("B0now_r", names(mcmc1)))){
       filter(Region != "Total") %>%
       tidyr::pivot_longer(cols=c(Catch,Catch_AW, CPUE,SSB,SSB0now,SSB0,RelSSB,RelSSBdata,VB,VB0now,VB0,RelVB,RelVBdata,TB,TB0,TB0now, RelTB, RelTBdata, U), names_to = "Variable", values_to = "Value") %>% #CPUE,F)
       group_by(Region, RuleNum, Variable) %>%
-      summarise(P5 = quantile(Value, 0.05),
-                       P50 = quantile(Value, 0.5),
-                       Mean = mean(Value),
-                       P95 = quantile(Value, 0.95))
+      summarise(P5 = quantile(Value, 0.05, na.rm = TRUE),
+                       P50 = quantile(Value, 0.5, na.rm = TRUE),
+                       Mean = mean(Value, na.rm = TRUE),
+                       P95 = quantile(Value, 0.95, na.rm = TRUE))
 
     gc()
 
@@ -894,7 +902,7 @@ if(any(grepl("B0now_r", names(mcmc1)))){
 
   average_info <- cinfo %>%
     right_join(find_msy %>% select(-c(P50,Mean))) %>%
-    filter(RuleType %in% c("FixedCatch", "FixedF")) %>%
+    filter(RuleType %in% unique(ruledf$RuleType)) %>%
     # tidyr::pivot_longer(cols = c(Catch,VB,TB,SSB,SSB0now, TB0now, VB0now, RelSSBdata, RelTBdata, RelVBdata), names_to = "Variable", values_to = "Value") %>%
     select(Iteration, Year, Region, RuleType, unique(summary$Variable))
 
@@ -929,10 +937,10 @@ if(any(grepl("B0now_r", names(mcmc1)))){
   average_sum <- average_info %>%
     tidyr::pivot_longer(cols = c(unique(summary$Variable)), names_to = "Variable", values_to = "Value") %>%
     group_by(Region, Variable) %>%
-    summarise(P5 = quantile(Value, 0.05),
-                     P50 = quantile(Value, 0.5),
-                     Mean = mean(Value),
-                     P95 = quantile(Value, 0.95)) %>%
+    summarise(P5 = quantile(Value, 0.05, na.rm = TRUE),
+                     P50 = quantile(Value, 0.5, na.rm = TRUE),
+                     Mean = mean(Value, na.rm = TRUE),
+                     P95 = quantile(Value, 0.95, na.rm = TRUE)) %>%
     mutate(RuleType = "Average")
 
   average_info2 <- average_info %>%
@@ -940,16 +948,16 @@ if(any(grepl("B0now_r", names(mcmc1)))){
     summarise(VB = mean(VB)) %>%
     mutate(RuleType = "Average") %>%
     full_join(average_info %>% select(Iteration, Year, RuleType, Region, VB))
-  average_info2$RuleType <- factor(average_info2$RuleType, levels = c("Average", "FixedCatch", "FixedF"))
+  average_info2$RuleType <- factor(average_info2$RuleType, levels = c("Average", unique(ruledf$RuleType)))
 
 
   rule_sum <- average_info %>%
     tidyr::pivot_longer(cols = c(unique(summary$Variable)), names_to = "Variable", values_to = "Value") %>%
     group_by(Region, Variable, RuleType) %>%
-    summarise(P5 = quantile(Value, 0.05),
-                     P50 = quantile(Value, 0.5),
-                     Mean = mean(Value),
-                     P95 = quantile(Value, 0.95))
+    summarise(P5 = quantile(Value, 0.05, na.rm = TRUE),
+                     P50 = quantile(Value, 0.5, na.rm = TRUE),
+                     Mean = mean(Value, na.rm = TRUE),
+                     P95 = quantile(Value, 0.95, na.rm = TRUE))
 
   sum <- full_join(average_sum, rule_sum)
   # write.csv(sum, file.path(figure_dir, "Summary_reference_average.csv"))
@@ -1085,7 +1093,7 @@ if(any(grepl("B0now_r", names(mcmc1)))){
 
   output4 <- output3 %>%
     tidyr::pivot_wider(names_from = Percentile, values_from = Catch:VB0now)
-  if(length(unique(output4$RuleType))==3) output4$RuleType <- factor(output4$RuleType, levels = c("FixedCatch","CPUE-based","FixedF"))
+  if(length(unique(output4$RuleType))==3) output4$RuleType <- factor(output4$RuleType, levels = unique(ruledf$RuleType))
   const <- unique(as.character(output4$Constraint))
   const1 <- const[grepl("CV",const)==FALSE]
   const1_1 <- const1[grepl("Catch", const1) == FALSE]
@@ -1116,7 +1124,7 @@ if(any(grepl("B0now_r", names(mcmc1)))){
 
   output4 <- output3 %>%
     tidyr::pivot_wider(names_from = Percentile, values_from = Catch:VB0now)
-  if(length(unique(output4$RuleType))==3) output4$RuleType <- factor(output4$RuleType, levels = c("FixedCatch","CPUE-based","FixedF"))
+  if(length(unique(output4$RuleType))==3) output4$RuleType <- factor(output4$RuleType, levels = unique(ruledf$RuleType))
   const <- unique(as.character(output4$Constraint))
   const1 <- const[grepl("CV",const)==FALSE]
   const1_1 <- const1[grepl("Catch", const1) == FALSE]
@@ -1744,7 +1752,7 @@ if(any(grepl("B0now_r", names(mcmc1)))){
     tidyr::pivot_longer(cols = c(SSB,VB,TB), names_to = "Variable", values_to = "Value") %>%
     mutate(Variable = replace(Variable, Variable == "TB", "Btot"),
            Variable = replace(Variable, Variable == "VB", "B"))
-  check3$RuleType <- factor(check3$RuleType, levels = c("FixedCatch", "Average", "FixedF"))
+  if(length(unique(ruledf$RuleType)) == 2) check3$RuleType <- factor(check3$RuleType, levels = c(unique(ruledf$RuleType)[1], "Average", unique(ruledf$RuleType)[2]))
   pb <- ggplot(check3) +
     stat_summary(data = checkt, aes(x = Year, y = Value), fun.min = function(x) stats::quantile(x, 0.05), fun.max = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25) +
     stat_summary(data = checkt, aes(x = Year, y = Value), fun = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1.2) +
@@ -1785,11 +1793,11 @@ if(any(grepl("B0now_r", names(mcmc1)))){
 
 
   check <- dinfo %>% left_join(max_all %>% filter(Variable == "VB")) %>%
-    mutate(CVConstraint = replace(CVConstraint, RuleType == "FixedCatch", "FixedCatch")) %>%
-    mutate(CVConstraint = replace(CVConstraint, RuleType == "FixedF", "FixedF")) %>%
+    # mutate(CVConstraint = replace(CVConstraint, RuleType == "FixedCatch", "FixedCatch")) %>%
+    # mutate(CVConstraint = replace(CVConstraint, RuleType == "FixedF", "FixedF")) %>%
     filter(CVConstraint != "Min")
-  if(length(unique(check$RuleType))==3) check$RuleType <- factor(check$RuleType, levels = c("FixedCatch", "CPUE-based", "FixedF"))
-  check$CVConstraint <- factor(check$CVConstraint, levels = c("FixedCatch", "25%", "Median", "75%", "Max", "FixedF"))
+  check$RuleType <- factor(check$RuleType, levels = unique(ruledf$RuleType))
+  # check$CVConstraint <- factor(check$CVConstraint, levels = c("FixedCatch", "25%", "Median", "75%", "Max", "FixedF"))
   p_vbcurr <- ggplot(check) +
     geom_ribbon(aes(x = Year, ymin = P5, ymax = P95, fill = CVConstraint), alpha = 0.5) +
     # geom_hline(aes(yintercept = P50, color = CVConstraint), lwd = 1.2) +
@@ -1827,8 +1835,8 @@ if(any(grepl("B0now_r", names(mcmc1)))){
     filter(Variable == "VB") %>%
     full_join(check_avg)
   check <- dinfo %>% left_join(max_sub) %>%
-    filter(RuleType %in% c("FixedCatch", "FixedF", "Average"))
-  check$RuleType <- factor(check$RuleType, levels = c("FixedCatch", "Average", "FixedF"))
+    filter(RuleType %in% c(unique(ruledf$RuleType) "Average"))
+  if(length(unique(ruledf$RuleType)) == 2) check$RuleType <- factor(check$RuleType, levels = c(unique(ruledf$RuleType)[1], "Average", unique(ruledf$RuleType)[2]))
   p_vbcurr <- ggplot(check) +
     geom_ribbon(aes(x = Year, ymin = P5, ymax = P95, fill = RuleType), alpha = 0.5) +
     # geom_hline(aes(yintercept = P50, color =RuleType), lwd = 1.2) +
@@ -1856,11 +1864,11 @@ if(any(grepl("B0now_r", names(mcmc1)))){
 
  if(any(grepl("B0now_r", names(mcmc1)))){
   check <- dinfo %>% left_join(max_all %>% filter(Variable == "RelVBdata")) %>%
-    mutate(CVConstraint = replace(CVConstraint, RuleType == "FixedCatch", "FixedCatch")) %>%
-    mutate(CVConstraint = replace(CVConstraint, RuleType == "FixedF", "FixedF")) %>%
+    # mutate(CVConstraint = replace(CVConstraint, RuleType == "FixedCatch", "FixedCatch")) %>%
+    # mutate(CVConstraint = replace(CVConstraint, RuleType == "FixedF", "FixedF")) %>%
     filter(CVConstraint != "Min")
-  if(length(unique(check$RuleType))==3) check$RuleType <- factor(check$RuleType, levels = c("FixedCatch", "CPUE-based", "FixedF"))
-  check$CVConstraint <- factor(check$CVConstraint, levels = c("FixedCatch", "25%", "Median", "75%", "Max", "FixedF"))
+  check$RuleType <- factor(check$RuleType, levels = unique(ruledf$RuleType))
+  # check$CVConstraint <- factor(check$CVConstraint, levels = c("FixedCatch", "25%", "Median", "75%", "Max", "FixedF"))
   p_relvbcurr <- ggplot(check) +
     geom_ribbon(aes(x = Year, ymin = P5, ymax = P95, fill = CVConstraint), alpha = 0.5) +
     # geom_hline(aes(yintercept = P50, color = CVConstraint), lwd = 1.2) +
@@ -1895,8 +1903,8 @@ if(any(grepl("B0now_r", names(mcmc1)))){
     filter(Variable == "RelVB") %>%
     full_join(check_avg)
   check <- dinfo %>% left_join(max_sub) %>%
-    filter(RuleType %in% c("FixedCatch", "FixedF", "Average"))
-  check$RuleType <- factor(check$RuleType, levels = c("FixedCatch", "Average", "FixedF"))
+    filter(RuleType %in% c(unique(ruledf$RuleType), "Average"))
+  if(length(unique(ruledf$RuleType)) == 2) check$RuleType <- factor(check$RuleType, levels = c(unique(ruledf$RuleType)[1], "Average", unique(ruledf$RuleType)[2]))
   p_relvbcurr <- ggplot(check) +
     geom_ribbon(aes(x = Year, ymin = P5, ymax = P95, fill = RuleType), alpha = 0.5) +
     # geom_hline(aes(yintercept = P50, color =RuleType), lwd = 1.2) +
@@ -1923,11 +1931,11 @@ if(any(grepl("B0now_r", names(mcmc1)))){
   gc()
 
   check <- dinfo %>% left_join(max_all %>% filter(Variable == "RelTBdata")) %>%
-    mutate(CVConstraint = replace(CVConstraint, RuleType == "FixedCatch", "FixedCatch")) %>%
-    mutate(CVConstraint = replace(CVConstraint, RuleType == "FixedF", "FixedF")) %>%
+    # mutate(CVConstraint = replace(CVConstraint, RuleType == "FixedCatch", "FixedCatch")) %>%
+    # mutate(CVConstraint = replace(CVConstraint, RuleType == "FixedF", "FixedF")) %>%
     filter(CVConstraint != "Min")
-  if(length(unique(check$RuleType))==3) check$RuleType <- factor(check$RuleType, levels = c("FixedCatch", "CPUE-based", "FixedF"))
-  check$CVConstraint <- factor(check$CVConstraint, levels = c("FixedCatch", "25%", "Median", "75%", "Max", "FixedF"))
+  check$RuleType <- factor(check$RuleType, levels = unique(ruledf$RuleType))
+  # check$CVConstraint <- factor(check$CVConstraint, levels = c("FixedCatch", "25%", "Median", "75%", "Max", "FixedF"))
   p_reltbcurr <- ggplot(check) +
     geom_ribbon(aes(x = Year, ymin = P5, ymax = P95, fill = CVConstraint), alpha = 0.5) +
     # geom_hline(aes(yintercept = P50, color = CVConstraint), lwd = 1.2) +
@@ -1962,8 +1970,8 @@ if(any(grepl("B0now_r", names(mcmc1)))){
     filter(Variable == "RelTB") %>%
     full_join(check_avg)
   check <- dinfo %>% left_join(max_sub) %>%
-    filter(RuleType %in% c("FixedCatch", "FixedF", "Average"))
-  check$RuleType <- factor(check$RuleType, levels = c("FixedCatch", "Average", "FixedF"))
+    filter(RuleType %in% c(unique(ruledf$RuleType), "Average"))
+  if(length(unique(ruledf$RuleType)) == 2) check$RuleType <- factor(check$RuleType, levels = c(unique(ruledf$RuleType)[1], "Average", unique(ruledf$RuleType)[2]))
   p_reltbcurr <- ggplot(check) +
     geom_ribbon(aes(x = Year, ymin = P5, ymax = P95, fill = RuleType), alpha = 0.5) +
     # geom_hline(aes(yintercept = P50, color =RuleType), lwd = 1.2) +
@@ -2039,8 +2047,8 @@ if(any(grepl("B0now_r", names(mcmc1)))){
                        P50 = quantile(Value, 0.50),
                        Mean = mean(Value),
                        P95 = quantile(Value, 0.95))
-    if(length(unique(check2$RuleType))==3) check2$RuleType <- factor(check2$RuleType, levels = c("FixedCatch", "CPUE-based", "FixedF"))
-    if(length(unique(check1$RuleType))==3) check1$RuleType <- factor(check1$RuleType, levels = c("FixedCatch", "CPUE-based", "FixedF"))
+    check2$RuleType <- factor(check2$RuleType, levels = unique(ruledf$RuleType))
+    check1$RuleType <- factor(check1$RuleType, levels = unique(ruledf$RuleType))
       const <- unique(as.character(output4$Constraint))
   const1 <- const[grepl("CV",const)==FALSE]
   const1_1 <- const1[grepl("Catch", const1) == FALSE]
@@ -2087,7 +2095,7 @@ if(any(grepl("B0now_r", names(mcmc1)))){
     left_join(max_info %>% filter(Variable == "Catch")) %>%
     select(Iteration, Year, Region, RuleNum, RuleType, Constraint, Catch, RelVB, RelSSBdata) %>%
     tidyr::pivot_longer(cols = c(Catch,RelVB,RelSSBdata), names_to = "Variable", values_to = "Value") %>%
-    filter(RuleType == "FixedF")
+    filter(RuleType == unique(ruledf$RuleType)[which(unique(ruledf$RuleType) != "FixedCatch")])
   if(nrow(check1) > 0){
     check2 <- check1 %>%
       group_by(Year, Region, RuleType, Constraint, Variable) %>%
@@ -2095,8 +2103,8 @@ if(any(grepl("B0now_r", names(mcmc1)))){
                        P50 = quantile(Value, 0.50),
                        Mean = mean(Value),
                        P95 = quantile(Value, 0.95))
-    if(length(unique(check2$RuleType))==3) check2$RuleType <- factor(check2$RuleType, levels = c("FixedCatch", "CPUE-based", "FixedF"))
-    if(length(unique(check1$RuleType))==3) check1$RuleType <- factor(check1$RuleType, levels = c("FixedCatch", "CPUE-based", "FixedF"))
+    check2$RuleType <- factor(check2$RuleType, levels = unique(ruledf$RuleType))
+    check1$RuleType <- factor(check1$RuleType, levels = unique(ruledf$RuleType))
     const <- unique(as.character(check1$Constraint))
   const <- unique(as.character(check1$Constraint))
   const1 <- const[grepl("CV",const)==FALSE]

@@ -271,7 +271,7 @@ plot_cpue <- function(object,
   }
 
   ## separate by series
-  ### CR
+  # CR
   ocr_yrs <- ocpue %>% filter(Year < 1979) %>% mutate(Region = paste0("Region ", Region))
   if (nrow(ocr_yrs) > 0) {
     pcr_yrs <- pcpue %>% filter(Year < 1979) %>% mutate(Region = paste0("Region ", Region))
@@ -338,9 +338,6 @@ plot_cpue <- function(object,
   }
 
   # CELR
-  # dfilter <- expand.grid("Year" = 1989:max(ocpue$Year), "Season" = c("AW","SS"))
-  # dfilter <- dfilter[-which(dfilter$Year == 1989 & dfilter$Season == "AW"),]
-  # dfilter <- dfilter[-which(dfilter$Year >=2019 & dfilter$Season == "SS"),]
   ocpue_celr <- ocpue %>% filter(CPUE_name == "CELR") #right_join(dfilter) %>% mutate(Region = paste0("Region ", Region))
   pcpue_celr <- pcpue %>% filter(CPUE_name == "CELR") #right_join(dfilter) %>% mutate(Region = paste0("Region ", Region))
   pcpue1_celr <- pcpue1 %>% filter(CPUE_name == "CELR") #right_join(dfilter) %>% mutate(Region = paste0("Region ", Region))
@@ -371,9 +368,6 @@ plot_cpue <- function(object,
   }
 
   # Logbook
-  # dfilter <- expand.grid("Year" = 1989:max(ocpue$Year), "Season" = c("AW","SS"))
-  # dfilter <- dfilter[-which(dfilter$Year == 1989 & dfilter$Season == "AW"),]
-  # dfilter <- dfilter[-which(dfilter$Year >=2019 & dfilter$Season == "SS"),]
   ocpue_lb <- ocpue %>% filter(CPUE_name == "Logbook") #right_join(dfilter) %>% mutate(Region = paste0("Region ", Region))
   pcpue_lb <- pcpue %>% filter(CPUE_name == "Logbook") #right_join(dfilter) %>% mutate(Region = paste0("Region ", Region))
   pcpue1_lb <- pcpue1 %>% filter(CPUE_name == "Logbook") #right_join(dfilter) %>% mutate(Region = paste0("Region ", Region))
@@ -424,7 +418,7 @@ plot_cpue <- function(object,
   ggsave(paste0(figure_dir, "cpue_resid.png"), p, height = 9, width = 12)
 
   ## separate by series
-  ### CR
+  # CR
   rcr_yrs <- rcpue %>% filter(Year < 1979) %>% mutate(Region = paste0("Region ", Region))
   if (nrow(rcr_yrs) > 0) {
     p <- ggplot(rcr_yrs) +
@@ -445,9 +439,7 @@ plot_cpue <- function(object,
     ggsave(paste0(figure_dir, "cpue_resid_CR.png"), p, height = 9, width = 12)
   }
 
-  ### FSU
-  # dfilter <- expand.grid("Year" = 1979:1989, "Season" = c("AW","SS"))
-  # dfilter <- dfilter[-which(dfilter$Year == 1989 & dfilter$Season == "SS"),]
+  # FSU
   rcpue_fsu <- rcpue %>%
     filter(CPUE_name == "FSU") %>%
     mutate(Region = paste0("Region ", Region))
@@ -472,10 +464,7 @@ plot_cpue <- function(object,
     ggsave(paste0(figure_dir, "cpue_resid_FSU.png"), p, height = 9, width = 12)
   }
 
-  ### CELR
-  # dfilter <- expand.grid("Year" = 1989:max(ocpue$Year), "Season" = c("AW","SS"))
-  # dfilter <- dfilter[-which(dfilter$Year==1989 & dfilter$Season == "AW"),]
-  # dfilter <- dfilter[-which(dfilter$Year == max(ocpue$Year) & dfilter$Season == "SS"),]
+  # CELR
   rcpue_celr <- rcpue %>% filter(CPUE_name == "CELR") #right_join(dfilter) %>% mutate(Region = paste0("Region ", Region))
   if (nrow(rcpue_celr) > 0) {
     p <- ggplot(rcpue_celr) +
@@ -500,10 +489,7 @@ plot_cpue <- function(object,
     ggsave(paste0(figure_dir, "cpue_resid_CELR.png"), p, height = 9, width = 12)
   }
 
-  ### Logbook
-  # dfilter <- expand.grid("Year" = 1989:max(ocpue$Year), "Season" = c("AW","SS"))
-  # dfilter <- dfilter[-which(dfilter$Year==1989 & dfilter$Season == "AW"),]
-  # dfilter <- dfilter[-which(dfilter$Year == max(ocpue$Year) & dfilter$Season == "SS"),]
+  # Logbook
   rcpue_lb <- rcpue %>% filter(CPUE_name == "Logbook") #right_join(dfilter) %>% mutate(Region = paste0("Region ", Region))
   if (nrow(rcpue_lb) > 0) {
     p <- ggplot(rcpue_lb) +
@@ -607,7 +593,7 @@ plot_aw_cpue_lm <- function(object, figure_dir = "figure/")
     geom_smooth(method = "lm", se = FALSE, colour = "green", size = 0.5) +
     geom_line(data = dd2, aes(x, y), colour = "red") +
     geom_text(aes(label = yr, colour = yr)) +
-    expand_limits(x = 0, y = c(0,1)) +
+    expand_limits(x = 0, y = c(0, 1)) +
     coord_fixed() +
     theme_lsd() +
     labs(x = "Standardised AW CPUE (kg/potlift)", y = "Proportion AW") +

@@ -124,6 +124,7 @@ do_plot <- function(object, map = FALSE, mcmc = FALSE, figure_dir = "figure/") {
   # tres <- table_residuals(object, figure_dir = figure_dir)
   print("plotting CPUE")
   plot_cpue(object, figure_dir = figure_dir)
+  print("plotting puerulus")
   plot_puerulus(object, figure_dir = figure_dir)
   print("plotting sex-ratios")
   plot_sex_ratio(object, figure_dir = figure_dir)

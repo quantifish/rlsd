@@ -324,11 +324,17 @@ if(any(grepl("B0now_r", names(mcmc1)))){
     group_by(Iteration, RuleNum, Year, Region) %>%
     summarise(F = sum(F))
 
+  if(length(is.na(projF2$F)) > 0) print("Some fixed catch projections are likely crashing the population.")
+
   projU <- mcmc$proj_U_jytrf
   dimnames(projU) <- list("Iteration"=1:n_iter, "RuleNum"=1:n_rules, "Year"=pyears, "Season"=seasons, "Region"=regions, "Fleet" = fleets)
   projU2 <- reshape2::melt(projU, value.name = "U") %>%
     group_by(Iteration, RuleNum, Year, Region) %>%
     summarise(U = sum(U))
+
+  p <- ggplot(projU2 %>% group_by(Year, RuleNum) %>% summarise(U = median(U))) +
+    geom_line(aes(x = Year, y = U, color = factor(RuleNum))) +
+    coord_cartesian(y = c(0,1)) 
 
   gc()
   # sub <- projF2 %>% filter(RuleNum > 22) %>% filter(Iteration == 1)
@@ -686,15 +692,15 @@ if(any(grepl("B0now_r", names(mcmc1)))){
       left_join(ruledf) %>%
       filter(Region != "Total") %>%
       group_by(Region, RuleNum) %>%
-      summarise(CV = sd(Catch, na.rm = TRUE)/mean(Catch, na.rm = TRUE),
+      summarise(CV = sd(Catch)/mean(Catch),
                       Prisk = length(which(RelSSBdata <= 0.2))/length(RelSSBdata),
                       RiskConstraint = ifelse(Prisk >= 0.05, 1, 0),
                       ExpectedCatchSL = sum(par2),
-                      ObsCatchSL = sum(SL, na.rm = TRUE),
+                      ObsCatchSL = sum(SL),
                       Pcatch = length(which(SL < 0.99 * par2))/length(SL),
-                      AvgTotalCatch = sum(Catch, na.rm = TRUE)/max(Iteration),
-                      Catch5 = quantile(Catch,0.05, na.rm = TRUE),
-                      Catch95 = quantile(Catch,0.95, na.rm = TRUE)) %>%
+                      AvgTotalCatch = sum(Catch)/max(Iteration),
+                      Catch5 = quantile(Catch,0.05),
+                      Catch95 = quantile(Catch,0.95)) %>%
       left_join(ruledf) %>%
       # mutate(ExpectedCatchSL = replace(ExpectedCatchSL, RuleType != "FixedCatch", 0)) %>%
       mutate(CatchConstraint = ifelse(RuleType == "FixedCatch" & Pcatch > 0.05, 1, 0))
@@ -710,10 +716,10 @@ if(any(grepl("B0now_r", names(mcmc1)))){
       filter(Region != "Total") %>%
       tidyr::pivot_longer(cols=c(Catch,Catch_AW, CPUE,SSB,SSB0now,SSB0,RelSSB,RelSSBdata,VB,VB0now,VB0,RelVB,RelVBdata,TB,TB0,TB0now, RelTB, RelTBdata, U), names_to = "Variable", values_to = "Value") %>% #CPUE,F)
       group_by(Region, RuleNum, Variable) %>%
-      summarise(P5 = quantile(Value, 0.05, na.rm = TRUE),
-                       P50 = quantile(Value, 0.5, na.rm = TRUE),
-                       Mean = mean(Value, na.rm = TRUE),
-                       P95 = quantile(Value, 0.95, na.rm = TRUE))
+      summarise(P5 = quantile(Value, 0.05),
+                       P50 = quantile(Value, 0.5),
+                       Mean = mean(Value),
+                       P95 = quantile(Value, 0.95))
 
     gc()
 
@@ -937,10 +943,10 @@ if(any(grepl("B0now_r", names(mcmc1)))){
   average_sum <- average_info %>%
     tidyr::pivot_longer(cols = c(unique(summary$Variable)), names_to = "Variable", values_to = "Value") %>%
     group_by(Region, Variable) %>%
-    summarise(P5 = quantile(Value, 0.05, na.rm = TRUE),
-                     P50 = quantile(Value, 0.5, na.rm = TRUE),
-                     Mean = mean(Value, na.rm = TRUE),
-                     P95 = quantile(Value, 0.95, na.rm = TRUE)) %>%
+    summarise(P5 = quantile(Value, 0.05),
+                     P50 = quantile(Value, 0.5),
+                     Mean = mean(Value),
+                     P95 = quantile(Value, 0.95)) %>%
     mutate(RuleType = "Average")
 
   average_info2 <- average_info %>%
@@ -954,10 +960,10 @@ if(any(grepl("B0now_r", names(mcmc1)))){
   rule_sum <- average_info %>%
     tidyr::pivot_longer(cols = c(unique(summary$Variable)), names_to = "Variable", values_to = "Value") %>%
     group_by(Region, Variable, RuleType) %>%
-    summarise(P5 = quantile(Value, 0.05, na.rm = TRUE),
-                     P50 = quantile(Value, 0.5, na.rm = TRUE),
-                     Mean = mean(Value, na.rm = TRUE),
-                     P95 = quantile(Value, 0.95, na.rm = TRUE))
+    summarise(P5 = quantile(Value, 0.05),
+                     P50 = quantile(Value, 0.5),
+                     Mean = mean(Value),
+                     P95 = quantile(Value, 0.95))
 
   sum <- full_join(average_sum, rule_sum)
   # write.csv(sum, file.path(figure_dir, "Summary_reference_average.csv"))
@@ -1835,7 +1841,7 @@ if(any(grepl("B0now_r", names(mcmc1)))){
     filter(Variable == "VB") %>%
     full_join(check_avg)
   check <- dinfo %>% left_join(max_sub) %>%
-    filter(RuleType %in% c(unique(ruledf$RuleType) "Average"))
+    filter(RuleType %in% c(unique(ruledf$RuleType), "Average"))
   if(length(unique(ruledf$RuleType)) == 2) check$RuleType <- factor(check$RuleType, levels = c(unique(ruledf$RuleType)[1], "Average", unique(ruledf$RuleType)[2]))
   p_vbcurr <- ggplot(check) +
     geom_ribbon(aes(x = Year, ymin = P5, ymax = P95, fill = RuleType), alpha = 0.5) +

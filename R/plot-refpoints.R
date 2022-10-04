@@ -94,11 +94,6 @@ plot_refpoints <- function(object, object1, figure_dir){
   gc()
 
   catch <- pcatch
-  catch_t <- pcatch_t %>%
-    filter(Season == "AW") %>%
-    ungroup() %>%
-    select(-Season) %>%
-    rename(SL_AW = SL, NSL_AW = NSL, Catch_AW = Catch)
   gc()
 
   vb <- mcmc1$biomass_vulnref_AW_jyr
@@ -176,6 +171,20 @@ plot_refpoints <- function(object, object1, figure_dir){
     rename(TB0=value)
   TB0$Region <- factor(TB0$Region)
 
+  projU <- mcmc1$proj_U_jytrf
+  dimnames(projU) <- list("Iteration"=1:n_iter1, "RuleNum"=1, "Year"=pyears1, "Season"=seasons, "Region"=regions, "Fleet" = fleets)
+  projU2 <- reshape2::melt(projU, value.name = "U") %>%
+    group_by(Iteration, RuleNum, Year, Season, Region) %>%
+    summarise(U = sum(U)) %>%
+    tidyr::pivot_wider(names_from = Season, values_from = "U") %>%
+    rename(U_AW = AW, U_SS = SS)
+
+  cpue <- mcmc1$proj_cpue_jryt
+  dimnames(cpue) <- list("Iteration" = 1:n_iter1, "RuleNum" = 1, "Region" = regions, "Year" = pyears1, "Season" = seasons)
+  cpue2 <- reshape2::melt(cpue, value.name = "CPUE") %>%
+    tidyr::pivot_wider(names_from = Season, values_from = "CPUE") %>%
+    rename(CPUE_AW = AW, CPUE_SS = SS)
+
   rec <- mcmc1$recruits_ry
   dimnames(rec) <- list("Iteration" = 1:n_iter1, "Region" = regions, "Year" = pyears1)
   rec2 <- reshape2::melt(rec) %>%
@@ -217,14 +226,13 @@ if(any(grepl("B0now_r", names(mcmc1)))){
 
 
   catch$Region <- factor(catch$Region)
-  catch_t$Region <- factor(catch_t$Region)
+  # catch_t$Region <- factor(catch_t$Region)
   info1x <- full_join(catch, relb2) %>%
-    full_join(catch_t) %>%
-    select(-c(SL_AW, NSL_AW))
+    full_join(cpue2 %>% mutate(Region = factor(Region))) %>%
+    full_join(projU2 %>% mutate(Region = factor(Region)))
   info1 <- info1x %>%
       filter(Region %in% regions) %>%
-      mutate(Region = paste0("Region ", Region)) %>%
-      mutate(U = Catch_AW / VB)
+      mutate(Region = paste0("Region ", Region))
 
   if(length(regions) > 1){
     b0_total <- info1x %>%
@@ -236,13 +244,10 @@ if(any(grepl("B0now_r", names(mcmc1)))){
       summarise(SL = sum(SL),
                        NSL = sum(NSL),
                        Catch = sum(Catch),
-                       Catch_AW = sum(Catch_AW),
-                       # CatchResidual = sum(CatchResidual),
                        SSB = sum(SSB),
                        VB = sum(VB),
                        TB = sum(TB),
-                       Recruitment = sum(Recruitment),
-                       U = Catch_AW / VB) %>%
+                       Recruitment = sum(Recruitment)) %>%
       mutate(Region = "Total") %>%
       full_join(b0_total) %>%
       mutate(RelVBdata = VB / VB0now) %>%
@@ -260,7 +265,7 @@ if(any(grepl("B0now_r", names(mcmc1)))){
  if(any(grepl("B0now_r", names(mcmc1)))){
   status_check <- info1 %>%
     filter(Year == max(years1)+1) %>%
-    tidyr::pivot_longer(cols=c(Catch, Catch_AW, SSB,SSB0now,SSB0,RelSSB,RelSSBdata,VB,VB0now,VB0,RelVB,RelVBdata,TB,TB0now,TB0,RelTB, RelTBdata, U), names_to = "Variable", values_to = "Value") %>%
+    tidyr::pivot_longer(cols=c(Catch, SSB,SSB0now,SSB0,RelSSB,RelSSBdata,VB,VB0now,VB0,RelVB,RelVBdata,TB,TB0now,TB0,RelTB, RelTBdata, U_AW, U_SS, CPUE_AW, CPUE_SS), names_to = "Variable", values_to = "Value") %>%
     group_by(RuleNum, Region, Variable) %>%
     summarise(P5 = quantile(Value, 0.05),
                      P50 = quantile(Value, 0.5),
@@ -269,7 +274,7 @@ if(any(grepl("B0now_r", names(mcmc1)))){
 
   proj_check <- info1 %>%
     filter(Year == max(years1)+5) %>%
-    tidyr::pivot_longer(cols=c(Catch, Catch_AW, SSB,SSB0now,SSB0,RelSSB,RelSSBdata,VB,VB0now,VB0,RelVB,RelVBdata,TB,TB0now,TB0,RelTB, RelTBdata, U), names_to = "Variable", values_to = "Value") %>%
+    tidyr::pivot_longer(cols=c(Catch, SSB,SSB0now,SSB0,RelSSB,RelSSBdata,VB,VB0now,VB0,RelVB,RelVBdata,TB,TB0now,TB0,RelTB, RelTBdata, U_AW, U_SS, CPUE_AW, CPUE_SS), names_to = "Variable", values_to = "Value") %>%
     group_by(RuleNum, Region, Variable) %>%
     summarise(Proj_P5 = quantile(Value, 0.05),
                      Proj_P50 = quantile(Value, 0.5),
@@ -278,7 +283,7 @@ if(any(grepl("B0now_r", names(mcmc1)))){
  } else {
   status_check <- info1 %>%
     filter(Year == max(years1)+1) %>%
-    tidyr::pivot_longer(cols=c(Catch, Catch_AW, SSB,SSB0,RelSSB,VB,TB,TB0,RelTB, U), names_to = "Variable", values_to = "Value") %>%
+    tidyr::pivot_longer(cols=c(Catch, SSB,SSB0,RelSSB,VB,TB,TB0,RelTB, U_AW, U_SS), names_to = "Variable", values_to = "Value") %>%
     group_by(RuleNum, Region, Variable) %>%
     summarise(P5 = quantile(Value, 0.05),
                      P50 = quantile(Value, 0.5),
@@ -287,7 +292,7 @@ if(any(grepl("B0now_r", names(mcmc1)))){
 
   proj_check <- info1 %>%
     filter(Year == max(years1)+5) %>%
-    tidyr::pivot_longer(cols=c(Catch, Catch_AW, SSB,SSB0,RelSSB,VB,TB,TB0,RelTB, U), names_to = "Variable", values_to = "Value") %>%
+    tidyr::pivot_longer(cols=c(Catch, SSB,SSB0,RelSSB,VB,TB,TB0,RelTB, U), names_to = "Variable", values_to = "Value") %>%
     group_by(RuleNum, Region, Variable) %>%
     summarise(Proj_P5 = quantile(Value, 0.05),
                      Proj_P50 = quantile(Value, 0.5),
@@ -320,54 +325,26 @@ if(any(grepl("B0now_r", names(mcmc1)))){
 
   projF <- mcmc$proj_F_jytrf
   dimnames(projF) <- list("Iteration"=1:n_iter, "RuleNum"=1:n_rules, "Year"=pyears, "Season"=seasons, "Region"=regions, "Fleet" = fleets)
-  projF2 <- reshape2::melt(projF, value.name = "F") %>%
-    group_by(Iteration, RuleNum, Year, Region) %>%
-    summarise(F = sum(F))
+  projF2 <- reshape2::melt(projF, value.name = "F")
 
   if(length(is.na(projF2$F)) > 0) print("Some fixed catch projections are likely crashing the population.")
 
   projU <- mcmc$proj_U_jytrf
   dimnames(projU) <- list("Iteration"=1:n_iter, "RuleNum"=1:n_rules, "Year"=pyears, "Season"=seasons, "Region"=regions, "Fleet" = fleets)
   projU2 <- reshape2::melt(projU, value.name = "U") %>%
-    group_by(Iteration, RuleNum, Year, Region) %>%
-    summarise(U = sum(U))
-
-  p <- ggplot(projU2 %>% group_by(Year, RuleNum) %>% summarise(U = median(U))) +
-    geom_line(aes(x = Year, y = U, color = factor(RuleNum))) +
-    coord_cartesian(y = c(0,1)) 
+    group_by(Iteration, RuleNum, Year, Season, Region) %>%
+    summarise(U = sum(U)) %>%
+    tidyr::pivot_wider(names_from = Season, values_from = "U") %>%
+    rename(U_AW = AW, U_SS = SS)
 
   gc()
-  # sub <- projF2 %>% filter(RuleNum > 22) %>% filter(Iteration == 1)
-  # p <- ggplot(sub %>% filter(Iteration == 1)) +
-  # geom_line(aes(x = Year, y = F, color = factor(RuleNum))) +
-  # facet_wrap(~Region, scales = "free_y") +
-  # # coord_cartesian(ylim = c(0,quantile(sub$F,0.99))) +
-  # theme_bw()
-
-  # qpar <- mcmc$par_q_cpue_qy
-  # dimnames(qpar) <- list("Iteration" = 1:n_iter, "qtype" = 1:3, "Year" = pyears)
-  # qpar2 <- reshape2::melt(qpar, value.name = "q")
-  # qpar2 <- qpar2 %>%
-  #   group_by(Year, qtype) %>%
-  #   mutate(q_med = median(q))
-  # ggplot(qpar2) + geom_line(aes(x = Year, y = q_med, color = factor(qtype)))
-
-  # p <- ggplot(qpar2) +
-  # geom_line(aes(x = Year, y = q)) +
-  # facet_wrap(~qtype) +
-  # theme_bw()
 
   cpue <- mcmc$proj_cpue_jryt
   dimnames(cpue) <- list("Iteration" = 1:n_iter, "RuleNum" = 1:n_rules, "Region" = regions, "Year" = pyears, "Season" = seasons)
-  cpue2 <- reshape2::melt(cpue, value.name = "CPUE")
-  cpue2 <- tibble(cpue2)
+  cpue2 <- reshape2::melt(cpue, value.name = "CPUE") %>%
+    tidyr::pivot_wider(names_from = Season, values_from = "CPUE") %>%
+    rename(CPUE_AW = AW, CPUE_SS = SS)
 
-  # sub <- cpue2 %>% filter(RuleNum > 22) %>% filter(Iteration == 1)
-  # p <- ggplot(sub %>% filter(Iteration == 1)) +
-  # geom_line(aes(x = Year, y = CPUE, color = factor(RuleNum))) +
-  # facet_wrap(~Region, scales = "free_y") +
-  # # coord_cartesian(ylim = c(0,quantile(sub$F,0.99))) +
-  # theme_bw()
 
   gc()
 
@@ -403,9 +380,9 @@ if(any(grepl("B0now_r", names(mcmc1)))){
     tidyr::pivot_wider(names_from = CatchType, values_from = Catch) %>%
     mutate(Catch = SL + NSL)
 
-  pcatch_t <- rbind.data.frame(slcatch2_t, nslcatch2_t) %>%
-    tidyr::pivot_wider(names_from = CatchType, values_from = Catch) %>%
-    mutate(Catch = SL + NSL)
+  # pcatch_t <- rbind.data.frame(slcatch2_t, nslcatch2_t) %>%
+  #   tidyr::pivot_wider(names_from = CatchType, values_from = Catch) %>%
+  #   mutate(Catch = SL + NSL)
 
   # sub <- pcatch %>% filter(RuleNum %in% c(6,37))
   # p <- ggplot(sub %>% filter(Iteration == 1)) +
@@ -418,11 +395,6 @@ if(any(grepl("B0now_r", names(mcmc1)))){
   gc()
 
   catch <- pcatch
-  catch_t <- pcatch_t %>%
-    filter(Season == "AW") %>%
-    ungroup() %>%
-    select(-Season) %>%
-    rename(SL_AW = SL, NSL_AW = NSL, Catch_AW = Catch)
 
   sub <- catch %>% left_join(rule_type) %>% filter(Iteration == 1)
   p <- ggplot(sub %>% filter(Iteration == 1)) +
@@ -431,8 +403,30 @@ if(any(grepl("B0now_r", names(mcmc1)))){
     theme_bw(base_size = 20)
   ggsave(file.path(figure_dir, "Catch_check.png"), p, height = 10, width = 15)
 
+
+  sub <- projU2 %>% left_join(rule_type) %>% filter(Iteration == 1) %>%
+    tidyr::pivot_longer(cols = U_AW:U_SS, names_to = "Season", values_to = "U") %>%
+    tidyr::separate(Season, into = c("Variable", "Season"), sep = "_")
+  p <- ggplot(sub) +
+    geom_line(aes(x = Year, y = U, color = factor(RuleNum))) +
+    facet_grid(RuleType ~ Region + Season, scales = "free_y") +
+    expand_limits(y = c(0,0)) +
+    coord_cartesian(y = c(0,1)) +
+    ylab("Exploitation rate") +
+    theme_bw(base_size = 20)
+  ggsave(file.path(figure_dir, "U_check.png"), p, height = 10, width = 15)
+
+  sub <- projF2 %>% left_join(rule_type) %>% filter(Iteration == 1)
+  p <- ggplot(sub) +
+    geom_line(aes(x = Year, y = F, color = factor(RuleNum))) +
+    facet_grid(RuleType ~ Season + Fleet + Region, scales = "free_y") +
+    expand_limits(y = c(0,0)) +
+    coord_cartesian(y = c(0,1)) +
+    theme_bw(base_size = 20)
+  ggsave(file.path(figure_dir, "F_check.png"), p, height = 10, width = 15)
+
   rm(pcatch)
-  rm(pcatch_t)
+  # rm(pcatch_t)
   gc()
 
 
@@ -592,27 +586,16 @@ if(any(grepl("B0now_r", names(mcmc1)))){
   rm(reltb)
 
   catch$Region <- factor(catch$Region)
-  catch_t$Region <- factor(catch_t$Region)
-  info <- full_join(catch, relb1) %>%
-    full_join(catch_t) %>%
-    select(-c(SL_AW, NSL_AW))
-  gc()
+  # catch_t$Region <- factor(catch_t$Region)
+  infox <- full_join(catch, relb1) %>%
+    full_join(cpue2 %>% mutate(Region = factor(Region))) %>%
+    full_join(projU2 %>% mutate(Region = factor(Region)))
 
-  cpue2$Region <- factor(cpue2$Region)
-  # projF2$Region <- factor(projF2$Region)
-  info <- full_join(info, cpue2)
-  info$Region <- factor(info$Region)
-  gc()
-
-  # infox <- full_join(info, projF2)
-  infox <- info
-  rm(info)
   gc()
 
   info <- infox %>%
     filter(Region %in% regions) %>%
-    mutate(Region = paste0("Region ", Region)) %>%
-    mutate(U = Catch_AW / VB)
+    mutate(Region = paste0("Region ", Region)) 
   gc()
 
   ### doesn't make sense to calculate total by rule, since not using total by rule
@@ -714,7 +697,7 @@ if(any(grepl("B0now_r", names(mcmc1)))){
   #####################
     summary <- cinfo %>%
       filter(Region != "Total") %>%
-      tidyr::pivot_longer(cols=c(Catch,Catch_AW, CPUE,SSB,SSB0now,SSB0,RelSSB,RelSSBdata,VB,VB0now,VB0,RelVB,RelVBdata,TB,TB0,TB0now, RelTB, RelTBdata, U), names_to = "Variable", values_to = "Value") %>% #CPUE,F)
+      tidyr::pivot_longer(cols=c(Catch,SSB,SSB0now,SSB0,RelSSB,RelSSBdata,VB,VB0now,VB0,RelVB,RelVBdata,TB,TB0,TB0now, RelTB, RelTBdata, U_AW, U_SS, CPUE_AW, CPUE_SS), names_to = "Variable", values_to = "Value") %>% #CPUE,F)
       group_by(Region, RuleNum, Variable) %>%
       summarise(P5 = quantile(Value, 0.05),
                        P50 = quantile(Value, 0.5),
@@ -754,20 +737,6 @@ if(any(grepl("B0now_r", names(mcmc1)))){
 
     msy_info1 <- output2 %>% right_join(find_msy1 %>% select(-P50))
 
-  ## filter MP rules where CV < CV(MSY Fixed F)
-  CVmaxF <- min(as.numeric(unlist(msy_info1[which(msy_info1$RuleType == "FixedF"),"CV"])))
-  output_mp <- output2 %>% filter(RuleType == "CPUE-based") %>% filter(RiskConstraint == 0)
-  CVquants <- quantile(output_mp$CV)
-
-  output2$CVConstraint = 0
-  output2 <- output2 %>%
-    mutate(CVConstraint = replace(CVConstraint, which(CV <= CVquants["100%"]), "Max")) %>%
-    mutate(CVConstraint = replace(CVConstraint, which(CV <= CVquants["75%"]), "75%")) %>%
-    mutate(CVConstraint = replace(CVConstraint, which(CV <= CVquants["50%"]), "Median")) %>%
-    mutate(CVConstraint = replace(CVConstraint, which(CV <= CVquants["25%"]), "25%")) %>%
-    mutate(CVConstraint = replace(CVConstraint, which(CV <= CVquants["0%"]), "Min")) %>%
-    mutate(CVConstraint = replace(CVConstraint, which(RuleType != "CPUE-based"), 0))
-
   gc()
 
   output2$Constraint <- sapply(1:nrow(output2), function(x){
@@ -783,10 +752,10 @@ if(any(grepl("B0now_r", names(mcmc1)))){
 
   find_max <- output2 %>%
     filter(Variable == "Catch") %>%
-    group_by(Region, RuleType, RuleNum, Constraint, CVConstraint) %>%
+    group_by(Region, RuleType, RuleNum, Constraint) %>%
     summarise(P50 = sum(P50),
                      Mean = sum(Mean)) %>%
-    group_by(Region, RuleType, Constraint, CVConstraint) %>%
+    group_by(Region, RuleType, Constraint) %>%
     # filter(P50 == max(P50))
     filter(Mean == max(Mean))
 
@@ -798,27 +767,13 @@ if(any(grepl("B0now_r", names(mcmc1)))){
     byType <- lapply(1:length(types), function(y){
       sub2 <- sub %>% filter(RuleType == types[y])
       con <- unique(sub2$Constraint)
-      con2 <- unique(sub2$CVConstraint)
       byCon <- lapply(1:length(con), function(z){
         sub3 <- sub2 %>% filter(Constraint == con[z])
-        if(types[y] == "CPUE-based"){
-          byCon2 <- lapply(1:length(con2), function(zz){
-            sub4 <- sub3 %>% filter(CVConstraint == con2[zz])
-            if(nrow(sub4) == 1) out <- sub4
-            if(nrow(sub4) > 1){
-              subinfo <- output2 %>% right_join(sub4)
-              out <- sub4[which(subinfo$AvgTotalCatch == max(subinfo$AvgTotalCatch)),]
-            }
-            return(out)
-          })
-          out <- do.call(rbind,byCon2)
-        } else {
           if(nrow(sub3) == 1) out <- sub3
           if(nrow(sub3) > 1){
             subinfo <- output2 %>% right_join(sub3)
             out <- sub3[which(subinfo$AvgTotalCatch == max(subinfo$AvgTotalCatch)),]
           }
-        }
         return(out)
       })
       byCon <- do.call(rbind, byCon)
@@ -837,18 +792,19 @@ if(any(grepl("B0now_r", names(mcmc1)))){
 
   if(length(regions) > 1){
     max_info2 <- cinfo %>%
-      right_join(unique(max_info %>% select(Region, RuleNum, Constraint, CVConstraint))) %>%
+      right_join(unique(max_info %>% select(Region, RuleNum, Constraint))) %>%
       left_join(ruledf)
     gc()
     max_info3 <- data.frame(max_info2) %>%
-      group_by(Iteration, Year, RuleType, Constraint, CVConstraint) %>%
+      group_by(Iteration, Year, RuleType, Constraint) %>%
       summarise(Catch = sum(Catch),
-                       Catch_AW = sum(Catch_AW),
                        VB = sum(VB),
                        SSB = sum(SSB),
                        TB = sum(TB),
-                       CPUE = mean(CPUE),
-                       U = Catch_AW / VB) %>%
+                       CPUE_AW = mean(CPUE_AW),
+                       CPUE_SS = mean(CPUE_SS),
+                       U_AW = mean(U_AW),
+                       U_SS = mean(U_SS)) %>%
       left_join(vb0now %>% filter(Region == "Total")) %>%
       left_join(ssb0now %>% filter(Region == "Total")) %>%
       left_join(tb0now %>% filter(Region == "Total")) %>%
@@ -862,8 +818,8 @@ if(any(grepl("B0now_r", names(mcmc1)))){
       mutate(RelSSB = SSB / SSB0) %>%
       mutate(RelTB = TB / TB0) %>%
       tidyr::drop_na()  %>%
-      tidyr::pivot_longer(cols = c(Catch, CPUE, VB, SSB, TB, VB0now, SSB0now, TB0now, VB0, SSB0, TB0, RelVBdata, RelSSBdata, RelTBdata, RelVB, RelSSB, RelTB), names_to = "Variable", values_to = "Value") %>%
-      group_by(RuleType, Constraint, CVConstraint, Variable) %>%
+      tidyr::pivot_longer(cols = unique(summary$Variable), names_to = "Variable", values_to = "Value") %>%
+      group_by(RuleType, Constraint, Variable) %>%
       summarise(P5 = quantile(Value, 0.05),
                        P50 = quantile(Value, 0.5),
                        Mean = mean(Value),
@@ -918,12 +874,13 @@ if(any(grepl("B0now_r", names(mcmc1)))){
     average_info_t <- average_info %>%
       group_by(Iteration, Year, RuleType) %>%
       summarise(Catch = sum(Catch),
-                       Catch_AW = sum(Catch_AW),
                        VB = sum(VB),
                        SSB = sum(SSB),
                        TB = sum(TB),
-                       CPUE = mean(CPUE),
-                       U = Catch_AW / VB) %>%
+                       CPUE_AW = mean(CPUE_AW),
+                       CPUE_SS = mean(CPUE_SS),
+                       U_AW = mean(U_AW),
+                       U_SS = mean(U_SS)) %>%
       left_join(vb0now %>% filter(Region == "Total")) %>%
       left_join(ssb0now %>% filter(Region == "Total")) %>%
       left_join(tb0now %>% filter(Region == "Total")) %>%
@@ -1050,7 +1007,7 @@ if(any(grepl("B0now_r", names(mcmc1)))){
     sum_info <- full_join(sum_status, msy_info_sub)
     write.csv(sum_info, file.path(figure_dir, "Reference_level_info.csv"), row.names = FALSE)
 
-  msy_toUse <- max_info %>% select(RuleType, Constraint, CVConstraint, Variable, P5, P50, Mean, P95, Region)
+  msy_toUse <- max_info %>% select(RuleType, Constraint, Variable, P5, P50, Mean, P95, Region)
   if(length(regions) > 1){
     msy_toUse <- rbind.data.frame(msy_toUse, max_info3)
   }
@@ -1296,13 +1253,13 @@ if(any(grepl("B0now_r", names(mcmc1)))){
     # geom_segment(aes(x = RelSSB_P5, xend = RelSSB_P95, y = Catch_P50, yend = Catch_P50, color = Constraint), lwd = 1.2, alpha = 0.8) +
     # geom_segment(aes(x = RelSSB_P50, xend = RelSSB_P50, y = Catch_P5, yend = Catch_P95, color = Constraint), lwd = 1.2, alpha = 0.8) +
     # geom_point(aes(x = RelSSB_P50, y = Catch_P50, fill = Constraint), pch = 21, cex = 4) +
-    geom_segment(aes(x = CPUE_P5, xend = CPUE_P95, y = Catch_Mean, yend = Catch_Mean, color = Constraint), lwd = 1.2, alpha = 0.25) +
-    geom_segment(aes(x = CPUE_Mean, xend = CPUE_Mean, y = Catch_P5, yend = Catch_P95, color = Constraint), lwd = 1.2, alpha = 0.25) +
-    geom_point(aes(x = CPUE_Mean, y = Catch_Mean, fill = Constraint), pch = 21, cex = 4, alpha = 0.5) +
+    geom_segment(aes(x = CPUE_AW_P5, xend = CPUE_AW_P95, y = Catch_Mean, yend = Catch_Mean, color = Constraint), lwd = 1.2, alpha = 0.25) +
+    geom_segment(aes(x = CPUE_AW_Mean, xend = CPUE_AW_Mean, y = Catch_P5, yend = Catch_P95, color = Constraint), lwd = 1.2, alpha = 0.25) +
+    geom_point(aes(x = CPUE_AW_Mean, y = Catch_Mean, fill = Constraint), pch = 21, cex = 4, alpha = 0.5) +
     expand_limits(y = 0, x = 0) +
     scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
     scale_x_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
-    xlab("Predicted CPUE") + ylab("Average annual catch (tonnes)") +
+    xlab("Predicted AW CPUE") + ylab("Average annual catch (tonnes)") +
     scale_fill_colorblind() +
     scale_color_colorblind() +
     theme_bw(base_size = 20)
@@ -1311,162 +1268,27 @@ if(any(grepl("B0now_r", names(mcmc1)))){
   } else {
     p_cpue <- p_cpue + facet_grid(~RuleType)
   }
-  ggsave(file.path(figure_dir, "CPUE_vs_Catch_byConstraint.png"), p_cpue, height = 8, width = 20)
-  # check <- cinfo %>%
-    #   select(Iteration, Year, Region, RuleNum, Catch, CPUE, F, VB) %>%
-    #   tidyr::pivot_longer(cols = c(Catch, CPUE, F, VB), names_to = "Variable", values_to = "Value") %>%
-    #   right_join(max_info %>% filter(Constraint == "Pass") %>% select(-c(P50,Mean))) %>%
-    #   filter(Variable %in% c("Catch", "CPUE", "F", "VB")) %>%
-    #   filter(Region != "Total")  %>%
-    #   mutate(CVConstraint = replace(CVConstraint, RuleType == "FixedF", "FixedF")) %>%
-    #   mutate(CVConstraint = replace(CVConstraint, RuleType == "FixedCatch", "FixedCatch")) %>%
-    #   filter(CVConstraint != "Min")
-    #   # mutate(CVConstraint = replace(CVConstraint, RuleType == "FixedF", "FixedF")) %>%
-    #   # mutate(CVConstraint = replace(CVConstraint, RuleType == "FixedCatch", "FixedCatch"))
-    # if(length(unique(check$RuleType))==3){
-    #   check$RuleType <- factor(check$RuleType, levels = c("FixedCatch", "CPUE-based", "FixedF"))
-    # }
-    # if(length(unique(check$CVConstraint))>0) check$CVConstraint <- factor(check$CVConstraint, levels = rev(c("FixedF", "Max", "75%", "Median", "25%", "FixedCatch")))
-    # p_f_cpue <- ggplot(check %>% filter(Iteration == 1)) +
-    #   geom_line(aes(x = Year, Value, color = CVConstraint), lwd = 1.2) +
-    #   scale_color_tableau() +
-    #   guides(color = guide_legend(title="Rule type")) +
-    #   expand_limits(y = 0) +
-    #   theme_bw(base_size = 20) #+
-    #   # theme(axis.text.x = element_blank())
-    # if(length(regions) > 1){
-    #   p_f_cpue <- p_f_cpue + facet_wrap(Region~Variable, scales = "free_y", ncol = 4)
-    # } else {
-    #   p_f_cpue <- p_f_cpue + facet_wrap(~Variable, scales = "free_y")
-    # }
-    # ggsave(file.path(figure_dir, "F_CPUE_Catch_VB_iter1.png"), p_f_cpue, height = 8, width = 15)
+  ggsave(file.path(figure_dir, "CPUE_AW_vs_Catch_byConstraint.png"), p_cpue, height = 8, width = 20)
+ 
+   p_cpue_v2 <- p_cpue +
+    # geom_vline(data = output5, aes(xintercept = RelVB_P50), linetype = 2, lwd = 1.5) +
+    # geom_hline(data = output5, aes(yintercept = Catch_P50), linetype = 2, lwd = 1.5)
+    geom_vline(data = output5, aes(xintercept = CPUE_AW_Mean), linetype = 2, lwd = 1.5) +
+    geom_hline(data = output5, aes(yintercept = Catch_Mean), linetype = 2, lwd = 1.5)
+  ggsave(file.path(figure_dir, "CPUE_AW_vs_Catch_wTarget.png"), p_cpue_v2, height = 8, width = 20)
 
-    # check <- cinfo %>%
-    #   select(Iteration, Year, Region, RuleNum, Catch, CPUE, F, VB) %>%
-    #   tidyr::pivot_longer(cols = c(Catch, CPUE, F, VB), names_to = "Variable", values_to = "Value") %>%
-    #   right_join(msy_info %>% select(-c(P50,Mean))) %>%
-    #   filter(Variable %in% c("Catch", "CPUE", "F", "VB")) %>%
-    #   filter(Region != "Total") %>%
-    #   mutate(CVConstraint = replace(CVConstraint, RuleType == "FixedF", "FixedF")) %>%
-    #   mutate(CVConstraint = replace(CVConstraint, RuleType == "FixedCatch", "FixedCatch")) %>%
-    #   filter(CVConstraint != "Min")
-    # check2 <- output2 %>%
-    #   right_join(msy_info %>% select(-c(P50,Mean))) %>%
-    #   filter(Variable %in% c("Catch", "CPUE", "F", "VB")) %>%
-    #   filter(Region != "Total") %>%
-    #   mutate(CVConstraint = replace(CVConstraint, RuleType == "FixedF", "FixedF")) %>%
-    #   mutate(CVConstraint = replace(CVConstraint, RuleType == "FixedCatch", "FixedCatch")) %>%
-    #   filter(CVConstraint != "Min")
-    # # if(length(unique(check2$RuleType))==3) check2$RuleType <- factor(check2$RuleType, levels = c("FixedCatch", "CPUE-based", "FixedF"))
-    # check$CVConstraint <- factor(check$CVConstraint, levels = c("FixedCatch", "25%", "Median", "75%", "Max", "FixedF"))
-    # check2$CVConstraint <- factor(check2$CVConstraint, levels = c("FixedCatch", "25%", "Median", "75%", "Max", "FixedF"))
-    # p_f_cpue_v2 <- ggplot(check) +
-    #   stat_summary(aes(x = Year, y = Value, fill = CVConstraint), fun.min = function(x) stats::quantile(x, 0.05), fun.max = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25) +
-    #   stat_summary(aes(x = Year, y = Value, fill = CVConstraint), fun.min = function(x) stats::quantile(x, 0.25), fun.max = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5) +
-    #   stat_summary(aes(x = Year, y = Value, color = CVConstraint), fun = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1.5) +
-    #   # geom_hline(data = check2, aes(yintercept = P50), lty = 2, lwd = 1.2) +
-    #   geom_hline(data = check2, aes(yintercept = Mean), lty = 2, lwd = 1.2) +
-    #   # scale_color_brewer(palette = "Spectral") +
-    #   # scale_fill_brewer(palette = "Spectral") +
-    #   scale_color_tableau() +
-    #   scale_fill_tableau() +
-    #   guides(color = FALSE, fill = FALSE) +
-    #   expand_limits(y = 0) +
-    #   theme_bw(base_size = 20) #+
-    #   # theme(axis.text.x = element_blank())
-    # if(length(regions) > 1){
-    #   p_f_cpue_v2 <- p_f_cpue_v2 + facet_grid(Variable~CVConstraint+Region, scales = "free_y")
-    # } else {
-    #   p_f_cpue_v2 <- p_f_cpue_v2 + facet_grid(Variable~CVConstraint, scales = "free_y")
-    # }
-  # ggsave(file.path(figure_dir, "F_CPUE_Catch_VB_intervals.png"), p_f_cpue_v2, height = 8, width = 15)
 
-  # p_f_cpue_v3 <- ggplot(check) +
-  #     stat_summary(aes(x = Year, y = Value, fill = CVConstraint), fun.min = function(x) stats::quantile(x, 0.05), fun.max = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25) +
-  #     stat_summary(aes(x = Year, y = Value, fill = CVConstraint), fun.min = function(x) stats::quantile(x, 0.25), fun.max = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5) +
-  #     stat_summary(aes(x = Year, y = Value, color = CVConstraint), fun = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1.5) +
-  #     geom_line(data = check %>% filter(Iteration == 1), aes(x = Year, y = Value)) +
-  #     geom_line(data = check %>% filter(Iteration == 2), aes(x = Year, y = Value)) +
-  #     geom_line(data = check %>% filter(Iteration == 3), aes(x = Year, y = Value)) +
-  #     geom_line(data = check %>% filter(Iteration == 4), aes(x = Year, y = Value)) +
-  #     geom_line(data = check %>% filter(Iteration == 5), aes(x = Year, y = Value)) +
-  #     # geom_hline(data = check2, aes(yintercept = P50), lty = 2, lwd = 1.2) +
-  #     geom_hline(data = check2, aes(yintercept = Mean), lty = 2, lwd = 1.2) +
-  #     # scale_color_brewer(palette = "Spectral") +
-  #     # scale_fill_brewer(palette = "Spectral") +
-  #     scale_color_tableau() +
-  #     scale_fill_tableau() +
-  #     guides(color = FALSE, fill = FALSE) +
-  #     expand_limits(y = 0) +
-  #     theme_bw(base_size = 20) #+
-  #     # theme(axis.text.x = element_blank())
-  #   if(length(regions) > 1){
-  #     p_f_cpue_v3 <- p_f_cpue_v3 + facet_grid(Variable~CVConstraint+Region, scales = "free_y")
-  #   } else {
-  #     p_f_cpue_v3 <- p_f_cpue_v3 + facet_grid(Variable~CVConstraint, scales = "free_y")
-  #   }
-  # ggsave(file.path(figure_dir, "F_CPUE_Catch_VB_intervals.png"), p_f_cpue_v3, height = 8, width = 15)
-
-# #   ## plots of rules over time
-#   info2 <- info %>%
-#     select(Iteration, Region, RuleNum, Year, Catch, RelSSB, RelVB, Recruitment) %>%
-#     tidyr::pivot_longer(-c(Iteration, Region, RuleNum, Year), names_to = "Variable", values_to = "Value") %>%
-#     group_by(Year, Region, RuleNum, Variable) %>%
-#     summarise(P5 = quantile(Value, 0.05),
-#                      P50 = quantile(Value, 0.50),
-#                      P95 = quantile(Value, 0.95))
-
-# #
-#   check <- info2 %>% filter(Variable %in% c("Catch","RelSSB", "RelVB")) %>%
-#     left_join(ruledf)
-#   plot_msy <- check %>% filter(RuleNum %in% find_msy$RuleNum)
-#   p_time <- ggplot(check) +
-#     geom_line(aes(x = Year, y = P50, col = factor(RuleNum)), alpha = 0.5) +
-#     geom_line(data = plot_msy, aes(x = Year, y = P50), lwd = 2) +
-#     guides(color = FALSE) +
-#     ylab("Median value by rule across iterations") +
-#     theme_bw(base_size = 20)
-#   if(length(regions)==1){
-#     p_time <- p_time + facet_wrap(RuleType~Variable, scales = "free_y", nrow = 3)
-#   } else {
-#     p_time <- p_time + facet_wrap(Variable~Region + RuleType, scales = "free_y", nrow = 3)
-#   }
-#   ggsave(file.path(figure_dir, "Projections.png"), p_time, height = 8, width = 15)
-
-  # check <- info2 %>% filter(Variable == "Recruitment") %>%
-  #   left_join(ruledf)
-  # p_rec <- ggplot(check) +
-  #   geom_ribbon(aes(x = Year, ymin = P5, ymax = P95), alpha = 0.5) +
-  #   geom_line(aes(x = Year, y = P50)) +
-  #   facet_wrap(Region~RuleType, scales = "free_y", nrow = 3) +
-  #   theme_bw(base_size = 20)
-  # ggsave(file.path(figure_dir, "Recruitment_check.png"), p_rec, height = 8, width = 15)
-
-  ## plotF
-  # projF2$Region <- factor(projF2$Region)
-  # plot_F1 <- projF2 %>%
-  #     filter(Year <= 2019)
-  # plot_F2 <- projF2 %>%
-  #     filter(Year > 2019) %>%
-  #     filter(RuleNum %in% find_msy$RuleNum)
-  # plot_F <- rbind.data.frame(plot_F1, plot_F2) %>%
-  #   left_join(ruledf)
-  # p <- ggplot(plot_F) +
-  # geom_line(aes(x = Year, y = F)) +
-  # facet_grid(RuleType ~ Fleet) +
-  # theme_bw()
-
-  p_cpue <- ggplot(output4) +
+   p_cpue <- ggplot(output4) +
     # geom_segment(aes(x = RelSSB_P5, xend = RelSSB_P95, y = Catch_P50, yend = Catch_P50, color = Constraint), lwd = 1.2, alpha = 0.8) +
     # geom_segment(aes(x = RelSSB_P50, xend = RelSSB_P50, y = Catch_P5, yend = Catch_P95, color = Constraint), lwd = 1.2, alpha = 0.8) +
     # geom_point(aes(x = RelSSB_P50, y = Catch_P50, fill = Constraint), pch = 21, cex = 4) +
-    geom_segment(aes(x = CPUE_P5, xend = CPUE_P95, y = Catch_Mean, yend = Catch_Mean, color = Constraint), lwd = 1.2, alpha = 0.25) +
-    geom_segment(aes(x = CPUE_Mean, xend = CPUE_Mean, y = Catch_P5, yend = Catch_P95, color = Constraint), lwd = 1.2, alpha = 0.25) +
-    geom_point(aes(x = CPUE_Mean, y = Catch_Mean, fill = Constraint), pch = 21, cex = 4, alpha = 0.5) +
+    geom_segment(aes(x = CPUE_SS_P5, xend = CPUE_SS_P95, y = Catch_Mean, yend = Catch_Mean, color = Constraint), lwd = 1.2, alpha = 0.25) +
+    geom_segment(aes(x = CPUE_SS_Mean, xend = CPUE_SS_Mean, y = Catch_P5, yend = Catch_P95, color = Constraint), lwd = 1.2, alpha = 0.25) +
+    geom_point(aes(x = CPUE_SS_Mean, y = Catch_Mean, fill = Constraint), pch = 21, cex = 4, alpha = 0.5) +
     expand_limits(y = 0, x = 0) +
     scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
     scale_x_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
-    xlab("Predicted CPUE") + ylab("Average annual catch (tonnes)") +
+    xlab("Predicted SS CPUE") + ylab("Average annual catch (tonnes)") +
     scale_fill_colorblind() +
     scale_color_colorblind() +
     theme_bw(base_size = 20)
@@ -1475,26 +1297,27 @@ if(any(grepl("B0now_r", names(mcmc1)))){
   } else {
     p_cpue <- p_cpue + facet_grid(~RuleType)
   }
-  ggsave(file.path(figure_dir, "CPUE_vs_Catch_byConstraint.png"), p_cpue, height = 8, width = 20)
-
+  ggsave(file.path(figure_dir, "CPUE_SS_vs_Catch_byConstraint.png"), p_cpue, height = 8, width = 20)
+ 
   p_cpue_v2 <- p_cpue +
     # geom_vline(data = output5, aes(xintercept = RelVB_P50), linetype = 2, lwd = 1.5) +
     # geom_hline(data = output5, aes(yintercept = Catch_P50), linetype = 2, lwd = 1.5)
-    geom_vline(data = output5, aes(xintercept = CPUE_Mean), linetype = 2, lwd = 1.5) +
+    geom_vline(data = output5, aes(xintercept = CPUE_SS_Mean), linetype = 2, lwd = 1.5) +
     geom_hline(data = output5, aes(yintercept = Catch_Mean), linetype = 2, lwd = 1.5)
-  ggsave(file.path(figure_dir, "CPUE_vs_Catch_wTarget.png"), p_cpue_v2, height = 8, width = 20)
+  ggsave(file.path(figure_dir, "CPUE_SS_vs_Catch_wTarget.png"), p_cpue_v2, height = 8, width = 20)
+
 
   p_cpue_b <- ggplot(output4) +
     # geom_segment(aes(x = RelSSB_P5, xend = RelSSB_P95, y = Catch_P50, yend = Catch_P50, color = Constraint), lwd = 1.2, alpha = 0.8) +
     # geom_segment(aes(x = RelSSB_P50, xend = RelSSB_P50, y = Catch_P5, yend = Catch_P95, color = Constraint), lwd = 1.2, alpha = 0.8) +
     # geom_point(aes(x = RelSSB_P50, y = Catch_P50, fill = Constraint), pch = 21, cex = 4) +
-    geom_segment(aes(x = VB_P5, xend = VB_P95, y = CPUE_Mean, yend = CPUE_Mean, color = Constraint), lwd = 1.2, alpha = 0.25) +
-    geom_segment(aes(x = VB_Mean, xend = VB_Mean, y = CPUE_P5, yend = CPUE_P95, color = Constraint), lwd = 1.2, alpha = 0.25) +
-    geom_point(aes(x = VB_Mean, y = CPUE_Mean, fill = Constraint), pch = 21, cex = 4, alpha = 0.5) +
+    geom_segment(aes(x = VB_P5, xend = VB_P95, y = CPUE_AW_Mean, yend = CPUE_AW_Mean, color = Constraint), lwd = 1.2, alpha = 0.25) +
+    geom_segment(aes(x = VB_Mean, xend = VB_Mean, y = CPUE_AW_P5, yend = CPUE_AW_P95, color = Constraint), lwd = 1.2, alpha = 0.25) +
+    geom_point(aes(x = VB_Mean, y = CPUE_AW_Mean, fill = Constraint), pch = 21, cex = 4, alpha = 0.5) +
     expand_limits(y = 0, x = 0) +
     scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
     scale_x_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
-    ylab("Offset-year CPUE") + xlab("AW adjusted vulnerable biomass (B; tonnes)") +
+    ylab("Predicted AW CPUE") + xlab("AW adjusted vulnerable biomass (B; tonnes)") +
     scale_fill_colorblind() +
     scale_color_colorblind() +
     theme_bw(base_size = 20)
@@ -1503,14 +1326,43 @@ if(any(grepl("B0now_r", names(mcmc1)))){
   } else {
     p_cpue_b <- p_cpue_b + facet_grid(~RuleType)
   }
-  ggsave(file.path(figure_dir, "CPUE_vs_VB_byConstraint.png"), p_cpue_b, height = 8, width = 20)
+  ggsave(file.path(figure_dir, "CPUE_AW_vs_VB_byConstraint.png"), p_cpue_b, height = 8, width = 20)
 
   p_cpue_b_v2 <- p_cpue_b +
     # geom_vline(data = output5, aes(xintercept = RelVB_P50), linetype = 2, lwd = 1.5) +
     # geom_hline(data = output5, aes(yintercept = Catch_P50), linetype = 2, lwd = 1.5)
     geom_vline(data = output5, aes(xintercept = VB_Mean), linetype = 2, lwd = 1.5) +
-    geom_hline(data = output5, aes(yintercept = CPUE_Mean), linetype = 2, lwd = 1.5)
-  ggsave(file.path(figure_dir, "CPUE_vs_VB_wTarget.png"), p_cpue_b_v2, height = 8, width = 20)
+    geom_hline(data = output5, aes(yintercept = CPUE_AW_Mean), linetype = 2, lwd = 1.5)
+  ggsave(file.path(figure_dir, "CPUE_AW_vs_VB_wTarget.png"), p_cpue_b_v2, height = 8, width = 20)
+
+
+  p_cpue_b <- ggplot(output4) +
+    # geom_segment(aes(x = RelSSB_P5, xend = RelSSB_P95, y = Catch_P50, yend = Catch_P50, color = Constraint), lwd = 1.2, alpha = 0.8) +
+    # geom_segment(aes(x = RelSSB_P50, xend = RelSSB_P50, y = Catch_P5, yend = Catch_P95, color = Constraint), lwd = 1.2, alpha = 0.8) +
+    # geom_point(aes(x = RelSSB_P50, y = Catch_P50, fill = Constraint), pch = 21, cex = 4) +
+    geom_segment(aes(x = VB_P5, xend = VB_P95, y = CPUE_SS_Mean, yend = CPUE_SS_Mean, color = Constraint), lwd = 1.2, alpha = 0.25) +
+    geom_segment(aes(x = VB_Mean, xend = VB_Mean, y = CPUE_SS_P5, yend = CPUE_SS_P95, color = Constraint), lwd = 1.2, alpha = 0.25) +
+    geom_point(aes(x = VB_Mean, y = CPUE_SS_Mean, fill = Constraint), pch = 21, cex = 4, alpha = 0.5) +
+    expand_limits(y = 0, x = 0) +
+    scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
+    scale_x_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
+    ylab("Predicted AW CPUE") + xlab("AW adjusted vulnerable biomass (B; tonnes)") +
+    scale_fill_colorblind() +
+    scale_color_colorblind() +
+    theme_bw(base_size = 20)
+  if(length(regions) > 1){
+    p_cpue_b <- p_cpue_b + facet_grid(Region~RuleType, scales = "free_x")
+  } else {
+    p_cpue_b <- p_cpue_b + facet_grid(~RuleType)
+  }
+  ggsave(file.path(figure_dir, "CPUE_SS_vs_VB_byConstraint.png"), p_cpue_b, height = 8, width = 20)
+
+  p_cpue_b_v2 <- p_cpue_b +
+    # geom_vline(data = output5, aes(xintercept = RelVB_P50), linetype = 2, lwd = 1.5) +
+    # geom_hline(data = output5, aes(yintercept = Catch_P50), linetype = 2, lwd = 1.5)
+    geom_vline(data = output5, aes(xintercept = VB_Mean), linetype = 2, lwd = 1.5) +
+    geom_hline(data = output5, aes(yintercept = CPUE_SS_Mean), linetype = 2, lwd = 1.5)
+  ggsave(file.path(figure_dir, "CPUE_SS_vs_VB_wTarget.png"), p_cpue_b_v2, height = 8, width = 20)
 
 
   p_cv <- ggplot(output4) +
@@ -1679,58 +1531,6 @@ if(any(grepl("B0now_r", names(mcmc1)))){
   ggsave(file.path(figure_dir, "TB_vs_Catch_byConstraint_wTarget.png"), p_tb_v2, height = 8, width = 20)
 
 
-  # p_vbcatch <- ggplot(output4) +
-  #   geom_segment(aes(x = VB_P5, xend = VB_P95, y = Catch_P50, yend = Catch_P50, color = factor(CatchConstraint)), lwd = 1.2, alpha = 0.8) +
-  #   geom_segment(aes(x = VB_P50, xend = VB_P50, y = Catch_P5, yend = Catch_P95, color = factor(CatchConstraint)), lwd = 1.2, alpha = 0.8) +
-  #   geom_point(aes(x = VB_P50, y = Catch_P50, fill = factor(CatchConstraint)), pch = 21, cex = 3) +
-  #   expand_limits(y = 0, x = 0) +
-  #   xlab("Vulnerable biomass") + ylab("Average annual catch") +
-  #   scale_fill_brewer(palette = "Spectral") +
-  #   scale_color_brewer(palette = "Spectral") +
-  #   guides(fill=guide_legend(title="Catch constraint"), color = FALSE) +
-  #   theme_bw(base_size = 20)
-  # if(length(regions) > 1){
-  #   p_vbcatch <- p_vbcatch + facet_wrap(Region~RuleType, scales = "free_x", nrow = length(regions))
-  # } else {
-  #   p_vbcatch <- p_vbcatch + facet_wrap(~RuleType, scales = "free_x", nrow = length(regions))
-  # }
-  # ggsave(file.path(figure_dir, "VB_vs_Catch_CatchConstraint.png"), p_vbcatch, height = 8, width = 20)
-
-  # p_vbrisk <- ggplot(output4) +
-  #   geom_segment(aes(x = VB_P5, xend = VB_P95, y = Catch_P50, yend = Catch_P50, color = factor(RiskConstraint)), lwd = 1.2, alpha = 0.8) +
-  #   geom_segment(aes(x = VB_P50, xend = VB_P50, y = Catch_P5, yend = Catch_P95, color = factor(RiskConstraint)), lwd = 1.2, alpha = 0.8) +
-  #   geom_point(aes(x = VB_P50, y = Catch_P50, fill = factor(RiskConstraint)), pch = 21, cex = 3) +
-  #   expand_limits(y = 0, x = 0) +
-  #   xlab("Vulnerable biomass") + ylab("Average annual catch") +
-  #   scale_fill_brewer(palette = "Spectral") +
-  #   scale_color_brewer(palette = "Spectral") +
-  #   guides(fill=guide_legend(title="Risk constraint"), color = FALSE) +
-  #   theme_bw(base_size = 20)
-  # if(length(regions) > 1){
-  #   p_vbrisk <- p_vbrisk + facet_wrap(Region~RuleType, scales = "free_x", nrow = length(regions))
-  # } else {
-  #   p_vbrisk <- p_vbrisk + facet_wrap(~RuleType, scales = "free_x", nrow = length(regions))
-  # }
-  # ggsave(file.path(figure_dir, "VB_vs_Catch_RiskConstraint.png"), p_vbrisk, height = 8, width = 20)
-
-  # p_vbcv <- ggplot(output4) +
-  #   geom_segment(aes(x = VB_P5, xend = VB_P95, y = Catch_P50, yend = Catch_P50, color = factor(CVConstraint)), lwd = 1.2, alpha = 0.8) +
-  #   geom_segment(aes(x = VB_P50, xend = VB_P50, y = Catch_P5, yend = Catch_P95, color = factor(CVConstraint)), lwd = 1.2, alpha = 0.8) +
-  #   geom_point(aes(x = VB_P50, y = Catch_P50, fill = factor(CVConstraint)), pch = 21, cex = 3) +
-  #   expand_limits(y = 0, x = 0) +
-  #   xlab("Vulnerable biomass") + ylab("Average annual catch") +
-  #   scale_fill_brewer(palette = "Spectral") +
-  #   scale_color_brewer(palette = "Spectral") +
-  #   guides(fill=guide_legend(title="CV constraint"), color = FALSE) +
-  #   theme_bw(base_size = 20)
-  # if(length(regions) > 1){
-  #   p_vbcv <- p_vbcv + facet_wrap(Region~RuleType, scales = "free_x", nrow = length(regions))
-  # } else {
-  #   p_vbcv <- p_vbcv + facet_wrap(~RuleType, scales = "free_x", nrow = length(regions))
-  # }
-  # ggsave(file.path(figure_dir, "VB_vs_Catch_CVConstraint.png"), p_vbcv, height = 8, width = 20)
-
-
   ###################################################
   ## Status relative to reference level by rule type
   ###################################################
@@ -1798,16 +1598,12 @@ if(any(grepl("B0now_r", names(mcmc1)))){
   }
 
 
-  check <- dinfo %>% left_join(max_all %>% filter(Variable == "VB")) %>%
-    # mutate(CVConstraint = replace(CVConstraint, RuleType == "FixedCatch", "FixedCatch")) %>%
-    # mutate(CVConstraint = replace(CVConstraint, RuleType == "FixedF", "FixedF")) %>%
-    filter(CVConstraint != "Min")
+  check <- dinfo %>% left_join(max_all %>% filter(Variable == "VB")) 
   check$RuleType <- factor(check$RuleType, levels = unique(ruledf$RuleType))
-  # check$CVConstraint <- factor(check$CVConstraint, levels = c("FixedCatch", "25%", "Median", "75%", "Max", "FixedF"))
   p_vbcurr <- ggplot(check) +
-    geom_ribbon(aes(x = Year, ymin = P5, ymax = P95, fill = CVConstraint), alpha = 0.5) +
-    # geom_hline(aes(yintercept = P50, color = CVConstraint), lwd = 1.2) +
-    geom_hline(aes(yintercept = Mean, color = CVConstraint), lwd = 1.2) +
+    geom_ribbon(aes(x = Year, ymin = P5, ymax = P95, fill = RuleType), alpha = 0.5) +
+    # geom_hline(aes(yintercept = P50, color = RuleType), lwd = 1.2) +
+    geom_hline(aes(yintercept = Mean, color = RuleType), lwd = 1.2) +
     # geom_line(aes(x = Year, y = VB), lwd = 1.2) +
     stat_summary(aes(x = Year, y = VB), fun.min = function(x) stats::quantile(x, 0.05), fun.max = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25) +
     stat_summary(aes(x = Year, y = VB), fun = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1.2) +
@@ -1821,9 +1617,9 @@ if(any(grepl("B0now_r", names(mcmc1)))){
     coord_cartesian(xlim = c(min(check$Year),max(check$Year)), expand = FALSE) +
     theme_bw(base_size = 20)
   if(length(regions) > 1){
-    p_vbcurr <- p_vbcurr + facet_grid(Region~CVConstraint, scales = "free_y")
+    p_vbcurr <- p_vbcurr + facet_grid(Region+RuleType~RuleType, scales = "free_y")
   } else {
-    p_vbcurr <- p_vbcurr + facet_grid(~CVConstraint, scales = "free_y")
+    p_vbcurr <- p_vbcurr + facet_grid(~RuleType, scales = "free_y")
   }
   ggsave(file.path(figure_dir, "VBcurrent.png"), p_vbcurr, height = 10, width = 20)
 
@@ -1833,9 +1629,7 @@ if(any(grepl("B0now_r", names(mcmc1)))){
     select(Region, Variable, P5, Mean, P95) %>%
     filter(Variable == "VB") %>%
     # rename(P50 = Mean) %>%
-    mutate(RuleType = "Average") %>%
-    mutate(CVConstraint = 0)
-  check_avg$CVConstraint <- factor(check_avg$CVConstraint)
+    mutate(RuleType = "Average")
   max_sub <- max_all %>%
     select(-Constraint) %>%
     filter(Variable == "VB") %>%
@@ -1869,16 +1663,12 @@ if(any(grepl("B0now_r", names(mcmc1)))){
   gc()
 
  if(any(grepl("B0now_r", names(mcmc1)))){
-  check <- dinfo %>% left_join(max_all %>% filter(Variable == "RelVBdata")) %>%
-    # mutate(CVConstraint = replace(CVConstraint, RuleType == "FixedCatch", "FixedCatch")) %>%
-    # mutate(CVConstraint = replace(CVConstraint, RuleType == "FixedF", "FixedF")) %>%
-    filter(CVConstraint != "Min")
+  check <- dinfo %>% left_join(max_all %>% filter(Variable == "RelVBdata")) 
   check$RuleType <- factor(check$RuleType, levels = unique(ruledf$RuleType))
-  # check$CVConstraint <- factor(check$CVConstraint, levels = c("FixedCatch", "25%", "Median", "75%", "Max", "FixedF"))
   p_relvbcurr <- ggplot(check) +
-    geom_ribbon(aes(x = Year, ymin = P5, ymax = P95, fill = CVConstraint), alpha = 0.5) +
-    # geom_hline(aes(yintercept = P50, color = CVConstraint), lwd = 1.2) +
-    geom_hline(aes(yintercept = Mean, color = CVConstraint), lwd = 1.2) +
+    geom_ribbon(aes(x = Year, ymin = P5, ymax = P95, fill = RuleType), alpha = 0.5) +
+    # geom_hline(aes(yintercept = P50, color = RuleType), lwd = 1.2) +
+    geom_hline(aes(yintercept = Mean, color = RuleType), lwd = 1.2) +
     stat_summary(aes(x = Year, y = RelVB), fun.min = function(x) stats::quantile(x,0.05), fun.max = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25) +
     stat_summary(aes(x = Year, y = RelVB), fun = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1.2) +
     expand_limits(y = 0) +
@@ -1891,9 +1681,9 @@ if(any(grepl("B0now_r", names(mcmc1)))){
     coord_cartesian(xlim = c(min(check$Year),max(check$Year)), expand = FALSE) +
     theme_bw(base_size = 20)
   if(length(regions) > 1){
-    p_relvbcurr <- p_relvbcurr + facet_grid(Region~CVConstraint)
+    p_relvbcurr <- p_relvbcurr + facet_grid(Region~RuleType)
   } else {
-    p_relvbcurr <- p_relvbcurr + facet_grid(~CVConstraint)
+    p_relvbcurr <- p_relvbcurr + facet_grid(~RuleType)
   }
   ggsave(file.path(figure_dir, "RelVBcurrent.png"), p_relvbcurr, height = 10, width = 20)
 
@@ -1901,9 +1691,7 @@ if(any(grepl("B0now_r", names(mcmc1)))){
     select(Region, Variable, P5, Mean, P95) %>%
     filter(Variable == "RelVB") %>%
     # rename(P50 = Mean) %>%
-    mutate(RuleType = "Average") %>%
-    mutate(CVConstraint = 0)
-  check_avg$CVConstraint <- factor(check_avg$CVConstraint)
+    mutate(RuleType = "Average")
   max_sub <- max_all %>%
     select(-Constraint) %>%
     filter(Variable == "RelVB") %>%
@@ -1936,16 +1724,12 @@ if(any(grepl("B0now_r", names(mcmc1)))){
 
   gc()
 
-  check <- dinfo %>% left_join(max_all %>% filter(Variable == "RelTBdata")) %>%
-    # mutate(CVConstraint = replace(CVConstraint, RuleType == "FixedCatch", "FixedCatch")) %>%
-    # mutate(CVConstraint = replace(CVConstraint, RuleType == "FixedF", "FixedF")) %>%
-    filter(CVConstraint != "Min")
+  check <- dinfo %>% left_join(max_all %>% filter(Variable == "RelTBdata")) 
   check$RuleType <- factor(check$RuleType, levels = unique(ruledf$RuleType))
-  # check$CVConstraint <- factor(check$CVConstraint, levels = c("FixedCatch", "25%", "Median", "75%", "Max", "FixedF"))
   p_reltbcurr <- ggplot(check) +
-    geom_ribbon(aes(x = Year, ymin = P5, ymax = P95, fill = CVConstraint), alpha = 0.5) +
-    # geom_hline(aes(yintercept = P50, color = CVConstraint), lwd = 1.2) +
-    geom_hline(aes(yintercept = Mean, color = CVConstraint), lwd = 1.2) +
+    geom_ribbon(aes(x = Year, ymin = P5, ymax = P95, fill = RuleType), alpha = 0.5) +
+    # geom_hline(aes(yintercept = P50, color = RuleType), lwd = 1.2) +
+    geom_hline(aes(yintercept = Mean, color = RuleType), lwd = 1.2) +
     stat_summary(aes(x = Year, y = RelTB), fun.min = function(x) stats::quantile(x, 0.05), fun.max = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25) +
     stat_summary(aes(x = Year, y = RelTB), fun = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1.2) +
     expand_limits(y = 0) +
@@ -1958,9 +1742,9 @@ if(any(grepl("B0now_r", names(mcmc1)))){
     coord_cartesian(xlim = c(min(check$Year),max(check$Year)), expand = FALSE) +
     theme_bw(base_size = 20)
   if(length(regions) > 1){
-    p_reltbcurr <- p_reltbcurr + facet_grid(Region~CVConstraint)
+    p_reltbcurr <- p_reltbcurr + facet_grid(Region~RuleType)
   } else {
-    p_reltbcurr <- p_reltbcurr + facet_grid(~CVConstraint)
+    p_reltbcurr <- p_reltbcurr + facet_grid(~RuleType)
   }
   ggsave(file.path(figure_dir, "RelTBcurrent.png"), p_reltbcurr, height = 10, width = 20)
 
@@ -1968,9 +1752,7 @@ if(any(grepl("B0now_r", names(mcmc1)))){
     select(Region, Variable, P5, Mean, P95) %>%
     filter(Variable == "RelTB") %>%
     # rename(P50 = Mean) %>%
-    mutate(RuleType = "Average") %>%
-    mutate(CVConstraint = 0)
-  check_avg$CVConstraint <- factor(check_avg$CVConstraint)
+    mutate(RuleType = "Average")
   max_sub <- max_all %>%
     select(-Constraint) %>%
     filter(Variable == "RelTB") %>%
@@ -2004,39 +1786,6 @@ if(any(grepl("B0now_r", names(mcmc1)))){
   # #######################################
   # ## examine variability across filters
   # #######################################
-  ## examples from find_max
-  # reg <- unique(find_max$Region)
-  # find_max_sub <- lapply(1:length(reg), function(x){
-  #   sub <- find_max %>% filter(Region == reg[x])
-  #   types <- unique(sub$RuleType)
-  #   byType <- lapply(1:length(types), function(y){
-  #     sub2 <- sub %>% filter(RuleType == types[y])
-  #     if(types[y] != "CPUE-based") con <- unique(sub2$Constraint)
-  #     if(types[y] == "CPUE-based"){
-  #       con <- unique(sub2$Constraint)
-  #       con2 <- unique(sub2$CVConstraint)
-  #     }
-  #     byCon <- lapply(1:length(con), function(z){
-  #       sub3 <- sub2 %>% filter(Constraint == con[z])
-  #       if(types[y] == "CPUE-based"){
-  #         byCon2 <- lapply(1:length(con2), function(zz){
-  #           sub4 <- sub3 %>% filter(CVConstraint == con2[zz])
-  #           out <- sub4[nrow(sub4),]
-  #           return(out)
-  #         })
-  #           out <- do.call(rbind,byCon2)
-  #       } else {
-  #         out <- sub3[nrow(sub3),]
-  #       }
-  #       return(out)
-  #     })
-  #     byCon <- do.call(rbind, byCon)
-  #     return(byCon)
-  #   })
-  #   byType <- do.call(rbind, byType)
-  #   return(byType)
-  # })
-  # find_max_sub <- do.call(rbind, find_max_sub)
 
   check1 <- cinfo %>%
     right_join(find_max %>% select(-c(P50,Mean))) %>%
@@ -2150,299 +1899,6 @@ if(any(grepl("B0now_r", names(mcmc1)))){
     ggsave(file.path(figure_dir, "CompareConstraints_FixedF.png"), p_constr2, height = 10, width = 15)
   }
 
-  check1 <- cinfo %>%
-    right_join(find_max %>% select(-c(P50,Mean))) %>%
-    left_join(max_info %>% filter(Variable == "Catch")) %>%
-    select(Iteration, Year, Region, RuleNum, RuleType, Constraint, CVConstraint, Catch, RelVB, RelSSBdata) %>%
-    tidyr::pivot_longer(cols = c(Catch,RelVB,RelSSBdata), names_to = "Variable", values_to = "Value") %>%
-    filter(RuleType == "CPUE-based") %>%
-    filter(CVConstraint != "Min") %>%
-    mutate(CVConstraint = replace(CVConstraint, Constraint == "Fail: Risk" & CVConstraint != "Max", 0)) %>%
-    mutate(CVConstraint = replace(CVConstraint, Constraint == "Fail: Risk" & CVConstraint == "Max", "Fail: Risk")) %>%
-    filter(CVConstraint != 0)
-  if(any(grepl("Fail: Risk", check1$Constraint))) check1$CVConstraint <- factor(check1$CVConstraint, levels = c("Fail: Risk","Max","75%","Median","25%"))
-  if(any(grepl("Fail: Risk", check1$Constraint)) == FALSE) check1$CVConstraint <- factor(check1$CVConstraint, levels = c("Max","75%","Median","25%"))
-  if(nrow(check1) > 0){
-    check2 <- check1 %>%
-      group_by(Year, Region, RuleType, Constraint, CVConstraint, Variable) %>%
-      summarise(P5 = quantile(Value, 0.05),
-                       P50 = quantile(Value, 0.50),
-                       Mean = mean(Value),
-                       P95 = quantile(Value, 0.95))
-    if(any(grepl("Fail: Risk", check2$Constraint))) check2$CVConstraint <- factor(check2$CVConstraint, levels = c("Fail: Risk","Max","75%","Median","25%"))
-    if(any(grepl("Fail: Risk", check2$Constraint)) == FALSE) check2$CVConstraint <- factor(check2$CVConstraint, levels = c("Max","75%","Median","25%"))
-    # if(length(unique(check2$RuleType))==3) check2$RuleType <- factor(check2$RuleType, levels = c("FixedCatch", "CPUE-based", "FixedF"))
-    # if(length(unique(check1$RuleType))==3) check1$RuleType <- factor(check1$RuleType, levels = c("FixedCatch", "CPUE-based", "FixedF"))
-    #
-    p_constr3 <- ggplot() +
-      geom_ribbon(data = check2 %>% filter(Variable %in% c("Catch","RelSSBdata","RelVB")), aes(x = Year, ymin = P5, ymax = P95, fill = CVConstraint), color = NA, alpha = 0.5) +
-      # geom_line(data = check2 %>% filter(Variable %in% c("Catch","RelSSBdata","RelVB")), aes(x = Year, y = P50, color = CVConstraint), lwd = 1.5) +
-      geom_line(data = check2 %>% filter(Variable %in% c("Catch","RelSSBdata","RelVB")), aes(x = Year, y = Mean, color = CVConstraint), lwd = 1.5) +
-      geom_line(data = check1 %>% filter(Iteration == 1) %>% filter(Variable %in% c("Catch","RelSSBdata","RelVB")), aes(x = Year, y = Value)) +
-      # scale_color_brewer(palette = "Spectral") +
-      # scale_fill_brewer(palette = "Spectral") +
-      scale_color_tableau() +
-      scale_fill_tableau() +
-      expand_limits(y = 0) +
-      ylab("Value") + xlab("Projection Year") +
-      guides(color = FALSE, fill = FALSE) +
-      theme_bw(base_size = 20)
-    if(length(regions)>1){
-      p_constr3 <- p_constr3 + facet_grid(Variable~Region+CVConstraint, scales = "free_y")
-    } else {
-      p_constr3 <- p_constr3 + facet_grid(Variable~CVConstraint, scales = "free_y")
-    }
-    ggsave(file.path(figure_dir, "CompareConstraints_MP.png"), p_constr3, height = 10, width = 15)
-  }
-  #
-  # check1 <- cinfo %>%
-  #   right_join(find_max_sub %>% select(-P50)) %>%
-  #   left_join(max_info %>% filter(Variable == "Catch")) %>%
-  #   select(Iteration, Year, Region, RuleNum, RuleType, Constraint, Catch, RelVB, RelSSB) %>%
-  #   tidyr::pivot_longer(cols = c(Catch,RelVB,RelSSB), names_to = "Variable", values_to = "Value") %>%
-  #   filter(Constraint == "Pass")
-  # if(nrow(check1) > 0){
-  #   check2 <- check1 %>%
-  #     group_by(Year, Region, RuleType, Constraint, Variable) %>%
-  #     summarise(P5 = quantile(Value, 0.05),
-  #                      P50 = quantile(Value, 0.50),
-  #                      P95 = quantile(Value, 0.95))
-  #   if(length(unique(check2$RuleType))==3) check2$RuleType <- factor(check2$RuleType, levels = c("FixedCatch", "CPUE-based", "FixedF"))
-  #   if(length(unique(check1$RuleType))==3) check1$RuleType <- factor(check1$RuleType, levels = c("FixedCatch", "CPUE-based", "FixedF"))
-  #   const <- unique(as.character(check1$Constraint))
-  # const <- unique(as.character(check1$Constraint))
-  # const1 <- const[grepl("CV",const)==FALSE]
-  # const1_1 <- const1[grepl("Catch", const1) == FALSE]
-  # const1_2 <- const1[grepl("Catch", const1)]
-  # const1 <- c(const1_1, const1_2)
-  # const2 <- const[grepl("CV", const)]
-  # constx <- c(const1,const2)
-  # const <- c(constx, const[which(const %in% constx == FALSE)])
-  # check1$Constraint <- factor(check1$Constraint, levels = const)
-  #   const <- rev(c(constx, const[which(const %in% constx == FALSE)]))
-  #   check1$Constraint <- factor(check1$Constraint, levels = const)
-  #   check2$Constraint <- factor(check2$Constraint, levels = const)
-  #   p_constr3 <- ggplot() +
-  #     geom_ribbon(data = check2 %>% filter(Variable %in% c("Catch","RelSSB","RelVB")), aes(x = Year, ymin = P5, ymax = P95, fill = RuleType), color = NA, alpha = 0.5) +
-  #     geom_line(data = check2 %>% filter(Variable %in% c("Catch","RelSSB","RelVB")), aes(x = Year, y = P50, color = RuleType), lwd = 1.5) +
-  #     geom_line(data = check1 %>% filter(Iteration == 1) %>% filter(Variable %in% c("Catch","RelSSB","RelVB")), aes(x = Year, y = Value)) +
-  #     scale_color_brewer(palette = "Spectral") +
-  #     scale_fill_brewer(palette = "Spectral") +
-  #     expand_limits(y = 0) +
-  #     ylab("Value") + xlab("Projection Year") +
-  #     guides(color = FALSE, fill = FALSE) +
-  #     theme_bw(base_size = 20)
-  #   if(length(regions)>1){
-  #     p_constr3 <- p_constr3 + facet_grid(Variable~Region+RuleType, scales = "free_y")
-  #   } else {
-  #     p_constr3 <- p_constr3 + facet_grid(Variable~RuleType, scales = "free_y")
-  #   }
-  #   ggsave(file.path(figure_dir, "CompareRuleTypes_Pass.png"), p_constr3, height = 10, width = 15)
-  # }
-  #
-  # check <- output4 %>%
-  #   filter(RuleType == "CPUE-based") %>%
-  #   filter(Constraint == "Pass")
-  # if(nrow(check) > 0) {
-  #   check$CVConstraint <- factor(check$CVConstraint, levels = c("Max","75%", "Median","25%","Min"))
-  #   p_cv <- ggplot(check) +
-  #     geom_segment(aes(x = CV, xend = CV, y = Catch_P5, yend = Catch_P95, color = CVConstraint), lwd = 1.2, alpha = 0.8) +
-  #     geom_point(aes(x = CV, y = Catch_P50, fill = CVConstraint), pch = 21, cex = 4) +
-  #     expand_limits(y = 0, x = 0) +
-  #     xlab("CV of catch over time and iteration") + ylab("Average annual catch") +
-  #     # scale_fill_brewer(palette = "Spectral") +
-  #     # scale_color_brewer(palette = "Spectral") +
-  #     scale_fill_tableau() +
-  #     scale_color_tableau() +
-  #     theme_bw(base_size = 20)
-  #   if(length(regions) > 1){
-  #     p_cv <- p_cv + facet_grid(Region~., scales = "free_x")
-  #   }
-  #   ggsave(file.path(figure_dir, "CV_vs_Catch_Pass.png"), p_cv, height = 8, width = 12)
-  # }
-
-  #   check1 <- cinfo %>%
-  #     left_join(output2 %>% filter(Variable == "Catch")) %>%
-  #     select(Iteration, Year, Region, RuleNum, RuleType, Constraint, CVConstraint, Catch, CPUE) %>%
-  #     filter(RuleType == "CPUE-based")
-  #   if(nrow(check1) > 0){
-  #   const <- unique(as.character(check1$Constraint))
-  # const <- unique(as.character(check1$Constraint))
-  # const1 <- const[grepl("CV",const)==FALSE]
-  # const1_1 <- const1[grepl("Catch", const1) == FALSE]
-  # const1_2 <- const1[grepl("Catch", const1)]
-  # const1 <- c(const1_1, const1_2)
-  # const2 <- const[grepl("CV", const)]
-  # constx <- c(const1,const2)
-  # const <- c(constx, const[which(const %in% constx == FALSE)])
-  #   const <- rev(c(constx, const[which(const %in% constx == FALSE)]))
-  #   check1$Constraint <- factor(check1$Constraint, levels = const)
-  #     p_cpue_mp <- ggplot(check1) +
-  #       geom_point(data = check1 %>% filter(Constraint != "Pass"), aes(x = CPUE, y = Catch, color = Constraint), cex = 2, alpha = 0.5) +
-  #       geom_point(data = check1 %>% filter(Constraint == "Pass"), aes(x = CPUE, y = Catch, color = Constraint), cex = 2, alpha = 0.5) +
-  #      # scale_color_brewer(palette = "Spectral") +
-  #       scale_color_tableau() +
-  #       xlab("Offset-year CPUE") +
-  #       theme_bw(base_size = 20)
-  #     if(length(regions) > 1){
-  #       p_cpue_mp <- p_cpue_mp + facet_grid(Region~., scales = "free_x")
-  #     }
-  #     ggsave(file.path(figure_dir, "CPUE_vs_Catch_MP.png"), p_cpue_mp, height = 10, width = 12)
-  #
-  #     check2 <- check1 %>% filter(Constraint == "Pass")
-  #     check2$CVConstraint <- factor(check2$CVConstraint, levels = c("Max", "75%", "Median", "25%", "Min"))
-  #     p_cpue_mp <- ggplot(check2) +
-  #       geom_point(aes(x = CPUE, y = Catch, color = CVConstraint), cex = 2, alpha = 0.5) +
-  #       # scale_color_brewer(palette = "Spectral") +
-  #       scale_color_tableau() +
-  #       xlab("Offset-year CPUE") +
-  #       theme_bw(base_size = 20)
-  #     if(length(regions) > 1){
-  #       p_cpue_mp <- p_cpue_mp + facet_grid(Region~., scales = "free_x")
-  #     }
-  #     ggsave(file.path(figure_dir, "CPUE_vs_Catch_MP_Pass.png"), p_cpue_mp, height = 10, width = 12)
-  #   }
-
-  #     p_cpue_mp_v2 <- p_cpue_mp +
-  #       geom_vline(data = msy_info2 %>% filter(RuleType == "CPUE-based"), aes(xintercept = CPUE), lty = 2) +
-  #       geom_hline(data = msy_info2 %>% filter(RuleType == "CPUE-based"), aes(yintercept = Catch), lty = 2)
-  #     ggsave(file.path(figure_dir, "CPUE_vs_Catch_MP_v2.png"), p_cpue_mp_v2, height = 10, width = 12)
-  #   }
-  #
-  #   check1 <- cinfo %>%
-  #     left_join(output2 %>% filter(Variable == "Catch")) %>%
-  #     select(Iteration, Year, Region, RuleNum, RuleType, Constraint, Catch, CPUE)
-  #   const <- unique(as.character(check1$Constraint))
-  # const <- unique(as.character(check1$Constraint))
-  # const1 <- const[grepl("CV",const)==FALSE]
-  # const1_1 <- const1[grepl("Catch", const1) == FALSE]
-  # const1_2 <- const1[grepl("Catch", const1)]
-  # const1 <- c(const1_1, const1_2)
-  # const2 <- const[grepl("CV", const)]
-  # constx <- c(const1,const2)
-  # const <- c(constx, const[which(const %in% constx == FALSE)])
-  #   check1$Constraint <- factor(check1$Constraint, levels = const)
-  #   if(length(unique(check1$RuleType))==3) check1$RuleType <- factor(check1$RuleType, levels = c("FixedCatch", "CPUE-based", "FixedF"))
-  #   p_cpue_all <- ggplot(check1) +
-  #     geom_point(data = check1 %>% filter(Constraint != "Pass"), aes(x = CPUE, y = Catch, color = Constraint), cex = 2, alpha = 0.5) +
-  #     geom_point(data = check1 %>% filter(Constraint == "Pass"), aes(x = CPUE, y = Catch, color = Constraint), cex = 2, alpha = 0.5) +
-  #     scale_color_brewer(palette = "Spectral") +
-  #     xlab("Offset-year CPUE") +
-  #     theme_bw(base_size = 20)
-  #   if(length(regions) > 1){
-  #     p_cpue_all <- p_cpue_all + facet_wrap(Region~RuleType)
-  #   } else {
-  #     p_cpue_all <- p_cpue_all + facet_wrap(~RuleType)
-  #   }
-  #   ggsave(file.path(figure_dir, "CPUE_vs_Catch.png"), p_cpue_all, height = 10, width = 12)
-  #
-  #   if(length(unique(msy_info2$RuleType == 3))) msy_info2$RuleType <- factor(msy_info2$RuleType, levels = c("FixedCatch", "CPUE-based", "FixedF"))
-  #   p_cpue_all_v2 <- p_cpue_all +
-  #       geom_vline(data = msy_info2, aes(xintercept = CPUE), lty = 2, lwd = 2) +
-  #       geom_hline(data = msy_info2, aes(yintercept = Catch), lty = 2, lwd = 2)
-  #   ggsave(file.path(figure_dir, "CPUE_vs_Catch_v2.png"), p_cpue_all, height = 10, width = 12)
-  #
-  #   check1 <- cinfo %>%
-  #     left_join(max_info %>% filter(Variable == "Catch")) %>%
-  #     select(Iteration, Year, Region, RuleNum, RuleType, Constraint, Catch, CPUE) %>%
-  #     filter(RuleType == "CPUE-based")
-  #   if(nrow(check1) > 0){
-  #   const <- unique(as.character(check1$Constraint))
-  # const <- unique(as.character(check1$Constraint))
-  # const1 <- const[grepl("CV",const)==FALSE]
-  # const1_1 <- const1[grepl("Catch", const1) == FALSE]
-  # const1_2 <- const1[grepl("Catch", const1)]
-  # const1 <- c(const1_1, const1_2)
-  # const2 <- const[grepl("CV", const)]
-  # constx <- c(const1,const2)
-  # const <- c(constx, const[which(const %in% constx == FALSE)])
-  #   const <- rev(c(constx, const[which(const %in% constx == FALSE)]))
-  #   check1$Constraint <- factor(check1$Constraint, levels = const)
-  #     p_cpue_mp <- ggplot(check1) +
-  #       geom_point(data = check1 %>% filter(Constraint != "Pass"), aes(x = CPUE, y = Catch, color = Constraint), cex = 2, alpha = 0.5) +
-  #       geom_point(data = check1 %>% filter(Constraint == "Pass"), aes(x = CPUE, y = Catch, color = Constraint), cex = 2, alpha = 0.5) +
-  #      scale_color_brewer(palette = "Spectral") +
-  #       xlab("Offset-year CPUE") +
-  #       theme_bw(base_size = 20)
-  #     if(length(regions) > 1){
-  #       p_cpue_mp <- p_cpue_mp + facet_wrap(Region~.)
-  #     }
-  #     ggsave(file.path(figure_dir, "CPUE_vs_Catch_MP_Max.png"), p_cpue_mp, height = 10, width = 12)
-  #
-  #     p_cpue_mp_v2 <- p_cpue_mp +
-  #       geom_vline(data = msy_info2 %>% filter(RuleType == "CPUE-based"), aes(xintercept = CPUE), lty = 2, lwd = 1.5) +
-  #       geom_hline(data = msy_info2 %>% filter(RuleType == "CPUE-based"), aes(yintercept = Catch), lty = 2, lwd = 1.5)
-  #     ggsave(file.path(figure_dir, "CPUE_vs_Catch_MP_Max_v2.png"), p_cpue_mp_v2, height = 10, width = 12)
-  #   }
-  #
-  #   check1 <- cinfo %>%
-  #     right_join(msy_info %>% filter(Variable == "Catch")) %>%
-  #     select(Iteration, Year, Region, RuleNum, RuleType, Constraint, Catch, CPUE)  %>%
-  #     filter(Region != "Total")
-  #   if(length(unique(check1$RuleType))==3) check1$RuleType <- factor(check1$RuleType, levels = c("FixedCatch", "CPUE-based", "FixedF"))
-  #   p_cpue_all <- ggplot(check1) +
-  #     geom_point(data = check1, aes(x = CPUE, y = Catch, color = RuleType), cex = 2, alpha = 0.5) +
-  #     scale_color_brewer(palette = "Spectral") +
-  #     xlab("Offset-year CPUE") +
-  #     theme_bw(base_size = 20)
-  #   if(length(regions) > 1){
-  #     p_cpue_all <- p_cpue_all + facet_wrap(Region~.)
-  #   }
-  #   ggsave(file.path(figure_dir, "CPUE_vs_Catch.png"), p_cpue_all, height = 10, width = 12)
-  #
-  #   if(length(unique(msy_info2$RuleType == 3))) msy_info2$RuleType <- factor(msy_info2$RuleType, levels = c("FixedCatch", "CPUE-based", "FixedF"))
-  #   p_cpue_all_v2 <- p_cpue_all +
-  #       geom_vline(data = msy_info2, aes(xintercept = CPUE, color = RuleType), lty = 2, lwd = 1.5) +
-  #       geom_hline(data = msy_info2, aes(yintercept = Catch, color = RuleType), lty = 2, lwd = 1.5)
-  #   ggsave(file.path(figure_dir, "CPUE_vs_Catch_v2.png"), p_cpue_all_v2, height = 10, width = 12)
-  #
-    sub <- output4 %>% filter(RuleType == "CPUE-based") %>% filter(Region != "Total")
-  #   const <- unique(as.character(sub$Constraint))
-  # const1 <- const[grepl("CV",const)==FALSE]
-  # const1_1 <- const1[grepl("Catch", const1) == FALSE]
-  # const1_2 <- const1[grepl("Catch", const1)]
-  # const1 <- c(const1_1, const1_2)
-  # const2 <- const[grepl("CV", const)]
-  # constx <- c(const1,const2)
-  # const <- c(constx, const[which(const %in% constx == FALSE)])
-  #   sub$Constraint <- factor(sub$Constraint, levels = const)
-  if(nrow(sub)>0){
-    msy <- unique(msy_info %>% filter(RuleType == "CPUE-based") %>% select(par1:par10,CVConstraint)) %>% mutate(Constraint = "Pass")
-    msy <- msy %>% filter(Region != "Total")
-    msy$CVConstraint <- factor(msy$CVConstraint, levels = c("Max", "75%", "Median", "25%", "Min"))
-    p_rule <- ggplot(sub) +
-      geom_segment(aes(x = par2, xend = par3, y = 0, yend = par5), lwd = 1.5) +
-      geom_segment(aes(x = par3, xend = par4, y = par5, yend = par5 ), lwd = 1.5) +
-      geom_segment(aes(x = par4, xend = par4, y = par5, yend = par5 + (par5 * par7)), lwd = 1.5) +
-      geom_segment(aes(x = par4, xend = par4 + par6, y = par5 + (par5 * par7), yend = par5 + (par5 * par7)), lwd = 1.5) +
-      geom_segment(aes(x = par4 + par6, xend = par4 + par6, y = par5 + (par5 * par7), yend = par5 + 2*(par5 * par7)), lwd = 1.5) +
-      geom_segment(aes(x = par4 + par6, xend = par4 + 2*par6, y = par5 + 2*(par5 * par7), yend = par5 + 2*(par5 * par7)), lwd = 1.5) +
-      geom_segment(aes(x = par4 + 2*par6, xend = par4 + 2*par6, y = par5 + 2*(par5 * par7), yend = par5 + 3*(par5 * par7)), lwd = 1.5) +
-      geom_segment(aes(x = par4 + 2*par6, xend = par4 + 3*par6, y = par5 + 3*(par5 * par7), yend = par5 + 3*(par5 * par7)), lwd = 1.5) +
-      geom_segment(aes(x = par4 + 3*par6, xend = par4 + 3*par6, y = par5 + 3*(par5 * par7), yend = par5 + 4*(par5 * par7)), lwd = 1.5) +
-      geom_segment(aes(x = par4 + 3*par6, xend = par4 + 4*par6, y = par5 + 4*(par5 * par7), yend = par5 + 4*(par5 * par7)), lwd = 1.5) +
-      geom_segment(data = msy, aes(color = CVConstraint, x = par2, xend = par3, y = 0, yend = par5 ), lwd = 1.5) +
-      geom_segment(data = msy, aes(color = CVConstraint, x = par3, xend = par4, y = par5, yend = par5  ), lwd = 1.5) +
-      geom_segment(data = msy, aes(color = CVConstraint, x = par4, xend = par4, y = par5, yend = par5 + (par5 * par7) ), lwd = 1.5) +
-      geom_segment(data = msy, aes(color = CVConstraint, x = par4, xend = par4 + par6, y = par5 + (par5 * par7), yend = par5 + (par5 * par7) ), lwd = 1.5) +
-      geom_segment(data = msy, aes(color = CVConstraint, x = par4 + par6, xend = par4 + par6, y = par5 + (par5 * par7), yend = par5 + 2*(par5 * par7) ), lwd = 1.5) +
-      geom_segment(data = msy, aes(color = CVConstraint, x = par4 + par6, xend = par4 + 2*par6, y = par5 + 2*(par5 * par7), yend = par5 + 2*(par5 * par7) ), lwd = 1.5) +
-      geom_segment(data = msy, aes(color = CVConstraint, x = par4 + 2*par6, xend = par4 + 2*par6, y = par5 + 2*(par5 * par7), yend = par5 + 3*(par5 * par7) ), lwd = 1.5) +
-      geom_segment(data = msy, aes(color = CVConstraint, x = par4 + 2*par6, xend = par4 + 3*par6, y = par5 + 3*(par5 * par7), yend = par5 + 3*(par5 * par7) ), lwd = 1.5) +
-      geom_segment(data = msy, aes(color = CVConstraint, x = par4 + 3*par6, xend = par4 + 3*par6, y = par5 + 3*(par5 * par7), yend = par5 + 4*(par5 * par7) ), lwd = 1.5) +
-      geom_segment(data = msy, aes(color = CVConstraint, x = par4 + 3*par6, xend = par4 + 4*par6, y = par5 + 4*(par5 * par7), yend = par5 + 4*(par5 * par7) ), lwd = 1.5) +
-      # scale_color_brewer(palette = "Spectral") +
-      scale_color_tableau() +
-      coord_cartesian(xlim = c(0,4)) +
-      xlab("Offset-year CPUE") + ylab("Catch") +
-      theme_bw(base_size = 14)
-    if(length(regions) > 1){
-      p_rule <- p_rule + facet_wrap(Region+Constraint~par5)
-    } else {
-      p_rule <- p_rule + facet_wrap(Constraint~par5)
-    }
-    ggsave(file.path(figure_dir, "CPUE_rules.png"), p_rule, height = 15, width = 17)
-  }
 
 
 

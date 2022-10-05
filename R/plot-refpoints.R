@@ -395,36 +395,7 @@ if(any(grepl("B0now_r", names(mcmc1)))){
   gc()
 
   catch <- pcatch
-
-  sub <- catch %>% left_join(rule_type) %>% filter(Iteration == 1)
-  p <- ggplot(sub %>% filter(Iteration == 1)) +
-    geom_line(aes(x = Year, y = Catch, color = factor(RuleNum))) +
-    facet_grid(RuleType~Region, scales = "free_y") +
-    theme_bw(base_size = 20)
-  ggsave(file.path(figure_dir, "Catch_check.png"), p, height = 10, width = 15)
-
-
-  sub <- projU2 %>% left_join(rule_type) %>% filter(Iteration == 1) %>%
-    tidyr::pivot_longer(cols = U_AW:U_SS, names_to = "Season", values_to = "U") %>%
-    tidyr::separate(Season, into = c("Variable", "Season"), sep = "_")
-  p <- ggplot(sub) +
-    geom_line(aes(x = Year, y = U, color = factor(RuleNum))) +
-    facet_grid(RuleType ~ Region + Season, scales = "free_y") +
-    expand_limits(y = c(0,0)) +
-    coord_cartesian(y = c(0,1)) +
-    ylab("Exploitation rate") +
-    theme_bw(base_size = 20)
-  ggsave(file.path(figure_dir, "U_check.png"), p, height = 10, width = 15)
-
-  sub <- projF2 %>% left_join(rule_type) %>% filter(Iteration == 1)
-  p <- ggplot(sub) +
-    geom_line(aes(x = Year, y = F, color = factor(RuleNum))) +
-    facet_grid(RuleType ~ Season + Fleet + Region, scales = "free_y") +
-    expand_limits(y = c(0,0)) +
-    coord_cartesian(y = c(0,1)) +
-    theme_bw(base_size = 20)
-  ggsave(file.path(figure_dir, "F_check.png"), p, height = 10, width = 15)
-
+  
   rm(pcatch)
   # rm(pcatch_t)
   gc()
@@ -637,7 +608,7 @@ if(any(grepl("B0now_r", names(mcmc1)))){
 
   rm(relb)
   # rm(relb2)
-  rm(catch)
+  # rm(catch)
   gc()
 
   colnames(rules) <- "par1"
@@ -861,6 +832,43 @@ if(any(grepl("B0now_r", names(mcmc1)))){
 
   msy_info <- output2 %>% right_join(find_msy %>% select(-c(P50,Mean)))
   # write.csv(msy_info, file.path(figure_dir, "MSY_info.csv"))
+  
+  msy_sub <- msy_info %>% select(RuleNum) %>% unique() %>% mutate(MSY = 1)
+  
+  sub <- catch %>% left_join(rule_type) %>% filter(Iteration == 1) %>% mutate(Region = paste0("Region ", Region)) %>% left_join(msy_sub) 
+  p <- ggplot(sub %>% filter(Iteration == 1)) +
+    geom_line(aes(x = Year, y = Catch, color = factor(RuleNum))) +
+    geom_line(data = sub %>% filter(Iteration == 1) %>% filter(MSY == 1), aes(x = Year, y = Catch)) +
+    facet_grid(RuleType~Region) +
+    expand_limits(y = 0) +
+    theme_bw(base_size = 20)
+  ggsave(file.path(figure_dir, "Catch_check.png"), p, height = 10, width = 15)
+  
+  
+  sub <- projU2 %>% left_join(rule_type) %>% filter(Iteration == 1) %>%
+    tidyr::pivot_longer(cols = U_AW:U_SS, names_to = "Season", values_to = "U") %>%
+    tidyr::separate(Season, into = c("Variable", "Season"), sep = "_") %>%
+    mutate(Region = paste0("Region ", Region)) %>%
+    left_join(msy_sub)
+  p <- ggplot(sub) +
+    geom_line(aes(x = Year, y = U, color = factor(RuleNum))) +
+    geom_line(data = sub %>% filter(MSY == 1), aes(x = Year, y = U)) +
+    facet_grid(RuleType ~ Region + Season) +
+    expand_limits(y = c(0,0)) +
+    coord_cartesian(y = c(0,1)) +
+    ylab("Exploitation rate") +
+    theme_bw(base_size = 20)
+  ggsave(file.path(figure_dir, "U_check.png"), p, height = 10, width = 15)
+  
+  sub <- projF2 %>% left_join(rule_type) %>% filter(Iteration == 1)
+  p <- ggplot(sub) +
+    geom_line(aes(x = Year, y = F, color = factor(RuleNum))) +
+    facet_grid(RuleType ~ Season + Fleet + Region, scales = "free_y") +
+    expand_limits(y = c(0,0)) +
+    coord_cartesian(y = c(0,1)) +
+    theme_bw(base_size = 20)
+  ggsave(file.path(figure_dir, "F_check.png"), p, height = 10, width = 15)
+  
 
   average_info <- cinfo %>%
     right_join(find_msy %>% select(-c(P50,Mean))) %>%

@@ -21,7 +21,7 @@ do_extract_ref <- function(dir = ".", model = "ref_lsd")
                           # "mp_offset_cpue_jry",
                           "proj_cpue_jryt",
                           # "biomass_vulnref_AW_jyr", 
-                          "biomass_vulnref_jyr",
+                          "biomass_vulnref_jytr",
                           "biomass_total_jytrs",
                           "Btot0_r",
                           "Btot0now_r",

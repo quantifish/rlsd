@@ -317,10 +317,10 @@ if(any(grepl("B0now_r", names(mcmc1)))){
   rules <- data$mp_rule_parameters
   n_rules <- nrow(rules)
   rule_type <- data.frame(RuleType1 = rules[,1], RuleNum = 1:n_rules) %>%
-  mutate(RuleType = case_when(RuleType1 == 0 ~ "FixedCatch",
-                              RuleType1 == 1 ~ "FixedU",
-                              RuleType1 == 2 ~ "FixedF")) %>%
-  select(-RuleType1)
+                    mutate(RuleType = case_when(RuleType1 == 0 ~ "FixedCatch",
+                                                RuleType1 == 1 ~ "FixedU",
+                                                RuleType1 == 2 ~ "FixedF")) %>%
+                    select(-RuleType1)
   fleets <- c("SL","NSL")
 
   projF <- mcmc$proj_F_jytrf
@@ -333,9 +333,7 @@ if(any(grepl("B0now_r", names(mcmc1)))){
   dimnames(projU) <- list("Iteration"=1:n_iter, "RuleNum"=1:n_rules, "Year"=pyears, "Season"=seasons, "Region"=regions, "Fleet" = fleets)
   projU2 <- reshape2::melt(projU, value.name = "U") %>%
     group_by(Iteration, RuleNum, Year, Season, Region) %>%
-    summarise(U = sum(U)) %>%
-    tidyr::pivot_wider(names_from = Season, values_from = "U") %>%
-    rename(U_AW = AW, U_SS = SS)
+    summarise(U = sum(U))
 
   gc()
 
@@ -401,11 +399,21 @@ if(any(grepl("B0now_r", names(mcmc1)))){
   gc()
 
 
-  vb <- mcmc$biomass_vulnref_AW_jyr
-  dimnames(vb) <- list("Iteration" = 1:n_iter, "RuleNum" = 1:dim(vb)[2], "Year" = pyears, "Region" = regions)
-  vb2 <- reshape2::melt(vb) %>%
+  vb <- mcmc$biomass_vulnref_jytr
+  dimnames(vb) <- list("Iteration" = 1:n_iter, "RuleNum" = 1:dim(vb)[2], "Year" = pyears, "Season" = seasons, "Region" = regions)
+  vb <- reshape2::melt(vb)%>%
     rename(VB = value)
+
+  vb2 <- vb %>%
+    filter(Season == "AW") %>%
+    select(-Season)
   vb2$Region <- factor(vb2$Region)
+
+  projU3 <- projU2 %>%
+    left_join(vb) %>%
+    tidyr::pivot_wider(names_from = Season, values_from = c("U", "VB")) %>%
+    mutate(Usum = ((U_AW * VB_AW) + (U_SS * VB_SS)) / (VB_AW + VB_SS) ) %>%
+    select(-c(VB_AW, VB_SS))
 
   vb0now <- mcmc$B0now_r
   dimnames(vb0now) <- list("Iteration" = 1:n_iter, "Region" = regions2)
@@ -560,7 +568,7 @@ if(any(grepl("B0now_r", names(mcmc1)))){
   # catch_t$Region <- factor(catch_t$Region)
   infox <- full_join(catch, relb1) %>%
     full_join(cpue2 %>% mutate(Region = factor(Region))) %>%
-    full_join(projU2 %>% mutate(Region = factor(Region)))
+    full_join(projU3 %>% mutate(Region = factor(Region)))
 
   gc()
 
@@ -668,7 +676,7 @@ if(any(grepl("B0now_r", names(mcmc1)))){
   #####################
     summary <- cinfo %>%
       filter(Region != "Total") %>%
-      tidyr::pivot_longer(cols=c(Catch,SSB,SSB0now,SSB0,RelSSB,RelSSBdata,VB,VB0now,VB0,RelVB,RelVBdata,TB,TB0,TB0now, RelTB, RelTBdata, U_AW, U_SS, CPUE_AW, CPUE_SS), names_to = "Variable", values_to = "Value") %>% #CPUE,F)
+      tidyr::pivot_longer(cols=c(Catch,SSB,SSB0now,SSB0,RelSSB,RelSSBdata,VB,VB0now,VB0,RelVB,RelVBdata,TB,TB0,TB0now, RelTB, RelTBdata, U_AW, U_SS, Usum, CPUE_AW, CPUE_SS), names_to = "Variable", values_to = "Value") %>% #CPUE,F)
       group_by(Region, RuleNum, Variable) %>%
       summarise(P5 = quantile(Value, 0.05),
                        P50 = quantile(Value, 0.5),
@@ -775,7 +783,8 @@ if(any(grepl("B0now_r", names(mcmc1)))){
                        CPUE_AW = mean(CPUE_AW),
                        CPUE_SS = mean(CPUE_SS),
                        U_AW = mean(U_AW),
-                       U_SS = mean(U_SS)) %>%
+                       U_SS = mean(U_SS),
+                       Usum = mean(Usum)) %>%
       left_join(vb0now %>% filter(Region == "Total")) %>%
       left_join(ssb0now %>% filter(Region == "Total")) %>%
       left_join(tb0now %>% filter(Region == "Total")) %>%
@@ -845,9 +854,11 @@ if(any(grepl("B0now_r", names(mcmc1)))){
   ggsave(file.path(figure_dir, "Catch_check.png"), p, height = 10, width = 15)
   
   
-  sub <- projU2 %>% left_join(rule_type) %>% filter(Iteration == 1) %>%
-    tidyr::pivot_longer(cols = U_AW:U_SS, names_to = "Season", values_to = "U") %>%
-    tidyr::separate(Season, into = c("Variable", "Season"), sep = "_") %>%
+  sub <- projU3 %>% left_join(rule_type) %>% filter(Iteration == 1) %>%
+    tidyr::pivot_longer(cols = U_AW:Usum, names_to = "Type", values_to = "U") %>%
+    mutate(Season = case_when(Type == "U_AW" ~ "AW",
+                              Type == "U_SS" ~ "SS",
+                              Type == "Usum" ~ "Weighted Avg")) %>%
     mutate(Region = paste0("Region ", Region)) %>%
     left_join(msy_sub)
   p <- ggplot(sub) +
@@ -888,7 +899,8 @@ if(any(grepl("B0now_r", names(mcmc1)))){
                        CPUE_AW = mean(CPUE_AW),
                        CPUE_SS = mean(CPUE_SS),
                        U_AW = mean(U_AW),
-                       U_SS = mean(U_SS)) %>%
+                       U_SS = mean(U_SS),
+                       Usum = mean(Usum)) %>%
       left_join(vb0now %>% filter(Region == "Total")) %>%
       left_join(ssb0now %>% filter(Region == "Total")) %>%
       left_join(tb0now %>% filter(Region == "Total")) %>%

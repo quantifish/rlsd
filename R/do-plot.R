@@ -115,10 +115,10 @@ do_plot <- function(object, map = FALSE, mcmc = FALSE, figure_dir = "figure/") {
       ggsave(paste0(figure_dir, "par_cdf_", i, ".png"), p, width = ifelse(npar > 1, 7, 3.5), height = npar + (npar %% 2))
     }
 
-    if (object@data$snail_on == 1) {
+    #if (object@data$snail_on == 1) {
       print("plotting snail")
       plot_snail(object, figure_dir = figure_dir)
-    }
+    #}
   }
 
   # tres <- table_residuals(object, figure_dir = figure_dir)

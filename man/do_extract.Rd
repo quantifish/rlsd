@@ -9,8 +9,7 @@ do_extract(
   data = TRUE,
   map = FALSE,
   mcmc = FALSE,
-  variational = FALSE,
-  model = "lsd"
+  variational = FALSE
 )
 }
 \arguments{
@@ -23,8 +22,6 @@ do_extract(
 \item{mcmc}{extract one or more MCMC files}
 
 \item{variational}{extract a var file}
-
-\item{model}{a name or label for the model being extracted}
 }
 \description{
 Extract model fits and load into lsdOutput object class for plotting

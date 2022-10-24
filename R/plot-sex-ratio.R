@@ -134,7 +134,8 @@ plot_sex_ratio <- function(object, scales = "free",
         xlab(xlab) +
         ylab(ylab) +
         theme_lsd() +
-        theme(axis.text.x = element_text(angle = 45,hjust = 1))
+        theme(axis.text.x = element_text(angle = 45,hjust = 1),
+            panel.spacing.y = unit(2, "lines"))
 
     if (data$n_area == 1) {
         p <- p + facet_grid(Sex ~ Season, scales = "free_x")

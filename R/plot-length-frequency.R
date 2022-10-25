@@ -288,7 +288,8 @@ plot_lfs_resid <- function(object, figure_dir = "figure/", ylim = c(-5, 5))
   rawW <- 1 / mcmc$sigma_lf_i
   dimnames(rawW) <- list("Iteration" = 1:n_iter, "LF" = 1:data$n_lf)
   rawW <- melt(rawW, value.name = "rawW") %>%
-    filter(Iteration == 1)
+    filter(Iteration == 1) %>%
+    select(-Iteration)
 
   if (min(resid$value) > ylim[1]) ylim <- c(min(resid$value), ylim[2])
   if (max(resid$value) < ylim[2]) ylim <- c(ylim[1], max(resid$value))
@@ -312,8 +313,6 @@ plot_lfs_resid <- function(object, figure_dir = "figure/", ylim = c(-5, 5))
     guides(fill = 'none', color = "none") +
     theme_lsd() +
     scale_alpha(guide = "none") +
-    scale_color_brewer(palette = "Set1") +
-    scale_fill_brewer(palette = "Set1") +
     coord_cartesian(ylim = ylim)
 
   if (length(regions) > 1) p <- p + facet_grid(Region ~ .)
@@ -325,8 +324,6 @@ plot_lfs_resid <- function(object, figure_dir = "figure/", ylim = c(-5, 5))
     labs(x = "Size (mm)", y = "Standardised residuals") +
     geom_hline(yintercept = 0, alpha = 0.8) +
     theme_lsd() +
-    scale_color_brewer(palette = "Set1") +
-    scale_fill_brewer(palette = "Set1") +
     scale_alpha(guide = "none")  +
     guides(fill = "none", color = "none") +
     coord_cartesian(ylim = ylim)
@@ -342,8 +339,6 @@ plot_lfs_resid <- function(object, figure_dir = "figure/", ylim = c(-5, 5))
     theme_lsd() +
     scale_alpha(guide = "none") +
     coord_cartesian(ylim = ylim) +
-    scale_color_brewer(palette = "Set1") +
-    scale_fill_brewer(palette = "Set1") +
     guides(fill = "none", color = "none")
 
   if (length(regions) > 1) {
@@ -362,9 +357,7 @@ plot_lfs_resid <- function(object, figure_dir = "figure/", ylim = c(-5, 5))
     theme_lsd() +
     guides(fill = "none", color = "none") +
     scale_alpha(guide = "none") +
-    coord_cartesian(ylim = ylim) +
-    scale_color_brewer(palette = "Set1") +
-    scale_fill_brewer(palette = "Set1")
+    coord_cartesian(ylim = ylim)
 
   if (length(regions) > 1) {
     p <- p + facet_grid(Sex ~ Region, scales = "free_y")
@@ -382,9 +375,7 @@ plot_lfs_resid <- function(object, figure_dir = "figure/", ylim = c(-5, 5))
     theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
     scale_alpha(guide = "none") +
     guides(fill = "none", color = "none") +
-    coord_cartesian(ylim = ylim) +
-    scale_color_brewer(palette = "Set1") +
-    scale_fill_brewer(palette = "Set1")
+    coord_cartesian(ylim = ylim)
 
   if (length(regions) > 1) {
     p <- p + facet_grid(Sex ~ Region, scales = "free_y")
@@ -399,11 +390,10 @@ plot_lfs_resid <- function(object, figure_dir = "figure/", ylim = c(-5, 5))
     labs(x = "Size (mm)", y = "Standardised residuals") +
     geom_hline(yintercept = 0, alpha = 0.8) +
     theme_lsd() +
+    guides(fill = 'none', color = 'none') +
     theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
     scale_alpha(guide = "none") +
-    coord_cartesian(ylim = ylim) +
-    scale_color_brewer(palette = "Set1") +
-    scale_fill_brewer(palette = "Set1")
+    coord_cartesian(ylim = ylim)
 
   if (length(regions) > 1) {
     p <- p + facet_grid(Sex ~ Region + Season, scales = "free_y")
@@ -421,9 +411,7 @@ plot_lfs_resid <- function(object, figure_dir = "figure/", ylim = c(-5, 5))
     theme_lsd() +
     scale_alpha(guide = "none") +
     coord_cartesian(ylim = ylim) +
-    guides(fill = "none", color = "none") +
-    scale_color_brewer(palette = "Set1") +
-    scale_fill_brewer(palette = "Set1")
+    guides(fill = "none", color = "none")
 
   if (length(regions) > 1) {
     p <- p + facet_grid(Sex ~ Region, scales = "free_y")

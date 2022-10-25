@@ -5,7 +5,6 @@
 #' @param map extract an MAP file
 #' @param mcmc extract one or more MCMC files
 #' @param variational extract a var file
-#' @param model a name or label for the model being extracted
 #' @import rstan
 #' @import methods
 #' @importFrom plyr adply
@@ -13,134 +12,135 @@
 #' @importFrom utils write.csv write.table
 #' @export
 #'
-do_extract <- function(dir = ".", data = TRUE,
-                       map = FALSE, mcmc = FALSE, variational = FALSE,
-                       model = "lsd")
-{
-    # model outputs that we don't want
-    dont_extract <- c("proj_numbers_ytrsl", "data_lf_all_isl", "resid_lf_i", "par_M_r",
-                      "vuln_selectivity_ytrsl",
-                      "pred_catch_lf_ytrsl", "F_ytrf",
-                      "par_grow_ip", "par_grow_beta_alpha_ip", "par_sel_ip", "recruits_estimated_ry")
+do_extract <- function(dir = ".",
+                       data = TRUE,
+                       map = FALSE, mcmc = FALSE, variational = FALSE) {
 
-    # pars we want for diagnostics
-    do_extract <- c("lp__", "lp_total", "lp_tag", "lp_prior", "lp_sexr", "lp_lf", "lp_cpue", "lp_puerulus",
-                    "par_R0_r", "par_M_i", "par_mat_50_i", "par_mat_95_i",
-                    "par_grow_alpha_i", "par_grow_beta_i", "par_grow_shape_i", "par_grow_cv_i", "par_grow_sd_i", "par_grow_dd",
-                    "par_sel_1_i", "par_sel_2_i", "par_sel_3_i", "par_vuln_i",
-                    "par_q_cpue_i", "par_q_puerulus_i", "par_q_cpue_drift_i", "par_cpue_pow", "par_init_erate_i", "par_move_i",
-                    "B0_r", "Bmin_jr", "Bcurr_jr", "Bproj_jr", "Bmsy_r", "B0now_r", "Bcurr_B0_jr", "Bcurr_B0now_jr", "Bcurr_Bref_jr", "Bproj_B0_jr", "Bproj_Bcurr_jr", "Bproj_Bref_jr",
-                    "SSB0_r", "SSBmsy_r", "SSBcurr_jr", "SSBproj_jr", "SSB0now_r", "SSBcurr_SSB0_jr", "SSBproj_SSB0_jr", "SSBcurr_SSB0now_jr", "SSBcurr_SSBref_jr", "SSBproj_SSBref_jr", "SSBproj_SSB0now_jr", "SSBproj_SSBcurr_jr",
-                    "Btot0_r", "Btot_curr_jr", "Btot0now_r", "Btot_proj_jr", "Btot_curr_Btot0_jr", "Btot_curr_Btot0now_jr", "Btot_proj_Btot0_jr", "Btot_proj_Btot0now_jr",
-                    "Bmoney_curr_jtr", "Bmoney_proj_jtr", "Umoney_curr_jtr", "Umoney_proj_jtr", "n_Bmoney_proj_l_curr_jr",
-                    "Ntot0_r", "Ntot_curr_jr",
-                    "SSBref_jr", "Bref_jr", "SSBref_SSB0_jr", "SSBref_SSB0now_jr", "Bref_B0_jr", "Bref_B0now_jr", "n_Bref_g_Bmsy_r",
-                    "MSY_r", "Fmsy_r", 
-                    "F_Fmsy_ry", "U_Uref_ry", 
-                    "Ucurr_jtr", "Uproj_jtr",
-                    "Ucurr_Uref_jtr", "Uproj_Uref_jtr",
-                    "Hcurr_r", "Hproj_r",
-                    "Rmean_r", "Rrho_r", "true_rec_dev_sd_r", "B0male_B0female_r", "Bmale_Bfemale_jr",
-                    "CPUEcurr_jr", "CPUEproj_jr", 
-                    "n_Bcurr_g_Bref_r", "n_Bproj_g_Bref_jr", "n_Bproj_g_Bcurr_jr", "n_Bcurr_g_Bmin_r", "n_Bcurr_g_Bmsy_r", "n_SSBcurr_g_SSBmsy_r", "n_Btot_proj_g_Btot_curr_jr",
-                    "n_SSBcurr_g_SSBref_jr", "n_SSBproj_g_SSBref_jr", "n_SSBproj_g_SSBcurr_jr",
-                    "n_SSBcurr_l_20SSB0_r", "n_SSBcurr_l_10SSB0_r", "n_SSBcurr_l_20SSB0now_r", "n_SSBcurr_l_10SSB0now_r",
-                    "n_SSBproj_l_20SSB0_jr", "n_SSBproj_l_10SSB0_jr", "n_SSBproj_l_20SSB0now_jr", "n_SSBproj_l_10SSB0now_jr",
-                    "n_Ucurr_g_Uref_r", "n_Uproj_g_Uref_jr", "n_Uproj_g_Ucurr_jr")
+  # model outputs that we don't want
+  dont_extract <- c("proj_numbers_ytrsl", "data_lf_all_isl", "resid_lf_i", "par_M_r",
+                    "vuln_selectivity_ytrsl",
+                    "pred_catch_lf_ytrsl", "F_ytrf",
+                    "par_grow_ip", "par_grow_beta_alpha_ip", "par_sel_ip", "recruits_estimated_ry")
 
-    # Priors that we want to compare with posteriors
-    do_extract_priors <- c("prior_R0_r", "prior_M_i", "prior_q_cpue_drift_i",
-                           "prior_mat_50_i", "prior_mat_95_i",
-                           "prior_grow_alpha_i", "prior_grow_diff_i", "prior_grow_shape_i", "prior_grow_cv_i", "prior_grow_sd_i",
-                           "prior_sel_1_i", "prior_sel_2_i", "prior_sel_3_i",
-                           "prior_vuln_i", "prior_init_erate_i")
+  # pars we want for diagnostics
+  do_extract <- c("lp__", "lp_total", "lp_tag", "lp_prior", "lp_sexr", "lp_lf", "lp_cpue", "lp_puerulus",
+                  "par_R0_r", "par_M_i", "par_mat_50_i", "par_mat_95_i",
+                  "par_grow_alpha_i", "par_grow_beta_i", "par_grow_shape_i", "par_grow_cv_i", "par_grow_sd_i", "par_grow_dd",
+                  "par_sel_1_i", "par_sel_2_i", "par_sel_3_i", "par_vuln_i",
+                  "par_q_cpue_i", "par_q_puerulus_i", "par_q_cpue_drift_i", "par_cpue_pow", "par_init_erate_i", "par_move_i",
+                  "B0_r", "Bmin_jr", "Bcurr_jr", "Bproj_jr", "Bmsy_r", "B0now_r", "Bcurr_B0_jr", "Bcurr_B0now_jr", "Bcurr_Bref_jr", "Bproj_B0_jr", "Bproj_Bcurr_jr", "Bproj_Bref_jr",
+                  "SSB0_r", "SSBmsy_r", "SSBcurr_jr", "SSBproj_jr", "SSB0now_r", "SSBcurr_SSB0_jr", "SSBproj_SSB0_jr", "SSBcurr_SSB0now_jr", "SSBcurr_SSBref_jr", "SSBproj_SSBref_jr", "SSBproj_SSB0now_jr", "SSBproj_SSBcurr_jr",
+                  "Btot0_r", "Btot_curr_jr", "Btot0now_r", "Btot_proj_jr", "Btot_curr_Btot0_jr", "Btot_curr_Btot0now_jr", "Btot_proj_Btot0_jr", "Btot_proj_Btot0now_jr",
+                  "Bmoney_curr_jtr", "Bmoney_proj_jtr", "Umoney_curr_jtr", "Umoney_proj_jtr", "n_Bmoney_proj_l_curr_jr",
+                  "Ntot0_r", "Ntot_curr_jr",
+                  "SSBref_jr", "Bref_jr", "SSBref_SSB0_jr", "SSBref_SSB0now_jr", "Bref_B0_jr", "Bref_B0now_jr", "n_Bref_g_Bmsy_r",
+                  "MSY_r", "Fmsy_r",
+                  "F_Fmsy_ry", "U_Uref_ry",
+                  "Ucurr_jtr", "Uproj_jtr",
+                  "Ucurr_Uref_jtr", "Uproj_Uref_jtr",
+                  "Hcurr_r", "Hproj_r",
+                  "Rmean_r", "Rrho_r", "true_rec_dev_sd_r", "B0male_B0female_r", "Bmale_Bfemale_jr",
+                  "CPUEcurr_jr", "CPUEproj_jr",
+                  "n_Bcurr_g_Bref_r", "n_Bproj_g_Bref_jr", "n_Bproj_g_Bcurr_jr", "n_Bcurr_g_Bmin_r", "n_Bcurr_g_Bmsy_r", "n_SSBcurr_g_SSBmsy_r", "n_Btot_proj_g_Btot_curr_jr",
+                  "n_SSBcurr_g_SSBref_jr", "n_SSBproj_g_SSBref_jr", "n_SSBproj_g_SSBcurr_jr",
+                  "n_SSBcurr_l_20SSB0_r", "n_SSBcurr_l_10SSB0_r", "n_SSBcurr_l_20SSB0now_r", "n_SSBcurr_l_10SSB0now_r",
+                  "n_SSBproj_l_20SSB0_jr", "n_SSBproj_l_10SSB0_jr", "n_SSBproj_l_20SSB0now_jr", "n_SSBproj_l_10SSB0now_jr",
+                  "n_Ucurr_g_Uref_r", "n_Uproj_g_Uref_jr", "n_Uproj_g_Ucurr_jr")
 
-    # initialise object
-    dS4 <- new("lsdOutput", model.name = model)
+  # Priors that we want to compare with posteriors
+  do_extract_priors <- c("prior_R0_r", "prior_M_i", "prior_q_cpue_drift_i",
+                         "prior_mat_50_i", "prior_mat_95_i",
+                         "prior_grow_alpha_i", "prior_grow_diff_i", "prior_grow_shape_i", "prior_grow_cv_i", "prior_grow_sd_i",
+                         "prior_sel_1_i", "prior_sel_2_i", "prior_sel_3_i",
+                         "prior_vuln_i", "prior_init_erate_i")
 
-    if (data) {
-        datfile <- list.files(path = dir, pattern = "[.]dat")[grepl(model, list.files(path = dir, pattern = "[.]dat"))]
-        if (length(datfile) > 0) {
-            message("Reading ", datfile)
-            dS4@data <- rstan::read_rdump(file.path(dir, datfile))
-            dS4@regions <- as.character(1:dS4@data$n_area)
-        } else warning("no 'dat' file")
+  # initialise object
+  dS4 <- new("lsdOutput", model.name = "lsd")
+
+  if (data) {
+    datfile <- list.files(path = dir, pattern = "[.]dat")[grepl("lsd", list.files(path = dir, pattern = "[.]dat"))]
+    if (length(datfile) > 0) {
+      message("Reading ", datfile)
+      dS4@data <- rstan::read_rdump(file.path(dir, datfile))
+      dS4@regions <- as.character(1:dS4@data$n_area)
+    } else warning("no 'dat' file")
+  }
+
+  if (map) {
+    mapfile <- list.files(path = dir, pattern = "[.]map")[grepl("lsd", list.files(path = dir, pattern = "[.]map"))]
+    if (length(mapfile) > 0) {
+      message("Reading ", mapfile)
+      map <- lsd::read_stan_map(file.path(dir, mapfile))
+      dS4@map <- rstan::extract(map, pars = dont_extract, permuted = TRUE, inc_warmup = FALSE, include = FALSE)
+
+      # trim estimated pars
+      i <- apply(as.matrix(do_extract), 1, FUN = function(x) {any(grepl(x, names(map)))})
+      do_extract_map <- do_extract[i]
+      do_extract_map <- c("sdnr_cpue", "sdnr_tag", "sdnr_sexr", "sdnr_lfs", "sdnr_puerulus",
+                          "MAR_puerulus", "MAR_cpue", "MAR_tag", "MAR_sexr", "MAR_lfs",
+                          "Francis_lf_new_wt_r",
+                          do_extract_map)
+
+      # write to txt file
+      map_tmp <- rstan::extract(map, pars = do_extract_map, permuted = FALSE, inc_warmup = FALSE, include = TRUE)
+      map_tmp <- map_tmp
+      map_tmp <- plyr::adply(map_tmp, 3)
+      colnames(map_tmp) <- c("par", "value")
+      #head(map_tmp)
+      #x <- dS4@data[c("lf_like_wt_rs","sexr_like_wt","cpue_like_wt","cr_like_wt","puerulus_like_wt","tag_like_wt")]
+      #unlist(x)
+      #plyr::adply(x, 4)
+      #map_tmp <- rbind(map_tmp)
+      # write.csv(map_tmp, file = "key_parameters_map.csv", quote = FALSE, row.names = FALSE)
+      write.table(map_tmp, file = "key_parameters_map.txt", sep = "\t", row.names = FALSE, col.names = TRUE)
+    } else warning("no 'map' file")
+  }
+
+  if (mcmc) {
+    if (file.exists("mpe.csv")) {
+      mcmcfiles <- "mpe.csv"
+    } else {
+      mcmcfiles <- list.files(path = dir, pattern = "[.]mcmc")[grepl("lsd", list.files(path = dir, pattern = "[.]mcmc"))]
     }
 
-    if (map) {
-        mapfile <- list.files(path = dir, pattern = "[.]map")[grepl(model, list.files(path = dir, pattern = "[.]map"))]
-        if (length(mapfile) > 0) {
-            message("Reading ", mapfile)
-            map <- lsd::read_stan_map(file.path(dir, mapfile))
-            dS4@map <- rstan::extract(map, pars = dont_extract, permuted = TRUE, inc_warmup = FALSE, include = FALSE)
+    if (length(mcmcfiles) > 0) {
+      message("Reading ", mcmcfiles)
 
-            # trim estimated pars
-            i <- apply(as.matrix(do_extract), 1, FUN = function(x) {any(grepl(x, names(map)))})
-            do_extract_map <- do_extract[i]
-            do_extract_map <- c("sdnr_cpue", "sdnr_tag", "sdnr_sexr", "sdnr_lfs", "sdnr_puerulus",
-                                "MAR_puerulus", "MAR_cpue", "MAR_tag", "MAR_sexr", "MAR_lfs",
-                                "Francis_lf_new_wt_r",
-                                do_extract_map)
+      # create stanfit object from mcmc outputs
+      #mcmc_raw_stan <- rstan::read_stan_csv(mcmcfiles)
+      mcmc_raw <- read_stan_mcmc(file.path(dir, mcmcfiles))
 
-            # write to txt file
-            map_tmp <- rstan::extract(map, pars = do_extract_map, permuted = FALSE, inc_warmup = FALSE, include = TRUE)
-            map_tmp <- map_tmp
-            map_tmp <- plyr::adply(map_tmp, 3)
-            colnames(map_tmp) <- c("par", "value")
-            #head(map_tmp)
-            #x <- dS4@data[c("lf_like_wt_rs","sexr_like_wt","cpue_like_wt","cr_like_wt","puerulus_like_wt","tag_like_wt")]
-            #unlist(x)
-            #plyr::adply(x, 4)
-            #map_tmp <- rbind(map_tmp)
-            # write.csv(map_tmp, file = "key_parameters_map.csv", quote = FALSE, row.names = FALSE)
-            write.table(map_tmp, file = "key_parameters_map.txt", sep = "\t", row.names = FALSE, col.names = TRUE)
-        } else warning("no 'map' file")
+      # create list object containing all model outputs
+      dS4@mcmc <- lsd::extract(mcmc_raw, pars = dont_extract, permuted = TRUE, include = FALSE)
+
+      # trim estimated pars
+      i <- vapply(do_extract, FUN = function(x) { x %in% mcmc_raw$pars_oi}, logical(1))
+      do_extract_mcmc <- do_extract[i]
+      i <- vapply(do_extract_priors, FUN = function(x) { x %in% mcmc_raw$pars_oi}, logical(1))
+      do_extract_priors <- do_extract_priors[i]
+
+      # extract pars (with chains) for diagnostic plots
+      mcmc_tmp <- lsd::extract(mcmc_raw, pars = do_extract_mcmc, permuted = FALSE, include = TRUE)
+      dimnames(mcmc_tmp)[[1]] <- 1:dim(mcmc_tmp)[1]
+      dimnames(mcmc_tmp)[[2]] <- 1:dim(mcmc_tmp)[2]
+      mcmc_tmp <- plyr::adply(mcmc_tmp, 1:3)
+      colnames(mcmc_tmp) <- c('iteration', 'chain', 'par', 'value')
+      dS4@mcmc_pars <- mcmc_tmp
+
+      # write to csv
+      mcmc_out <- mcmc_tmp %>% spread(.data$par, .data$value)
+      write.table(mcmc_out, file = "key_parameters_mcmc.txt", sep = "\t", row.names = FALSE, col.names = TRUE)
+
+      mcmc_tmp <- lsd::extract(mcmc_raw, pars = do_extract_priors, permuted = FALSE, include = TRUE)
+      dimnames(mcmc_tmp)[[1]] <- 1:dim(mcmc_tmp)[1]
+      dimnames(mcmc_tmp)[[2]] <- 1:dim(mcmc_tmp)[2]
+      mcmc_tmp <- plyr::adply(mcmc_tmp, 1:3)
+      colnames(mcmc_tmp) <- c('iteration', 'chain', 'par', 'value')
+      dS4@mcmc_priors <- mcmc_tmp
+    } else {
+      warning("no 'mcmc' files")
     }
+  }
 
-    if (mcmc) {
-        if (file.exists("mpe.csv")) {
-            mcmcfiles <- "mpe.csv"
-        } else {
-            mcmcfiles <- list.files(path = dir, pattern = "[.]mcmc")[grepl(model, list.files(path = dir, pattern = "[.]mcmc"))]
-        }
-        if (length(mcmcfiles) > 0) {
-            message("Reading ", mcmcfiles)
-
-            # create stanfit object from mcmc outputs
-            #mcmc_raw_stan <- rstan::read_stan_csv(mcmcfiles)
-            mcmc_raw <- read_stan_mcmc(file.path(dir, mcmcfiles))
-
-            # create list object containing all model outputs
-            dS4@mcmc <- lsd::extract(mcmc_raw, pars = dont_extract, permuted = TRUE, include = FALSE)
-
-            # trim estimated pars
-            i <- vapply(do_extract, FUN = function(x) { x %in% mcmc_raw$pars_oi}, logical(1))
-            do_extract_mcmc <- do_extract[i]
-            i <- vapply(do_extract_priors, FUN = function(x) { x %in% mcmc_raw$pars_oi}, logical(1))
-            do_extract_priors <- do_extract_priors[i]
-
-            # extract pars (with chains) for diagnostic plots
-            mcmc_tmp <- lsd::extract(mcmc_raw, pars = do_extract_mcmc, permuted = FALSE, include = TRUE)
-            dimnames(mcmc_tmp)[[1]] <- 1:dim(mcmc_tmp)[1]
-            dimnames(mcmc_tmp)[[2]] <- 1:dim(mcmc_tmp)[2]
-            mcmc_tmp <- plyr::adply(mcmc_tmp, 1:3)
-            colnames(mcmc_tmp) <- c('iteration', 'chain', 'par', 'value')
-            dS4@mcmc_pars <- mcmc_tmp
-
-            # write to csv
-            mcmc_out <- mcmc_tmp %>% spread(.data$par, .data$value)
-            write.table(mcmc_out, file = "key_parameters_mcmc.txt", sep = "\t", row.names = FALSE, col.names = TRUE)
-
-            mcmc_tmp <- lsd::extract(mcmc_raw, pars = do_extract_priors, permuted = FALSE, include = TRUE)
-            dimnames(mcmc_tmp)[[1]] <- 1:dim(mcmc_tmp)[1]
-            dimnames(mcmc_tmp)[[2]] <- 1:dim(mcmc_tmp)[2]
-            mcmc_tmp <- plyr::adply(mcmc_tmp, 1:3)
-            colnames(mcmc_tmp) <- c('iteration', 'chain', 'par', 'value')
-            dS4@mcmc_priors <- mcmc_tmp
-        } else {
-            warning("no 'mcmc' files")
-        }
-    }
-
-    return(dS4)
+  return(dS4)
 }

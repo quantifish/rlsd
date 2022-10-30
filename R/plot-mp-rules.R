@@ -3,17 +3,60 @@ plot_mp_biomass <- function(object,
                             figure_dir = "figure/") {
 
   object <- readRDS("lsd.rds")
-  # object <- dS4
 
   mcmc <- object@mcmc
-  object@data$n_all_yr
+  data <- object@data
 
   mcmc$mp_biomass_jry[1,,1,]
-  mcmc$mp_tacc_jry
-  mcmc$proj_U_jytrf
+  mcmc$mp_tacc_jry[1,,1,]
+  data$mp_rule_parameters[1,]
 
+  n_rules <- data$n_rules
+  n_iter <- nrow(mcmc[[1]])
+  regions <- 1:data$n_area
 
-  p
+  mp_biomass <- mcmc$mp_biomass_jry
+  dimnames(mp_biomass) <- list(Iteration = 1:n_iter, Rules = 1:n_rules, Region = regions, Year = data$first_yr:data$last_proj_yr)
+  mp_biomass <- melt(mp_biomass, value.name = "mp_input") %>%
+    filter(Year %in% data$first_proj_yr:data$last_proj_yr) %>%
+    mutate(Rules = factor(Rules))
+
+  mp_tacc <- mcmc$mp_tacc_jry
+  dimnames(mp_tacc) <- list(Iteration = 1:n_iter, Rules = 1:n_rules, Region = regions, Year = data$first_yr:data$last_proj_yr)
+  mp_tacc <- melt(mp_tacc, value.name = "mp_output") %>%
+    filter(Year %in% data$first_proj_yr:data$last_proj_yr) %>%
+    mutate(Rules = factor(Rules))
+
+  mp_output <- full_join(mp_biomass, mp_tacc, by = c("Iteration", "Rules", "Region", "Year"))
+
+  head(mp_output)
+
+  p1 <- ggplot(data = mp_output, aes(x = Year, y = mp_input)) +
+    stat_summary(aes(fill = Rules), fun.min = function(x) quantile(x, 0.025), fun.max = function(x) quantile(x, 0.975), geom = "ribbon", alpha = 0.125) +
+    stat_summary(aes(colour = Rules), fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1) +
+    labs(x = "Fishing year", y = "MP biomass (tonnes)", colour = NULL, fill = NULL) +
+    scale_y_continuous(limits = c(0, NA), expand = expansion(mult = c(0, 0.05))) +
+    theme_lsd()
+
+  p2 <- ggplot(data = mp_output, aes(x = Year, y = mp_output)) +
+    stat_summary(aes(fill = Rules), fun.min = function(x) quantile(x, 0.025), fun.max = function(x) quantile(x, 0.975), geom = "ribbon", alpha = 0.125) +
+    stat_summary(aes(colour = Rules), fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1) +
+    labs(x = "Fishing year", y = "TAC (tonnes)", colour = NULL, fill = NULL) +
+    # scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1), expand = c(0, 1)) +
+    scale_y_continuous(limits = c(0, NA), expand = expansion(mult = c(0, 0.05))) +
+    theme_lsd()
+
+  p3 <- ggplot(data = mp_output, aes(x = mp_input, y = mp_output)) +
+    geom_point(aes(colour = Rules)) +
+    # stat_summary(aes(fill = Rules), fun.min = function(x) quantile(x, 0.025), fun.max = function(x) quantile(x, 0.975), geom = "ribbon", alpha = 0.125) +
+    # stat_summary(aes(colour = Rules), fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1) +
+    labs(x = "MP biomass (tonnes)", y = "TAC (tonnes)", colour = "Rule") +
+    # scale_y_continuous(limits = c(0, NA), expand = expansion(mult = c(0, 0.05))) +
+    theme_lsd()
+
+  p3
+
+  p1 + p2 + p3
 }
 
 

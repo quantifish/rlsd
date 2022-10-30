@@ -568,8 +568,7 @@ plot_offset_cpue_lm <- function(object, figure_dir = "figure/") {
 #' @importFrom stats rnorm
 #' @export
 #'
-plot_aw_cpue_lm <- function(object, figure_dir = "figure/")
-{
+plot_aw_cpue_lm <- function(object, figure_dir = "figure/") {
   logit <- function() { log(x / (1 - x)) }
   inv_logit <- function(x) { 1 / (1 + exp(-x)) }
 
@@ -590,15 +589,19 @@ plot_aw_cpue_lm <- function(object, figure_dir = "figure/")
 
   p <- ggplot(data = dd1, aes(x = px, y = py)) +
     geom_point(data = dd2, aes(x, yerr), colour = "grey", alpha = 0.25) +
-    geom_smooth(method = "lm", se = FALSE, colour = "green", size = 0.5) +
+    # geom_smooth(method = "lm", se = FALSE, colour = "green", size = 0.5) +
     geom_line(data = dd2, aes(x, y), colour = "red") +
     geom_text(aes(label = yr, colour = yr)) +
-    expand_limits(x = 0, y = c(0, 1)) +
-    coord_fixed() +
+    # expand_limits(x = 0, y = c(0, 1)) +
+    # coord_fixed() +
+    scale_x_continuous(limits = c(0, NA), expand = expansion(mult = c(0.05, 0.05))) +
+    scale_y_continuous(limits = c(0, 1), expand = expansion(mult = c(0, 0))) +
     theme_lsd() +
-    labs(x = "Standardised AW CPUE (kg/potlift)", y = "Proportion AW") +
+    labs(x = "Observed AW CPUE (kg/potlift)", y = "Proportion AW") +
     ggtitle(bquote(R^2 == .(round(params[5], 2)))) +
     theme(legend.position = "none")
 
   ggsave(paste0(figure_dir, "lm_aw_cpue.png"), p)
+
+  return(p)
 }

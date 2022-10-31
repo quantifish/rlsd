@@ -27,7 +27,7 @@ plot_snail <- function(object, figure_dir = "figure/", irule = 1) {
   seasons <- c("AW", "SS")
   fleets <- c("SL", "NSL")
 
-  # Bref <- data$Bref_r
+  Bref <- data$Bref_r
   # Uref <- data$Uref_rt
   # U <- mcmc$U_ytrf
   # dimnames(U) <- list(Iteration = 1:n_iter, Year = years, Season = seasons, Region = regions, Fishery = fleets)
@@ -56,25 +56,33 @@ plot_snail <- function(object, figure_dir = "figure/", irule = 1) {
     summarise(ymedian = median(U_Uref), ylower = quantile(U_Uref, probs = 0.025), yupper = quantile(U_Uref, probs = 0.975),
               xmedian = median(B_Bref), xlower = quantile(B_Bref, probs = 0.025), xupper = quantile(B_Bref, probs = 0.975))
 
-  dferr <- dfmed %>% filter(Year %in% c(data$first_yr, data$last_yr))
+  # dferr <- dfmed %>% filter(Year %in% c(data$first_yr, data$last_yr))
+  dferr <- dfmed %>%
+    mutate(Decade = case_when(Year < 1980 ~ "< 1980",
+                              Year %in% 1980:1989 ~ "1980s",
+                              Year %in% 1990:1999 ~ "1990s",
+                              Year %in% 2000:2009 ~ "2000s",
+                              Year %in% 2010:2019 ~ "2010s",
+                              Year > 2019 ~ "> 2019"))
+  dferr$Decade <- factor(dferr$Decade, levels = c("< 1980", "1980s", "1990s", "2000s", "2010s", "> 2019"))
   df_label <- dfmed %>% filter(Year %in% c(data$first_yr, data$last_yr, seq(1980, 2021, 10)))
 
   p <- ggplot(data = dfmed, aes(x = xmedian, y = ymedian)) +
-    geom_linerange(data = dferr, aes(ymin = ylower, ymax = yupper), alpha = 0.25, size = 1) +
-    geom_errorbarh(data = dferr, aes(xmin = xlower, xmax = xupper), height = 0, alpha = 0.25, size = 1) +
+    geom_text(data = df_label, aes(label = Year)) +
+    geom_linerange(data = dferr, aes(ymin = ylower, ymax = yupper, color = Decade), alpha = 0.4, size = 1) +
+    geom_errorbarh(data = dferr, aes(xmin = xlower, xmax = xupper, color = Decade), height = 0, alpha = 0.25, size = 1) +
     geom_segment(aes(xend = lead(xmedian), yend = lead(ymedian)), arrow = arrow(length = unit(0.2, "cm"))) +
-    geom_label(data = df_label, aes(label = Year)) +
     geom_vline(xintercept = 1, linetype = "dashed") +
     geom_hline(yintercept = 1, linetype = "dashed") +
     scale_x_continuous(limits = c(0, NA), expand = expansion(mult = c(0, 0.05))) +
     scale_y_continuous(limits = c(0, NA), expand = expansion(mult = c(0, 0.05))) +
     labs(x = expression(B/B[R]), y = expression(paste("Fishing intensity (", U/U[R], ")"))) +
     # labs(x = expression(B/B[REF]), y = expression(paste("Exploitation rate (U)"))) +
-    theme_lsd(base_size = 16) +
-    theme(legend.position = "none")
+    theme_lsd(base_size = 16) #+
+    # theme(legend.position = "none")
 
   p
-  ggsave(file.path(figure_dir, "snail_trail.png"), p, width = 7, height = 7)
+  ggsave(file.path(figure_dir, "snail_trail.png"), p, width = 8, height = 7)
 
   # F_Fmsy <- mcmc$F_Fmsy_ry
   # dimnames(F_Fmsy) <- list(Iteration = 1:n_iter, Region = regions, Year = years)

@@ -23,7 +23,7 @@ plot_F <- function(object, scales = "free",
   data <- object@data
   map <- object@map
   mcmc <- object@mcmc
-  year_change <- c( data$first_yr,data$season_change_yr)
+  year_change <- c(data$first_yr, data$season_change_yr)
   file_names <- c("", "_V2")
 
   for (i in 1:length(year_change)) {

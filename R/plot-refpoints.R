@@ -1646,13 +1646,17 @@ if(any(grepl("B0now_r", names(mcmc1)))){
   ggsave(file.path(figure_dir, "VBcurrent.png"), p_vbcurr, height = 10, width = 20)
 
 
+  msyx <- msy_info %>% select(Region, RuleNum) %>% unique()
   vbcheck <- check %>% 
     select(Iteration, Year, Region, RuleType, VB) %>% 
+    filter(Region != "Total") %>%
     unique()
   sub <- info %>% 
     filter(RuleNum %in% msy_info$RuleNum, Year %in% (min(projyears)-1):max(projyears)) %>% 
     left_join(rule_type) %>% 
+    inner_join(msyx) %>%
     select(Iteration, Year, Region, RuleType, VB) %>%
+    filter(Region != "Total") %>%
     unique()
   p_vbcheck <- ggplot() +
     stat_summary(data = vbcheck, aes(x = Year, y = VB), fun.min = function(x) stats::quantile(x, 0.05), fun.max = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25) +

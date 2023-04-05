@@ -879,6 +879,8 @@ if(any(grepl("B0now_r", names(mcmc1)))){
     coord_cartesian(y = c(0,1)) +
     theme_bw(base_size = 20)
   ggsave(file.path(figure_dir, "F_check.png"), p, height = 10, width = 15)
+
+
   
 
   average_info <- cinfo %>%
@@ -1642,6 +1644,30 @@ if(any(grepl("B0now_r", names(mcmc1)))){
     p_vbcurr <- p_vbcurr + facet_grid(~RuleType, scales = "free_y")
   }
   ggsave(file.path(figure_dir, "VBcurrent.png"), p_vbcurr, height = 10, width = 20)
+
+
+  vbcheck <- check %>% 
+    select(Iteration, Year, Region, RuleType, VB) %>% 
+    unique()
+  sub <- info %>% 
+    filter(RuleNum %in% msy_info$RuleNum, Year %in% (min(projyears)-1):max(projyears)) %>% 
+    left_join(rule_type) %>% 
+    select(Iteration, Year, Region, RuleType, VB) %>%
+    unique()
+  p_vbcheck <- ggplot() +
+    stat_summary(data = vbcheck, aes(x = Year, y = VB), fun.min = function(x) stats::quantile(x, 0.05), fun.max = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25) +
+    stat_summary(data = vbcheck, aes(x = Year, y = VB), fun = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1.2) +
+    stat_summary(data = sub, aes(x = Year, y = VB, fill = RuleType), fun.min = function(x) stats::quantile(x, 0.05), fun.max = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25) +
+    stat_summary(data = sub, aes(x = Year, y = VB, color = RuleType), fun = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1.2) +    
+    expand_limits(y = 0) +
+    scale_fill_tableau() +
+    scale_color_tableau() +
+    ylab("AW adjusted vulnerable biomass (B; tonnes)") +
+    theme_bw(base_size = 20)
+  if(length(regions) > 1){
+    p_vbcheck <- p_vbcheck + facet_grid(~Region)
+  }
+  ggsave(file.path(figure_dir, "VBcheck.png"), p_vbcheck, height = 10, width = 20)
 
 
 

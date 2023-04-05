@@ -617,7 +617,7 @@ if(any(grepl("B0now_r", names(mcmc1)))){
   ## projection time series
   ##########################
     syears <- projyears[5]
-    cutyears <- (projyears[1]+10):(data$last_proj_yr)
+    cutyears <- (data$last_proj_yr-19):(data$last_proj_yr)
     pinfo <- info %>% filter(Year %in% (max(years)+1):(min(cutyears)-1))
     cinfo <- info %>% filter(Year %in% cutyears)
     sinfo <- info %>% filter(Year %in% syears)

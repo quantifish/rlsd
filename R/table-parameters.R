@@ -11,6 +11,23 @@ table_parameters <- function(object, figure_dir = "figure/", save_table = TRUE)
   mcmc <- object@mcmc_pars
   names(mcmc) <- c("Iteration", "Chain", "Parameter", "Estimate")
 
+  ## sdnr and mar
+  map <- object@map
+  map2 <- map %>%
+  reshape2::melt() %>%
+  rename(Parameter = L1, Estimate = value) %>%
+  filter(grepl("sdnr", Parameter) | grepl("MAR", Parameter)) %>%
+  select(Parameter, Estimate)
+
+  ## weights
+  data <- object@data
+  data2 <- data %>%
+  reshape2::melt() %>%
+  rename(Parameter = L1, Estimate = value) %>%
+  filter(grepl("_wt", Parameter)) %>%
+  select(Parameter, Estimate)
+
+
   pars <- mcmc %>%
     group_by(.data$Parameter) %>%
     summarise(Estimate = median(.data$Estimate))
@@ -38,9 +55,11 @@ table_parameters <- function(object, figure_dir = "figure/", save_table = TRUE)
     }
   }
 
+  out <- bind_rows(data2, map2, pars)
+
   if (save_table == TRUE) {
-    write.csv(pars, file.path(figure_dir, "Parameters_summary.csv"), row.names = FALSE)
+    write.csv(out, file.path(figure_dir, "Parameters_summary.csv"), row.names = FALSE)
   } else {
-    return(pars)
+    return(out)
   }
 }

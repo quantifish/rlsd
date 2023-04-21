@@ -17,6 +17,11 @@ table_parameters <- function(object, figure_dir = "figure/", save_table = TRUE)
   reshape2::melt() %>%
   rename(Parameter = L1, Estimate = value) %>%
   filter(grepl("sdnr", Parameter) | grepl("MAR", Parameter)) %>%
+  select(Parameter, Estimate) %>%
+  mutate(Dummy = 1) %>%
+  group_by(Parameter) %>%
+  mutate(N = cumsum(Dummy)) %>%
+  mutate(Parameter = paste0(Parameter, " [", N, "]")) %>%
   select(Parameter, Estimate)
 
   ## weights
@@ -25,6 +30,11 @@ table_parameters <- function(object, figure_dir = "figure/", save_table = TRUE)
   reshape2::melt() %>%
   rename(Parameter = L1, Estimate = value) %>%
   filter(grepl("_wt", Parameter)) %>%
+  select(Parameter, Estimate) %>%
+  mutate(Dummy = 1) %>%
+  group_by(Parameter) %>%
+  mutate(N = cumsum(Dummy)) %>%
+  mutate(Parameter = paste0(Parameter, " [", N, "]")) %>%
   select(Parameter, Estimate)
 
 

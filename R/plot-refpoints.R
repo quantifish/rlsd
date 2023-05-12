@@ -297,7 +297,7 @@ if(any(grepl("B0now_r", names(mcmc1)))){
 
   # write.csv(status_check, file.path(figure_dir, "Current_status_check.csv"))
   recdev <- mcmc1$par_rec_dev_ry
-  ryears <- years[-c((length(years)-1):length(years))]
+  ryears <- years1[-c((length(years1)-1):length(years1))]
   dimnames(recdev) <- list("Iteration" = 1:n_iter1, "Region" = regions, "Year" = ryears)
   recdev2 <- reshape2::melt(recdev) %>%
     rename(Recruitment = value)

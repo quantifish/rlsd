@@ -296,7 +296,21 @@ if(any(grepl("B0now_r", names(mcmc1)))){
  }
 
   # write.csv(status_check, file.path(figure_dir, "Current_status_check.csv"))
+  recdev <- mcmc1$par_rec_dev_ry
+  ryears <- years[-c((length(years)-1):length(years))]
+  dimnames(recdev) <- list("Iteration" = 1:n_iter1, "Region" = regions, "Year" = ryears)
+  recdev2 <- reshape2::melt(recdev) %>%
+    rename(Recruitment = value)
+  recdev2$Region <- factor(recdev2$Region)
 
+  r0 <- mcmc1$par_R0_r
+  dimnames(r0) <- list("Iteration" = 1:n_iter1, "Region" = regions)
+  r0 <- reshape2::melt(r0) %>%
+  rename(R0 = value)
+  r0$Region <- factor(r0$Region)
+
+
+if(length(object) == 1){
   ## from refpoints
   mcmc <- object@mcmc
   data <- object@data
@@ -316,44 +330,12 @@ if(any(grepl("B0now_r", names(mcmc1)))){
   select(-RuleType1)
   fleets <- c("SL","NSL")
 
-  # projF <- mcmc$proj_F_jytrf
-  # dimnames(projF) <- list("Iteration"=1:n_iter, "RuleNum"=1:n_rules, "Year"=pyears, "Season"=seasons, "Region"=regions, "Fleet" = fleets)
-  # projF2 <- reshape2::melt(projF, value.name = "F") %>%
-  #   group_by(Iteration, RuleNum, Year, Region) %>%
-  #   summarise(F = sum(F))
-
   gc()
-  # sub <- projF2 %>% filter(RuleNum > 22) %>% filter(Iteration == 1)
-  # p <- ggplot(sub %>% filter(Iteration == 1)) +
-  # geom_line(aes(x = Year, y = F, color = factor(RuleNum))) +
-  # facet_wrap(~Region, scales = "free_y") +
-  # # coord_cartesian(ylim = c(0,quantile(sub$F,0.99))) +
-  # theme_bw()
-
-  # qpar <- mcmc$par_q_cpue_qy
-  # dimnames(qpar) <- list("Iteration" = 1:n_iter, "qtype" = 1:3, "Year" = pyears)
-  # qpar2 <- reshape2::melt(qpar, value.name = "q")
-  # qpar2 <- qpar2 %>%
-  #   group_by(Year, qtype) %>%
-  #   mutate(q_med = median(q))
-  # ggplot(qpar2) + geom_line(aes(x = Year, y = q_med, color = factor(qtype)))
-
-  # p <- ggplot(qpar2) +
-  # geom_line(aes(x = Year, y = q)) +
-  # facet_wrap(~qtype) +
-  # theme_bw()
-
+  
   cpue <- mcmc$mp_offset_cpue_jry
   dimnames(cpue) <- list("Iteration" = 1:n_iter, "RuleNum" = 1:n_rules, "Region" = regions, "Year" = pyears)
   cpue2 <- reshape2::melt(cpue, value.name = "CPUE")
   cpue2 <- tibble(cpue2)
-
-  # sub <- cpue2 %>% filter(RuleNum > 22) %>% filter(Iteration == 1)
-  # p <- ggplot(sub %>% filter(Iteration == 1)) +
-  # geom_line(aes(x = Year, y = CPUE, color = factor(RuleNum))) +
-  # facet_wrap(~Region, scales = "free_y") +
-  # # coord_cartesian(ylim = c(0,quantile(sub$F,0.99))) +
-  # theme_bw()
 
   gc()
 
@@ -392,13 +374,6 @@ if(any(grepl("B0now_r", names(mcmc1)))){
   pcatch_t <- rbind.data.frame(slcatch2_t, nslcatch2_t) %>%
     tidyr::pivot_wider(names_from = CatchType, values_from = Catch) %>%
     mutate(Catch = SL + NSL)
-
-  # sub <- pcatch %>% filter(RuleNum %in% c(6,37))
-  # p <- ggplot(sub %>% filter(Iteration == 1)) +
-  # geom_line(aes(x = Year, y = Catch, color = factor(RuleNum))) +
-  # # facet_wrap(~Fleet) +
-  # theme_bw()
-
   rm(slcatch)
   rm(nslcatch)
   gc()
@@ -410,12 +385,6 @@ if(any(grepl("B0now_r", names(mcmc1)))){
     select(-Season) %>%
     rename(SL_AW = SL, NSL_AW = NSL, Catch_AW = Catch)
 
-  sub <- catch %>% left_join(rule_type) %>% filter(Iteration == 1)
-  p <- ggplot(sub %>% filter(Iteration == 1)) +
-    geom_line(aes(x = Year, y = Catch, color = factor(RuleNum))) +
-    facet_grid(RuleType~Region, scales = "free_y") +
-    theme_bw(base_size = 20)
-  ggsave(file.path(figure_dir, "Catch_check.png"), p, height = 10, width = 15)
 
   rm(pcatch)
   rm(pcatch_t)
@@ -487,12 +456,6 @@ if(any(grepl("B0now_r", names(mcmc1)))){
 
   gc()
 
-  recdev <- mcmc1$par_rec_dev_ry
-  ryears <- years[-c((length(years)-1):length(years))]
-  dimnames(recdev) <- list("Iteration" = 1:n_iter1, "Region" = regions, "Year" = ryears)
-  recdev2 <- reshape2::melt(recdev) %>%
-    rename(Recruitment = value)
-  recdev2$Region <- factor(recdev2$Region)
 
   rec <- mcmc$recruits_ry
   ryears <- years[-c((length(years)-1):length(years))]
@@ -506,12 +469,6 @@ if(any(grepl("B0now_r", names(mcmc1)))){
   summarise(P5 = quantile(Recruitment, 0.05),
             P50 = quantile(Recruitment, 0.5),
             P95 = quantile(Recruitment, 0.95))
-
-  r0 <- mcmc1$par_R0_r
-  dimnames(r0) <- list("Iteration" = 1:n_iter1, "Region" = regions)
-  r0 <- reshape2::melt(r0) %>%
-  rename(R0 = value)
-  r0$Region <- factor(r0$Region)
 
   recdev3 <- recdev2 %>%
   left_join(r0) %>%
@@ -531,20 +488,6 @@ if(any(grepl("B0now_r", names(mcmc1)))){
   left_join(recdev4) %>%
   tidyr::pivot_longer(R0:Last10Years, names_to = "Type", values_to = "Average")
 
-  p <- ggplot(rec3) +
-    geom_ribbon(aes(x = Year, ymin = P5, ymax = P95), alpha = 0.3) +
-    geom_line(aes(x = Year, y = P50)) +
-    geom_vline(aes(xintercept = min(data$data_lf_year_i)), lty = 2) +
-    geom_vline(aes(xintercept = projyears[1]), lty = 2) +
-    ylab("Recruitment") +
-    geom_line(aes(x = Year, y = Average, color = Type), lwd = 0.9) +
-    guides(color=guide_legend(title="Compare average\nrecruitment")) +
-    facet_wrap(~Region) +
-    expand_limits(y = 0) +
-    scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
-    scale_color_brewer(palette = "Set1") +
-    theme_bw(base_size = 20)
-  ggsave(file.path(figure_dir, "Recruitment_proj.png"), p, height = 8, width = 15)
 
   gc()
 
@@ -611,13 +554,406 @@ if(any(grepl("B0now_r", names(mcmc1)))){
   rulepar <- paste0("par",1:10)
   colnames(rules) <- rulepar
   ruledf <- data.frame(RuleNum = 1:nrow(rules), rules) %>%
-    mutate(RuleType = ifelse(par1 == 0, "FixedF", ifelse(par1 == 1, "FixedCatch", "CPUE-based")))
+    mutate(RuleType = ifelse(par1 == 0, "FixedF", ifelse(par1 == 1, "FixedCatch", NA)))
+
+
+  sub <- catch %>% left_join(rule_type) %>% filter(Iteration == 1)
+  p <- ggplot(sub %>% filter(Iteration == 1)) +
+    geom_line(aes(x = Year, y = Catch, color = factor(RuleNum))) +
+    facet_grid(RuleType~Region, scales = "free_y") +
+    theme_bw(base_size = 20)
+  ggsave(file.path(figure_dir, "Catch_check.png"), p, height = 10, width = 15)
+
+  p <- ggplot(rec3) +
+    geom_ribbon(aes(x = Year, ymin = P5, ymax = P95), alpha = 0.3) +
+    geom_line(aes(x = Year, y = P50)) +
+    geom_vline(aes(xintercept = min(data1$data_lf_year_i)), lty = 2) +
+    geom_vline(aes(xintercept = projyears[1]), lty = 2) +
+    ylab("Recruitment") +
+    geom_line(aes(x = Year, y = Average, color = Type), lwd = 0.9) +
+    guides(color=guide_legend(title="Compare average\nrecruitment")) +
+    facet_wrap(~Region) +
+    expand_limits(y = 0) +
+    scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
+    scale_color_brewer(palette = "Set1") +
+    theme_bw(base_size = 20)
+  ggsave(file.path(figure_dir, "Recruitment_proj.png"), p, height = 8, width = 15)
+
+    cutyears <- (data$last_proj_yr-19):(data$last_proj_yr)
+}
+  
+
+if(length(object) > 1){
+
+    type <- sapply(1:length(object), function(x) strsplit(names(object)[x], "_")[[1]][3])
+    region <- sapply(1:length(object), function(x) strsplit(strsplit(as.character(strsplit(names(object)[x], "_")[[1]][4]),".rds")[[1]],"Region")[[1]][2])
+
+
+  data_list <- lapply(1:length(object), function(x){
+    out <- object[[x]]@data
+    return(out)
+  })
+  mcmc_list <- lapply(1:length(object), function(x){
+    out <- object[[x]]@mcmc
+    return(out)
+  })
+  years <- data_list[[1]]$first_yr:data_list[[1]]$last_yr
+  pyears <- data_list[[1]]$first_yr:data_list[[1]]$last_proj_yr
+  projyears <- (data_list[[1]]$first_proj_yr):data_list[[1]]$last_proj_yr
+  n_iter <- nrow(mcmc_list[[1]][[1]])
+  regions <- 1:data_list[[1]]$n_area
+  seasons <- c("AW","SS")
+  if(length(regions) > 1) regions2 <- c(regions, "Total")
+  if(length(regions) == 1) regions2 <- regions
+  sex <- c("Male","Immature female","Mature female")
+  nrules_list <- sapply(1:length(object), function(x){ nrow(data_list[[x]]$mp_rule_parameters)})
+  rules_list <- lapply(1:length(object), function(x){
+    out <- data.frame(data_list[[x]]$mp_rule_parameters) %>%
+      mutate(N = x) %>%
+      mutate(RuleNum = 1:nrow(.))
+    return(out)
+  })
+  rules <- do.call(rbind, rules_list)
+  n_rules <- nrow(rules)
+  rule_type <- data.frame(RuleType1 = rules[,1], RuleNumAll = 1:n_rules, N = rules[,"N"], RuleNum = rules[,"RuleNum"]) %>%
+  mutate(RuleType = ifelse(RuleType1 == 1, "FixedCatch", "FixedF")) %>%
+  select(-RuleType1)
+  fleets <- c("SL","NSL")
+
+  gc()
+  
+  cpue_list <- lapply(1:length(object), function(x){
+    cpue <- mcmc_list[[x]]$mp_offset_cpue_jry
+    dimnames(cpue) <- list("Iteration" = 1:n_iter, "RuleNum" = 1:nrules_list[x], "Region" = regions, "Year" = pyears)
+    cpue2 <- reshape2::melt(cpue, value.name = "CPUE")
+    cpue2 <- tibble(cpue2) %>%
+      mutate(N = x) %>%
+      left_join(rule_type) %>%
+      select(-c(RuleNum,N,RuleType)) %>%
+      rename(RuleNum = RuleNumAll)
+    return(cpue2)
+  })
+  cpue2 <- do.call(rbind, cpue_list)
+
+  gc()
+
+  slcatch_list <- lapply(1:length(object), function(x){
+    slcatch <- mcmc_list[[x]]$pred_catch_sl_jryt
+    dimnames(slcatch) <- list("Iteration"=1:n_iter, "RuleNum"=1:dim(slcatch)[2], "Region"=regions, "Year"=pyears, "Season"=seasons)
+    slcatch2 <- reshape2::melt(slcatch, value.name = "Catch") %>%
+      group_by(Iteration, Year, Region, RuleNum) %>%
+      summarise(Catch = sum(Catch)) %>%
+      mutate("CatchType" = "SL")  %>%
+      mutate(N = x) %>%
+      left_join(rule_type) %>%
+      select(-c(RuleNum, N, RuleType)) %>%
+      rename(RuleNum = RuleNumAll)
+    return(slcatch2)
+  })
+  slcatch2 <- do.call(rbind, slcatch_list)
+
+  slcatcht_list <- lapply(1:length(object), function(x){
+    slcatch <- mcmc_list[[x]]$pred_catch_sl_jryt
+    dimnames(slcatch) <- list("Iteration"=1:n_iter, "RuleNum"=1:dim(slcatch)[2], "Region"=regions, "Year"=pyears, "Season"=seasons)
+    slcatch2_t <- reshape2::melt(slcatch, value.name = "Catch") %>%
+      group_by(Iteration, Year, Region, Season, RuleNum) %>%
+      summarise(Catch = sum(Catch)) %>%
+      mutate("CatchType" = "SL")  %>%
+      mutate(N = x) %>%
+      left_join(rule_type) %>%
+      select(-c(RuleNum, N, RuleType)) %>%
+      rename(RuleNum = RuleNumAll)
+    return(slcatch2_t)
+  })
+  slcatch2_t <- do.call(rbind, slcatcht_list)
+
+  gc()
+
+  nslcatch_list <- lapply(1:length(object), function(x){
+    nslcatch <- mcmc_list[[x]]$pred_catch_nsl_jryt
+    dimnames(nslcatch) <- list("Iteration"=1:n_iter, "RuleNum"=1:dim(nslcatch)[2], "Region"=regions, "Year"=pyears, "Season"=seasons)
+    nslcatch2 <- reshape2::melt(nslcatch, value.name = "Catch") %>%
+      group_by(Iteration, Year, Region, RuleNum) %>%
+      summarise(Catch = sum(Catch)) %>%
+      mutate("CatchType" = "NSL") %>%
+      mutate(N = x) %>%
+      left_join(rule_type) %>%
+      select(-c(RuleNum, N, RuleType)) %>%
+      rename(RuleNum = RuleNumAll)
+    return(nslcatch2)
+  })
+  nslcatch2 <- do.call(rbind, nslcatch_list)
+
+  nslcatcht_list <- lapply(1:length(object), function(x){
+    nslcatch <- mcmc_list[[x]]$pred_catch_nsl_jryt
+    dimnames(nslcatch) <- list("Iteration"=1:n_iter, "RuleNum"=1:dim(nslcatch)[2], "Region"=regions, "Year"=pyears, "Season"=seasons)
+    nslcatch2_t <- reshape2::melt(nslcatch, value.name = "Catch") %>%
+      group_by(Iteration, Year, Region, Season, RuleNum) %>%
+      summarise(Catch = sum(Catch)) %>%
+      mutate("CatchType" = "NSL") %>%
+      mutate(N = x) %>%
+      left_join(rule_type) %>%
+      select(-c(RuleNum, N, RuleType)) %>%
+      rename(RuleNum = RuleNumAll)
+    return(nslcatch2_t)
+  })
+  nslcatch2_t <- do.call(rbind, nslcatcht_list)
+
+  gc()
+
+  pcatch <- rbind.data.frame(slcatch2, nslcatch2) %>%
+    tidyr::pivot_wider(names_from = CatchType, values_from = Catch) %>%
+    mutate(Catch = SL + NSL)
+
+  pcatch_t <- rbind.data.frame(slcatch2_t, nslcatch2_t) %>%
+    tidyr::pivot_wider(names_from = CatchType, values_from = Catch) %>%
+    mutate(Catch = SL + NSL)
+
+  gc()
+
+  catch <- pcatch
+  catch_t <- pcatch_t %>%
+    filter(Season == "AW") %>%
+    ungroup() %>%
+    select(-Season) %>%
+    rename(SL_AW = SL, NSL_AW = NSL, Catch_AW = Catch)
+
+
+  rm(pcatch)
+  rm(pcatch_t)
+  gc()
+
+  vb_list <- lapply(1:length(object), function(x){
+    vb <- mcmc_list[[x]]$biomass_vulnref_AW_jyr
+    dimnames(vb) <- list("Iteration" = 1:n_iter, "RuleNum" = 1:dim(vb)[2], "Year" = pyears, "Region" = regions)
+    vb2 <- reshape2::melt(vb) %>%
+      rename(VB = value) %>%
+      mutate(N = x) %>%
+      left_join(rule_type) %>%
+      select(-c(RuleNum, N, RuleType)) %>%
+      rename(RuleNum = RuleNumAll)
+    vb2$Region <- factor(vb2$Region)
+    return(vb2)
+  })
+  vb2 <- do.call(rbind, vb_list)
+
+
+    vb0now <- mcmc_list[[1]]$B0now_r
+    dimnames(vb0now) <- list("Iteration" = 1:n_iter, "Region" = regions2)
+    vb0now <- reshape2::melt(vb0now) %>%
+      rename(VB0now = value) 
+    vb0now$Region <- factor(vb0now$Region)
+
+
+    VB0 <- mcmc_list[[1]]$B0_r
+    dimnames(VB0) <- list("Iteration" = 1:n_iter, "Region" = regions2)
+    VB0 <- reshape2::melt(VB0) %>%
+      rename(VB0 = value)
+    VB0$Region <- factor(VB0$Region)
+
+
+  gc()
+
+  ssb_list <- lapply(1:length(object), function(x){
+   ssb <- mcmc_list[[x]]$biomass_ssb_jyr
+   dimnames(ssb) <- list("Iteration" = 1:n_iter, "RuleNum" = 1:dim(ssb)[2], "Year" = pyears, "Region" = regions)
+   ssb2 <- reshape2::melt(ssb) %>% rename("SSB"=value)  %>%
+      mutate(N = x) %>%
+      left_join(rule_type) %>%
+      select(-c(RuleNum, N, RuleType)) %>%
+      rename(RuleNum = RuleNumAll)
+   ssb2$Region <- factor(ssb2$Region)   
+   return(ssb2)
+  })
+  ssb2 <- do.call(rbind, ssb_list)
+
+   ssb0now <- mcmc_list[[1]]$SSB0now_r
+   dimnames(ssb0now) <- list("Iteration" = 1:n_iter, "Region" = regions2)
+   ssb0now <- reshape2::melt(ssb0now) %>%
+     rename(SSB0now=value)
+  ssb0now$Region <- factor(ssb0now$Region)
+
+    SSB0 <- mcmc_list[[1]]$SSB0_r
+    dimnames(SSB0) <- list("Iteration" = 1:n_iter, "Region" = regions2)
+    SSB0 <- reshape2::melt(SSB0) %>%
+      rename(SSB0=value)
+    SSB0$Region <- factor(SSB0$Region)
+
+
+
+  gc()
+
+
+  tb_list <- lapply(1:length(object), function(x){
+    tb <- mcmc_list[[x]]$biomass_total_jytrs
+    dimnames(tb) <- list("Iteration" = 1:n_iter, "RuleNum" = 1:dim(tb)[2], "Year" = pyears, "Season" = seasons, "Region" = regions, "Sex" = c(sex, "Total"))
+    tb2 <- reshape2::melt(tb) %>%
+      rename("TB"=value) %>%
+      filter(Sex == "Total") %>%
+      select(-Sex) %>%
+      filter(Season == "AW") %>%
+      select(-Season) %>%
+      group_by(Iteration, RuleNum, Year, Region) %>%
+      summarise(TB = sum(TB)) %>%
+      ungroup() %>%
+      mutate(N = x) %>%
+      left_join(rule_type) %>%
+      select(-c(RuleNum, N, RuleType)) %>%
+      rename(RuleNum = RuleNumAll)
+    tb2$Region <- factor(tb2$Region)
+    return(tb2)
+  })
+  tb2 <- do.call(rbind, tb_list)
+
+
+    tb0now <- mcmc_list[[1]]$Btot0now_r
+    dimnames(tb0now) <- list("Iteration" = 1:n_iter, "Region" = regions2)
+    tb0now <- reshape2::melt(tb0now) %>%
+      rename(TB0now=value)
+    tb0now$Region <- factor(tb0now$Region)
+
+
+    TB0 <- mcmc_list[[1]]$Btot0_r
+    dimnames(TB0) <- list("Iteration" = 1:n_iter, "Region" = regions2)
+    TB0 <- reshape2::melt(TB0) %>%
+      rename(TB0=value)
+    TB0$Region <- factor(TB0$Region)   
+
+
+
+  gc()
+
+   rec <- mcmc_list[[1]]$recruits_ry
+  ryears <- years[-c((length(years)-1):length(years))]
+  dimnames(rec) <- list("Iteration" = 1:n_iter, "Region" = regions, "Year" = pyears)
+  rec2 <- reshape2::melt(rec) %>%
+    rename(Recruitment = value)
+  rec2$Region <- factor(rec2$Region)
+
+  rec3 <- rec2 %>%
+  group_by(Region, Year) %>%
+  summarise(P5 = quantile(Recruitment, 0.05),
+            P50 = quantile(Recruitment, 0.5),
+            P95 = quantile(Recruitment, 0.95))
+
+  recdev3 <- recdev2 %>%
+  left_join(r0) %>%
+  filter(Year %in% min(data_list[[1]]$data_lf_year_i):(max(years)-2)) %>%
+  group_by(Region) %>%
+  summarise(R0 = median(R0), DataYears = median(R0) * exp(median(Recruitment) - 0.5 * data_list[[1]]$fpar_rec_sd ^ 2))
+
+  recdev4 <- recdev2 %>%
+  left_join(r0) %>%
+  filter(Year %in% (max(years) - 9 - 2):(max(years)-2)) %>%
+  group_by(Region) %>%
+  summarise(Last10Years = median(R0) * exp(median(Recruitment) - 0.5 * data_list[[1]]$fpar_rec_sd ^ 2))
+
+  rec3 <- rec3 %>%
+  left_join(recdev3) %>%
+  left_join(recdev4) %>%
+  tidyr::pivot_longer(R0:Last10Years, names_to = "Type", values_to = "Average")
+
+  gc()
+
+  relssb <- inner_join(ssb2, ssb0now) %>%
+    left_join(SSB0) %>%
+    mutate(RelSSBdata = SSB/SSB0now,
+                  RelSSB = SSB/SSB0)
+  gc()
+
+  relvb <- inner_join(vb2, vb0now) %>%
+    left_join(VB0) %>%
+    mutate(RelVBdata = VB/VB0now,
+                  RelVB = VB/VB0)
+  gc()
+
+  reltb <- inner_join(tb2, tb0now) %>%
+    left_join(TB0) %>%
+    mutate(RelTBdata = TB/TB0now,
+                  RelTB = TB/TB0)
+  gc()
+
+
+  relb <- full_join(relssb, relvb)
+  gc()
+  relb1 <- full_join(relb, reltb)
+  gc()
+  # relb2 <- full_join(relb1, rec2)
+  # gc()
+
+  rm(relssb)
+  rm(relvb)
+  rm(reltb)
+
+  catch$Region <- factor(catch$Region)
+  catch_t$Region <- factor(catch_t$Region)
+  info <- full_join(catch, relb1) %>%
+    full_join(catch_t) %>%
+    select(-c(SL_AW, NSL_AW))
+  gc()
+
+  cpue2$Region <- factor(cpue2$Region)
+  # projF2$Region <- factor(projF2$Region)
+  info <- full_join(info, cpue2)
+  info$Region <- factor(info$Region)
+  gc()
+
+  # infox <- full_join(info, projF2)
+  infox <- info
+  rm(info)
+  gc()
+
+  info <- infox %>%
+    filter(Region %in% regions) %>%
+    mutate(Region = paste0("Region ", Region)) %>%
+    mutate(U = Catch_AW / VB)
+  gc()
+
+
+  rm(relb)
+  # rm(relb2)
+  # rm(catch)
+  gc()
+
+  rulepar <- paste0("par",1:10)
+  colnames(rules) <- c(rulepar,"N","RuleNumInit")
+  ruledf <- data.frame(RuleNum = 1:nrow(rules), rules) %>%
+    mutate(RuleType = ifelse(par1 == 0, "FixedF", ifelse(par1 == 1, "FixedCatch", NA)))
+
+  sub <- catch %>% 
+      left_join(rule_type %>% select(-c(RuleNum,N)) %>% rename(RuleNum = RuleNumAll)) %>% 
+      filter(Iteration == 1)
+  p <- ggplot(sub %>% filter(Iteration == 1)) +
+    geom_line(aes(x = Year, y = Catch, color = factor(RuleNum))) +
+    facet_grid(RuleType~Region, scales = "free_y") +
+    theme_bw(base_size = 20)
+  ggsave(file.path(figure_dir, "Catch_check.png"), p, height = 10, width = 15)
+
+  p <- ggplot(rec3) +
+    geom_ribbon(aes(x = Year, ymin = P5, ymax = P95), alpha = 0.3) +
+    geom_line(aes(x = Year, y = P50)) +
+    geom_vline(aes(xintercept = min(data1$data_lf_year_i)), lty = 2) +
+    geom_vline(aes(xintercept = projyears[1]), lty = 2) +
+    ylab("Recruitment") +
+    geom_line(aes(x = Year, y = Average, color = Type), lwd = 0.9) +
+    guides(color=guide_legend(title="Compare average\nrecruitment")) +
+    facet_wrap(~Region) +
+    expand_limits(y = 0) +
+    scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
+    scale_color_brewer(palette = "Set1") +
+    theme_bw(base_size = 20)
+  ggsave(file.path(figure_dir, "Recruitment_proj.png"), p, height = 8, width = 15)
+
+    cutyears <- (data_list[[1]]$last_proj_yr-19):(data_list[[1]]$last_proj_yr)
+}
+
+
+
 
   ##########################
   ## projection time series
   ##########################
     syears <- projyears[5]
-    cutyears <- (data$last_proj_yr-19):(data$last_proj_yr)
     pinfo <- info %>% filter(Year %in% (max(years)+1):(min(cutyears)-1))
     cinfo <- info %>% filter(Year %in% cutyears)
     sinfo <- info %>% filter(Year %in% syears)

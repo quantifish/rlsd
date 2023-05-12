@@ -585,10 +585,6 @@ if(length(object) == 1){
 
 if(length(object) > 1){
 
-    type <- sapply(1:length(object), function(x) strsplit(names(object)[x], "_")[[1]][3])
-    region <- sapply(1:length(object), function(x) strsplit(strsplit(as.character(strsplit(names(object)[x], "_")[[1]][4]),".rds")[[1]],"Region")[[1]][2])
-
-
   data_list <- lapply(1:length(object), function(x){
     out <- object[[x]]@data
     return(out)

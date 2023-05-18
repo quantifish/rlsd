@@ -941,6 +941,7 @@ if(length(object) > 1){
   ggsave(file.path(figure_dir, "Recruitment_proj.png"), p, height = 8, width = 15)
 
     cutyears <- (data_list[[1]]$last_proj_yr-19):(data_list[[1]]$last_proj_yr)
+    rule_type <- rule_type %>% select(-c(RuleNum, N)) %>% rename(RuleNum = RuleNumAll)
 }
 
 
@@ -1018,8 +1019,9 @@ if(length(object) > 1){
       summarise(P50 = sum(P50),
                        Mean = sum(Mean)) %>%
       group_by(Region, RuleType, Constraint) %>%
-      # filter(P50 == max(P50))
-      filter(Mean == max(Mean))
+      # filter(Mean == max(Mean))
+      filter(Mean > 0.99 * max(Mean)) %>%
+      filter(Mean == min(Mean))
 
     find_msy1 <- find_max1 %>% filter(Constraint == "Pass")
 
@@ -1058,8 +1060,9 @@ if(length(object) > 1){
     summarise(P50 = sum(P50),
                      Mean = sum(Mean)) %>%
     group_by(Region, RuleType, Constraint, CVConstraint) %>%
-    # filter(P50 == max(P50))
-    filter(Mean == max(Mean))
+      # filter(Mean == max(Mean))
+      filter(Mean > 0.99 * max(Mean)) %>%
+      filter(Mean == min(Mean))
 
   ## examples from find_max
   reg <- unique(find_max$Region)

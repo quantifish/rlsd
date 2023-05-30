@@ -1580,7 +1580,7 @@ plot_compare_cpue <- function(object_list,
   # CELR
   dfilter <- expand.grid("Year" = 1989:min(c(max(ocpue$Year),2019)), "Season" = c("AW","SS"))
   dfilter <- dfilter[-which(dfilter$Year == 1989 & dfilter$Season == "AW"),]
-  dfilter <- dfilter[-which(dfilter$Year == 2019 & dfilter$Season == "SS"),]
+  if(!max(ocpue$Year) < 2019) dfilter <- dfilter[-which(dfilter$Year == 2019 & dfilter$Season == "SS"),]
 
   ocr_yrs <- ocpue %>% right_join(dfilter) %>% 
     filter(CPUE_type == 1) %>%

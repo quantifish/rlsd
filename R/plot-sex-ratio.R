@@ -95,11 +95,9 @@ plot_sex_ratio <- function(object, scales = "free",
 
   if (n_iter > 10) {
     p <- p + geom_violin(aes(x = as.factor(.data$Year), y = .data$value, alpha = .data$Sigma), fill = "tomato", color = "tomato") +
-      scale_x_discrete(breaks = seq(0, 1e6, 5)) +
       scale_alpha(range = c(1, 0.1))
   } else {
-    p <- p + geom_point(aes(x = .data$Year, y = .data$value, size = .data$Sigma), alpha = 0.75, color = "tomato") + #, cex = 2) +
-      scale_x_continuous(breaks = seq(0, 1e6, 5), minor_breaks = seq(0, 1e6, 1))
+    p <- p + geom_point(aes(x = .data$Year, y = .data$value, size = .data$Sigma), alpha = 0.75, color = "tomato") 
   }
 
   if (data$n_area == 1) {

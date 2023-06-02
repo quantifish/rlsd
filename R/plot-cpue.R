@@ -253,7 +253,8 @@ plot_cpue <- function(object,
     scale_y_continuous(limits = c(0, NA), expand = expansion(mult = c(0, 0.1))) +
     scale_x_continuous(breaks = pretty_breaks()) +
     xlab(xlab) + ylab(ylab) +
-    theme_lsd()
+    theme_lsd() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
   if (!is.null(pcpue)) {
     p <- p + stat_summary(data = pcpue, aes(x = Year, y = CPUE), fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
       stat_summary(data = pcpue, aes(x = Year, y = CPUE), fun = function(x) quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
@@ -293,9 +294,10 @@ plot_cpue <- function(object,
       p <- p + geom_line(data = p1cr_yrs, aes(x = Year, y = CPUE), linetype = 2)
     }
     if (length(unique(ocr_yrs$Region)) > 1) {
-      p <- p + facet_wrap(~Region, scales = "free", ncol = data$n_area)
+      p <- p + facet_wrap(Region~Season, scales = "free", ncol = data$n_area)
       ggsave(paste0(figure_dir, "cpue_CR.png"), p, width = 15, height = 10)
     } else {
+      p <- p + facet_wrap(~Season, scales = "free_y", ncol = 1)
       ggsave(paste0(figure_dir, "cpue_CR.png"), p, height = 9, width = 12)
     }
   }
@@ -332,7 +334,7 @@ plot_cpue <- function(object,
       p <- p + facet_wrap(Region~Season, scales = "free", ncol = data$n_area)
       ggsave(paste0(figure_dir, "cpue_FSU.png"), p, width = 15, height = 10)
     } else {
-      p <- p + facet_wrap(~Season, scales = "free", ncol = data$n_area)
+      p <- p + facet_wrap(~Season, scales = "free_y", ncol = data$n_area)
       ggsave(paste0(figure_dir, "cpue_FSU.png"), p, height = 9, width = 12)
     }
   }
@@ -362,7 +364,7 @@ plot_cpue <- function(object,
       p <- p + facet_wrap(Region~Season, scales = "free", ncol = data$n_area)
       ggsave(paste0(figure_dir, "cpue_CELR.png"), p, height = 10, width = 15)
     } else {
-      p <- p + facet_wrap(~Season, scales = "free", ncol = data$n_area)
+      p <- p + facet_wrap(~Season, scales = "free_y", ncol = data$n_area)
       ggsave(paste0(figure_dir, "cpue_CELR.png"), p, height = 9, width = 12)
     }
   }
@@ -379,7 +381,7 @@ plot_cpue <- function(object,
       scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
       expand_limits(y = 0) +
       xlab(xlab) + ylab(ylab) +
-      theme_lsd()
+      theme_lsd() 
     if (!is.null(pcpue_lb)) {
       p <- p + stat_summary(data = pcpue_lb, aes(x = Year, y = CPUE), fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
         stat_summary(data = pcpue_lb, aes(x = Year, y = CPUE), fun.ymin = function(x) quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
@@ -392,7 +394,7 @@ plot_cpue <- function(object,
       p <- p + facet_wrap(Region~Season, scales = "free", ncol = data$n_area)
       ggsave(paste0(figure_dir, "cpue_Logbook.png"), p, height = 10, width = 15)
     } else {
-      p <- p + facet_wrap(~Season, scales = "free", ncol = data$n_area)
+      p <- p + facet_wrap(~Season, scales = "free_y", ncol = data$n_area)
       ggsave(paste0(figure_dir, "cpue_Logbook.png"), p, height = 9, width = 12)
     }
   }
@@ -402,13 +404,13 @@ plot_cpue <- function(object,
     geom_hline(yintercept = 0, alpha = 0.2) +
     xlab(xlab) + ylab("Standardised residual") +
     theme_lsd() +
-    theme(legend.position = "none")
+    theme(legend.position = "none") +
+    scale_x_continuous(breaks = pretty_breaks()) +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
   if (n_iter > 10) {
-    p <- p + geom_violin(aes(x = as.factor(Year), y = CPUE, colour = Season, fill = Season)) +
-      scale_x_discrete(breaks = seq(0, 1e6, 5))
+    p <- p + geom_violin(aes(x = as.factor(Year), y = CPUE, colour = Season, fill = Season))
   } else {
-    p <- p + geom_point(aes(x = Year, y = CPUE, color = Season)) +
-      scale_x_continuous(breaks = seq(0, 1e6, 5), minor_breaks = seq(0, 1e6, 1))
+    p <- p + geom_point(aes(x = Year, y = CPUE, color = Season))
   }
   if (data$n_area > 1) {
     p <- p + facet_wrap(Season ~ Region+CPUE_name, scales = "free", ncol = data$n_area)
@@ -425,16 +427,17 @@ plot_cpue <- function(object,
       geom_hline(yintercept = 0, alpha = 0.2) +
       xlab(xlab) + ylab("Standardised residual") +
       theme_lsd() +
-      theme(legend.position = "none")
+      theme(legend.position = "none") +
+    scale_x_continuous(breaks = pretty_breaks())
     if (n_iter > 10) {
-      p <- p + geom_violin(aes(x = as.factor(Year), y = CPUE, colour = Season, fill = Season)) +
-        scale_x_discrete(breaks = seq(0, 1e6, 5))
+      p <- p + geom_violin(aes(x = as.factor(Year), y = CPUE, colour = Season, fill = Season))
     } else {
-      p <- p + geom_point(aes(x = Year, y = CPUE, color = Season)) +
-        scale_x_continuous(breaks = seq(0, 1e6, 5), minor_breaks = seq(0, 1e6, 1))
+      p <- p + geom_point(aes(x = Year, y = CPUE, color = Season)) 
     }
     if (length(unique(rcr_yrs$Region)) > 1) {
-      p <- p + facet_wrap( ~ Region, scales = "free", ncol = data$n_area)
+      p <- p + facet_wrap(Region ~ Season, scales = "free", ncol = data$n_area)
+    } else {
+      p <- p + facet_wrap(~ Season, scales = "free_y", ncol = 1)
     }
     ggsave(paste0(figure_dir, "cpue_resid_CR.png"), p, height = 9, width = 12)
   }
@@ -448,18 +451,17 @@ plot_cpue <- function(object,
       geom_hline(yintercept = 0, alpha = 0.2) +
       labs(x = xlab, y = "Standardised residual") +
       theme_lsd() +
-      theme(legend.position = "none")
+      theme(legend.position = "none") +
+    scale_x_continuous(breaks = pretty_breaks())
     if (n_iter > 10) {
-      p <- p + geom_violin(aes(x = as.factor(Year), y = CPUE, colour = Season, fill = Season)) +
-        scale_x_discrete(breaks = seq(0, 1e6, 5))
+      p <- p + geom_violin(aes(x = as.factor(Year), y = CPUE, colour = Season, fill = Season))
     } else {
-      p <- p + geom_point(aes(x = Year, y = CPUE, color = Season)) +
-        scale_x_continuous(breaks = seq(0, 1e6, 5), minor_breaks = seq(0, 1e6, 1))
+      p <- p + geom_point(aes(x = Year, y = CPUE, color = Season)) 
     }
     if (length(unique(rcpue_fsu$Region)) > 1) {
       p <- p + facet_wrap(Region ~ Season, scales = "free", ncol = data$n_area)
     } else {
-      p <- p + facet_wrap( ~ Season, scales = "free", ncol = data$n_area)
+      p <- p + facet_wrap( ~ Season, scales = "free_y", ncol = data$n_area)
     }
     ggsave(paste0(figure_dir, "cpue_resid_FSU.png"), p, height = 9, width = 12)
   }
@@ -473,7 +475,7 @@ plot_cpue <- function(object,
       # scale_x_continuous(breaks = pretty(c(min(rcpue_celr$Year),max(rcpue_celr$Year)))) +
       xlab(xlab) + ylab("Standardised residual") +
       theme_lsd() +
-      theme(legend.position = "none")
+      theme(legend.position = "none") 
     if (n_iter > 10) {
       p <- p + geom_violin(aes(x = as.factor(Year), y = CPUE, colour = Season, fill = Season)) +
         scale_x_discrete(breaks = seq(0, 1e6, 5))
@@ -484,7 +486,7 @@ plot_cpue <- function(object,
     if (length(unique(rcpue_celr$Region)) > 1) {
       p <- p + facet_wrap(Region ~ Season, scales = "free", ncol = data$n_area)
     } else {
-      p <- p + facet_wrap( ~ Season, scales = "free", ncol = data$n_area)
+      p <- p + facet_wrap( ~ Season, scales = "free_y", ncol = data$n_area)
     }
     ggsave(paste0(figure_dir, "cpue_resid_CELR.png"), p, height = 9, width = 12)
   }
@@ -509,7 +511,7 @@ plot_cpue <- function(object,
     if (length(unique(rcpue_lb$Region)) > 1) {
       p <- p + facet_wrap(Region ~ Season, scales = "free", ncol = data$n_area)
     } else {
-      p <- p + facet_wrap( ~ Season, scales = "free", ncol = data$n_area)
+      p <- p + facet_wrap( ~ Season, scales = "free_y", ncol = data$n_area)
     }
     ggsave(paste0(figure_dir, "cpue_resid_Logbook.png"), p, height = 9, width = 12)
   }

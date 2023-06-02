@@ -428,6 +428,8 @@ plot_cpue <- function(object,
       xlab(xlab) + ylab("Standardised residual") +
       theme_lsd() +
       theme(legend.position = "none") +
+    geom_hline(aes(yintercept = -2), linetype = 2) +
+    geom_hline(aes(yintercept = 2), linetype = 2) +
     scale_x_continuous(breaks = pretty_breaks())
     if (n_iter > 10) {
       p <- p + geom_violin(aes(x = as.factor(Year), y = CPUE, colour = Season, fill = Season))
@@ -452,6 +454,8 @@ plot_cpue <- function(object,
       labs(x = xlab, y = "Standardised residual") +
       theme_lsd() +
       theme(legend.position = "none") +
+    geom_hline(aes(yintercept = -2), linetype = 2) +
+    geom_hline(aes(yintercept = 2), linetype = 2) +
     scale_x_continuous(breaks = pretty_breaks())
     if (n_iter > 10) {
       p <- p + geom_violin(aes(x = as.factor(Year), y = CPUE, colour = Season, fill = Season))
@@ -475,6 +479,8 @@ plot_cpue <- function(object,
       # scale_x_continuous(breaks = pretty(c(min(rcpue_celr$Year),max(rcpue_celr$Year)))) +
       xlab(xlab) + ylab("Standardised residual") +
       theme_lsd() +
+    geom_hline(aes(yintercept = -2), linetype = 2) +
+    geom_hline(aes(yintercept = 2), linetype = 2) +
       theme(legend.position = "none") 
     if (n_iter > 10) {
       p <- p + geom_violin(aes(x = as.factor(Year), y = CPUE, colour = Season, fill = Season)) +
@@ -500,7 +506,9 @@ plot_cpue <- function(object,
       # scale_x_continuous(breaks = pretty(c(min(rcpue_lb$Year),max(rcpue_lb$Year)))) +
       xlab(xlab) + ylab("Standardised residual") +
       theme_lsd() +
-      theme(legend.position = "none")
+      theme(legend.position = "none") +
+      geom_hline(aes(yintercept = -2), linetype = 2) +
+    geom_hline(aes(yintercept = 2), linetype = 2)
     if (n_iter > 10) {
       p <- p + geom_violin(aes(x = as.factor(Year), y = CPUE, colour = Season, fill = Season)) +
         scale_x_discrete(breaks = seq(0, 1e6, 5))

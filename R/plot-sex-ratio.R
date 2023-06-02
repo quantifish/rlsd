@@ -91,7 +91,10 @@ plot_sex_ratio <- function(object, scales = "free",
     labs(x = xlab, y = "Standardised residual") +
     theme_lsd()  +
     guides(alpha = FALSE) +
-    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+    geom_hline(aes(yintercept = -2), linetype = 2) +
+    geom_hline(aes(yintercept = 2), linetype = 2)
+
 
   if (n_iter > 10) {
     p <- p + geom_violin(aes(x = as.factor(.data$Year), y = .data$value, alpha = .data$Sigma), fill = "tomato", color = "tomato") +

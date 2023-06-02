@@ -173,7 +173,8 @@ plot_compare_ssb <- function(object_list,
     dimnames(bio) <- list("Iteration" = 1:n_iter, "Rule" = 1:dim(bio)[2], "Year" = pyears_list[[x]], "Region" = regions_list[[x]])
     bio2 <- melt(bio) %>%
       group_by(Iteration, Year, Rule, Region) %>%
-      summarise(value = sum(value))
+      summarise(value = sum(value)) %>%
+      filter(Year <= max(years_list[[x]]))
     bio2$Model <- object_names[x]
     return(bio2)
   })
@@ -775,7 +776,7 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
         filter(value > 0) %>%
         mutate(Season = as.character(Season), Season = ifelse(Year >= data_list[[x]]$season_change_yr, Season, YR)) %>%
         filter(Season %in% c("YR","AW")) %>%
-        #filter(Year <= max(years_list[[x]])) %>%
+        filter(Year <= max(years_list[[x]])) %>%
         group_by(Iteration, Year, Season, Region) %>%
         summarise(value = sum(value))
     } else {
@@ -785,7 +786,7 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
         filter(value > 0) %>%
         mutate(Season = as.character(Season), Season = ifelse(Year >= data_list[[x]]$season_change_yr, Season, YR)) %>%
         filter(Season %in% c("YR","AW")) %>%
-        #filter(Year <= max(years_list[[x]])) %>%
+        filter(Year <= max(years_list[[x]])) %>%
         group_by(Iteration, Year, Season, Region) %>%
         summarise(value = sum(value))
     }
@@ -1309,7 +1310,8 @@ plot_compare_recruitment <- function(object_list, object_names, figure_dir = "co
     dimnames(recruits2) <- list("Iteration" = 1:n_iter, "Region" = regions_list[[x]], "Year" = pyears_list[[x]])
     recruits2 <- melt(recruits2) %>%
       group_by(Iteration, Year, Region) %>%
-      summarise(value = sum(value))
+      summarise(value = sum(value)) %>%
+      filter(Year <= max(years_list[[x]]))
     recruits2$Model <- object_names[x]
     recruits2$qconstant <- as.character(ifelse(grepl("qconstant", object_names[[x]]), 1,0))
     recruits2

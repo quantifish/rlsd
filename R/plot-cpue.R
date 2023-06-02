@@ -406,6 +406,8 @@ plot_cpue <- function(object,
     theme_lsd() +
     theme(legend.position = "none") +
     scale_x_continuous(breaks = pretty_breaks()) +
+    geom_hline(aes(yintercept = -2), linetype = 2) +
+    geom_hline(aes(yintercept = 2), linetype = 2) +
     theme(axis.text.x = element_text(angle = 45, hjust = 1))
   if (n_iter > 10) {
     p <- p + geom_violin(aes(x = as.factor(Year), y = CPUE, colour = Season, fill = Season))

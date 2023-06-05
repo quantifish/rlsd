@@ -245,6 +245,8 @@ plot_lfs_resid2 <- function(object, n_panel = 10, figure_dir = "figure/")
       stat_summary(fun.min = function(x) quantile(x, 0.25), fun.max = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
       stat_summary(fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1) +
       scale_x_continuous(minor_breaks = seq(0, 1e6, 2), limits = c(min(lim$lower), max(lim$upper))) +
+      geom_hline(aes(yintercept = -2), linetype = 2) +
+      geom_hline(aes(yintercept = 2), linetype = 2) +
       xlab("Midpoint of size-class (mm)") + ylab("Standardised residuals") +
       theme_lsd()
     if (data$n_area == 1) {
@@ -312,6 +314,8 @@ plot_lfs_resid <- function(object, figure_dir = "figure/", ylim = c(-5, 5))
     scale_x_discrete(breaks = rev(seq(max(years), by = -5))) +
     guides(fill = 'none', color = "none") +
     theme_lsd() +
+    geom_hline(aes(yintercept = -2), linetype = 2) +
+    geom_hline(aes(yintercept = 2), linetype = 2) +
     scale_alpha(guide = "none") +
     coord_cartesian(ylim = ylim)
 
@@ -325,6 +329,8 @@ plot_lfs_resid <- function(object, figure_dir = "figure/", ylim = c(-5, 5))
     geom_hline(yintercept = 0, alpha = 0.8) +
     theme_lsd() +
     scale_alpha(guide = "none")  +
+    geom_hline(aes(yintercept = -2), linetype = 2) +
+    geom_hline(aes(yintercept = 2), linetype = 2) +
     guides(fill = "none", color = "none") +
     coord_cartesian(ylim = ylim)
 
@@ -337,6 +343,8 @@ plot_lfs_resid <- function(object, figure_dir = "figure/", ylim = c(-5, 5))
     labs(x = "Size (mm)", y = "Standardised residuals") +
     geom_hline(yintercept = 0, alpha = 0.8) +
     theme_lsd() +
+    geom_hline(aes(yintercept = -2), linetype = 2) +
+    geom_hline(aes(yintercept = 2), linetype = 2) +
     scale_alpha(guide = "none") +
     coord_cartesian(ylim = ylim) +
     guides(fill = "none", color = "none")
@@ -355,6 +363,8 @@ plot_lfs_resid <- function(object, figure_dir = "figure/", ylim = c(-5, 5))
     scale_x_discrete(breaks = rev(seq(max(years), by = -5))) +
     geom_hline(yintercept = 0, alpha = 0.8) +
     theme_lsd() +
+    geom_hline(aes(yintercept = -2), linetype = 2) +
+    geom_hline(aes(yintercept = 2), linetype = 2) +
     guides(fill = "none", color = "none") +
     scale_alpha(guide = "none") +
     coord_cartesian(ylim = ylim)
@@ -372,6 +382,8 @@ plot_lfs_resid <- function(object, figure_dir = "figure/", ylim = c(-5, 5))
     xlab("Size (mm)") + ylab("Standardised residuals") +
     geom_hline(yintercept = 0, alpha = 0.8) +
     theme_lsd() +
+    geom_hline(aes(yintercept = -2), linetype = 2) +
+    geom_hline(aes(yintercept = 2), linetype = 2) +
     theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
     scale_alpha(guide = "none") +
     guides(fill = "none", color = "none") +
@@ -390,6 +402,8 @@ plot_lfs_resid <- function(object, figure_dir = "figure/", ylim = c(-5, 5))
     labs(x = "Size (mm)", y = "Standardised residuals") +
     geom_hline(yintercept = 0, alpha = 0.8) +
     theme_lsd() +
+    geom_hline(aes(yintercept = -2), linetype = 2) +
+    geom_hline(aes(yintercept = 2), linetype = 2) +
     guides(fill = 'none', color = 'none') +
     theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
     scale_alpha(guide = "none") +
@@ -409,6 +423,8 @@ plot_lfs_resid <- function(object, figure_dir = "figure/", ylim = c(-5, 5))
     labs(x = "Year", y = "Standardised residuals") +
     geom_hline(yintercept = 0, alpha = 0.8) +
     theme_lsd() +
+    geom_hline(aes(yintercept = -2), linetype = 2) +
+    geom_hline(aes(yintercept = 2), linetype = 2) +
     scale_alpha(guide = "none") +
     coord_cartesian(ylim = ylim) +
     guides(fill = "none", color = "none")

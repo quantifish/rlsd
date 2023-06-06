@@ -352,7 +352,7 @@ plot_lfs_resid <- function(object, figure_dir = "figure/", ylim = c(-5, 5))
   if (length(regions) > 1) {
     p <- p + facet_grid(Region ~ Season)
   } else {
-    p <- p + facet_grid( ~ Season)
+    p <- p + facet_grid( Season ~ . )
   }
 
   ggsave(paste0(figure_dir, "lf_residuals_size_season.png"), p, width = 16)

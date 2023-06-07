@@ -311,7 +311,7 @@ plot_lfs_resid <- function(object, figure_dir = "figure/", ylim = c(-5, 5))
     geom_violin(aes(x = factor(Year), y = value, alpha = WtYr, fill = Region, color = Region), scale = "width") +
     labs(x = "Year", y = "Standardised residuals") +
     geom_hline(yintercept = 0, alpha = 0.8) +
-    scale_x_discrete(breaks = rev(seq(max(years), by = -5))) +
+    scale_x_discrete(breaks = rev(seq(max(years), by = -2))) +
     guides(fill = 'none', color = "none") +
     theme_lsd() +
     geom_hline(aes(yintercept = -2), linetype = 2) +
@@ -360,7 +360,7 @@ plot_lfs_resid <- function(object, figure_dir = "figure/", ylim = c(-5, 5))
   p <- ggplot(data = resid) +
     geom_violin(aes(x = factor(Year), y = value, fill = Region, color = Region, alpha = WtYr), scale = "width") +
     labs(x = "Year", y = "Standardised residuals") +
-    scale_x_discrete(breaks = rev(seq(max(years), by = -5))) +
+    scale_x_discrete(breaks = rev(seq(max(years), by = -2))) +
     geom_hline(yintercept = 0, alpha = 0.8) +
     theme_lsd() +
     geom_hline(aes(yintercept = -2), linetype = 2) +
@@ -419,7 +419,7 @@ plot_lfs_resid <- function(object, figure_dir = "figure/", ylim = c(-5, 5))
 
   p <- ggplot(data = resid) +
     geom_violin(aes(x = factor(Year), y = value, color = Region, fill = Region, alpha = WtYr), scale = "width") +
-    scale_x_discrete(breaks = rev(seq(max(years), by = -5))) +
+    scale_x_discrete(breaks = rev(seq(max(years), by = -2))) +
     labs(x = "Year", y = "Standardised residuals") +
     geom_hline(yintercept = 0, alpha = 0.8) +
     theme_lsd() +

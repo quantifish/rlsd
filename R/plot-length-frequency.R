@@ -332,7 +332,8 @@ plot_lfs_resid <- function(object, figure_dir = "figure/", ylim = c(-5, 5))
     geom_hline(aes(yintercept = -2), linetype = 2) +
     geom_hline(aes(yintercept = 2), linetype = 2) +
     guides(fill = "none", color = "none") +
-    coord_cartesian(ylim = ylim)
+    coord_cartesian(ylim = ylim) 
+
 
   if (length(regions) > 1) p <- p + facet_grid(Region ~ .)
 
@@ -384,7 +385,7 @@ plot_lfs_resid <- function(object, figure_dir = "figure/", ylim = c(-5, 5))
     theme_lsd() +
     geom_hline(aes(yintercept = -2), linetype = 2) +
     geom_hline(aes(yintercept = 2), linetype = 2) +
-    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
+    # theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
     scale_alpha(guide = "none") +
     guides(fill = "none", color = "none") +
     coord_cartesian(ylim = ylim)
@@ -405,7 +406,8 @@ plot_lfs_resid <- function(object, figure_dir = "figure/", ylim = c(-5, 5))
     geom_hline(aes(yintercept = -2), linetype = 2) +
     geom_hline(aes(yintercept = 2), linetype = 2) +
     guides(fill = 'none', color = 'none') +
-    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+    scale_x_discrete(breaks = seq(min(bins), max(bins), by = 4)) +
     scale_alpha(guide = "none") +
     coord_cartesian(ylim = ylim)
 

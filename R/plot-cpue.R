@@ -405,14 +405,15 @@ plot_cpue <- function(object,
     xlab(xlab) + ylab("Standardised residual") +
     theme_lsd() +
     theme(legend.position = "none") +
-    scale_x_continuous(breaks = pretty_breaks()) +
     geom_hline(aes(yintercept = -2), linetype = 2) +
     geom_hline(aes(yintercept = 2), linetype = 2) +
     theme(axis.text.x = element_text(angle = 45, hjust = 1))
   if (n_iter > 10) {
-    p <- p + geom_violin(aes(x = as.factor(Year), y = CPUE, colour = Season, fill = Season))
+    p <- p + geom_violin(aes(x = as.factor(Year), y = CPUE, colour = Season, fill = Season)) +
+        scale_x_discrete(breaks = pretty_breaks()) 
   } else {
-    p <- p + geom_point(aes(x = Year, y = CPUE, color = Season))
+    p <- p + geom_point(aes(x = Year, y = CPUE, color = Season)) +
+        scale_x_continuous(breaks = pretty_breaks())
   }
   if (data$n_area > 1) {
     p <- p + facet_wrap(Season ~ Region+CPUE_name, scales = "free", ncol = data$n_area)
@@ -431,13 +432,14 @@ plot_cpue <- function(object,
       theme_lsd() +
       theme(legend.position = "none") +
     geom_hline(aes(yintercept = -2), linetype = 2) +
-    geom_hline(aes(yintercept = 2), linetype = 2) +
-    scale_x_continuous(breaks = pretty_breaks())
-    if (n_iter > 10) {
-      p <- p + geom_violin(aes(x = as.factor(Year), y = CPUE, colour = Season, fill = Season))
-    } else {
-      p <- p + geom_point(aes(x = Year, y = CPUE, color = Season)) 
-    }
+    geom_hline(aes(yintercept = 2), linetype = 2) 
+  if (n_iter > 10) {
+    p <- p + geom_violin(aes(x = as.factor(Year), y = CPUE, colour = Season, fill = Season)) +
+        scale_x_discrete(breaks = pretty_breaks()) 
+  } else {
+    p <- p + geom_point(aes(x = Year, y = CPUE, color = Season)) +
+        scale_x_continuous(breaks = pretty_breaks())
+  }
     if (length(unique(rcr_yrs$Region)) > 1) {
       p <- p + facet_wrap(Region ~ Season, scales = "free", ncol = data$n_area)
     } else {
@@ -457,13 +459,14 @@ plot_cpue <- function(object,
       theme_lsd() +
       theme(legend.position = "none") +
     geom_hline(aes(yintercept = -2), linetype = 2) +
-    geom_hline(aes(yintercept = 2), linetype = 2) +
-    scale_x_continuous(breaks = pretty_breaks())
-    if (n_iter > 10) {
-      p <- p + geom_violin(aes(x = as.factor(Year), y = CPUE, colour = Season, fill = Season))
-    } else {
-      p <- p + geom_point(aes(x = Year, y = CPUE, color = Season)) 
-    }
+    geom_hline(aes(yintercept = 2), linetype = 2)
+  if (n_iter > 10) {
+    p <- p + geom_violin(aes(x = as.factor(Year), y = CPUE, colour = Season, fill = Season)) +
+        scale_x_discrete(breaks = pretty_breaks()) 
+  } else {
+    p <- p + geom_point(aes(x = Year, y = CPUE, color = Season)) +
+        scale_x_continuous(breaks = pretty_breaks())
+  }
     if (length(unique(rcpue_fsu$Region)) > 1) {
       p <- p + facet_wrap(Region ~ Season, scales = "free", ncol = data$n_area)
     } else {
@@ -484,13 +487,13 @@ plot_cpue <- function(object,
     geom_hline(aes(yintercept = -2), linetype = 2) +
     geom_hline(aes(yintercept = 2), linetype = 2) +
       theme(legend.position = "none") 
-    if (n_iter > 10) {
-      p <- p + geom_violin(aes(x = as.factor(Year), y = CPUE, colour = Season, fill = Season)) +
-        scale_x_discrete(breaks = seq(0, 1e6, 5))
-    } else {
-      p <- p + geom_point(aes(x = Year, y = CPUE, color = Season)) +
-        scale_x_continuous(breaks = seq(0, 1e6, 5), minor_breaks = seq(0, 1e6, 1))
-    }
+  if (n_iter > 10) {
+    p <- p + geom_violin(aes(x = as.factor(Year), y = CPUE, colour = Season, fill = Season)) +
+        scale_x_discrete(breaks = pretty_breaks()) 
+  } else {
+    p <- p + geom_point(aes(x = Year, y = CPUE, color = Season)) +
+        scale_x_continuous(breaks = pretty_breaks())
+  }
     if (length(unique(rcpue_celr$Region)) > 1) {
       p <- p + facet_wrap(Region ~ Season, scales = "free", ncol = data$n_area)
     } else {
@@ -505,19 +508,18 @@ plot_cpue <- function(object,
     p <- ggplot(rcpue_lb) +
       geom_hline(yintercept = 0, alpha = 0.2) +
       # expand_limits(y = 0) +
-      # scale_x_continuous(breaks = pretty(c(min(rcpue_lb$Year),max(rcpue_lb$Year)))) +
       xlab(xlab) + ylab("Standardised residual") +
       theme_lsd() +
       theme(legend.position = "none") +
       geom_hline(aes(yintercept = -2), linetype = 2) +
     geom_hline(aes(yintercept = 2), linetype = 2)
-    if (n_iter > 10) {
-      p <- p + geom_violin(aes(x = as.factor(Year), y = CPUE, colour = Season, fill = Season)) +
-        scale_x_discrete(breaks = seq(0, 1e6, 5))
-    } else {
-      p <- p + geom_point(aes(x = Year, y = CPUE, color = Season)) +
-        scale_x_continuous(breaks = seq(0, 1e6, 5), minor_breaks = seq(0, 1e6, 1))
-    }
+  if (n_iter > 10) {
+    p <- p + geom_violin(aes(x = as.factor(Year), y = CPUE, colour = Season, fill = Season)) +
+        scale_x_discrete(breaks = pretty_breaks()) 
+  } else {
+    p <- p + geom_point(aes(x = Year, y = CPUE, color = Season)) +
+        scale_x_continuous(breaks = pretty_breaks())
+  }
     if (length(unique(rcpue_lb$Region)) > 1) {
       p <- p + facet_wrap(Region ~ Season, scales = "free", ncol = data$n_area)
     } else {

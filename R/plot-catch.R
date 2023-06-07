@@ -56,8 +56,8 @@ plot_catch_rule <- function(object,
     labs(x = xlab, y = ylab) +
     scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
     scale_y_continuous(expand = expansion(mult = c(0, 0.05)), limits = c(0, NA)) +
-    theme_lsd() +
-    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+    theme_lsd() #+
+    # theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
   if (save_plot) {
     ggsave(paste0(figure_dir, "catch_rule.png"), p2)
@@ -201,8 +201,8 @@ plot_catch <- function(object,
     labs(x = xlab, y = ylab) +
     scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
     scale_y_continuous(expand = expansion(mult = c(0, 0.05)), limits = c(0, NA)) +
-    theme_lsd() +
-    theme(axis.text.x = element_text(angle = 45,hjust = 1))
+    theme_lsd() #+
+    # theme(axis.text.x = element_text(angle = 45,hjust = 1))
 
   if (data$n_area > 1) {
     p1 <- p1 + facet_grid(Region + Type ~ Season, scales = "free")
@@ -236,8 +236,8 @@ plot_catch <- function(object,
     xlab(xlab) + ylab(ylab) +
     scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
     scale_y_continuous(expand = expansion(mult = c(0, 0.05)), limits = c(0, NA)) +
-    theme_lsd() +
-    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+    theme_lsd() #+
+    # theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
   if (data$n_area > 1) {
     p2 <- p2 + facet_grid(Region ~ Type, scales = scales)
@@ -264,8 +264,8 @@ plot_catch <- function(object,
     stat_summary(fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1) +
     scale_y_continuous(expand = expansion(mult = c(0, 0.05)), limits = c(0, NA)) +
     xlab(xlab) + ylab("Residual") +
-    theme_lsd() +
-    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+    theme_lsd() #+
+    # theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
   p3 <- p3 + facet_grid(Region + Type ~ Season, scales = "free")
 

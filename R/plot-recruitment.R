@@ -60,8 +60,8 @@ plot_recruitment_deviations <- function(object,
     p <- p + expand_limits(y = 0) +
         xlab(xlab) + ylab(ylab) +
         scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
-        theme_lsd() +
-        theme(axis.text.x = element_text(angle = 45,hjust = 1))
+        theme_lsd() #+
+        # theme(axis.text.x = element_text(angle = 45,hjust = 1))
 
     ggsave(paste0(figure_dir, "recruitment_deviations.png"), p)
 }
@@ -152,8 +152,8 @@ plot_recruitment <- function(object,
         #scale_x_continuous(breaks = seq(xmin, xmax, 10), minor_breaks = seq(xmin, xmax, 1)) +
         scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
         scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
-        theme_lsd() +
-        theme(axis.text.x = element_text(angle = 45,hjust = 1))
+        theme_lsd() #+
+        # theme(axis.text.x = element_text(angle = 45,hjust = 1))
 
     if (data$n_area > 1) p <- p + facet_wrap(~Region)
 

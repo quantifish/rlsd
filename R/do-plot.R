@@ -42,26 +42,70 @@ do_plot <- function(object, map = FALSE, mcmc = FALSE, figure_dir = "figure/") {
 
     sq <- seq(1, length(unique(posteriors_trace$par)), n_panel)
 
+    lp <- posteriors_trace %>% filter(grepl('lp_', par)) %>% filter(par != "lp__")
+    grow <- posteriors_trace %>% filter(grepl("grow_", par))
+    selvuln <- posteriors_trace %>% filter(grepl("vuln_", par) | grepl("sel_", par))
+    more <- posteriors_trace %>% filter(grepl("_M_", par) | grepl("R0_", par) | grepl("mat_", par) | grepl("cpue_", par))
+
     # MCMC trace plot
     print("plotting traces")
-    for (i in 1:length(sq)) {
-      pq <- sq[i]:(sq[i] + n_panel - 1)
-      d <- posteriors_trace %>% filter(.data$par %in% unique(posteriors_trace$par)[pq])
-      npar <- length(unique(d$par))
 
-      p <- ggplot(d) +
+      p <- ggplot(lp) +
         geom_line(aes(x = as.integer(.data$iteration), y = .data$value, col = .data$chain)) +
-        facet_wrap(~ .data$par, scales = "free_y", ncol = n_col) +
+        facet_wrap(~ .data$par, scales = "free_y") +
         labs(x = "Iteration", y = NULL, col = "Chain") +
         theme_lsd()
+      ggsave(paste0(figure_dir, "par_trace_lp.png"), p, width = 8, height = 10) #npar + (npar %% 2)
 
-      ggsave(paste0(figure_dir, "par_trace_", i, ".png"), p, width = ifelse(npar > 1, 8, 4), height = 10) #npar + (npar %% 2)
-    }
+      p <- ggplot(grow) +
+        geom_line(aes(x = as.integer(.data$iteration), y = .data$value, col = .data$chain)) +
+        facet_wrap(~ .data$par, scales = "free_y") +
+        labs(x = "Iteration", y = NULL, col = "Chain") +
+        theme_lsd()
+      ggsave(paste0(figure_dir, "par_trace_grow.png"), p, width = 8, height = 10) #npar + (npar %% 2)
 
-    sq <- seq(1, length(unique(posteriors$par)), n_panel)
+      p <- ggplot(selvuln) +
+        geom_line(aes(x = as.integer(.data$iteration), y = .data$value, col = .data$chain)) +
+        facet_wrap(~ .data$par, scales = "free_y") +
+        labs(x = "Iteration", y = NULL, col = "Chain") +
+        theme_lsd()
+      ggsave(paste0(figure_dir, "par_trace_selvuln.png"), p, width = 8, height = 10) #npar + (npar %% 2)
+
+      p <- ggplot(more) +
+        geom_line(aes(x = as.integer(.data$iteration), y = .data$value, col = .data$chain)) +
+        facet_wrap(~ .data$par, scales = "free_y") +
+        labs(x = "Iteration", y = NULL, col = "Chain") +
+        theme_lsd()
+      ggsave(paste0(figure_dir, "par_trace_M_R0_mat_cpue.png"), p, width = 8, height = 10) #npar + (npar %% 2)
+
+    # for (i in 1:length(sq)) {
+    #   pq <- sq[i]:(sq[i] + n_panel - 1)
+    #   d <- posteriors_trace %>% filter(.data$par %in% unique(posteriors_trace$par)[pq])
+    #   npar <- length(unique(d$par))
+
+    #   p <- ggplot(d) +
+    #     geom_line(aes(x = as.integer(.data$iteration), y = .data$value, col = .data$chain)) +
+    #     facet_wrap(~ .data$par, scales = "free_y", ncol = n_col) +
+    #     labs(x = "Iteration", y = NULL, col = "Chain") +
+    #     theme_lsd()
+
+    #   ggsave(paste0(figure_dir, "par_trace_", i, ".png"), p, width = ifelse(npar > 1, 8, 4), height = 10) #npar + (npar %% 2)
+    # }
+
+    # sq <- seq(1, length(unique(posteriors$par)), n_panel)
 
     # MCMC histogram
     print("plotting histograms")
+
+      # p <- ggplot(data = lp, aes(x = .data$value, fill = .data$chain)) +
+      #   geom_histogram(aes(x = value), bins = 50) +
+      #   facet_wrap(~ .data$par, scales = "free", ncol = n_col) +
+      #   scale_y_continuous(limits = c(0, NA), expand = expansion(mult = c(0, 0.05))) +
+      #   labs(x = "Value", y = NULL, fill = "Chain") +
+      #   theme_lsd()
+      # ggsave(paste0(figure_dir, "par_histogram_lp.png"), p, width = ifelse(npar > 1, 8, 4), height = 10) #npar + (npar %% 2)
+
+
     for (i in 1:length(sq)) {
       pq <- sq[i]:(sq[i] + n_panel - 1)
       d <- posteriors %>% filter(.data$par %in% unique(posteriors$par)[pq])

@@ -153,7 +153,8 @@ plot_F <- function(object, scales = "free",
       }
     }
 
-    ggsave(paste0(figure_dir, "fishing_mortality",file_names[i] , ".png"), p)
+    if(type_catch == 1) ggsave(paste0(figure_dir, "exploitation_rate", file_names[i], ".png"), p)
+    if(type_catch == 2) ggsave(paste0(figure_dir, "fishing_mortality",file_names[i] , ".png"), p)
   }
 
 }

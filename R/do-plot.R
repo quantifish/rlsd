@@ -97,67 +97,165 @@ do_plot <- function(object, map = FALSE, mcmc = FALSE, figure_dir = "figure/") {
     # MCMC histogram
     print("plotting histograms")
 
-      # p <- ggplot(data = lp, aes(x = .data$value, fill = .data$chain)) +
-      #   geom_histogram(aes(x = value), bins = 50) +
-      #   facet_wrap(~ .data$par, scales = "free", ncol = n_col) +
-      #   scale_y_continuous(limits = c(0, NA), expand = expansion(mult = c(0, 0.05))) +
-      #   labs(x = "Value", y = NULL, fill = "Chain") +
-      #   theme_lsd()
-      # ggsave(paste0(figure_dir, "par_histogram_lp.png"), p, width = ifelse(npar > 1, 8, 4), height = 10) #npar + (npar %% 2)
-
-
-    for (i in 1:length(sq)) {
-      pq <- sq[i]:(sq[i] + n_panel - 1)
-      d <- posteriors %>% filter(.data$par %in% unique(posteriors$par)[pq])
-      npar <- length(unique(d$par))
-
-      p <- ggplot(data = d, aes(x = .data$value, fill = .data$chain)) +
+      p <- ggplot(data = lp, aes(x = .data$value, fill = .data$chain)) +
         geom_histogram(aes(x = value), bins = 50) +
-        facet_wrap(~ .data$par, scales = "free", ncol = n_col) +
+        facet_wrap(~ .data$par, scales = "free") +
         scale_y_continuous(limits = c(0, NA), expand = expansion(mult = c(0, 0.05))) +
         labs(x = "Value", y = NULL, fill = "Chain") +
         theme_lsd()
+      ggsave(paste0(figure_dir, "par_histogram_lp.png"), p, width = 8, height = 10) #npar + (npar %% 2)
 
-      ggsave(paste0(figure_dir, "par_histogram_", i, ".png"), p, width = ifelse(npar > 1, 8, 4), height = 10) #npar + (npar %% 2)
-    }
+      p <- ggplot(data = grow, aes(x = .data$value, fill = .data$chain)) +
+        geom_histogram(aes(x = value), bins = 50) +
+        facet_wrap(~ .data$par, scales = "free") +
+        scale_y_continuous(limits = c(0, NA), expand = expansion(mult = c(0, 0.05))) +
+        labs(x = "Value", y = NULL, fill = "Chain") +
+        theme_lsd()
+      ggsave(paste0(figure_dir, "par_histogram_grow.png"), p, width = 8, height = 10) #npar + (npar %% 2)
+
+      p <- ggplot(data = selvuln, aes(x = .data$value, fill = .data$chain)) +
+        geom_histogram(aes(x = value), bins = 50) +
+        facet_wrap(~ .data$par, scales = "free") +
+        scale_y_continuous(limits = c(0, NA), expand = expansion(mult = c(0, 0.05))) +
+        labs(x = "Value", y = NULL, fill = "Chain") +
+        theme_lsd()
+      ggsave(paste0(figure_dir, "par_histogram_selvuln.png"), p, width = 8, height = 10) #npar + (npar %% 2)
+
+      p <- ggplot(data = more, aes(x = .data$value, fill = .data$chain)) +
+        geom_histogram(aes(x = value), bins = 50) +
+        facet_wrap(~ .data$par, scales = "free") +
+        scale_y_continuous(limits = c(0, NA), expand = expansion(mult = c(0, 0.05))) +
+        labs(x = "Value", y = NULL, fill = "Chain") +
+        theme_lsd()
+      ggsave(paste0(figure_dir, "par_histogram_M_R0_mat_CPUE.png"), p, width = 8, height = 10) #npar + (npar %% 2)
+
+
+    # for (i in 1:length(sq)) {
+    #   pq <- sq[i]:(sq[i] + n_panel - 1)
+    #   d <- posteriors %>% filter(.data$par %in% unique(posteriors$par)[pq])
+    #   npar <- length(unique(d$par))
+
+    #   p <- ggplot(data = d, aes(x = .data$value, fill = .data$chain)) +
+    #     geom_histogram(aes(x = value), bins = 50) +
+    #     facet_wrap(~ .data$par, scales = "free", ncol = n_col) +
+    #     scale_y_continuous(limits = c(0, NA), expand = expansion(mult = c(0, 0.05))) +
+    #     labs(x = "Value", y = NULL, fill = "Chain") +
+    #     theme_lsd()
+
+    #   ggsave(paste0(figure_dir, "par_histogram_", i, ".png"), p, width = ifelse(npar > 1, 8, 4), height = 10) #npar + (npar %% 2)
+    # }
 
     # MCMC density
     print("plotting density")
-    for (i in 1:length(sq)) {
-      pq <- sq[i]:(sq[i] + n_panel - 1)
-      d <- rbind(posteriors, priors) %>% filter(.data$par %in% unique(posteriors$par)[pq])
-      d$type <- factor(d$type, levels = c("Prior", "Posterior"))
-      npar <- length(unique(d$par))
 
-      p <- ggplot(d) +
+      p <- ggplot(lp) +
         geom_density(aes(x = .data$value, fill = .data$type, colour = .data$type), alpha = 0.5, trim = TRUE) +
-        facet_wrap(~ .data$par, scales = "free", ncol = n_col, nrow = 6) +
+        facet_wrap(~ .data$par, scales = "free") +
         labs(x = NULL, y = NULL, colour = NULL, fill = NULL) +
         scale_y_continuous(limits = c(0, NA), expand = expansion(mult = c(0, 0.05))) +
         scale_colour_discrete(drop = TRUE, limits = c("Prior", "Posterior")) +
         scale_fill_discrete(drop = TRUE, limits = c("Prior", "Posterior")) +
         theme_lsd() +
         theme(legend.position = "top")
+      ggsave(paste0(figure_dir, "par_density_lp.png"), p, width = 8, height = 10)
 
-      ggsave(paste0(figure_dir, "par_density_", i, ".png"), p, width = ifelse(npar > 1, 8, 4), height = 10)
-      #ggsave(paste0(figure_dir, "par_density_", i, ".png"), p, width = ifelse(npar > 1, 7, 3.5), height = npar + (npar %% 2))
-    }
+      p <- ggplot(grow) +
+        geom_density(aes(x = .data$value, fill = .data$type, colour = .data$type), alpha = 0.5, trim = TRUE) +
+        facet_wrap(~ .data$par, scales = "free") +
+        labs(x = NULL, y = NULL, colour = NULL, fill = NULL) +
+        scale_y_continuous(limits = c(0, NA), expand = expansion(mult = c(0, 0.05))) +
+        scale_colour_discrete(drop = TRUE, limits = c("Prior", "Posterior")) +
+        scale_fill_discrete(drop = TRUE, limits = c("Prior", "Posterior")) +
+        theme_lsd() +
+        theme(legend.position = "top")
+      ggsave(paste0(figure_dir, "par_density_grow.png"), p, width = 8, height = 10)
+
+      p <- ggplot(selvuln) +
+        geom_density(aes(x = .data$value, fill = .data$type, colour = .data$type), alpha = 0.5, trim = TRUE) +
+        facet_wrap(~ .data$par, scales = "free") +
+        labs(x = NULL, y = NULL, colour = NULL, fill = NULL) +
+        scale_y_continuous(limits = c(0, NA), expand = expansion(mult = c(0, 0.05))) +
+        scale_colour_discrete(drop = TRUE, limits = c("Prior", "Posterior")) +
+        scale_fill_discrete(drop = TRUE, limits = c("Prior", "Posterior")) +
+        theme_lsd() +
+        theme(legend.position = "top")
+      ggsave(paste0(figure_dir, "par_density_selvuln.png"), p, width = 8, height = 10)
+
+        p <- ggplot(more) +
+        geom_density(aes(x = .data$value, fill = .data$type, colour = .data$type), alpha = 0.5, trim = TRUE) +
+        facet_wrap(~ .data$par, scales = "free") +
+        labs(x = NULL, y = NULL, colour = NULL, fill = NULL) +
+        scale_y_continuous(limits = c(0, NA), expand = expansion(mult = c(0, 0.05))) +
+        scale_colour_discrete(drop = TRUE, limits = c("Prior", "Posterior")) +
+        scale_fill_discrete(drop = TRUE, limits = c("Prior", "Posterior")) +
+        theme_lsd() +
+        theme(legend.position = "top")
+      ggsave(paste0(figure_dir, "par_density_M_R0_mat_CPUE.png"), p, width = 8, height = 10)
+
+    # for (i in 1:length(sq)) {
+    #   pq <- sq[i]:(sq[i] + n_panel - 1)
+    #   d <- rbind(posteriors, priors) %>% filter(.data$par %in% unique(posteriors$par)[pq])
+    #   d$type <- factor(d$type, levels = c("Prior", "Posterior"))
+    #   npar <- length(unique(d$par))
+
+    #   p <- ggplot(d) +
+    #     geom_density(aes(x = .data$value, fill = .data$type, colour = .data$type), alpha = 0.5, trim = TRUE) +
+    #     facet_wrap(~ .data$par, scales = "free", ncol = n_col, nrow = 6) +
+    #     labs(x = NULL, y = NULL, colour = NULL, fill = NULL) +
+    #     scale_y_continuous(limits = c(0, NA), expand = expansion(mult = c(0, 0.05))) +
+    #     scale_colour_discrete(drop = TRUE, limits = c("Prior", "Posterior")) +
+    #     scale_fill_discrete(drop = TRUE, limits = c("Prior", "Posterior")) +
+    #     theme_lsd() +
+    #     theme(legend.position = "top")
+
+    #   ggsave(paste0(figure_dir, "par_density_", i, ".png"), p, width = ifelse(npar > 1, 8, 4), height = 10)
+    #   #ggsave(paste0(figure_dir, "par_density_", i, ".png"), p, width = ifelse(npar > 1, 7, 3.5), height = npar + (npar %% 2))
+    # }
 
     # MCMC cumulative density
     print("plotting cumulative density")
-    for (i in 1:length(sq)) {
-      pq <- sq[i]:(sq[i] + n_panel - 1)
-      d <- posteriors %>% filter(.data$par %in% unique(posteriors$par)[pq])
-      npar <- length(unique(d$par))
 
-      p <- ggplot(d, aes(x = .data$value, colour = .data$chain)) +
+      p <- ggplot(lp, aes(x = .data$value, colour = .data$chain)) +
         stat_ecdf() +
-        facet_wrap(~ .data$par, scales = "free_x", ncol = n_col) +
+        facet_wrap(~ .data$par, scales = "free_x") +
         labs(x = "Value", y = NULL, colour = "Chain") +
         theme_lsd()
+      ggsave(paste0(figure_dir, "par_cdf_lp.png"), p, width = 8, height = 10)
 
-      ggsave(paste0(figure_dir, "par_cdf_", i, ".png"), p, width = ifelse(npar > 1, 7, 3.5), height = npar + (npar %% 2))
-    }
+      p <- ggplot(grow, aes(x = .data$value, colour = .data$chain)) +
+        stat_ecdf() +
+        facet_wrap(~ .data$par, scales = "free_x") +
+        labs(x = "Value", y = NULL, colour = "Chain") +
+        theme_lsd()
+      ggsave(paste0(figure_dir, "par_cdf_grow.png"), p, width = 8, height = 10)
+
+      p <- ggplot(selvuln, aes(x = .data$value, colour = .data$chain)) +
+        stat_ecdf() +
+        facet_wrap(~ .data$par, scales = "free_x") +
+        labs(x = "Value", y = NULL, colour = "Chain") +
+        theme_lsd()
+      ggsave(paste0(figure_dir, "par_cdf_selvuln.png"), p, width = 8, height = 10)
+
+      p <- ggplot(more, aes(x = .data$value, colour = .data$chain)) +
+        stat_ecdf() +
+        facet_wrap(~ .data$par, scales = "free_x") +
+        labs(x = "Value", y = NULL, colour = "Chain") +
+        theme_lsd()
+      ggsave(paste0(figure_dir, "par_cdf_M_R0_mat_CPUE.png"), p, width = 8, height = 10)
+
+    # for (i in 1:length(sq)) {
+    #   pq <- sq[i]:(sq[i] + n_panel - 1)
+    #   d <- posteriors %>% filter(.data$par %in% unique(posteriors$par)[pq])
+    #   npar <- length(unique(d$par))
+
+    #   p <- ggplot(d, aes(x = .data$value, colour = .data$chain)) +
+    #     stat_ecdf() +
+    #     facet_wrap(~ .data$par, scales = "free_x", ncol = n_col) +
+    #     labs(x = "Value", y = NULL, colour = "Chain") +
+    #     theme_lsd()
+
+    #   ggsave(paste0(figure_dir, "par_cdf_", i, ".png"), p, width = ifelse(npar > 1, 7, 3.5), height = npar + (npar %% 2))
+    # }
 
     #if (object@data$snail_on == 1) {
       print("plotting snail")

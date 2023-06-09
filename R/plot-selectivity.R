@@ -39,7 +39,7 @@ plot_selectivity <- function(object,
         sel1 <- melt(sel1, value.name = "Selectivity") %>%
             inner_join(w, by = "Selex") %>%
             mutate(Year = factor(.data$Year), Inference = "MAP") %>%
-            distinct(.data$Iteration, .data$Selectivity, .data$Region, .keep_all = TRUE)
+            distinct(.data$Iteration, .data$Selectivity, .data$Region, .data$Size, .keep_all = TRUE)
     } else {
         sel1 <- NULL
     }
@@ -50,7 +50,7 @@ plot_selectivity <- function(object,
         sel2 <- melt(sel2, value.name = "Selectivity") %>%
             inner_join(w, by = "Selex") %>%
             mutate(Year = factor(.data$Year), Inference = "MCMC") %>%
-            distinct(.data$Iteration, .data$Selectivity, .data$Region, .keep_all = TRUE)
+            distinct(.data$Iteration, .data$Selectivity, .data$Region, .data$Size, .keep_all = TRUE)
     } else {
         sel2 <- NULL
     }
@@ -99,7 +99,7 @@ plot_selectivity <- function(object,
         xlab(xlab) +
         theme_lsd()
 
-    ggsave(paste0(figure_dir, "selectivity.png"), p)
+    ggsave(paste0(figure_dir, "selectivity.png"), p, width = 8, height = 8)
 
     if (!is.null(sel1)) {
         q <- ggplot(sel1, aes(x = .data$Size, y = .data$Year, height = .data$Selectivity, fill = .data$Sex)) +
@@ -143,7 +143,7 @@ plot_selectivity <- function(object,
     } else {
         p <- p + facet_grid( ~ .data$Sex)
     }
-    ggsave(paste0(figure_dir, "selectivity_vulnerability.png"), p)
+    ggsave(paste0(figure_dir, "selectivity_vulnerability.png"), p, width = 12, height = 8)
 
 
 }

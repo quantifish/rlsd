@@ -1497,7 +1497,8 @@ plot_compare_selectivity <- function(object_list, object_names, figure_dir = "co
   }
 
   p <- p + #scale_x_continuous(breaks = seq(30, 90, 10)) +
-    expand_limits(y = c(0, 1)) +
+    scale_y_continuous(expand = c(0,0)) +
+    coord_cartesian(ylim = c(0, 1)) +
     xlab("Length bin") +
     theme_lsd(base_size = 14)
 

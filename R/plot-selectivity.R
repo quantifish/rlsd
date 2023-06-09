@@ -29,7 +29,6 @@ plot_selectivity <- function(object,
         sex <- c("Male", "Immature female", "Mature female") 
     }
 
-
     w <- data$which_sel_rsyt
     dimnames(w) <- list("Region" = object@regions, "Sex" = sex, "Year" = years, "Season" = seasons)
     w <- melt(w, value.name = "Selex")
@@ -114,4 +113,37 @@ plot_selectivity <- function(object,
         }
         ggsave(paste0(figure_dir, "selectivity_ridges.png"), q)
     }
+
+################################
+## vulnerability & selectivity
+################################
+  n_iter <- nrow(mcmc[[1]])
+  pyears <- data$first_yr:data$last_proj_yr
+  seasons <- c("AW", "SS")
+  regions <- 1:data$n_area
+  if (length(regions) > 1) regions2 <- c(regions, max(regions) + 1)
+  if (length(regions) == 1) regions2 <- regions
+  YR <- "YR" # label for the season before the season change year
+  n_rules <- data$n_rules
+  sex <- c("Male", "Immature female", "Mature female") 
+  bins <- data$size_midpoint_l
+
+    vs <- mcmc$vuln_selectivity_ytrsl
+    dimnames(vs) <- list("Iteration" = 1:n_iter, "Year" = pyears, "Season" = seasons, "Region" = regions, "Sex" = sex, "Size" = bins)
+    vs2 <- melt(vs) %>%
+    rename(SelVuln = value)
+
+    p <- ggplot(data = vs2, aes(x = .data$Size, y = .data$SelVuln, col = .data$Season, fill = .data$Season)) +
+            stat_summary(fun.min = function(x) quantile(x, 0.05), fun.max = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
+            stat_summary(fun.min = function(x) quantile(x, 0.25), fun.max = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
+            stat_summary(fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1) +
+            theme_lsd() 
+    if (data$n_area > 1) {
+        p <- p + facet_grid(.data$Region ~ .data$Sex)
+    } else {
+        p <- p + facet_grid( ~ .data$Sex)
+    }
+    ggsave(paste0(figure_dir, "selectivity_vulnerability.png"), p)
+
+
 }

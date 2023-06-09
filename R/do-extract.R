@@ -18,7 +18,7 @@ do_extract <- function(dir = ".",
 
   # model outputs that we don't want
   dont_extract <- c("proj_numbers_ytrsl", "data_lf_all_isl", "resid_lf_i", "par_M_r",
-                    "vuln_selectivity_ytrsl",
+                    # "vuln_selectivity_ytrsl",
                     "pred_catch_lf_ytrsl", "F_ytrf",
                     "par_grow_ip", "par_grow_beta_alpha_ip", "par_sel_ip", "recruits_estimated_ry")
 

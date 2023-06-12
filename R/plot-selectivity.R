@@ -137,6 +137,7 @@ plot_selectivity <- function(object,
             stat_summary(fun.min = function(x) quantile(x, 0.05), fun.max = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
             stat_summary(fun.min = function(x) quantile(x, 0.25), fun.max = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
             stat_summary(fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1) +
+            scale_y_continuous(expand = c(0,0)) +
             coord_cartesian(ylim = c(0, 1)) +
             xlab(xlab) + ylab("Selectivity * Vulnerability") +
             theme_lsd() 

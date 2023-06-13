@@ -204,46 +204,51 @@ plot_cpue <- function(object,
   ocpue <- ocpue %>%
     mutate(CPUE_name = case_when(Year < 1979 ~ "CR",
                                  Year >= 1979 & Year <= 1989 & CPUE_type == 1 ~ "FSU",
-                                 Year == 1989 & CPUE_type == 1 & Season == "SS" ~ "CELR",
                                  Year <= 2019 & Year > 1989 & CPUE_type == 1 ~ "CELR",
+                                 # Year == 1989 & CPUE_type == 1 & Season == "SS" ~ "CELR",
                                  CPUE_type == 2 ~ "Logbook" )) %>%
-    filter(!is.na(Type))
+    filter(!is.na(Type)) %>%
+    mutate(CPUE_name = ifelse(Year == 1989 & CPUE_type == 1 & Season == "SS", "CELR", CPUE_name))
   ocpue$CPUE_name <- factor(ocpue$CPUE_name, levels = unique(ocpue$CPUE_name))
 
   pcpue <- pcpue %>%
     mutate(CPUE_name = case_when(Year < 1979 ~ "CR",
                                  Year >= 1979 & Year <= 1989 & CPUE_type == 1 ~ "FSU",
-                                 Year == 1989 & CPUE_type == 1 & Season == "SS" ~ "CELR",
+                                 # Year == 1989 & CPUE_type == 1 & Season == "SS" ~ "CELR",
                                  Year <= 2019 & Year > 1989 & CPUE_type == 1 ~ "CELR",
                                  CPUE_type == 2 ~ "Logbook" )) %>%
-    filter(!is.na(Type))
+    filter(!is.na(Type)) %>%
+    mutate(CPUE_name = ifelse(Year == 1989 & CPUE_type == 1 & Season == "SS", "CELR", CPUE_name))
   pcpue$CPUE_name <- factor(pcpue$CPUE_name, levels = unique(pcpue$CPUE_name))
 
   rcpue <- rcpue %>%
     mutate(CPUE_name = case_when(Year < 1979 ~ "CR",
                                  Year >= 1979 & Year <= 1989 & CPUE_type == 1 ~ "FSU",
-                                 Year == 1989 & CPUE_type == 1 & Season == "SS" ~ "CELR",
+                                 # Year == 1989 & CPUE_type == 1 & Season == "SS" ~ "CELR",
                                  Year <= 2019 & Year > 1989 & CPUE_type == 1 ~ "CELR",
                                  CPUE_type == 2 ~ "Logbook" )) %>%
-    filter(!is.na(Type))
+    filter(!is.na(Type)) %>%
+    mutate(CPUE_name = ifelse(Year == 1989 & CPUE_type == 1 & Season == "SS", "CELR", CPUE_name))
   rcpue$CPUE_name <- factor(rcpue$CPUE_name, levels = unique(rcpue$CPUE_name))
 
   pcpue1 <- pcpue1 %>%
     mutate(CPUE_name = case_when(Year < 1979 ~ "CR",
                                  Year >= 1979 & Year <= 1989 & CPUE_type == 1 ~ "FSU",
-                                 Year == 1989 & CPUE_type == 1 & Season == "SS" ~ "CELR",
+                                 # Year == 1989 & CPUE_type == 1 & Season == "SS" ~ "CELR",
                                  Year <= 2019 & Year > 1989 & CPUE_type == 1 ~ "CELR",
                                  CPUE_type == 2 ~ "Logbook" )) %>%
-    filter(!is.na(Type))
+    filter(!is.na(Type)) %>%
+    mutate(CPUE_name = ifelse(Year == 1989 & CPUE_type == 1 & Season == "SS", "CELR", CPUE_name))
   pcpue1$CPUE_name <- factor(pcpue1$CPUE_name, levels = unique(pcpue1$CPUE_name))
 
   rcpue1 <- rcpue1 %>%
     mutate(CPUE_name = case_when(Year < 1979 ~ "CR",
                                  Year >= 1979 & Year <= 1989 & CPUE_type == 1 ~ "FSU",
-                                 Year == 1989 & CPUE_type == 1 & Season == "SS" ~ "CELR",
+                                 # Year == 1989 & CPUE_type == 1 & Season == "SS" ~ "CELR",
                                  Year <= 2019 & Year > 1989 & CPUE_type == 1 ~ "CELR",
                                  CPUE_type == 2 ~ "Logbook" )) %>%
-    filter(!is.na(Type))
+    filter(!is.na(Type)) %>%
+    mutate(CPUE_name = ifelse(Year == 1989 & CPUE_type == 1 & Season == "SS", "CELR", CPUE_name))
   rcpue1$CPUE_name <- factor(rcpue1$CPUE_name, levels = unique(rcpue1$CPUE_name))
 
   # Plot CPUE

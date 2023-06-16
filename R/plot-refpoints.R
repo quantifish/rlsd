@@ -314,12 +314,13 @@ if(any(grepl("B0now_r", names(mcmc1)))){
   if(length(regions) > 1) regions2 <- c(regions, "Total")
   if(length(regions) == 1) regions2 <- regions
   sex <- c("Male","Immature female","Mature female")
-  rules <- data$mp_rule_parameters
+  rules <- data$mp_rule_parameters[,1:2]
+  colnames(rules) <- c("par1", "par2")
   n_rules <- nrow(rules)
   rule_type <- data.frame(RuleType1 = rules[,1], RuleNum = 1:n_rules) %>%
-                    mutate(RuleType = case_when(RuleType1 == 0 ~ "FixedCatch",
-                                                RuleType1 == 1 ~ "FixedU",
-                                                RuleType1 == 2 ~ "FixedF")) %>%
+                    mutate(RuleType = case_when(RuleType1 == 1 ~ "FixedCatch",
+                                                RuleType1 == 2 ~ "FixedU",
+                                                RuleType1 == 0 ~ "FixedF")) %>%
                     select(-RuleType1)
   fleets <- c("SL","NSL")
 
@@ -619,11 +620,10 @@ if(any(grepl("B0now_r", names(mcmc1)))){
   # rm(catch)
   gc()
 
-  colnames(rules) <- "par1"
   ruledf <- data.frame(RuleNum = 1:nrow(rules), rules) %>%
-    mutate(RuleType = case_when(par1 == 2 ~ "FixedF",
-                                par1 == 0 ~ "FixedCatch",
-                                par1 == 1 ~ "FixedU"))
+    mutate(RuleType = case_when(par1 == 0 ~ "FixedF",
+                                par1 == 1 ~ "FixedCatch",
+                                par1 == 2 ~ "FixedU"))
 
   proj_in <- data$proj_catch_commercial_in_jryt
   dimnames(proj_in) <- list("RuleNum" = 1:n_rules, "Region" = regions, "Year" = projyears, "Season" = seasons)

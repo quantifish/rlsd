@@ -815,13 +815,6 @@ if(any(grepl("B0now_r", names(mcmc1)))){
   check <- lapply(1:length(regions), function(x){
     check2 <- lapply(1:length(ruletypes), function(y){
       sub <- find_msy %>% filter(Region == paste0("Region ", regions[x])) %>% filter(RuleType == ruletypes[y])
-      if(ruletypes[y] == "CPUE-based"){
-        ncon <- unique(sub$CVConstraint)
-        if(nrow(sub) == length(ncon)) return(sub)
-        if(nrow(sub) > length(ncon)){
-          stop("Multiple rules are associated with the max catch by CV constraint. Need to write code to find the max average total catch by CV constraint.")
-        }
-      }
       if(nrow(sub) == 1) return(sub)
       if(nrow(sub) > 1){
         nums <- unique(sub$RuleNum)
@@ -844,10 +837,10 @@ if(any(grepl("B0now_r", names(mcmc1)))){
   
   msy_sub <- msy_info %>% select(RuleNum) %>% unique() %>% mutate(MSY = 1)
   
-  sub <- catch %>% left_join(rule_type) %>% filter(Iteration == 1) %>% mutate(Region = paste0("Region ", Region)) %>% left_join(msy_sub) 
+  sub <- catch %>% left_join(rule_type) %>% filter(Iteration == 1) #%>% mutate(Region = paste0("Region ", Region)) %>% left_join(msy_sub) 
   p <- ggplot(sub %>% filter(Iteration == 1)) +
     geom_line(aes(x = Year, y = Catch, color = factor(RuleNum))) +
-    geom_line(data = sub %>% filter(Iteration == 1) %>% filter(MSY == 1), aes(x = Year, y = Catch)) +
+    # geom_line(data = sub %>% filter(Iteration == 1) %>% filter(MSY == 1), aes(x = Year, y = Catch)) +
     facet_grid(RuleType~Region) +
     expand_limits(y = 0) +
     theme_bw(base_size = 20)

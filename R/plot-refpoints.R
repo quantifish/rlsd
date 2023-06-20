@@ -6,6 +6,7 @@
 #' @import dplyr
 #' @import ggplot2
 #' @import ggthemes
+#' @import ggforce
 #' @export
 #'
 plot_refpoints <- function(object, object1, figure_dir){
@@ -578,42 +579,6 @@ if(any(grepl("B0now_r", names(mcmc1)))){
     mutate(Region = paste0("Region ", Region)) 
   gc()
 
-  ### doesn't make sense to calculate total by rule, since not using total by rule
-  ### must calculate totals after identifying msy
-  # if(length(regions) > 1){
-  #   b0_total <- full_join(VB0, vb0now) %>%
-  #     full_join(TB0) %>%
-  #     full_join(tb0now) %>%
-  #     full_join(SSB0) %>%
-  #     full_join(ssb0now) %>%
-  #     filter(Region == "Total")
-  #   tinfo <- info %>%
-  #     group_by(Iteration, Year, RuleNum) %>%
-  #     summarise(SL = sum(SL),
-  #                      NSL = sum(NSL),
-  #                      Catch = sum(Catch),
-  #                      # CatchResidual = sum(CatchResidual),
-  #                      SSB = sum(SSB),
-  #                      VB = sum(VB),
-  #                      TB = sum(TB),
-  #                      Recruitment = sum(Recruitment),
-  #                      CPUE = mean(CPUE),
-  #                      F = sum(F)) %>%
-  #     mutate(Region = "Total") %>%
-  #     full_join(b0_total) %>%
-  #     mutate(RelVBdata = VB / VB0now) %>%
-  #     mutate(RelSSBdata = SSB / SSB0now) %>%
-  #     mutate(RelTBdata = TB / TB0now) %>%
-  #     mutate(RelVB = VB / VB0) %>%
-  #     mutate(RelSSB = SSB / SSB0) %>%
-  #     mutate(RelTB = TB / TB0)
-  #   gc()
-  #
-  #   info <- rbind.data.frame(info, tinfo)
-  #   gc()
-  #   info <- data.frame(info)
-  #   gc()
-  # }
 
   rm(relb)
   # rm(relb2)
@@ -835,34 +800,36 @@ if(any(grepl("B0now_r", names(mcmc1)))){
   msy_info <- output2 %>% right_join(find_msy %>% select(-c(P50,Mean)))
   # write.csv(msy_info, file.path(figure_dir, "MSY_info.csv"))
   
-  msy_sub <- msy_info %>% select(RuleNum) %>% unique() %>% mutate(MSY = 1)
+  msy_sub <- msy_info %>% ungroup() %>% select(RuleNum) %>% unique() %>% mutate(MSY = 1)
   
-  sub <- catch %>% left_join(rule_type) %>% filter(Iteration == 1) %>% filter(Year %in% (min(projyears)-10):max(projyears)) #%>% mutate(Region = paste0("Region ", Region)) %>% left_join(msy_sub) 
-  p <- ggplot(sub %>% filter(Iteration == 1)) +
+  sub <- catch %>% left_join(rule_type) %>% filter(Iteration == 1) %>% left_join(msy_sub) %>% 
+    filter(Year %in% (min(projyears)-10):max(projyears))#%>% mutate(Region = paste0("Region ", Region)) %>% left_join(msy_sub) 
+  p <- ggplot(sub) +
     geom_line(aes(x = Year, y = Catch, color = factor(RuleNum))) +
     guides(color = FALSE) +
-    # geom_line(data = sub %>% filter(Iteration == 1) %>% filter(MSY == 1), aes(x = Year, y = Catch)) +
+    geom_line(data = sub %>% filter(Iteration == 1) %>% filter(MSY == 1), aes(x = Year, y = Catch)) +
     facet_grid(RuleType~Region) +
     expand_limits(y = 0) +
+    coord_cartesian(xlim = c(min(projyears)-10, max(projyears)), expand = FALSE) +
     theme_bw(base_size = 20)
   ggsave(file.path(figure_dir, "Catch_check.png"), p, height = 10, width = 15)
   
   
   sub <- projU3 %>% left_join(rule_type) %>% filter(Iteration == 1) %>%
-    filter(Year %in% (min(projyears)-10):max(projyears)) %>%
     tidyr::pivot_longer(cols = U_AW:Usum, names_to = "Type", values_to = "U") %>%
     mutate(Season = case_when(Type == "U_AW" ~ "AW",
                               Type == "U_SS" ~ "SS",
                               Type == "Usum" ~ "Weighted Avg")) %>%
     mutate(Region = paste0("Region ", Region)) %>%
-    left_join(msy_sub)
+    left_join(msy_sub) %>%
+    filter(Year %in% (min(projyears)-10):max(projyears))
   p <- ggplot(sub) +
     geom_line(aes(x = Year, y = U, color = factor(RuleNum))) +
     geom_line(data = sub %>% filter(MSY == 1), aes(x = Year, y = U)) +
     facet_grid(RuleType ~ Region + Season) +
     guides(color = FALSE) +
     expand_limits(y = c(0,0)) +
-    coord_cartesian(y = c(0,1)) +
+    coord_cartesian(y = c(0,1), expand = FALSE) +
     ylab("Exploitation rate") +
     theme_bw(base_size = 20)
   ggsave(file.path(figure_dir, "U_check.png"), p, height = 10, width = 15)

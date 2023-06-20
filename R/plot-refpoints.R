@@ -837,9 +837,10 @@ if(any(grepl("B0now_r", names(mcmc1)))){
   
   msy_sub <- msy_info %>% select(RuleNum) %>% unique() %>% mutate(MSY = 1)
   
-  sub <- catch %>% left_join(rule_type) %>% filter(Iteration == 1) #%>% mutate(Region = paste0("Region ", Region)) %>% left_join(msy_sub) 
+  sub <- catch %>% left_join(rule_type) %>% filter(Iteration == 1) %>% filter(Year %in% (min(projyears)-10):max(projyears)) #%>% mutate(Region = paste0("Region ", Region)) %>% left_join(msy_sub) 
   p <- ggplot(sub %>% filter(Iteration == 1)) +
     geom_line(aes(x = Year, y = Catch, color = factor(RuleNum))) +
+    guides(color = FALSE) +
     # geom_line(data = sub %>% filter(Iteration == 1) %>% filter(MSY == 1), aes(x = Year, y = Catch)) +
     facet_grid(RuleType~Region) +
     expand_limits(y = 0) +
@@ -848,6 +849,7 @@ if(any(grepl("B0now_r", names(mcmc1)))){
   
   
   sub <- projU3 %>% left_join(rule_type) %>% filter(Iteration == 1) %>%
+    filter(Year %in% (min(projyears)-10):max(projyears)) %>%
     tidyr::pivot_longer(cols = U_AW:Usum, names_to = "Type", values_to = "U") %>%
     mutate(Season = case_when(Type == "U_AW" ~ "AW",
                               Type == "U_SS" ~ "SS",
@@ -858,6 +860,7 @@ if(any(grepl("B0now_r", names(mcmc1)))){
     geom_line(aes(x = Year, y = U, color = factor(RuleNum))) +
     geom_line(data = sub %>% filter(MSY == 1), aes(x = Year, y = U)) +
     facet_grid(RuleType ~ Region + Season) +
+    guides(color = FALSE) +
     expand_limits(y = c(0,0)) +
     coord_cartesian(y = c(0,1)) +
     ylab("Exploitation rate") +

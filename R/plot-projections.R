@@ -66,7 +66,7 @@ plot_vulnref_AW_proj <- function(object,
   }
 
   if (!show_proj) {
-    vb <- vb %>% filter(.data$Year <= data$last_yr)
+    vb <- vb %>% filter(Year <= data$last_yr)
     if (length(map) > 0 & show_map) vb1 <- vb1 %>% filter(.data$Year <= data$last_yr)
   }
 
@@ -100,6 +100,25 @@ plot_vulnref_AW_proj <- function(object,
     p <- p + facet_wrap(~ .data$Region, scales = scales)
   }
 
+
+  object2 <- readRDS("/home/darcy/Projects/CRA/lsd-auto/CRA1/2022/rec18_2019sq/lsd.rds")
+  data2 <- object2@data
+  mcmc2 <- object2@mcmc
+  vb2 <- mcmc2$biomass_vulnref_AW_jyr
+  dimnames(vb2) <- list(Iteration = 1:n_iter, Rule = 1, Year = data2$first_yr:data2$last_proj_yr, Region = 1)
+  vb2 <- melt(vb2, value.name = "VB") %>%
+    # group_by(Year, Rule) %>%
+    # summarise(SSB = mean(SSB)) %>%
+    filter(Year > 1979)
+
+  p2 <- p +
+    stat_summary(data = vb2, fun = function(x) quantile(x, 0.5), geom = "line", linetype = "dashed", linewidth = 1, colour = "black")
+  # geom_line(data = vb2, aes(x = Year, y = SSB), colour = "black", linewidth = 1)
+  p2
+  figure_dir <- ""
+  ggsave(paste0(figure_dir, "biomass_vuln.png"), p2, width = 12, height = 6)
+
+
   return(p)
 }
 
@@ -120,12 +139,12 @@ plot_vulnref_AW_proj <- function(object,
 #' @export
 #'
 plot_ssb_AW_proj <- function(object,
-                                 scales = "free",
-                                 show_map =  FALSE,
-                                 show_mcmc = TRUE,
-                                 show_proj = TRUE,
-                                 show_ref = TRUE,
-                                 xlab = "Fishing year (1 April - 31 March)")
+                             scales = "free",
+                             show_map =  FALSE,
+                             show_mcmc = TRUE,
+                             show_proj = TRUE,
+                             show_ref = TRUE,
+                             xlab = "Fishing year (1 April - 31 March)")
 {
   data <- object@data
   map <- object@map
@@ -193,10 +212,7 @@ plot_ssb_AW_proj <- function(object,
     sh <- bind_rows(soft_limit, hard_limit) %>% filter(.data$Year > data$season_change_yr)
     p <- p +
       stat_summary(data = sh, aes(y = value, fill = type, colour = NULL), fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.125) +
-      stat_summary(data = sh, aes(y = value, colour = type), fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1)# +
-      # stat_summary(data = hard_limit, aes(y = value, fill = type, colour = NULL), fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.125) +
-      # stat_summary(data = soft_limit, aes(y = value, colour = type), fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1)# +
-    # geom_label(data = Bref, label = "Reference", aes(x = min(vb$Year) + 15, y = .data$value), colour = cpal[2], size = 5, fill = "white")
+      stat_summary(data = sh, aes(y = value, colour = type), fun = function(x) quantile(x, 0.5), geom = "line", linewidth = 1)
   }
 
   if (show_proj) {
@@ -205,7 +221,7 @@ plot_ssb_AW_proj <- function(object,
 
   p <- p +
     stat_summary(fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.125, colour = NA) +
-    stat_summary(fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1) +
+    stat_summary(fun = function(x) quantile(x, 0.5), geom = "line", linewidth = 1) +
     scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1), expand = c(0, 1)) +
     scale_y_continuous(limits = c(0, NA), expand = expansion(mult = c(0, 0.1))) +
     labs(x = xlab, y = "Spawning stock biomass (tonnes)", colour = NULL, fill = NULL) +
@@ -218,6 +234,24 @@ plot_ssb_AW_proj <- function(object,
   if (data$n_area > 1) {
     p <- p + facet_wrap(~ .data$Region, scales = scales)
   }
+
+  object2 <- readRDS("/home/darcy/Projects/CRA/lsd-auto/CRA1/2022/rec18_2019sq/lsd.rds")
+  data2 <- object2@data
+  mcmc2 <- object2@mcmc
+  vb2 <- mcmc2$biomass_ssb_jyr
+  dimnames(vb2) <- list(Iteration = 1:n_iter, Rule = 1, Year = data2$first_yr:data2$last_proj_yr, Region = 1)
+  vb2 <- melt(vb2, value.name = "SSB") %>%
+    # group_by(Year, Rule) %>%
+    # summarise(SSB = mean(SSB)) %>%
+    filter(Year > 1979)
+
+  p2 <- p +
+    stat_summary(data = vb2, fun = function(x) quantile(x, 0.5), geom = "line", linetype = "dashed", linewidth = 1, colour = "black")
+    # geom_line(data = vb2, aes(x = Year, y = SSB), colour = "black", linewidth = 1)
+  p2
+  figure_dir <- ""
+  ggsave(paste0(figure_dir, "biomass_vuln_and_money.png"), p2, width = 12, height = 6)
+
 
   return(p)
 }

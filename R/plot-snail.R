@@ -11,6 +11,7 @@
 #' @importFrom reshape2 melt
 #' @importFrom stats quantile
 #' @importFrom ggrepel geom_text_repel
+#' @importFrom ggforce facet_zoom
 #' @export
 #'
 plot_snail <- function(object, figure_dir = "figure/", irule = 1) {

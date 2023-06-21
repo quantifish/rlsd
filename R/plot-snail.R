@@ -85,6 +85,24 @@ plot_snail <- function(object, figure_dir = "figure/", irule = 1) {
   p
   ggsave(file.path(figure_dir, "snail_trail.png"), p, width = 8, height = 7)
 
+  p <- ggplot(data = dfmed, aes(x = xmedian, y = ymedian)) +
+    geom_text(data = df_label, aes(label = Year)) +
+    geom_linerange(data = dferr, aes(ymin = ylower, ymax = yupper, color = Decade), alpha = 0.4, size = 1) +
+    geom_errorbarh(data = dferr, aes(xmin = xlower, xmax = xupper, color = Decade), height = 0, alpha = 0.25, size = 1) +
+    geom_segment(aes(xend = lead(xmedian), yend = lead(ymedian)), arrow = arrow(length = unit(0.2, "cm"))) +
+    geom_vline(xintercept = 1, linetype = "dashed") +
+    geom_hline(yintercept = 1, linetype = "dashed") +
+    scale_x_continuous(limits = c(0, NA), expand = expansion(mult = c(0, 0.05))) +
+    scale_y_continuous(limits = c(0, NA), expand = expansion(mult = c(0, 0.05))) +
+    labs(x = expression(B/B[R]), y = expression(paste("Fishing intensity (", U/U[R], ")"))) +
+    # labs(x = expression(B/B[REF]), y = expression(paste("Exploitation rate (U)"))) +
+    theme_lsd(base_size = 16) +
+    facet_zoom(xlim = c(0,2), ylim = c(0,2), zoom.size = 1)#+
+    # theme(legend.position = "none")
+
+  p
+  ggsave(file.path(figure_dir, "snail_trail_zoom.png"), p, width = 14, height = 7)
+
   # F_Fmsy <- mcmc$F_Fmsy_ry
   # dimnames(F_Fmsy) <- list(Iteration = 1:n_iter, Region = regions, Year = years)
   # F_Fmsy <- melt(F_Fmsy, value.name = "F_Fmsy")

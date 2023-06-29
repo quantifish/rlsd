@@ -86,7 +86,7 @@ plot_ssb <- function(object,
   map <- object@map
   mcmc <- object@mcmc
 
-  cpal <- c("#56B4E9", "#009E73", "#E69F00", "tomato")
+  # cpal <- c("#56B4E9", "#009E73", "#E69F00", "tomato")
 
   years <- data$first_yr:data$last_yr
   pyears <- data$first_yr:data$last_proj_yr
@@ -114,13 +114,13 @@ plot_ssb <- function(object,
       left_join(expand.grid(Iteration = 1:n_iter, Year = pyears), by = "Iteration") %>%
       group_by(Iteration, Region, value, Year) %>%
       ungroup() %>%
-      mutate(Rule = 1, type = "Hard limit", value = value * 0.1)
+      mutate(type = "Hard limit", value = value * 0.1)
     soft_limit <- melt(SSB0) %>%
       filter(Region != "Total") %>%
       left_join(expand.grid(Iteration = 1:n_iter, Year = pyears), by = "Iteration") %>%
       group_by(Iteration, Region, value, Year) %>%
       ungroup() %>%
-      mutate(Rule = 1, type = "Soft limit", value = value * 0.2)
+      mutate(type = "Soft limit", value = value * 0.2)
 
     SSBref <- mcmc$SSBref_jr
     dimnames(SSBref) <- list("Iteration" = 1:n_iter, "Rule" = 1:n_rules, "Region" = regions2)
@@ -137,17 +137,20 @@ plot_ssb <- function(object,
     ssb_in <- ssb %>%
       mutate(type = "SSB") %>%
       rename(value = SSB) %>%
-      rbind(soft_limit, hard_limit, SSBref)
+      full_join(soft_limit) %>%
+      full_join(hard_limit)
     if (length(map) > 0 & show_map) ssb1_in <- ssb1 %>% mutate(type = "SSB")
   } else {
     ssb_in <- ssb %>%
       mutate(type = "SSB") %>%
       rename(value = SSB) %>%
-      rbind(soft_limit, hard_limit, SSBref) %>%
+      full_join(soft_limit) %>%
+      full_join(hard_limit) %>%
       filter(Year <= data$last_yr)
     if (length(map) > 0 & show_map) ssb1_in <- filter(ssb1, Year <= data$last_yr) %>% mutate(type = "SSB")
   }
-  ssb_in$type <- factor(ssb_in$type, levels = c("SSB", "Reference", "Soft limit", "Hard limit"))
+  ssb_in <- ssb_in %>%
+    mutate(Rule_type = ifelse(type == "SSB", paste("SSB", Rule), type))
 
   if (!show_ref) {
     ssb_in <- filter(ssb_in, type != "Reference")
@@ -155,7 +158,7 @@ plot_ssb <- function(object,
   # ssb_in$Region <- sapply(1:nrow(ssb_in), function(x) paste0("Region ", ssb_in$Region[x]))
   # ssb1_in$Region <- sapply(1:nrow(ssb1_in), function(x) paste0("Region ", ssb1_in$Region[x]))
 
-  p <- ggplot(data = ssb_in %>% filter(Region %in% regions), aes(x = Year, y = value))
+  p <- ggplot(data = ssb_in %>% filter(Region %in% regions, type == "SSB"), aes(x = Year, y = value))
   # if (show_ref) {
   #     # p <- p + geom_vline(aes(xintercept = data$first_ref_yr), linetype = "dashed", colour = cpal[2]) +
   #     #     geom_vline(aes(xintercept = data$last_ref_yr), linetype = "dashed", colour = cpal[2])
@@ -165,19 +168,25 @@ plot_ssb <- function(object,
   if (show_proj) p <- p + geom_vline(aes(xintercept = data$last_yr), linetype = "dashed")
 
   p <- p +
-    stat_summary(aes(fill = type), fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.125) +
-    stat_summary(aes(fill = type), fun.ymin = function(x) quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.25) +
-    stat_summary(aes(colour = type), fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1) +
+    stat_summary(aes(fill = Rule_type), fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.125) +
+    stat_summary(aes(fill = Rule_type), fun.ymin = function(x) quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.25) +
+    stat_summary(aes(colour = Rule_type), fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1) +
+    stat_summary(data = ssb_in %>% filter(Region %in% regions, type == "Hard limit"),  fill = "black", fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.125) +
+    stat_summary(data = ssb_in %>% filter(Region %in% regions, type == "Hard limit"),  fill = "black", fun.ymin = function(x) quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.125) +
+    stat_summary(data = ssb_in %>% filter(Region %in% regions, type == "Hard limit"), color = "black", fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1) +
+    stat_summary(data = ssb_in %>% filter(Region %in% regions, type == "Soft limit"),  fill = gray(0.4), fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.125) +
+    stat_summary(data = ssb_in %>% filter(Region %in% regions, type == "Soft limit"),  fill = gray(0.4), fun.ymin = function(x) quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.125) +
+    stat_summary(data = ssb_in %>% filter(Region %in% regions, type == "Soft limit"), color = gray(0.4), fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1) +
     expand_limits(y = 0) +
     labs(x = xlab, y = "Spawning stock biomass (tonnes)", colour = NULL, fill = NULL) +
     scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1), expand = c(0, 1)) +
     scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
-    scale_fill_manual(values = cpal) +
-    scale_colour_manual(values = cpal) +
+    scale_fill_brewer(palette = "Set1") +
+    scale_color_brewer(palette = "Set1") +
     theme_lsd()
 
   if (length(map) > 0 & show_map) {
-    p <- p + geom_line(data = ssb1_in %>% filter(Region %in% regions), aes(x = Year, y = SSB, colour = type), linetype = 2)
+    p <- p + geom_line(data = ssb1_in %>% filter(Region %in% regions), aes(x = Year, y = SSB, colour = Rule_type), linetype = 2)
   }
 
   if (data$n_area > 1) {

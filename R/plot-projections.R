@@ -250,7 +250,7 @@ plot_ssb_AW_proj <- function(object,
   #   # geom_line(data = vb2, aes(x = Year, y = SSB), colour = "black", linewidth = 1)
   # p2
   # figure_dir <- ""
-  ggsave(paste0(figure_dir, "biomass_vuln_and_money.png"), p, width = 12, height = 6)
+  ggsave(paste0(figure_dir, "biomass_spawning.png"), p, width = 12, height = 6)
 
 
   return(p)

@@ -19,7 +19,8 @@ plot_vulnref_AW_proj <- function(object,
                                  show_mcmc = TRUE,
                                  show_proj = TRUE,
                                  show_ref = TRUE,
-                                 xlab = "Fishing year (1 April - 31 March)")
+                                 xlab = "Fishing year (1 April - 31 March)",
+                                 figure_dir = "figure/")
 {
   data <- object@data
   map <- object@map
@@ -144,7 +145,8 @@ plot_ssb_AW_proj <- function(object,
                              show_mcmc = TRUE,
                              show_proj = TRUE,
                              show_ref = TRUE,
-                             xlab = "Fishing year (1 April - 31 March)")
+                             xlab = "Fishing year (1 April - 31 March)",
+                             figure_dir = "figure/")
 {
   data <- object@data
   map <- object@map

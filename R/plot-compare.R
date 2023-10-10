@@ -1428,9 +1428,16 @@ plot_compare_selectivity <- function(object_list, object_names, figure_dir = "co
     regions <- 1:data_list[[x]]$n_area
     pyears <- pyears_list[[x]]
 
-    w <- data_list[[x]]$which_sel_rsyt
-    dimnames(w) <- list("Region" = paste0("Region ", regions), "Sex" = sex, "Year" = pyears, "Season" = 1:n_season)
-    w <- melt(w, value.name = "Selex")
+    if(any(grepl('which_sel_rsyt', names(data_list[[x]])))){
+      w <- data_list[[x]]$which_sel_rsyt
+      dimnames(w) <- list("Region" = paste0("Region ", regions), "Sex" = sex, "Year" = pyears, "Season" = 1:n_season)
+      w <- melt(w, value.name = "Selex")
+    } else {
+      w <- data_list[[x]]$which_sel_rsy
+      dimnames(w) <- list("Region" = paste0("Region ", regions), "Sex" = sex, "Year" = pyears)
+      w <- melt(w, value.name = "Selex") %>% mutate(Season = 1)
+    }
+
 
     sel2 <- mcmc_list[[x]]$selectivity_ml
     dimnames(sel2) <- list("Iteration" = 1:n_iter, "Selex" = 1:data_list[[x]]$n_sel, "Size" = data_list[[x]]$size_midpoint_l)

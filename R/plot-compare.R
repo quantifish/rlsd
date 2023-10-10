@@ -20,7 +20,7 @@ plot_compare_lfs <- function(object_list,
 {
   sex <- c("Male", "Immature female", "Mature female")
   seasons <- c("AW", "SS")
-  sources <- c("LB", "CS")
+  #sources <- c("LB", "CS")
   nmod <- length(object_list)
 
   elf <- NULL
@@ -33,69 +33,63 @@ plot_compare_lfs <- function(object_list,
     mcmc <- object@mcmc
 
     n_iter <- nrow(mcmc[[1]])
+    sex <- c("Male", "Immature female", "Mature female")
+    seasons <- c("AW", "SS")
     bins <- data$size_midpoint_l
     regions <- 1:data$n_area
-
+    
     w <- data.frame(LF = 1:data$n_lf,
                     Year = data$data_lf_year_i, Season = data$data_lf_season_i,
-                    Source = data$data_lf_source_i, Region = data$data_lf_area_i)
-
+                    Region = data$data_lf_area_i, Sex = data$data_lf_sex_i)
+    
     # 1. Minimum legal size by region, year and sex. These get plotted as vertical lines on each panel.
     # 2. Bin limits
     # 3. Effective N
     # 4. Weights
     mls <- data$cov_mls_ytrs
     dimnames(mls) <- list("Year" = data$first_yr:data$last_proj_yr, "Season" = seasons, "Region" = regions, "Sex" = sex)
-    mls <- reshape2::melt(mls, id.var = "Year", variable.name = "Sex", value.name = "MLS")
-
-    lim <- array(NA, dim = c(length(regions), length(sex), 2))
-    lim[,,] <- data$data_lf_bin_limits_rsi
-    dimnames(lim) <- list("Region" = regions, "Sex" = sex, "Limit" = c("lower", "upper"))
-    lim <- reshape2::melt(lim, variable.name = "Sex") %>%
-      mutate(value = bins[value]) %>%
-      tidyr::spread(Limit, value)
-
-    rawN <- data$data_lf_N_is
-    dimnames(rawN) <- list("LF" = 1:data$n_lf, "Sex" = sex)
-    rawN <- reshape2::melt(rawN, value.name = "rawN") %>% mutate(Iteration = 1)
-
-    rawW <- data$data_lf_weight_is
-    dimnames(rawW) <- list("LF" = 1:data$n_lf, "Sex" = sex)
-    rawW <- reshape2::melt(rawW, value.name = "rawW") %>% mutate(Iteration = 1)
-
-    effN <- mcmc$pred_lf_effN_is
-    dimnames(effN) <- list("Iteration" = 1:n_iter, "LF" = 1:data$n_lf, "Sex" = sex)
-    effN <- reshape2::melt(effN, value.name = "effN")
-
-    elf1 <- left_join(rawN, effN) %>%
+    mls <- melt(mls, id.var = "Year", variable.name = "Sex", value.name = "MLS")
+    
+    lim <- data$data_lf_bin_limits_i
+    colnames(lim) <- c("Min", "Max")
+    lim <- data.frame(lim) %>%
+      mutate(LF = 1:data$n_lf) %>%
+      mutate(lower = bins[Min], upper = bins[Max]) %>%
+      dplyr::select("LF", "lower", "upper")
+    
+    rawW <- 1 / mcmc$sigma_lf_i
+    dimnames(rawW) <- list("Iteration" = 1:n_iter, "LF" = 1:data$n_lf)
+    rawW <- melt(rawW, value.name = "rawW") %>%
+      filter(Iteration == 1)
+    
+    elf2 <- rawW %>%
       left_join(w, by = "LF") %>%
-      mutate(Source = sources[Source], Season = factor(seasons[Season]), Model = object_names[i]) %>%
+      mutate(Season = seasons[Season], Sex = sex[Sex], Model = object_names[i]) %>%
       left_join(mls, by = c("Region", "Year", "Season", "Sex")) %>%
-      left_join(lim, by = c("Region", "Sex")) %>%
+      left_join(lim, by = c("LF")) %>%
       dplyr::select(-Iteration) %>%
-      mutate(effN = paste0("n: ", sprintf("%.2f", effN))) %>%
-      mutate(rawN = paste0("N: ", sprintf("%.0f", rawN)))
-    elf <- rbind(elf, elf1)
-
+      group_by(Year, Season, Region, Sex, MLS, lower, upper) %>%
+      mutate(rawW2 = max(rawW))
+    elf <- rbind(elf, elf2)
+    
     # Observed LF
-    dlf1 <- mcmc$data_lf_out_isl
-    dimnames(dlf1) <- list("Iteration" = 1:n_iter, "LF" = 1:data$n_lf, "Sex" = sex, "Bin" = 1:length(bins))
-    dlf1 <- reshape2::melt(dlf1) %>%
+    dlf1 <- mcmc$data_lf_obs2_il
+    dimnames(dlf1) <- list("Iteration" = 1:n_iter, "LF" = 1:data$n_lf, "Size" = bins)
+    dlf1 <- melt(dlf1) %>%
       left_join(w, by = "LF") %>%
-      mutate(Source = factor(sources[Source]), Model = object_names[i]) %>%
-      mutate(Season = seasons[Season], Size = bins[Bin]) %>%
       filter(Iteration == 1, value >= 0) %>%
       dplyr::select(-Iteration) %>%
-      left_join(lim, by = c("Sex", "Region"))
+      left_join(lim, by = c("LF")) %>%
+      mutate(Season = seasons[Season], Sex = sex[Sex], Model = object_names[i])
     dlf <- rbind(dlf, dlf1)
-
+    
     # Predicted LF
-    plf1 <- mcmc$pred_lf_isl
-    dimnames(plf1) <- list("Iteration" = 1:n_iter, "LF" = 1:data$n_lf, "Sex" = sex, "Size" = bins)
-    plf1 <- reshape2::melt(plf1) %>%
+    plf1 <- mcmc$pred_lf_il
+    dimnames(plf1) <- list("Iteration" = 1:n_iter, "LF" = 1:data$n_lf, "Size" = bins)
+    plf <- melt(plf1) %>%
       left_join(w, by = "LF") %>%
-      mutate(Source = sources[Source], Season = seasons[Season], Model = object_names[i]) %>%
-      left_join(lim, by = c("Sex", "Region"))
+      left_join(lim, by = c("LF")) %>%
+      mutate(Season = seasons[Season], Sex = sex[Sex], Model = object_names[i])
     plf <- rbind(plf, plf1)
   }
 
@@ -115,7 +109,7 @@ plot_compare_lfs <- function(object_list,
     # scale_shape_manual(values = c(0, 4)) +
     # scale_colour_manual(values = rev(ggplotColours(n = length(sources)))) +
     # scale_color_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
-    scale_x_continuous(minor_breaks = seq(0, 1e6, 2), limits = c(min(elf$lower), max(elf$upper))) +
+    scale_x_continuous(minor_breaks = seq(0, 1e6, 2), limits = c(min(elf2$lower), max(elf2$upper))) +
     theme_lsd()
 
     if (nmod > 5) {
@@ -129,14 +123,152 @@ plot_compare_lfs <- function(object_list,
     }
 
   if (data$n_area == 1) {
-    p <- p + facet_grid(Year + Season + Source ~ Sex, scales = "free_y")
+    p <- p + facet_grid(Year + Season ~ Sex, scales = "free_y")
   } else {
-    p <- p + facet_grid(Region + Year + Season + Source ~ Sex, scales = "free_y")
+    p <- p + facet_grid(Region + Year + Season ~ Sex, scales = "free_y")
   }
 
   return(p)
 }
 
+#' Compare OLD LFs from multiple models
+#'
+#' @param object_list list of 'lsd.rds' files from multiple models
+#' @param object_names vector of model names associated with each of the output files in object_list
+#' @param yrs the years to compare
+#' @param xlab the x axis label
+#' @param ylab the y axis label
+#' @import dplyr
+#' @import ggplot2
+#' @importFrom reshape2 melt
+#' @importFrom grDevices colorRampPalette gray
+#' @importFrom stats quantile
+#' @export
+#'
+plot_compare_lfs_old <- function(object_list,
+                             object_names,
+                             yrs = 2018:2019,
+                             xlab = "Midpoint of size-class (mm)",
+                             ylab = "Proportion at size (mm)")
+{
+  sex <- c("Male", "Immature female", "Mature female")
+  seasons <- c("AW", "SS")
+  sources <- c("LB", "CS")
+  nmod <- length(object_list)
+  
+  elf <- NULL
+  plf <- NULL
+  dlf <- NULL
+  
+  for (i in 1:nmod) {
+    object <- object_list[[i]]
+    data <- object@data
+    mcmc <- object@mcmc
+    
+    n_iter <- nrow(mcmc[[1]])
+    bins <- data$size_midpoint_l
+    regions <- 1:data$n_area
+    
+    w <- data.frame(LF = 1:data$n_lf,
+                    Year = data$data_lf_year_i, Season = data$data_lf_season_i,
+                    Source = data$data_lf_source_i, Region = data$data_lf_area_i)
+    
+    # 1. Minimum legal size by region, year and sex. These get plotted as vertical lines on each panel.
+    # 2. Bin limits
+    # 3. Effective N
+    # 4. Weights
+    mls <- data$cov_mls_ytrs
+    dimnames(mls) <- list("Year" = data$first_yr:data$last_proj_yr, "Season" = seasons, "Region" = regions, "Sex" = sex)
+    mls <- reshape2::melt(mls, id.var = "Year", variable.name = "Sex", value.name = "MLS")
+    
+    lim <- array(NA, dim = c(length(regions), length(sex), 2))
+    lim[,,] <- data$data_lf_bin_limits_rsi
+    dimnames(lim) <- list("Region" = regions, "Sex" = sex, "Limit" = c("lower", "upper"))
+    lim <- reshape2::melt(lim, variable.name = "Sex") %>%
+      mutate(value = bins[value]) %>%
+      tidyr::spread(Limit, value)
+    
+    rawN <- data$data_lf_N_is
+    dimnames(rawN) <- list("LF" = 1:data$n_lf, "Sex" = sex)
+    rawN <- reshape2::melt(rawN, value.name = "rawN") %>% mutate(Iteration = 1)
+    
+    rawW <- data$data_lf_weight_is
+    dimnames(rawW) <- list("LF" = 1:data$n_lf, "Sex" = sex)
+    rawW <- reshape2::melt(rawW, value.name = "rawW") %>% mutate(Iteration = 1)
+    
+    effN <- mcmc$pred_lf_effN_is
+    dimnames(effN) <- list("Iteration" = 1:n_iter, "LF" = 1:data$n_lf, "Sex" = sex)
+    effN <- reshape2::melt(effN, value.name = "effN")
+    
+    elf1 <- left_join(rawN, effN) %>%
+      left_join(w, by = "LF") %>%
+      mutate(Source = sources[Source], Season = factor(seasons[Season]), Model = object_names[i]) %>%
+      left_join(mls, by = c("Region", "Year", "Season", "Sex")) %>%
+      left_join(lim, by = c("Region", "Sex")) %>%
+      dplyr::select(-Iteration) %>%
+      mutate(effN = paste0("n: ", sprintf("%.2f", effN))) %>%
+      mutate(rawN = paste0("N: ", sprintf("%.0f", rawN)))
+    elf <- rbind(elf, elf1)
+    
+    # Observed LF
+    dlf1 <- mcmc$data_lf_out_isl
+    dimnames(dlf1) <- list("Iteration" = 1:n_iter, "LF" = 1:data$n_lf, "Sex" = sex, "Bin" = 1:length(bins))
+    dlf1 <- reshape2::melt(dlf1) %>%
+      left_join(w, by = "LF") %>%
+      mutate(Source = factor(sources[Source]), Model = object_names[i]) %>%
+      mutate(Season = seasons[Season], Size = bins[Bin]) %>%
+      filter(Iteration == 1, value >= 0) %>%
+      dplyr::select(-Iteration) %>%
+      left_join(lim, by = c("Sex", "Region"))
+    dlf <- rbind(dlf, dlf1)
+    
+    # Predicted LF
+    plf1 <- mcmc$pred_lf_isl
+    dimnames(plf1) <- list("Iteration" = 1:n_iter, "LF" = 1:data$n_lf, "Sex" = sex, "Size" = bins)
+    plf1 <- reshape2::melt(plf1) %>%
+      left_join(w, by = "LF") %>%
+      mutate(Source = sources[Source], Season = seasons[Season], Model = object_names[i]) %>%
+      left_join(lim, by = c("Sex", "Region"))
+    plf <- rbind(plf, plf1)
+  }
+  
+  p <- ggplot() +
+    geom_vline(data = elf %>% filter(Year %in% yrs), aes(xintercept = MLS), linetype = "dashed") +
+    # geom_label(data = elf %>% filter(Year %in% yrs), aes(x = Inf, y = Inf, label = paste(rawN, "\n", effN)), hjust = 1, vjust = 1) +
+    # stat_summary(data = plf %>% filter(Year %in% yrs, Size >= lower & Size <= upper),
+    #              aes(x = as.numeric(as.character(Size)), y = value), fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
+    # stat_summary(data = plf %>% filter(Year %in% yrs, Size >= lower & Size <= upper),
+    #              aes(x = as.numeric(as.character(Size)), y = value), fun.min = function(x) quantile(x, 0.25), fun.max = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
+    stat_summary(data = plf %>% filter(Year %in% yrs, Size >= lower & Size <= upper),
+                 aes(x = as.numeric(as.character(Size)), y = value, colour = Model), fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1) +
+    geom_point(data = dlf %>% filter(Year %in% yrs, Size >= lower & Size <= upper),
+               aes(x = as.numeric(as.character(Size)), y = value, colour = Model, shape = Model)) +
+    labs(x = xlab, y = ylab) +
+    # guides(shape = "none", colour = "none") +
+    # scale_shape_manual(values = c(0, 4)) +
+    # scale_colour_manual(values = rev(ggplotColours(n = length(sources)))) +
+    # scale_color_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
+    scale_x_continuous(minor_breaks = seq(0, 1e6, 2), limits = c(min(elf$lower), max(elf$upper))) +
+    theme_lsd()
+  
+  if (nmod > 5) {
+    p <- p +
+      scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
+      scale_color_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod)))
+  } else{
+    p <- p +
+      scale_fill_brewer(palette = "Set1") +
+      scale_color_brewer(palette = "Set1")
+  }
+  
+  if (data$n_area == 1) {
+    p <- p + facet_grid(Year + Season + Source ~ Sex, scales = "free_y")
+  } else {
+    p <- p + facet_grid(Region + Year + Season + Source ~ Sex, scales = "free_y")
+  }
+  
+  return(p)
+}
 
 #' Compare spawning biomass from multiple models
 #'
@@ -150,11 +282,13 @@ plot_compare_lfs <- function(object_list,
 #' @importFrom grDevices colorRampPalette gray
 #' @importFrom stats quantile
 #' @export
+#' @param show_proj for rapid updates plots to show projections only for full assessment or for all model comparisons
 #'
 plot_compare_ssb <- function(object_list,
                              object_names,
                              figure_dir = "compare_figure/",
-                             save_plot = TRUE) {
+                             save_plot = TRUE,
+                             show_proj = TRUE) {
 
   data_list <- lapply(1:length(object_list), function(x) object_list[[x]]@data)
   mcmc_list <- lapply(1:length(object_list), function(x) object_list[[x]]@mcmc)
@@ -661,9 +795,25 @@ plot_compare_ssb <- function(object_list,
 
     }
   } else {
+     
+    Line <- ssb %>% filter(YearType == "FirstProjYear")
       
+    if (show_proj == FALSE) {
+        ssb1 <- ssb[ssb$Model == object_names[1],]
+        ssb01 <- ssb0[ssb0$Model == object_names[1],]
+        Line <- ssb[ssb$Model == object_names[1],] %>% filter(YearType == "FirstProjYear")
+        for (i in 2:nmod){
+          tmp <- ssb[ssb$Model == object_names[i] & ssb$YearType != "Projection", ]
+          tmp2 <-ssb0[ssb0$Model == object_names[i] & ssb0$YearType != "Projection", ]
+          ssb1 <- rbind(ssb1, tmp)
+          ssb01 <- rbind(ssb01, tmp2)
+        }
+        ssb <- ssb1
+        ssb0 <- ssb01 
+      }
+    
       p1 <- ggplot(ssb %>% group_by(Iteration, Year, Model, YearType) %>% summarise(value = sum(value)), aes(x = Year, y = value)) +
-         geom_vline(data = ssb %>% filter(YearType == "FirstProjYear"), aes(xintercept = Year), linetype = 2) +
+         geom_vline(data = Line, aes(xintercept = Year - 0.5), linetype = 2) +
         stat_summary(data = ssb0 %>% filter(type == "Soft limit") %>% group_by(Iteration, Year, Model, YearType) %>% summarise(value = sum(value)), fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
         stat_summary(data = ssb0 %>% filter(type == "Soft limit") %>% group_by(Iteration, Year, Model, YearType) %>% summarise(value = sum(value)), fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model)) +
         stat_summary(data = ssb0 %>% filter(type == "Hard limit") %>% group_by(Iteration, Year, Model, YearType) %>% summarise(value = sum(value)), fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
@@ -746,8 +896,9 @@ plot_compare_ssb <- function(object_list,
 #' @importFrom reshape2 melt
 #' @importFrom stats quantile
 #' @export
+#' @param show_proj for rapid updates plots to show projections only for full assessment or for all model comparisons
 #'
-plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_figure/", save_plot = TRUE)
+plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_figure/", save_plot = TRUE, show_proj = TRUE)
 {
   data_list <- lapply(1:length(object_list), function(x) object_list[[x]]@data)
   mcmc_list <- lapply(1:length(object_list), function(x) object_list[[x]]@mcmc)
@@ -1168,10 +1319,21 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
     
     if (any(Bref$value > 0)) {
       
-
+      Line <- vb %>% filter(YearType == "FirstProjYear")
+      
+      if (show_proj == FALSE) {
+        vb1 <- vb[vb$Model == object_names[1],]
+        Line <- vb[vb$Model == object_names[1],] %>% filter(YearType == "FirstProjYear")
+        for (i in 2:nmod){
+          tmp <- vb[vb$Model == object_names[i] & vb$YearType != "Projection", ]
+          vb1 <- rbind(vb1, tmp)
+          }
+        vb <- vb1
+       }
+      
       # Vulnerable biomass
       p <- ggplot(data = vb %>% group_by(Iteration, Year, Model) %>% summarise(value = sum(value)), aes(x = Year, y = value, color = Model, fill = Model)) +
-    geom_vline(data = vb %>% filter(YearType == "FirstProjYear"), aes(xintercept = Year), linetype = 2) +
+    geom_vline(data = Line, aes(xintercept = Year - 0.5), linetype = 2) +
         stat_summary(data = vb %>% group_by(Iteration, Year, Model,) %>% summarise(value = sum(value)), fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
         #stat_summary(data = vb %>% group_by(Iteration, Year, Model) %>% summarise(value = sum(value)), fun.min = function(x) quantile(x, 0.25), fun.max = function(x) quantile(x, 0.75), geom = "ribbon", alpha=0.45, colour = NA) +
         stat_summary(data = vb %>% group_by(Iteration, Year, Model) %>% summarise(value = sum(value)), fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75) +
@@ -1233,7 +1395,7 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
       # Vulnerable biomass
       p <- ggplot(data = vb %>% group_by(.data$Iteration, .data$Year, .data$Model) %>% summarise(value = sum(.data$value)),
                   aes(x = .data$Year, y = .data$value, color = .data$Model, fill = .data$Model)) +
-      geom_vline(data = vb %>% filter(YearType == "FirstProjYear"), aes(xintercept = Year), linetype = 2) +
+      geom_vline(Line, aes(xintercept = Year-0.5), linetype = 2) +
         stat_summary(data = vb %>% group_by(Iteration, Year, Model,) %>% summarise(value = sum(value)), fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
         #stat_summary(data = vb %>% group_by(Iteration, Year, Model) %>% summarise(value = sum(value)), fun.min = function(x) quantile(x, 0.25), fun.max = function(x) quantile(x, 0.75), geom = "ribbon", alpha=0.45, colour = NA) +
         stat_summary(data = vb %>% group_by(Iteration, Year, Model) %>% summarise(value = sum(value)), fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75) +
@@ -1300,8 +1462,9 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
 #' @importFrom stats quantile
 #' @importFrom RColorBrewer brewer.pal
 #' @export
+#' @param show_proj for rapid updates plots to show projections only for full assessment or for all model comparisons
 #'
-plot_compare_recruitment <- function(object_list, object_names, figure_dir = "compare_figure/", save_plot = TRUE)
+plot_compare_recruitment <- function(object_list, object_names, figure_dir = "compare_figure/", save_plot = TRUE, show_proj = TRUE)
 {
   data_list <- lapply(1:length(object_list), function(x) object_list[[x]]@data)
   mcmc_list <- lapply(1:length(object_list), function(x) object_list[[x]]@mcmc)
@@ -1367,9 +1530,21 @@ plot_compare_recruitment <- function(object_list, object_names, figure_dir = "co
   if (save_plot) {
     ggsave(paste0(figure_dir, "recruitment_compare.png"), p, width = 10)
   }
-
+  
+  Line <- recruits %>% filter(YearType == "FirstProjYear")
+  
+  if (show_proj == FALSE) {
+    recruits1 <- recruits[recruits$Model == object_names[1],]
+    Line <- recruits[recruits$Model == object_names[1],] %>% filter(YearType == "FirstProjYear")
+    for (i in 2:nmod){
+      tmp <- recruits[recruits$Model == object_names[i] & recruits$YearType != "Projection", ]
+      recruits1 <- rbind(recruits1, tmp)
+    }
+    recruits <- recruits1
+  }
+  
   p <- ggplot(data = recruits, aes(x = .data$Year, y = .data$value, color = .data$Model, fill = .data$Model)) +
-      geom_vline(data = recruits %>% filter(YearType == "FirstProjYear"), aes(xintercept = Year), linetype = 2) +
+      geom_vline(data = Line, aes(xintercept = Year - 0.5), linetype = 2) +
     stat_summary(fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
     stat_summary(fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75) +
     stat_summary(fun = function(x) quantile(x, 0.5), geom = "point", size = 1.5, alpha = 0.75) +

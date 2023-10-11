@@ -1464,7 +1464,7 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
 #' @export
 #' @param show_proj for rapid updates plots to show projections only for full assessment or for all model comparisons
 #'
-plot_compare_recruitment <- function(object_list, object_names, figure_dir = "compare_figure/", save_plot = TRUE, show_proj = TRUE)
+plot_compare_recruitment <- function(object_list, object_names, figure_dir = "compare_figure/", save_plot = TRUE, show_proj = TRUE, Region = NA)
 {
   data_list <- lapply(1:length(object_list), function(x) object_list[[x]]@data)
   mcmc_list <- lapply(1:length(object_list), function(x) object_list[[x]]@mcmc)
@@ -1498,7 +1498,6 @@ plot_compare_recruitment <- function(object_list, object_names, figure_dir = "co
   mods <- unique(object_names)
   # mod_num <- sapply(1:length(mods), function(m) as.numeric(strsplit(as.character(mods[m]), "_")[[1]][1]))
   recruits$Model <- factor(recruits$Model, levels = mods)
-
 
 
   # plot recruitment
@@ -1542,6 +1541,11 @@ plot_compare_recruitment <- function(object_list, object_names, figure_dir = "co
     }
     recruits <- recruits1
   }
+  Region = Region
+  if (!is.na(Region)) {
+    recruits2 <- recruits[recruits$Region == Region,]
+    recruits <- recruits2
+    }
   
   p <- ggplot(data = recruits, aes(x = .data$Year, y = .data$value, color = .data$Model, fill = .data$Model)) +
       geom_vline(data = Line, aes(xintercept = Year - 0.5), linetype = 2) +

@@ -94,6 +94,7 @@ plot_recruitment <- function(object,
 
     ny <- dim(mcmc$recruits_ry)[3]
     years <- data$first_yr:(data$first_yr + ny - 1)
+    rdev_years <- data$first_rdev_yr:data$last_rdev_yr
     regions <- 1:data$n_area
 
     if (length(map) > 0) {
@@ -128,6 +129,36 @@ plot_recruitment <- function(object,
     xmax <- max(recruits1$Year, recruits2$Year)
 
     if (!is.null(recruits2)) {
+        p <- ggplot(data = recruits2 %>% filter(Year %in% rdev_years), aes(x = Year, y = value))
+    } else if (!is.null(recruits1)) {
+        p <- ggplot(data = recruits1 %>% filter(Year %in% rdev_years), aes(x = Year, y = value))
+    }
+    if (!is.null(recruits2)) {
+        p <- p +
+            stat_summary(data = R02 %>% filter(Year %in% rdev_years), aes(x = Year, y = value/1e+6), fun.min = function(x) stats::quantile(x, 0.05), fun.max = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, fill = "green") +
+            stat_summary(data = R02 %>% filter(Year %in% rdev_years), aes(x = Year, y = value/1e+6), fun.min = function(x) stats::quantile(x, 0.25), fun.max = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA, fill = "green") +
+            stat_summary(data = R02 %>% filter(Year %in% rdev_years), aes(x = Year, y = value/1e+6), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1, colour = "green") +
+            stat_summary(data = recruits2 %>% filter(Year %in% rdev_years), aes(x = Year, y = value/1e+6), fun.min = function(x) stats::quantile(x, 0.05), fun.max = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
+            stat_summary(data = recruits2 %>% filter(Year %in% rdev_years), aes(x = Year, y = value/1e+6), fun.min = function(x) stats::quantile(x, 0.25), fun.max = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
+            stat_summary(data = recruits2 %>% filter(Year %in% rdev_years), aes(x = Year, y = value/1e+6), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1)
+    }
+    if (!is.null(recruits1)) {
+        p <- p + geom_line(data = R01 %>% filter(Year %in% rdev_years), aes(x = Year, y = value/1e+6), linetype = 2, colour = "green") +
+            geom_line(data = recruits1 %>% filter(Year %in% rdev_years), aes(x = Year, y = value/1e+6), linetype = 2)
+    }
+
+    p <- p + expand_limits(y = 0) +
+        xlab(xlab) + ylab(ylab) +
+        #scale_x_continuous(breaks = seq(xmin, xmax, 10), minor_breaks = seq(xmin, xmax, 1)) +
+        scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
+        scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
+        theme_lsd() #+
+        # theme(axis.text.x = element_text(angle = 45,hjust = 1))
+
+    if (data$n_area > 1) p <- p + facet_wrap(~Region)
+    ggsave(paste0(figure_dir, "recruitment.png"), p)
+
+    if (!is.null(recruits2)) {
         p <- ggplot(data = recruits2, aes(x = Year, y = value))
     } else if (!is.null(recruits1)) {
         p <- ggplot(data = recruits1, aes(x = Year, y = value))
@@ -157,7 +188,7 @@ plot_recruitment <- function(object,
 
     if (data$n_area > 1) p <- p + facet_wrap(~Region)
 
-    ggsave(paste0(figure_dir, "recruitment.png"), p)
+    ggsave(paste0(figure_dir, "recruitment_v2.png"), p)
 
     # Time-series analysis of recruitment
     #r_ts = ts(data = rep(dplyr::select(recruits1, value)[,1], each = 2),

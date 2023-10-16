@@ -1527,48 +1527,48 @@ plot_biomass <- function(object,
 {
   # spawning stock biomass
   p <- plot_ssb(object)
-  ggsave(paste0(figure_dir, "biomass_spawning.png"), p, width = 12)
+  ggsave(paste0(figure_dir, "biomass_spawning.png"), p, height = 6, width = 8.5)
 
   p <- plot_ssb(object, show_proj = TRUE, show_map = FALSE)
-  ggsave(paste0(figure_dir, "biomass_spawning_v2.png"), p, width = 15)
+  ggsave(paste0(figure_dir, "biomass_spawning_v2.png"), p, height = 6, width = 9)
 
   p <- plot_ssb(object, show_ref = TRUE)
-  ggsave(paste0(figure_dir, "biomass_spawning_wRef.png"), p, width = 12)
+  ggsave(paste0(figure_dir, "biomass_spawning_wRef.png"), height = 6, width = 8.5)
 
   p <- plot_ssb(object, show_proj = TRUE, show_ref = TRUE, show_map = FALSE)
-  ggsave(paste0(figure_dir, "biomass_spawning_wRef_v2.png"), p, width = 15)
+  ggsave(paste0(figure_dir, "biomass_spawning_wRef_v2.png"), height = 6, width = 9)
 
   # AW adjusted vulnerable biomass
   p <- plot_vulnref_AW(object)
-  ggsave(paste0(figure_dir, "biomass_AW_vulnref.png"), p, width = 12)
+  ggsave(paste0(figure_dir, "biomass_AW_vulnref.png"), p, height = 6, width = 8.5)
 
   p <- plot_vulnref_AW(object, show_proj = TRUE, show_map = FALSE)
-  ggsave(paste0(figure_dir, "biomass_AW_vulnref_v2.png"), p, width = 15)
+  ggsave(paste0(figure_dir, "biomass_AW_vulnref_v2.png"), p, height = 6, width = 9)
 
   p <- plot_vulnref_AW(object, show_ref = TRUE)
-  ggsave(paste0(figure_dir, "biomass_AW_vulnref_wRef.png"), p, width = 12)
+  ggsave(paste0(figure_dir, "biomass_AW_vulnref_wRef.png"), p, height = 6, width = 8.5)
 
   p <- plot_vulnref_AW(object, show_proj = TRUE, show_ref = TRUE, show_map = FALSE)
-  ggsave(paste0(figure_dir, "biomass_AW_vulnref_wRef_v2.png"), p, width = 15)
+  ggsave(paste0(figure_dir, "biomass_AW_vulnref_wRef_v2.png"), p, height = 6, width = 9) #, width = 15
 
 
   p <- plot_total_biomass(object, show_proj = FALSE)
-  ggsave(paste0(figure_dir, "biomass_total.png"), p, width = 12)
+  ggsave(paste0(figure_dir, "biomass_total.png"), p, height = 6, width = 8.5)
 
   p <- plot_total_biomass(object, show_proj = TRUE, show_map = FALSE)
-  ggsave(paste0(figure_dir, "biomass_total_v2.png"), p, width = 15)
+  ggsave(paste0(figure_dir, "biomass_total_v2.png"), p, height = 6, width = 9)
 
   # Vulnerable biomass  no projection
   p <- plot_vulnerable_biomass(object, show_proj = FALSE)
-  ggsave(paste0(figure_dir, "biomass_vuln.png"), p, width = 12)
+  ggsave(paste0(figure_dir, "biomass_vuln.png"), p, height = 6, width = 8.5)
 
   # vulnerable biomass with projection
   p <- plot_vulnerable_biomass(object, show_proj = TRUE, show_map = FALSE)
-  ggsave(paste0(figure_dir, "biomass_vuln_v2.png"), p, width = 12)
+  ggsave(paste0(figure_dir, "biomass_vuln_v2.png"), p, height = 6, width = 9)
 
   # Reference biomass - version 1
   p <- plot_vulnerable_reference_biomass(object)
-  ggsave(paste0(figure_dir, "biomass_vulnref.png"), p, width = 10)
+  ggsave(paste0(figure_dir, "biomass_vulnref.png"), p, height = 6, width = 8.5)
 
   # # Reference biomass - version 2
   # p <- ggplot(data = biomass_vulnref_yt2, aes(x = Year, y = value/1000, color = Season, fill = Season)) +
@@ -1586,26 +1586,26 @@ plot_biomass <- function(object,
   #     p <- p + geom_line(data = biomass_vulnref_yt1, aes(x = Year, y = value/1000), linetype = 2)
   # }
   p <- plot_vulnerable_reference_biomass(object, show_proj = TRUE, show_map = FALSE)
-  ggsave(paste0(figure_dir, "biomass_vulnref_v2.png"), p, width = 12)
+  ggsave(paste0(figure_dir, "biomass_vulnref_v2.png"), p, height = 6, width = 9)
 
   p <- plot_vulnref_rel(object, show_proj = FALSE)
-  ggsave(paste0(figure_dir, "biomass_vulnref_relyr1.png"), p, width = 10)
+  ggsave(paste0(figure_dir, "biomass_vulnref_relyr1.png"), p, height = 6, width = 8.5)
 
   p <- plot_vulnref_rel(object, show_proj = TRUE, show_map = FALSE)
-  ggsave(paste0(figure_dir, "biomass_vulnref_relyr1_v2.png"), p, width = 10)
+  ggsave(paste0(figure_dir, "biomass_vulnref_relyr1_v2.png"), p, height = 6, width = 9)
 
   # plot Money biomass
   p <- plot_money_biomass(object, show_proj = FALSE, show_map = TRUE)
-  ggsave(paste0(figure_dir, "biomass_money.png"), p, width = 12)
+  ggsave(paste0(figure_dir, "biomass_money.png"), p, height = 6, width = 8.5)
 
   # plot Money and vulnerable biomass on the same plot
   p <- plot_money_vuln_biomass(object, show_proj = FALSE, show_map = TRUE)
-  ggsave(paste0(figure_dir, "biomass_vuln_and_money.png"), p, width = 12)
+  ggsave(paste0(figure_dir, "biomass_vuln_and_money.png"), p, height = 6, width = 8.5)
 
   # Plot projected biomass
   p <- plot_vulnref_AW_proj(object)
-  ggsave(paste0(figure_dir, "biomass_vulnref_proj.png"), p, width = 14)
+  ggsave(paste0(figure_dir, "biomass_vulnref_proj.png"), p, height = 6, width = 9)
 
   p <- plot_ssb_AW_proj(object)
-  ggsave(paste0(figure_dir, "biomass_ssb_proj.png"), p, width = 14)
+  ggsave(paste0(figure_dir, "biomass_ssb_proj.png"), p, height = 6, width = 9)
 }

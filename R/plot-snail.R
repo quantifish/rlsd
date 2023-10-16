@@ -69,12 +69,13 @@ plot_snail <- function(object, figure_dir = "figure/", irule = 1) {
   df_label <- dfmed %>% filter(Year %in% c(data$first_yr, data$last_yr, seq(1980, 2021, 10)))
 
   p <- ggplot(data = dfmed, aes(x = xmedian, y = ymedian)) +
-    geom_text(data = df_label, aes(label = Year)) +
-    geom_linerange(data = dferr, aes(ymin = ylower, ymax = yupper, color = Decade), alpha = 0.4, size = 1) +
-    geom_errorbarh(data = dferr, aes(xmin = xlower, xmax = xupper, color = Decade), height = 0, alpha = 0.25, size = 1) +
     geom_segment(aes(xend = lead(xmedian), yend = lead(ymedian)), arrow = arrow(length = unit(0.2, "cm"))) +
     geom_vline(xintercept = 1, linetype = "dashed") +
     geom_hline(yintercept = 1, linetype = "dashed") +
+    geom_linerange(data = dferr %>% filter(Year == max(Year)), aes(ymin = ylower, ymax = yupper), color = "tomato", alpha = 0.8, size = 1) +
+    geom_errorbarh(data = dferr %>% filter(Year == max(Year)), aes(xmin = xlower, xmax = xupper), color = "tomato", height = 0, alpha = 0.8, size = 1) +
+    geom_point(data = dfmed %>% filter(Year == max(Year)), aes(x = xmedian, y = ymedian), color = "tomato", pch = 19, size = 3, alpha = 0.8) +
+    geom_text(data = df_label, aes(label = Year)) +
     scale_x_continuous(limits = c(0, NA), expand = expansion(mult = c(0, 0.05))) +
     scale_y_continuous(limits = c(0, NA), expand = expansion(mult = c(0, 0.05))) +
     labs(x = expression(B/B[R]), y = expression(paste("Fishing intensity (", U/U[R], ")"))) +
@@ -86,12 +87,16 @@ plot_snail <- function(object, figure_dir = "figure/", irule = 1) {
   ggsave(file.path(figure_dir, "snail_trail.png"), p, width = 8, height = 7)
 
   p <- ggplot(data = dfmed, aes(x = xmedian, y = ymedian)) +
-    geom_text(data = df_label, aes(label = Year)) +
-    geom_linerange(data = dferr, aes(ymin = ylower, ymax = yupper, color = Decade), alpha = 0.4, size = 1) +
-    geom_errorbarh(data = dferr, aes(xmin = xlower, xmax = xupper, color = Decade), height = 0, alpha = 0.25, size = 1) +
+    # geom_text(data = df_label, aes(label = Year)) +
+    # geom_linerange(data = dferr, aes(ymin = ylower, ymax = yupper, color = Decade), alpha = 0.4, size = 1) +
+    # geom_errorbarh(data = dferr, aes(xmin = xlower, xmax = xupper, color = Decade), height = 0, alpha = 0.25, size = 1) +
     geom_segment(aes(xend = lead(xmedian), yend = lead(ymedian)), arrow = arrow(length = unit(0.2, "cm"))) +
     geom_vline(xintercept = 1, linetype = "dashed") +
     geom_hline(yintercept = 1, linetype = "dashed") +
+    geom_linerange(data = dferr %>% filter(Year == max(Year)), aes(ymin = ylower, ymax = yupper), color = "tomato", alpha = 0.8, size = 1) +
+    geom_errorbarh(data = dferr %>% filter(Year == max(Year)), aes(xmin = xlower, xmax = xupper), color = "tomato", height = 0, alpha = 0.8, size = 1) +
+    geom_point(data = dfmed %>% filter(Year == max(Year)), aes(x = xmedian, y = ymedian), color = "tomato", pch = 19, size = 3, alpha = 0.8) +
+    geom_text(data = df_label, aes(label = Year)) +
     scale_x_continuous(limits = c(0, NA), expand = expansion(mult = c(0, 0.05))) +
     scale_y_continuous(limits = c(0, NA), expand = expansion(mult = c(0, 0.05))) +
     labs(x = expression(B/B[R]), y = expression(paste("Fishing intensity (", U/U[R], ")"))) +
@@ -102,6 +107,25 @@ plot_snail <- function(object, figure_dir = "figure/", irule = 1) {
 
   p
   ggsave(file.path(figure_dir, "snail_trail_zoom.png"), p, width = 14, height = 7)
+
+    p <- ggplot(data = dfmed, aes(x = xmedian, y = ymedian)) +
+    geom_segment(aes(xend = lead(xmedian), yend = lead(ymedian)), arrow = arrow(length = unit(0.2, "cm"))) +
+    geom_vline(xintercept = 1, linetype = "dashed") +
+    geom_hline(yintercept = 1, linetype = "dashed") +
+    geom_linerange(data = dferr %>% filter(Year == max(Year)), aes(ymin = ylower, ymax = yupper), color = "tomato", alpha = 0.8, size = 1) +
+    geom_errorbarh(data = dferr %>% filter(Year == max(Year)), aes(xmin = xlower, xmax = xupper), color = "tomato", height = 0, alpha = 0.8, size = 1) +
+    geom_point(data = dfmed %>% filter(Year == max(Year)), aes(x = xmedian, y = ymedian), color = "tomato", pch = 19, size = 3, alpha = 0.8) +
+    geom_text(data = df_label, aes(label = Year)) +
+    scale_x_continuous(limits = c(0, NA), expand = expansion(mult = c(0, 0))) +
+    scale_y_continuous(limits = c(0, NA), expand = expansion(mult = c(0, 0))) +
+    labs(x = expression(B/B[R]), y = expression(paste("Fishing intensity (", U/U[R], ")"))) +
+    # labs(x = expression(B/B[REF]), y = expression(paste("Exploitation rate (U)"))) +
+    coord_cartesian(xlim = c(0,2), ylim = c(0,2)) +
+    theme_lsd(base_size = 16) #+
+    # theme(legend.position = "none")
+
+  p
+  ggsave(file.path(figure_dir, "snail_trail_lim2.png"), p, width = 8, height = 7)
 
   # F_Fmsy <- mcmc$F_Fmsy_ry
   # dimnames(F_Fmsy) <- list(Iteration = 1:n_iter, Region = regions, Year = years)

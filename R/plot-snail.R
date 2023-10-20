@@ -66,16 +66,17 @@ plot_snail <- function(object, figure_dir = "figure/", irule = 1) {
                               Year %in% 2010:2019 ~ "2010s",
                               Year > 2019 ~ "> 2019"))
   dferr$Decade <- factor(dferr$Decade, levels = c("< 1980", "1980s", "1990s", "2000s", "2010s", "> 2019"))
-  df_label <- dfmed %>% filter(Year %in% c(data$first_yr, data$last_yr, seq(1980, 2021, 10)))
+  df_label <- dferr %>% filter(Year %in% c(data$first_yr, data$last_yr, seq(1980, 2021, 10)))
 
-  p <- ggplot(data = dfmed, aes(x = xmedian, y = ymedian)) +
-    geom_segment(aes(xend = lead(xmedian), yend = lead(ymedian)), arrow = arrow(length = unit(0.2, "cm"))) +
+  p <- ggplot(data = dferr, aes(x = xmedian, y = ymedian)) +
+    geom_segment(aes(xend = lead(xmedian), yend = lead(ymedian), color = Decade), arrow = arrow(length = unit(0.2, "cm"))) +
     geom_vline(xintercept = 1, linetype = "dashed") +
     geom_hline(yintercept = 1, linetype = "dashed") +
-    geom_linerange(data = dferr %>% filter(Year == max(Year)), aes(ymin = ylower, ymax = yupper), color = "tomato", alpha = 0.8, size = 1) +
-    geom_errorbarh(data = dferr %>% filter(Year == max(Year)), aes(xmin = xlower, xmax = xupper), color = "tomato", height = 0, alpha = 0.8, size = 1) +
-    geom_point(data = dfmed %>% filter(Year == max(Year)), aes(x = xmedian, y = ymedian), color = "tomato", pch = 19, size = 3, alpha = 0.8) +
-    geom_text(data = df_label, aes(label = Year)) +
+    geom_linerange(data = dferr %>% filter(Year == max(Year)), aes(ymin = ylower, ymax = yupper), alpha = 0.5, size = 1) +
+    geom_errorbarh(data = dferr %>% filter(Year == max(Year)), aes(xmin = xlower, xmax = xupper), height = 0, alpha = 0.5, size = 1) +
+    geom_point(data = dfmed %>% filter(Year == max(Year)), aes(x = xmedian, y = ymedian), pch = 19, size = 3, alpha = 0.5) +
+    # geom_text(data = df_label %>% filter(Year != max(Year)), aes(label = Year)) +
+    geom_text_repel(data = df_label, aes(label = Year)) +
     scale_x_continuous(limits = c(0, NA), expand = expansion(mult = c(0, 0.05))) +
     scale_y_continuous(limits = c(0, NA), expand = expansion(mult = c(0, 0.05))) +
     labs(x = expression(B/B[R]), y = expression(paste("Fishing intensity (", U/U[R], ")"))) +
@@ -86,17 +87,18 @@ plot_snail <- function(object, figure_dir = "figure/", irule = 1) {
   p
   ggsave(file.path(figure_dir, "snail_trail.png"), p, width = 8, height = 7)
 
-  p <- ggplot(data = dfmed, aes(x = xmedian, y = ymedian)) +
+  p <- ggplot(data = dferr, aes(x = xmedian, y = ymedian)) +
     # geom_text(data = df_label, aes(label = Year)) +
     # geom_linerange(data = dferr, aes(ymin = ylower, ymax = yupper, color = Decade), alpha = 0.4, size = 1) +
     # geom_errorbarh(data = dferr, aes(xmin = xlower, xmax = xupper, color = Decade), height = 0, alpha = 0.25, size = 1) +
-    geom_segment(aes(xend = lead(xmedian), yend = lead(ymedian)), arrow = arrow(length = unit(0.2, "cm"))) +
+    geom_segment(aes(xend = lead(xmedian), yend = lead(ymedian), color = Decade), arrow = arrow(length = unit(0.2, "cm"))) +
     geom_vline(xintercept = 1, linetype = "dashed") +
     geom_hline(yintercept = 1, linetype = "dashed") +
-    geom_linerange(data = dferr %>% filter(Year == max(Year)), aes(ymin = ylower, ymax = yupper), color = "tomato", alpha = 0.8, size = 1) +
-    geom_errorbarh(data = dferr %>% filter(Year == max(Year)), aes(xmin = xlower, xmax = xupper), color = "tomato", height = 0, alpha = 0.8, size = 1) +
-    geom_point(data = dfmed %>% filter(Year == max(Year)), aes(x = xmedian, y = ymedian), color = "tomato", pch = 19, size = 3, alpha = 0.8) +
-    geom_text(data = df_label, aes(label = Year)) +
+    geom_linerange(data = dferr %>% filter(Year == max(Year)), aes(ymin = ylower, ymax = yupper), alpha = 0.5, size = 1) +
+    geom_errorbarh(data = dferr %>% filter(Year == max(Year)), aes(xmin = xlower, xmax = xupper), height = 0, alpha = 0.5, size = 1) +
+    geom_point(data = dfmed %>% filter(Year == max(Year)), aes(x = xmedian, y = ymedian), pch = 19, size = 3, alpha = 0.5) +
+    # geom_text(data = df_label %>% filter(Year != max(Year)), aes(label = Year)) +
+    geom_text_repel(data = df_label, aes(label = Year)) +
     scale_x_continuous(limits = c(0, NA), expand = expansion(mult = c(0, 0.05))) +
     scale_y_continuous(limits = c(0, NA), expand = expansion(mult = c(0, 0.05))) +
     labs(x = expression(B/B[R]), y = expression(paste("Fishing intensity (", U/U[R], ")"))) +
@@ -108,14 +110,15 @@ plot_snail <- function(object, figure_dir = "figure/", irule = 1) {
   p
   ggsave(file.path(figure_dir, "snail_trail_zoom.png"), p, width = 14, height = 7)
 
-    p <- ggplot(data = dfmed, aes(x = xmedian, y = ymedian)) +
-    geom_segment(aes(xend = lead(xmedian), yend = lead(ymedian)), arrow = arrow(length = unit(0.2, "cm"))) +
+    p <- ggplot(data = dferr, aes(x = xmedian, y = ymedian)) +
+    geom_segment(aes(xend = lead(xmedian), yend = lead(ymedian), color = Decade), arrow = arrow(length = unit(0.2, "cm"))) +
     geom_vline(xintercept = 1, linetype = "dashed") +
     geom_hline(yintercept = 1, linetype = "dashed") +
-    geom_linerange(data = dferr %>% filter(Year == max(Year)), aes(ymin = ylower, ymax = yupper), color = "tomato", alpha = 0.8, size = 1) +
-    geom_errorbarh(data = dferr %>% filter(Year == max(Year)), aes(xmin = xlower, xmax = xupper), color = "tomato", height = 0, alpha = 0.8, size = 1) +
-    geom_point(data = dfmed %>% filter(Year == max(Year)), aes(x = xmedian, y = ymedian), color = "tomato", pch = 19, size = 3, alpha = 0.8) +
-    geom_text(data = df_label, aes(label = Year)) +
+    geom_linerange(data = dferr %>% filter(Year == max(Year)), aes(ymin = ylower, ymax = yupper), alpha = 0.5, size = 1) +
+    geom_errorbarh(data = dferr %>% filter(Year == max(Year)), aes(xmin = xlower, xmax = xupper), height = 0, alpha = 0.5, size = 1) +
+    geom_point(data = dfmed %>% filter(Year == max(Year)), aes(x = xmedian, y = ymedian), pch = 19, size = 3, alpha = 0.5) +
+    # geom_text(data = df_label %>% filter(Year != max(Year)), aes(label = Year)) +
+    geom_text_repel(data = df_label, aes(label = Year)) +
     scale_x_continuous(limits = c(0, NA), expand = expansion(mult = c(0, 0))) +
     scale_y_continuous(limits = c(0, NA), expand = expansion(mult = c(0, 0))) +
     labs(x = expression(B/B[R]), y = expression(paste("Fishing intensity (", U/U[R], ")"))) +

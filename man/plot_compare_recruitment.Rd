@@ -8,7 +8,8 @@ plot_compare_recruitment(
   object_list,
   object_names,
   figure_dir = "compare_figure/",
-  save_plot = TRUE
+  save_plot = TRUE,
+  region = NA
 )
 }
 \arguments{

@@ -11,7 +11,8 @@ plot_ssb_AW_proj(
   show_mcmc = TRUE,
   show_proj = TRUE,
   show_ref = TRUE,
-  xlab = "Fishing year (1 April - 31 March)"
+  xlab = "Fishing year (1 April - 31 March)",
+  figure_dir = "figure/"
 )
 }
 \arguments{

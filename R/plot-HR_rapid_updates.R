@@ -151,7 +151,7 @@ plot_HR_rapid_updates <- function(object, scales = "free",
   
   p <- p + stat_summary(data = h_rate, aes(x = .data$Year, y = .data$HR, color = .data$Season), fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1) +
     expand_limits(y = 0) +
-    labs(x = xlab, y = "Harvest rate (Catch (SL + NSL) / Adjusted vulnerable biomass)") +
+    labs(x = xlab, y = "Harvest rate (total catch/adjusted vulnerable biomass)") +
     scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1), expand = c(0, 1)) +
     scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
     theme_lsd()

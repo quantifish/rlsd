@@ -25,6 +25,7 @@ plot_offset_cpue <- function(object,
 
     n_iter <- nrow(mcmc[[1]])
     n_area <- data$n_area
+    n_rules <- data$n_rules
     seasons <- c("AW","SS")
     years <- data$first_yr:data$last_proj_yr
 
@@ -33,19 +34,19 @@ plot_offset_cpue <- function(object,
     obs_offset <- melt(obs_offset) %>%
         mutate(Iteration = NA, Data = "Observed")
 
-    if (length(map) > 0) {
-        map_offset <- map$mp_offset_cpue_ry
-        dimnames(map_offset) <- list(Iteration = 1, Region = 1:n_area, Year = years)
-        map_offset <- melt(map_offset) %>%
-            mutate(Data = "Expected") %>%
-            filter(Year >= min(obs_offset$Year))
-    } else {
-        map_offset <- NULL
-    }
+    # if (length(map) > 0) {
+    #     map_offset <- map$mp_offset_cpue_jry
+    #     dimnames(map_offset) <- list(Iteration = 1, Option = 1:n_rules, Region = 1:n_area, Year = years)
+    #     map_offset <- melt(map_offset) %>%
+    #         mutate(Data = "Expected") %>%
+    #         filter(Year >= min(obs_offset$Year))
+    # } else {
+    #     map_offset <- NULL
+    # }
 
     if (length(mcmc) > 0) {
-        mcmc_offset <- mcmc$mp_offset_cpue_ry
-        dimnames(mcmc_offset) <- list(Iteration = 1:n_iter, Region = 1:n_area, Year = data$first_yr:data$last_proj_yr)
+        mcmc_offset <- mcmc$mp_offset_cpue_jry
+        dimnames(mcmc_offset) <- list(Iteration = 1:n_iter, Option = 1:n_rules, Region = 1:n_area, Year = data$first_yr:data$last_proj_yr)
         mcmc_offset <- melt(mcmc_offset) %>%
             mutate(Data = "Expected") %>%
             filter(Year >= min(obs_offset$Year))
@@ -64,9 +65,9 @@ plot_offset_cpue <- function(object,
             stat_summary(data = mcmc_offset, aes(x = Year, y = value), fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
             stat_summary(data = mcmc_offset, aes(x = Year, y = value), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1)
     }
-    if (!is.null(map_offset)) {
-        p <- p + geom_line(data = map_offset, aes(x = Year, y = value), linetype = 2)
-    }
+    # if (!is.null(map_offset)) {
+    #     p <- p + geom_line(data = map_offset, aes(x = Year, y = value), linetype = 2)
+    # }
     if (data$n_area > 1) {
         p <- p + facet_wrap(~ Region, scales = scales)
     }
@@ -605,7 +606,7 @@ plot_offset_cpue_lm <- function(object, figure_dir = "figure/") {
     data <- object@data
     mcmc <- object@mcmc
 
-    xx1 <- mcmc$mp_pred_offset_cpue_ry[1,1,2:dim(mcmc$mp_pred_offset_cpue_ry)[3]] # y is n_offset_cpue
+    xx1 <- mcmc$mp_pred_offset_cpue_ry[1,1,1:dim(mcmc$mp_pred_offset_cpue_ry)[3]] # y is n_offset_cpue
     yy1 <- data$data_offset_cpue_ry[1,]
     yr <- data$data_offset_cpue_year_i
     dd1 <- data.frame(yr = yr, x = xx1, y = yy1)
@@ -622,13 +623,14 @@ plot_offset_cpue_lm <- function(object, figure_dir = "figure/") {
         geom_line(data = dd2, aes(x, y), colour = "red") +
         geom_text(aes(label = yr, colour = yr)) +
         expand_limits(x = 0, y = 0) +
-        coord_fixed() +
+        scale_x_continuous(expand = c(0,0)) + scale_y_continuous(expand = c(0,0)) +
+        # coord_fixed() +
         theme_lsd() +
         theme(legend.position = "none") +
         ggtitle(bquote(R^2 == .(round(params[5], 2)))) +
         labs(x = "Mean(AW CPUE[y], SS CPUE[y-1]) (kg/potlift)", y = "Offset year CPUE (kg/potlift)")
 
-    ggsave(paste0(figure_dir, "lm_offset_cpue.png"), p)
+    ggsave(paste0(figure_dir, "lm_offset_cpue.png"), p, height = 9, width = 9)
 }
 
 
@@ -654,7 +656,7 @@ plot_aw_cpue_lm <- function(object, figure_dir = "figure/")
     yr <- data$data_aw_cpue_year_i
     yy1 <- data.frame(yr = yr, py = mcmc$mp_proportion_catch_aw_ry[1,1,])
     xx1 <- data.frame(yr = yr, px = mcmc$mp_pred_aw_cpue_ry[1,1,])
-    xx1 <- xx1[-which(xx1$yr >=2020),]
+    # xx1 <- xx1[-which(xx1$yr >=2020),]
     dd1 <- inner_join(yy1, xx1)
 
     xx2 <- seq(0, max(xx1$px) * 1.1, 0.0001)
@@ -669,11 +671,12 @@ plot_aw_cpue_lm <- function(object, figure_dir = "figure/")
         geom_line(data = dd2, aes(x, y), colour = "red") +
         geom_text(aes(label = yr, colour = yr)) +
         expand_limits(x = 0, y = c(0,1)) +
-        coord_fixed() +
+        scale_x_continuous(expand = c(0,0)) + scale_y_continuous(expand = c(0,0)) +
+        # coord_fixed() +
         theme_lsd() +
         labs(x = "Standardised AW CPUE (kg/potlift)", y = "Proportion AW") +
         ggtitle(bquote(R^2 == .(round(params[5], 2)))) +
         theme(legend.position = "none")
 
-    ggsave(paste0(figure_dir, "lm_aw_cpue.png"), p)
+    ggsave(paste0(figure_dir, "lm_aw_cpue.png"), p, height = 9, width = 9)
 }

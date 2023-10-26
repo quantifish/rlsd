@@ -15,11 +15,6 @@ do_plot <- function(object, map = FALSE, mcmc = FALSE, figure_dir = "figure/") {
   # Data only plots
   plot_data_extent(object, figure_dir = figure_dir)
 
-  # MP plots
-  plot_offset_cpue(object, figure_dir = figure_dir)
-  plot_offset_cpue_lm(object, figure_dir = figure_dir)
-  plot_aw_cpue_lm(object, figure_dir = figure_dir)
-
   # # MCMC diagnostic plots
   # if (mcmc && nrow(object@mcmc[[1]]) > 10 && dim(object@mcmc$Bcurr_jr)[2] < 10) {
 
@@ -155,6 +150,11 @@ do_plot <- function(object, map = FALSE, mcmc = FALSE, figure_dir = "figure/") {
   if (object@data$move_on > 0) {
     plot_movement(object, figure_dir = figure_dir)
   }
+
+  # MP plots
+  plot_offset_cpue(object, figure_dir = figure_dir)
+  plot_offset_cpue_lm(object, figure_dir = figure_dir)
+  plot_aw_cpue_lm(object, figure_dir = figure_dir)
 
   # plot_surplus_production(object, figure_dir = figure_dir)
   # plot_retro(object, figure_dir = figure_dir)

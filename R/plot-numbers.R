@@ -154,10 +154,7 @@ plot_proj_numbers <- function(object,
   dimnames(numbers) <- list("Iteration" = 1:n_iter, "Rule" = 1:n_rules, "Year" = pyears, "Season" = c(seasons, "EOY"), "Region" = regions, "Sex" = sex, "Size" = bins)
   numbers2 <- melt(numbers, value.name = "N") %>%
     mutate(Region = as.factor(Region)) %>%
-    mutate(Sex = case_when(
-      Sex == "Male" ~ "Male",
-      .default = "Female"
-    )) %>%
+    mutate(Sex = ifelse(Sex == "Male", "Male", "Female")) %>%
     filter(Year %in% c(max(years), 2026, max(pyears))) %>%
     # filter(Year %in% c(min(years), max(years), max(pyears))) %>%
     filter(Season == "AW") %>%
@@ -176,30 +173,30 @@ plot_proj_numbers <- function(object,
 
 
 
-  object2 <- readRDS("/home/darcy/Projects/CRA/lsd-auto/CRA1/2022/rec18_30yr_2019sq/lsd.rds")
-  data2 <- object2@data
-  mcmc2 <- object2@mcmc
+  # object2 <- readRDS("/home/darcy/Projects/CRA/lsd-auto/CRA1/2022/rec18_30yr_2019sq/lsd.rds")
+  # data2 <- object2@data
+  # mcmc2 <- object2@mcmc
 
-  numbers <- mcmc2$proj_numbers_jytrsl
-  dimnames(numbers) <- list("Iteration" = 1:n_iter, "Rule" = 1, "Year" = 1945:2051, "Season" = c(seasons, "EOY"), "Region" = regions, "Sex" = sex, "Size" = bins)
-  numbers3 <- melt(numbers, value.name = "N") %>%
-    mutate(Region = as.factor(Region)) %>%
-    mutate(Sex = case_when(
-      Sex == "Male" ~ "Male",
-      .default = "Female"
-    )) %>%
-    filter(Year %in% c(max(years), 2026, max(pyears))) %>%
-    # filter(Year %in% c(min(years), max(years), max(pyears))) %>%
-    filter(Season == "AW") %>%
-    group_by(across(-N)) %>%
-    summarise(N = sum(N))
-  numbers3$Sex <- factor(numbers3$Sex, levels = c("Male", "Female"))
+  # numbers <- mcmc2$proj_numbers_jytrsl
+  # dimnames(numbers) <- list("Iteration" = 1:n_iter, "Rule" = 1, "Year" = 1945:2051, "Season" = c(seasons, "EOY"), "Region" = regions, "Sex" = sex, "Size" = bins)
+  # numbers3 <- melt(numbers, value.name = "N") %>%
+  #   mutate(Region = as.factor(Region)) %>%
+  #   mutate(Sex = case_when(
+  #     Sex == "Male" ~ "Male",
+  #     .default = "Female"
+  #   )) %>%
+  #   filter(Year %in% c(max(years), 2026, max(pyears))) %>%
+  #   # filter(Year %in% c(min(years), max(years), max(pyears))) %>%
+  #   filter(Season == "AW") %>%
+  #   group_by(across(-N)) %>%
+  #   summarise(N = sum(N))
+  # numbers3$Sex <- factor(numbers3$Sex, levels = c("Male", "Female"))
 
-  p2 <- p +
-    stat_summary(data = numbers3, fun = function(x) quantile(x, 0.5), geom = "line", linetype = "dashed", linewidth = 1, colour = "black")
-  p2
-  figure_dir <- ""
-  ggsave(paste0(figure_dir, "NNN.png"), p2, width = 7, height = 8)
+  # p2 <- p +
+  #   stat_summary(data = numbers3, fun = function(x) quantile(x, 0.5), geom = "line", linetype = "dashed", linewidth = 1, colour = "black")
+  # p2
+  # figure_dir <- ""
+  # ggsave(paste0(figure_dir, "NNN.png"), p2, width = 7, height = 8)
 
 
 

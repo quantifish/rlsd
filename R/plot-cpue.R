@@ -32,7 +32,12 @@ plot_offset_cpue <- function(object,
   obs_offset <- data$data_offset_cpue_ry
   dimnames(obs_offset) <- list(Region = 1:n_area, Year = data$data_offset_cpue_year_i)
   obs_offset <- melt(obs_offset) %>%
-    mutate(Iteration = NA, Data = "Observed")
+    mutate(Iteration = NA, Data = "Observed") %>%
+    filter(Region == 2)
+
+    p <- ggplot(data = obs_offset) +
+    geom_point(aes(x = Year, y = value), color = "red") +
+    facet_wrap(~Region)
 
   # if (length(map) > 0) {
   #     map_offset <- map$mp_offset_cpue_jry
@@ -49,7 +54,8 @@ plot_offset_cpue <- function(object,
     dimnames(mcmc_offset) <- list(Iteration = 1:n_iter, Option = 1:n_rules, Region = 1:n_area, Year = data$first_yr:data$last_proj_yr)
     mcmc_offset <- melt(mcmc_offset) %>%
       mutate(Data = "Expected") %>%
-      filter(Year >= min(obs_offset$Year))
+      filter(Year >= min(obs_offset$Year)) %>%
+      filter(Region == 2)
   } else {
     mcmc_offset <- NULL
   }
@@ -73,7 +79,7 @@ plot_offset_cpue <- function(object,
   }
   p <- p + geom_point(data = obs_offset, aes(x = Year, y = value), color = "red", alpha = 0.75)
 
-  ggsave(paste0(figure_dir, "cpue_offset.png"), p, width = 12)
+  ggsave(paste0(figure_dir, "cpue_offset.png"), p, width = 9)
 }
 
 

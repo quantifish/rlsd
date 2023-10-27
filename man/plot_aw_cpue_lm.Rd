@@ -4,10 +4,12 @@
 \alias{plot_aw_cpue_lm}
 \title{Plot offset year CPUE linear model}
 \usage{
-plot_aw_cpue_lm(object, figure_dir = "figure/")
+plot_aw_cpue_lm(object, region = 1, figure_dir = "figure/")
 }
 \arguments{
 \item{object}{and LSD object}
+
+\item{region}{the region to plot}
 
 \item{figure_dir}{the directory to save to}
 }

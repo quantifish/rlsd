@@ -17,8 +17,8 @@ plot_offset_cpue <- function(object,
                              scales = "fixed",
                              xlab = "Offset year (October-September)",
                              ylab = "Offset year CPUE (kg/potlift)",
-                             figure_dir = "figure/")
-{
+                             figure_dir = "figure/") {
+
   data <- object@data
   map <- object@map
   mcmc <- object@mcmc
@@ -64,12 +64,13 @@ plot_offset_cpue <- function(object,
     expand_limits(y = 0) +
     xlab(xlab) + ylab(ylab) +
     scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
-    scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
+    scale_y_continuous(limits = c(0, NA), expand = expansion(mult = c(0, 0.1))) +
     theme_lsd()
+
   if (!is.null(mcmc_offset)) {
-    p <- p + stat_summary(data = mcmc_offset, aes(x = Year, y = value), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
-      stat_summary(data = mcmc_offset, aes(x = Year, y = value), fun.ymin = function(x) stats::quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
-      stat_summary(data = mcmc_offset, aes(x = Year, y = value), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1)
+    p <- p + stat_summary(data = mcmc_offset, aes(x = Year, y = value), fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
+      stat_summary(data = mcmc_offset, aes(x = Year, y = value), fun.ymin = function(x) quantile(x, 0.25), fun.ymax = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
+      stat_summary(data = mcmc_offset, aes(x = Year, y = value), fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1)
   }
   # if (!is.null(map_offset)) {
   #     p <- p + geom_line(data = map_offset, aes(x = Year, y = value), linetype = 2)

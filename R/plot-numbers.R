@@ -79,20 +79,41 @@ plot_numbers <- function(object,
     seasons <- c("AW", "SS")
     bins <- object@data$size_midpoint_l
     regions <- 1:object@data$n_area
+    n_rules <- data$n_rules
 
-    # Numbers
-    numbers <- mcmc$numbers_ytrsl
-    dimnames(numbers) <- list("Iteration" = 1:n_iter, "Year" = years, "Season" = c(seasons, "EOY"), "Region" = regions, "Sex" = sex, "Size" = bins)
-    numbers2 <- reshape2::melt(numbers, value.name = "N") %>%
-        dplyr::mutate(Region = as.factor(Region)) %>%
-        dplyr::filter(Year == max(years)) %>%
-        dplyr::filter(Season == "AW")
+    # Numbers in final model year
+    # numbers <- mcmc$numbers_ytrsl
+    # dimnames(numbers) <- list("Iteration" = 1:n_iter, "Year" = years, "Season" = c(seasons, "EOY"), "Region" = regions, "Sex" = sex, "Size" = bins)
+    # numbers2 <- reshape2::melt(numbers, value.name = "N") %>%
+    #     dplyr::mutate(Region = as.factor(Region)) %>%
+    #     dplyr::filter(Year == max(years)) %>%
+    #     dplyr::filter(Season == "AW")
 
-    p <- ggplot(data = numbers2, aes(x = Size, y = N/1000, color = Sex, fill = Sex)) +
-        #stat_summary(fun.min = function(x) stats::quantile(x, 0.05), fun.max = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
-        # stat_summary(fun.min = function(x) stats::quantile(x, 0.25), fun.max = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
+    # p <- ggplot(data = numbers2, aes(x = Size, y = N/1000, color = Sex, fill = Sex)) +
+    #     #stat_summary(fun.min = function(x) stats::quantile(x, 0.05), fun.max = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
+    #     # stat_summary(fun.min = function(x) stats::quantile(x, 0.25), fun.max = function(x) stats::quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
+    #     stat_summary(fun = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1) +
+    #     scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
+    #     xlab(xlab) + ylab(ylab) +
+    #     theme_lsd()
+
+    ## numbers in final model year and final projection year
+lf <- mcmc$proj_numbers_jytrsl
+dimnames(lf) <- list("Iteration" = 1:n_iter, "RuleNum" = 1:n_rules, "Year" = pyears, "Season" = c(seasons, "EOY"), "Region" = regions, "Sex" = sex, "Size" = bins)
+numbers_proj <- reshape2::melt(lf, value.name = "N") %>%
+  filter(Year %in% c(max(years), max(pyears))) %>%
+  mutate(Region = as.character(Region)) %>%
+  filter(Season == "AW") %>%
+  select(-Season)
+
+  ymax_df <- numbers_proj %>%
+  group_by(Size) %>%
+  summarise(Median = quantile(N, 0.5))
+  ymax <- max(ymax_df$Median)
+
+    p <- ggplot(data = numbers_proj %>% filter(Year == max(years)), aes(x = Size, y = N/1000, color = Sex, fill = Sex)) +
         stat_summary(fun = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1) +
-        scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
+        scale_y_continuous(limits = c(0, ymax/1000), expand = expansion(mult = c(0, 0.1))) +
         xlab(xlab) + ylab(ylab) +
         theme_lsd()
     ggsave(paste0(figure_dir, "numbers_AW_finalyear.png"), p)
@@ -101,6 +122,34 @@ plot_numbers <- function(object,
       p <- p + facet_wrap( ~ .data$Region, ncol = 2, scales="free_y")
       ggsave(paste0(figure_dir, "numbers_AW_finalyear_byArea.png"), p)
     }
+
+  p <- ggplot(data = numbers_proj %>% filter(Year == max(pyears)), aes(x = Size, y = N/1000, color = Sex, fill = Sex)) +
+  stat_summary(fun = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1) +
+        scale_y_continuous(limits = c(0, ymax/1000), expand = expansion(mult = c(0, 0.1))) +
+        xlab(xlab) + ylab(ylab) +
+        theme_lsd()
+
+if(n_rules > 1) {
+    p <- p + facet_wrap(~RuleNum)
+ }
+    ggsave(paste0(figure_dir, "numbers_AW_finalprojyear.png"), p)
+
+    if (data$n_area > 1) {
+      p <- p + facet_wrap( RuleNum ~ .data$Region, ncol = 2, scales="free_y")
+      ggsave(paste0(figure_dir, "numbers_AW_finalprojyear_byArea.png"), p)
+    }
+
+    p <- ggplot(data = numbers_proj, aes(x = Size, y = N/1000, color = factor(Year), fill = factor(Year))) +
+      stat_summary(fun = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1) +
+        scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
+        guides(color=guide_legend(title="Year")) +
+        xlab(xlab) + ylab(ylab) +
+        facet_wrap(RuleNum ~ Sex) +
+        theme_lsd(base_size = 20)
+    ggsave(paste0(figure_dir, "numbers_AW_compare_current_proj.png"), p)
+
+
+
 
 
     # for (r in 1:object@data$n_area)

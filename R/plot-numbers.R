@@ -145,7 +145,7 @@ if(n_rules > 1) {
         guides(color=guide_legend(title="Year")) +
         xlab(xlab) + ylab(ylab) +
         facet_wrap(RuleNum ~ Sex) +
-        theme_lsd(base_size = 20)
+        theme_lsd()
     ggsave(paste0(figure_dir, "numbers_AW_compare_current_proj.png"), p, width = 12)
 
 

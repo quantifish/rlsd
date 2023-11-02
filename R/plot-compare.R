@@ -2041,6 +2041,91 @@ plot_compare_movement <- function(object_list , object_names , figure_dir  = "co
   }
 }
 
+#' Compare Numbers at length from multiple models
+#'
+#' @param object_list list of 'lsd.rds' files from multiple models
+#' @param object_names vector of model names associated with each of the output files in object_list
+#' @param xlab the x axis label
+#' @param ylab the y axis label
+#' @import dplyr
+#' @import ggplot2
+#' @importFrom reshape2 melt
+#' @importFrom grDevices colorRampPalette gray
+#' @importFrom stats quantile
+#' @export
+#'
+plot_compare_numbers <- function(object_list,
+                             object_names,
+                             xlab = "Size (mm)",
+                             ylab = "Number of individuals (thousands)")
+{
+  data_list <- lapply(1:length(object_list), function(x) object_list[[x]]@data)
+  mcmc_list <- lapply(1:length(object_list), function(x) object_list[[x]]@mcmc)
+  n_iter_list <- lapply(1:length(object_list), function(x) nrow(mcmc_list[[x]][[1]]))
+  years_list <- lapply(1:length(object_list), function(x) data_list[[x]]$first_yr:data_list[[x]]$last_yr)
+  pyears_list <- lapply(1:length(object_list), function(x) data_list[[x]]$first_yr:data_list[[x]]$last_proj_yr)
+
+    sex <- c("Male","Immature female","Mature female")
+    seasons <- c("AW", "SS")
+    bins <- data_list[[1]]$size_midpoint_l
+    regions <- 1:data_list[[1]]$n_area
+    n_rules <- 1:data_list[[1]]$n_rules
+
+  nmod <- length(object_names)
+
+  year_rdev <- data_list[[x]]$last_rdev_yr
+  year_proj <- max(pyears_list[[1]])
+
+num_df <- lapply(1:length(object_list), function(x) {
+  lf <- mcmc_list[[x]]$proj_numbers_jytrsl
+  dimnames(lf) <- list("Iteration" = 1:n_iter_list[[x]], "RuleNum" = 1:n_rules, "Year" = pyears_list[[x]], "Season" = c(seasons, "EOY"), "Region" = regions, "Sex" = sex, "Size" = bins)
+  numbers_proj <- reshape2::melt(lf, value.name = "N") %>%
+    filter(Year %in% c(year_rdev, year_proj)) %>%
+    mutate(Region = as.character(Region)) %>%
+    filter(Season == "AW") %>%
+    select(-Season) %>%
+    mutate(Model = object_names[[x]])
+  return(numbers_proj)
+})
+num_comp <- do.call(rbind, num_df)
+
+  ymax_df <- num_comp %>%
+  group_by(Size) %>%
+  summarise(Median = quantile(N, 0.5))
+  ymax <- max(ymax_df$Median)
+
+mls_df <- lapply(1:length(object_list), function(x){
+    mls <- data_list[[x]]$cov_mls_ytrs
+    dimnames(mls) <- list("Year" = data_list[[x]]$first_yr:data_list[[x]]$last_proj_yr, "Season" = seasons, "Region" = regions, "Sex" = sex)
+    mls <- melt(mls, id.var = "Year", variable.name = "Sex", value.name = "MLS") %>%
+    mutate(Model = object_names[[x]])
+
+    return(mls)
+  })
+mls <- do.call(rbind, mls_df)
+
+## compare current year numbers
+    p <- ggplot(data = num_comp %>% filter(Year == year_rdev), aes(x = Size, y = N/1000, color = Model, fill = Model)) +
+        stat_summary(fun = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1) +
+        scale_y_continuous(limits = c(0, ymax/1000), expand = expansion(mult = c(0, 0.1))) +
+        geom_vline(data = mls %>% filter(Year == year_rdev, Season == "AW"), aes(xintercept = MLS, color = Model, linetype = Model), lwd = 1) +
+        xlab(xlab) + ylab(ylab) +
+        facet_wrap(~Sex) +
+        theme_lsd()
+    ggsave(file.path(figure_dir, "Numbers_final_rdev_year.png"), p, width = 12)
+
+    p <- ggplot(data = num_comp %>% filter(Year == year_proj), aes(x = Size, y = N/1000, color = Model, fill = Model)) +
+        stat_summary(fun = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1) +
+        scale_y_continuous(limits = c(0, ymax/1000), expand = expansion(mult = c(0, 0.1))) +
+        geom_vline(data = mls %>% filter(Year == year_proj, Season == "AW"), aes(xintercept = MLS, color = Model, linetype = Model), lwd = 1) +
+        xlab(xlab) + ylab(ylab) +
+        facet_wrap(~Sex) +
+        theme_lsd()
+    ggsave(file.path(figure_dir, "Numbers_final_proj_year.png"), p, width = 12)
+
+  return(p)
+}
+
 #' Table comparing residuals for various data types across models
 #'
 #' @param object_list list of 'lsd.rds' files from multiple models

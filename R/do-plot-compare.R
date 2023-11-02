@@ -21,6 +21,7 @@ do_plot_compare <- function(object_list, object_names,
     plot_compare_ssb(object_list = object_list, object_names = object_names, figure_dir = figure_dir)
     plot_compare_selectivity(object_list = object_list, object_names = object_names, figure_dir = figure_dir)
     plot_compare_cpue(object_list = object_list, object_names = object_names, figure_dir = figure_dir)
+    plot_compare_numbers(object_list = object_list, object_names = object_names, figure_dir = figure_dir)
     # plot_compare_movement(object_list = object_list, object_names = object_names, figure_dir = figure_dir)
     # end of figures and tables that should run for all comparisons
     tryCatch(

@@ -2101,7 +2101,8 @@ mls_df <- lapply(1:length(object_list), function(x){
     mls <- data_list[[x]]$cov_mls_ytrs
     dimnames(mls) <- list("Year" = data_list[[x]]$first_yr:data_list[[x]]$last_proj_yr, "Season" = seasons, "Region" = regions, "Sex" = sex)
     mls <- melt(mls, id.var = "Year", variable.name = "Sex", value.name = "MLS") %>%
-    mutate(Model = object_names[[x]])
+    mutate(Model = object_names[[x]]) %>%
+    filter(Sex != "Immature female")
 
     return(mls)
   })
@@ -2109,6 +2110,7 @@ mls <- do.call(rbind, mls_df)
 
 ## compare current year numbers
     p <- ggplot(data = num_comp %>% filter(Year == year_rdev), aes(x = Size, y = N/1000, color = Model, fill = Model)) +
+        # stat_summary(fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
         stat_summary(fun = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1) +
         scale_y_continuous(limits = c(0, ymax/1000), expand = expansion(mult = c(0, 0.1))) +
         geom_vline(data = mls %>% filter(Year == year_rdev, Season == "AW"), aes(xintercept = MLS, color = Model, linetype = Model), lwd = 1) +
@@ -2128,6 +2130,7 @@ mls <- do.call(rbind, mls_df)
     ggsave(file.path(figure_dir, "Numbers_final_rdev_year.png"), p, width = 12)
 
     p <- ggplot(data = num_comp %>% filter(Year == year_proj), aes(x = Size, y = N/1000, color = Model, fill = Model)) +
+        # stat_summary(fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
         stat_summary(fun = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1) +
         scale_y_continuous(limits = c(0, ymax/1000), expand = expansion(mult = c(0, 0.1))) +
         geom_vline(data = mls %>% filter(Year == year_proj, Season == "AW"), aes(xintercept = MLS, color = Model, linetype = Model), lwd = 1) +

@@ -2114,6 +2114,16 @@ mls <- do.call(rbind, mls_df)
         xlab(xlab) + ylab(ylab) +
         facet_wrap(~Sex) +
         theme_lsd()
+
+  if (nmod > 5) {
+    p <- p +
+      scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
+      scale_color_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod)))
+  } else{
+    p <- p +
+      scale_fill_brewer(palette = "Set1") +
+      scale_color_brewer(palette = "Set1")
+  }
     ggsave(file.path(figure_dir, "Numbers_final_rdev_year.png"), p, width = 12)
 
     p <- ggplot(data = num_comp %>% filter(Year == year_proj), aes(x = Size, y = N/1000, color = Model, fill = Model)) +
@@ -2123,6 +2133,16 @@ mls <- do.call(rbind, mls_df)
         xlab(xlab) + ylab(ylab) +
         facet_wrap(~Sex) +
         theme_lsd()
+
+  if (nmod > 5) {
+    p <- p +
+      scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
+      scale_color_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod)))
+  } else{
+    p <- p +
+      scale_fill_brewer(palette = "Set1") +
+      scale_color_brewer(palette = "Set1")
+  }
     ggsave(file.path(figure_dir, "Numbers_final_proj_year.png"), p, width = 12)
 
   return(p)

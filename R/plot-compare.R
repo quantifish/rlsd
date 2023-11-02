@@ -2047,6 +2047,7 @@ plot_compare_movement <- function(object_list , object_names , figure_dir  = "co
 #' @param object_names vector of model names associated with each of the output files in object_list
 #' @param xlab the x axis label
 #' @param ylab the y axis label
+#' @param figure_dir figure directory
 #' @import dplyr
 #' @import ggplot2
 #' @importFrom reshape2 melt
@@ -2057,7 +2058,8 @@ plot_compare_movement <- function(object_list , object_names , figure_dir  = "co
 plot_compare_numbers <- function(object_list,
                              object_names,
                              xlab = "Size (mm)",
-                             ylab = "Number of individuals (thousands)")
+                             ylab = "Number of individuals (thousands)",
+                             figure_dir)
 {
   data_list <- lapply(1:length(object_list), function(x) object_list[[x]]@data)
   mcmc_list <- lapply(1:length(object_list), function(x) object_list[[x]]@mcmc)

@@ -2086,6 +2086,7 @@ num_df <- lapply(1:length(object_list), function(x) {
     mutate(Region = as.character(Region)) %>%
     filter(Season == "AW") %>%
     select(-Season) %>%
+    filter(Sex != "Immature female") %>%
     mutate(Model = object_names[[x]])
   return(numbers_proj)
 })

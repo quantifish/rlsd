@@ -2075,7 +2075,7 @@ plot_compare_numbers <- function(object_list,
 
   nmod <- length(object_names)
 
-  year_rdev <- data_list[[x]]$last_rdev_yr
+  year_rdev <- data_list[[1]]$last_rdev_yr
   year_proj <- max(pyears_list[[1]])
 
 num_df <- lapply(1:length(object_list), function(x) {

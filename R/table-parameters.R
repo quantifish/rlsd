@@ -3,7 +3,7 @@
 #' @param object and LSD object
 #' @param figure_dir the directory to save to
 #' @param save_table TRUE or FALSE
-#' @import dplyr
+#' @import dplyr tidyr
 #' @export
 #'
 table_parameters <- function(object, figure_dir = "figure/", save_table = TRUE)
@@ -73,7 +73,7 @@ table_parameters <- function(object, figure_dir = "figure/", save_table = TRUE)
       select(-Order)
 
   mu <- pars %>% 
-    filter(grepl("init_expl", Parameter))
+    filter(grepl("init_erate", Parameter))
 
   q <- pars %>%
     filter(grepl("q_cpue", Parameter))
@@ -126,7 +126,8 @@ table_parameters <- function(object, figure_dir = "figure/", save_table = TRUE)
                            grepl("Ucurr_Uref", Par) ~ 4,
                            grepl("Uproj_Uref", Par) ~ 5,
                            grepl("Uproj_Ucurr", Par) ~ 6)) %>%
-  arrange(Order)
+  arrange(Order) %>%
+  select(-c(Order, Par, Type))
 
   ssb <- pars %>%
     filter(grepl("par", Parameter) == FALSE) %>%
@@ -169,7 +170,8 @@ table_parameters <- function(object, figure_dir = "figure/", save_table = TRUE)
   other <- pars %>%
   filter(substr(Parameter, 1, 1) %in% c("H", "C", "R")) %>%
   mutate(Order = case_when(grepl("R", Parameter) ~ 1,
-                           grepl("H", Parameter) ~ 2))
+                           grepl("H", Parameter) ~ 2)) %>%
+  select(-Order)
 
   ratio <- pars %>%
   filter(grepl("male", Parameter))

@@ -2198,8 +2198,10 @@ table_compare_parameters <- function(object_list, object_names, figure_dir = "co
   })
   pdf <- do.call(rbind, plist)
   pdf2 <- pdf %>%
-    # pivot_longer(-c(model,Parameter), names_to = "Type", values_to = "value") %>%
-    pivot_wider(names_from = model, values_from = Estimate)
+    pivot_longer(-c(model,Parameter), names_to = "Type", values_to = "value") %>%
+    mutate(Name_long = paste(model, Type, sep = "_")) %>%
+    select(-c(model, Type)) %>%
+    pivot_wider(names_from = "Name_long", values_from = "value")
 
   if (save_plot) {
     write.csv(pdf2, file = file.path(figure_dir, "parameter_summaries.csv"), row.names = FALSE)

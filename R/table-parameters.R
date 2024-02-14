@@ -49,9 +49,9 @@ table_parameters <- function(object, figure_dir = "figure/", save_table = TRUE)
 
   pars <- mcmc %>%
     group_by(.data$Parameter) %>%
-    summarise(P5 = quantile(.data$Estimate),
+    summarise(P5 = quantile(.data$Estimate, 0.95),
               Estimate = median(.data$Estimate),
-              P95 = median(.data$Estimate))
+              P95 = quantile(.data$Estimate, 0.95))
 
   likes <- pars %>% filter(grepl("lp_", Parameter)) %>%
   mutate(Order = case_when(grepl("lp__", Parameter) ~ 1,
@@ -222,7 +222,8 @@ table_parameters <- function(object, figure_dir = "figure/", save_table = TRUE)
 
   extra <- pars %>% filter(Parameter %in% out$Parameter == FALSE)
 
-  out2 <- bind_rows(out, extra)
+  out2 <- bind_rows(out, extra) 
+  out2 <- cbind.data.frame(out2[,"Parameter"], out2[,"P5"], out2[,"Estimate"], out2[,"P95"])
 
   if (save_table == TRUE) {
     write.csv(out2, file.path(figure_dir, "Parameters_summary.csv"), row.names = FALSE)

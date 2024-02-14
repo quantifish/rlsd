@@ -49,7 +49,7 @@ table_parameters <- function(object, figure_dir = "figure/", save_table = TRUE)
 
   pars <- mcmc %>%
     group_by(.data$Parameter) %>%
-    summarise(P5 = quantile(.data$Estimate, 0.95),
+    summarise(P5 = quantile(.data$Estimate, 0.05),
               Estimate = median(.data$Estimate),
               P95 = quantile(.data$Estimate, 0.95))
 

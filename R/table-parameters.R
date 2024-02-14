@@ -28,7 +28,8 @@ table_parameters <- function(object, figure_dir = "figure/", save_table = TRUE)
   mutate(Order = case_when(grepl('sexr', Parameter) ~ 1,
                            grepl("cpue", Parameter) ~ 2)) %>%
   arrange(Type, Order) %>%
-  select(-c(Type, Order))
+  select(-c(Type, Order)) %>%
+  mutate(P5 = NA, P95 = NA)
 
 
   ## weights
@@ -42,12 +43,15 @@ table_parameters <- function(object, figure_dir = "figure/", save_table = TRUE)
   group_by(Parameter) %>%
   mutate(N = cumsum(Dummy)) %>%
   mutate(Parameter = paste0(Parameter, " [", N, "]")) %>%
-  select(Parameter, Estimate)
+  select(Parameter, Estimate) %>%
+  mutate(P5 = NA, P95 = NA)
 
 
   pars <- mcmc %>%
     group_by(.data$Parameter) %>%
-    summarise(Estimate = median(.data$Estimate))
+    summarise(P5 = quantile(.data$Estimate),
+              Estimate = median(.data$Estimate),
+              P95 = median(.data$Estimate))
 
   likes <- pars %>% filter(grepl("lp_", Parameter)) %>%
   mutate(Order = case_when(grepl("lp__", Parameter) ~ 1,

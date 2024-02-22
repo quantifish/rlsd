@@ -88,14 +88,14 @@ table_parameters <- function(object, figure_dir = "figure/", save_table = TRUE)
 
   sel <- pars %>%
     filter(grepl("_sel_", Parameter)) %>%
-    separate(Parameter, c("Par", "Sex"), "i", remove = FALSE) %>%
+    tidyr::separate(Parameter, c("Par", "Sex"), "i", remove = FALSE) %>%
     arrange(Sex, Par) %>%
     select(-c(Par, Sex))
 
   b_rep <- pars %>%
     filter(grepl("par", Parameter) == FALSE) %>%
     filter(grepl('lp_', Parameter) == FALSE) %>%
-    separate(Parameter, c("Par", "Type"), "[\\[\\]]", remove = FALSE) %>%
+    tidyr::separate(Parameter, c("Par", "Type"), "[\\[\\]]", remove = FALSE) %>%
     filter(grepl("B", Par)) %>%
     filter(grepl("SSB", Par) == FALSE) %>%
     filter(grepl("Btot", Par) == FALSE) %>%
@@ -124,7 +124,7 @@ table_parameters <- function(object, figure_dir = "figure/", save_table = TRUE)
   expl <- pars %>%
   filter(substr(Parameter, 1, 1) == "U") %>%
   filter(grepl("money", Parameter) == FALSE) %>%
-  separate(Parameter, c("Par", "Type"), "[\\[\\]]", remove = FALSE) %>%
+  tidyr::separate(Parameter, c("Par", "Type"), "[\\[\\]]", remove = FALSE) %>%
   mutate(Order = case_when(Par == "Uref_jr" ~ 1,
                            Par == "Ucurr_jtr" ~ 2,
                            Par ==  "Uproj_jtr" ~ 3,
@@ -137,7 +137,7 @@ table_parameters <- function(object, figure_dir = "figure/", save_table = TRUE)
   ssb <- pars %>%
     filter(grepl("par", Parameter) == FALSE) %>%
     filter(grepl('lp_', Parameter) == FALSE) %>%
-    separate(Parameter, c("Par", "Type"), "[\\[\\]]", remove = FALSE) %>%
+    tidyr::separate(Parameter, c("Par", "Type"), "[\\[\\]]", remove = FALSE) %>%
     filter(grepl("SSB", Par)) %>%
     filter(grepl('n_', Par) == FALSE) %>%
     filter(grepl("msy", Par) == FALSE) %>%
@@ -156,7 +156,7 @@ table_parameters <- function(object, figure_dir = "figure/", save_table = TRUE)
   tb <- pars %>%
     filter(grepl("par", Parameter) == FALSE) %>%
     filter(grepl('lp_', Parameter) == FALSE) %>%
-    separate(Parameter, c("Par", "Type"), "[\\[\\]]", remove = FALSE) %>%
+    tidyr::separate(Parameter, c("Par", "Type"), "[\\[\\]]", remove = FALSE) %>%
     filter(grepl("Btot", Par)) %>%
     filter(grepl('n_', Par) == FALSE) %>%
     filter(grepl("msy", Par) == FALSE) %>%

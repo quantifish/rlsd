@@ -49,9 +49,9 @@ table_parameters <- function(object, figure_dir = "figure/", save_table = TRUE)
 
   pars <- mcmc %>%
     group_by(Parameter) %>%
-    summarise(P5 = quantile(Estimate, 0.05),
-              P50 = median(Estimate, 0.5),
-              P95 = quantile(Estimate, 0.95))
+    summarise(P5 = quantile(.data$Estimate, 0.05),
+              P50 = median(.data$Estimate, 0.5),
+              P95 = quantile(.data$Estimate, 0.95))
 
   likes <- pars %>% filter(grepl("lp_", Parameter)) %>%
   mutate(Order = case_when(grepl("lp__", Parameter) ~ 1,

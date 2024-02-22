@@ -3,7 +3,7 @@
 #' @param object and LSD object
 #' @param figure_dir the directory to save to
 #' @param save_table TRUE or FALSE
-#' @import dplyr
+#' @import dplyr tidyr
 #' @export
 #'obj
 table_parameters <- function(object, figure_dir = "figure/", save_table = TRUE)

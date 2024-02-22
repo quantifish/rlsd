@@ -48,7 +48,6 @@ table_parameters <- function(object, figure_dir = "figure/", save_table = TRUE)
 
 
   pars <- mcmc %>%
-    mutate(Parameter = as.character(Parameter)) %>%
     group_by(Parameter) %>%
     summarise(P5 = quantile(Estimate, 0.05),
               P50 = median(Estimate, 0.5),

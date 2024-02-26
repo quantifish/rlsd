@@ -23,7 +23,8 @@ do_extract <- function(dir = ".",
                     "par_grow_ip", "par_grow_beta_alpha_ip", "par_sel_ip", "recruits_estimated_ry")
 
   # pars we want for diagnostics
-  do_extract <- c("lp__", "lp_total", "lp_tag", "lp_prior", "lp_sexr", "lp_lf", "lp_cpue", "lp_puerulus",
+  do_extract <- c("sdnr_cpue", "sdnr_tag", "sdnr_sexr", "sdnr_lfs", "sdnr_puerulus",
+                  "MAR_puerulus", "MAR_cpue", "MAR_tag", "MAR_sexr", "MAR_lfs", "lp__", "lp_total", "lp_tag", "lp_prior", "lp_sexr", "lp_lf", "lp_cpue", "lp_puerulus",
                   "par_R0_r", "par_M_i", "par_mat_50_i", "par_mat_95_i",
                   "par_grow_alpha_i", "par_grow_beta_i", "par_grow_shape_i", "par_grow_cv_i", "par_grow_sd_i", "par_grow_dd",
                   "par_sel_1_i", "par_sel_2_i", "par_sel_3_i", "par_vuln_i",

@@ -112,7 +112,7 @@ plot_compare_lfs <- function(object_list,
     scale_x_continuous(minor_breaks = seq(0, 1e6, 2), limits = c(min(elf2$lower), max(elf2$upper))) +
     theme_lsd()
 
-    if (nmod > 5) {
+    if (nmod > 6) {
       p <- p +
         scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
         scale_color_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod)))
@@ -251,7 +251,7 @@ plot_compare_lfs_old <- function(object_list,
     scale_x_continuous(minor_breaks = seq(0, 1e6, 2), limits = c(min(elf$lower), max(elf$upper))) +
     theme_lsd()
   
-  if (nmod > 5) {
+  if (nmod > 6) {
     p <- p +
       scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
       scale_color_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod)))
@@ -394,7 +394,7 @@ plot_compare_ssb <- function(object_list,
     theme(axis.text.x = element_text(angle = 45,hjust = 1)) +
     coord_cartesian(clip = "off")
 
-  if (nmod > 5) {
+  if (nmod > 6) {
     p1 <- p1 +
       scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
       scale_color_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod)))
@@ -429,7 +429,7 @@ plot_compare_ssb <- function(object_list,
       #geom_label(data = labs2, mapping = aes(x = Year, y = value, label = type), nudge_x = -5) +
       coord_cartesian(clip = "off")
 
-    if (nmod > 5) {
+    if (nmod > 6) {
       q1 <- q1 +
         scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
         scale_color_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod)))
@@ -465,7 +465,7 @@ plot_compare_ssb <- function(object_list,
     theme_lsd(base_size = 14) +
     theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-  if (nmod > 5) {
+  if (nmod > 6) {
     p1 <- p1 +
       scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
       scale_color_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod)))
@@ -496,7 +496,7 @@ plot_compare_ssb <- function(object_list,
       #geom_label(data = labs2, mapping = aes(x = Year, y = value, label = type), nudge_x = -5) +
       coord_cartesian(clip = "off")
 
-    if (nmod > 5) {
+    if (nmod > 6) {
       q1 <- q1 +
         scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
         scale_color_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod)))
@@ -535,7 +535,7 @@ plot_compare_ssb <- function(object_list,
     geom_text(data = labs_rel %>% filter(type != "SSB0"), aes(x = "base", y = value, label = type)) +
     xlab("Model") + ylab("Terminal year relative spawning biomass")
 
-  if (nmod > 5) {
+  if (nmod > 6) {
     p <- p +
       scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
       scale_color_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod)))
@@ -581,7 +581,7 @@ plot_compare_ssb <- function(object_list,
       ylab("Terminal year relative spawning biomass") +
       facet_wrap(~Region)
 
-    if (nmod > 5) {
+    if (nmod > 6) {
       q <- q +
         scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
         scale_color_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod)))
@@ -617,7 +617,7 @@ plot_compare_ssb <- function(object_list,
     labs(x = "Model", y = "Terminal year relative spawning biomass") +
     scale_alpha_manual(values = rep(c(1, 0.5), length(unique(relssb_next_proj$Year))/2), guide = FALSE)
 
-  if (nmod > 5) {
+  if (nmod > 6) {
     p <- p +
       scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
       scale_color_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod)))
@@ -656,7 +656,7 @@ plot_compare_ssb <- function(object_list,
       facet_wrap(~Region) +
       scale_alpha_manual(values = c(1, 0.5), guide = FALSE)
 
-    if (nmod > 5) {
+    if (nmod > 6) {
       q <- q +
         scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
         scale_color_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod)))
@@ -689,7 +689,7 @@ plot_compare_ssb <- function(object_list,
     labs(x = "Fishing year", y = "Relative spawning biomass") +
     theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-  if (nmod > 5) {
+  if (nmod > 6) {
     p <- p +
       scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
       scale_color_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod)))
@@ -716,7 +716,7 @@ plot_compare_ssb <- function(object_list,
     labs(x = "Year", y = "Relative spawning biomass") +
     theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-  if (nmod > 5) {
+  if (nmod > 6) {
     p <- p +
       scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
       scale_color_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod)))
@@ -751,7 +751,7 @@ plot_compare_ssb <- function(object_list,
       facet_grid(~Region) +
       theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-    if (nmod > 5) {
+    if (nmod > 6) {
       q <- q +
         scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
         scale_color_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod)))
@@ -779,7 +779,7 @@ plot_compare_ssb <- function(object_list,
       scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
       facet_wrap(~Region)
 
-    if (nmod > 5) {
+    if (nmod > 6) {
       q <- q +
         scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
         scale_color_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod)))
@@ -830,7 +830,7 @@ plot_compare_ssb <- function(object_list,
         theme_lsd(base_size = 14) +
         theme(axis.text.x = element_text(angle = 45, hjust = 1))
       
-      if (nmod > 5) {
+      if (nmod > 6) {
         p1 <- p1 +
           scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
           scale_color_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod)))
@@ -867,7 +867,7 @@ plot_compare_ssb <- function(object_list,
       #     geom_label(data = labs %>% filter(type != "SSB0"), mapping = aes(x = Year, y = value, label = type), nudge_x = -5) +
       #     coord_cartesian(clip = "off")
       #   
-      #   if (nmod > 5) {
+      #   if (nmod > 6) {
       #     q1 <- q1 +
       #       scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
       #       scale_color_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod)))
@@ -1010,7 +1010,7 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
     theme_lsd(base_size = 14) +
     theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-  if (nmod > 5) {
+  if (nmod > 6) {
     p <- p +
       scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
       scale_color_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod)))
@@ -1042,7 +1042,7 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
       theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
       facet_wrap(~Region)
 
-    if (nmod > 5) {
+    if (nmod > 6) {
       q <- q +
         scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
         scale_color_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod)))
@@ -1081,7 +1081,7 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
       theme_lsd(base_size = 14) +
       theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-    if (nmod > 5) {
+    if (nmod > 6) {
       p <- p +
         scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
         scale_color_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod)))
@@ -1112,7 +1112,7 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
         theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
         facet_wrap(~Region)
 
-      if (nmod > 5) {
+      if (nmod > 6) {
         q <- q +
           scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
           scale_color_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod)))
@@ -1149,7 +1149,7 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
     theme_lsd(base_size = 14) +
     theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-  if (nmod > 5) {
+  if (nmod > 6) {
     p <- p +
       scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
       scale_color_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod)))
@@ -1177,7 +1177,7 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
       theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
       facet_wrap(~Region)
 
-    if (nmod > 5) {
+    if (nmod > 6) {
       q <- q +
         scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
         scale_color_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod)))
@@ -1209,7 +1209,7 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
     theme_lsd(base_size = 14) +
     theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-  if (nmod > 5) {
+  if (nmod > 6) {
     p <- p +
       scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
       scale_color_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod)))
@@ -1233,7 +1233,7 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
       theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
       facet_wrap(~Region)
 
-    if (nmod > 5) {
+    if (nmod > 6) {
       q <- q +
         scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
         scale_color_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod)))
@@ -1270,7 +1270,7 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
       theme_lsd(base_size = 14) +
       theme(axis.text.x = element_text(angle = 45,hjust = 1))
     
-    if (nmod > 5) {
+    if (nmod > 6) {
       p <- p +
         scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
         scale_color_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod)))
@@ -1297,7 +1297,7 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
         theme(axis.text.x = element_text(angle = 45,hjust = 1)) +
         facet_wrap(~Region)
       
-      if (nmod > 5) {
+      if (nmod > 6) {
         q <- q +
           scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
           scale_color_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod)))
@@ -1354,7 +1354,7 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
           geom_label(data = Bref , label = "Reference", aes(x = min(vb$Year) + 10, y = value), size = 5, color = "forestgreen", fill = "white") 
       }
       
-      if (nmod > 5) {
+      if (nmod > 6) {
         p <- p +
           scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
           scale_color_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod)))
@@ -1381,7 +1381,7 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
       #     theme(axis.text.x = element_text(angle = 45,hjust = 1))# +
       #     #facet_wrap(~Region)
       #   
-      #   if (nmod > 5) {
+      #   if (nmod > 6) {
       #     q <- q +
       #       scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
       #       scale_color_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod)))
@@ -1406,7 +1406,7 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
         theme_lsd(base_size = 14) +
         theme(axis.text.x = element_text(angle = 45, hjust = 1))
       
-      if (nmod > 5) {
+      if (nmod > 6) {
         p <- p +
           scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
           scale_color_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod)))
@@ -1431,7 +1431,7 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
       #     theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
       #     facet_wrap(~Region)
       #   
-      #   if (nmod > 5) {
+      #   if (nmod > 6) {
       #     q <- q +
       #       scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
       #       scale_color_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod)))
@@ -1512,7 +1512,7 @@ plot_compare_recruitment <- function(object_list, object_names, figure_dir = "co
     theme_lsd(base_size = 14) +
     theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-  if (nmod > 5) {
+  if (nmod > 6) {
     p <- p +
       scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
       scale_color_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod)))
@@ -1558,7 +1558,7 @@ plot_compare_recruitment <- function(object_list, object_names, figure_dir = "co
     theme_lsd(base_size = 14) +
     theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-  if (nmod > 5) {
+  if (nmod > 6) {
     p <- p +
       scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
       scale_color_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod)))
@@ -1655,7 +1655,7 @@ plot_compare_selectivity <- function(object_list, object_names, figure_dir = "co
       scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1)))
   }
 
-  if (nmod > 5) {
+  if (nmod > 6) {
     p <- p +
       scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
       scale_color_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod)))
@@ -1801,7 +1801,7 @@ plot_compare_cpue <- function(object_list,
       stat_summary(data = pcr_yrs, aes(x = .data$Year, y = .data$CPUE, color = .data$Model), fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1)
   }
 
-  if (nmod > 5) {
+  if (nmod > 6) {
     p <- p +
       scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
       scale_color_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod)))
@@ -1845,7 +1845,7 @@ if(nrow(ocr_yrs) > 0){
       stat_summary(data = pcr_yrs, aes(x = .data$Year, y = .data$CPUE, color = .data$Model), fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1)
   }
 
-  if (nmod > 5) {
+  if (nmod > 6) {
     p <- p +
       scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
       scale_color_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod)))
@@ -1964,7 +1964,7 @@ plot_compare_q <- function(object_list, object_names, figure_dir = "compare_figu
     theme_lsd() +
     facet_wrap(~qtype, scales = "free")
 
-  if (nmod > 5) {
+  if (nmod > 6) {
     p <- p +
       scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
       scale_color_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod)))
@@ -2024,7 +2024,7 @@ plot_compare_movement <- function(object_list , object_names , figure_dir  = "co
     # scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
     theme_lsd()
 
-  if (nmod > 5) {
+  if (nmod > 6) {
     p <- p +
       scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
       scale_color_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod)))
@@ -2118,7 +2118,7 @@ mls <- do.call(rbind, mls_df)
         facet_wrap(~Sex) +
         theme_lsd()
 
-  if (nmod > 5) {
+  if (nmod > 6) {
     p <- p +
       scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
       scale_color_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod)))
@@ -2138,7 +2138,7 @@ mls <- do.call(rbind, mls_df)
         facet_wrap(~Sex) +
         theme_lsd()
 
-  if (nmod > 5) {
+  if (nmod > 6) {
     p <- p +
       scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
       scale_color_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod)))

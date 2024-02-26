@@ -237,7 +237,7 @@ table_parameters <- function(object, figure_dir = "figure/", save_table = TRUE)
 
   out <- bind_rows(data2, sdnr_mar, likes, par1, growth, mu, q, vuln, sel, b_rep, expl, ssb, tb, other, ratio, probs)
 
-  extra <- pars %>% filter(Parameter %in% out$Parameter == FALSE)
+  extra <- pars %>% filter(Parameter %in% out$Parameter == FALSE) %>% filter(grepl("sdnr", Parameter) == FALSE, grepl("MAR", Parameter) == FALSE)
 
   out2 <- bind_rows(out, extra) 
   out2 <- cbind.data.frame(out2[,"Parameter"], out2[,"P5"], out2[,"Estimate"], out2[,"P95"])

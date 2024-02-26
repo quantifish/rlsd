@@ -6,31 +6,30 @@
 #' @import dplyr
 #' @importFrom tidyr pivot_longer pivot_wider
 #' @export
-#'obj
 table_parameters <- function(object, figure_dir = "figure/", save_table = TRUE)
 {
   mcmc <- object@mcmc_pars
   names(mcmc) <- c("Iteration", "Chain", "Parameter", "Estimate")
 
   ## sdnr and mar
-  map <- object@map
-  map2 <- map %>%
-  reshape2::melt() %>%
-  rename(Parameter = L1, Estimate = value) %>%
-  filter(grepl("sdnr", Parameter) | grepl("MAR", Parameter)) %>%
-  select(Parameter, Estimate) %>%
-  mutate(Dummy = 1) %>%
-  group_by(Parameter) %>%
-  mutate(N = cumsum(Dummy)) %>%
-  mutate(Parameter = paste0(Parameter, " [", N, "]")) %>%
-  select(Parameter, Estimate) %>%
-  mutate(Type = case_when(grepl('sdnr', Parameter) ~ 1,
-                           grepl("MAR", Parameter) ~ 2)) %>%
-  mutate(Order = case_when(grepl('sexr', Parameter) ~ 1,
-                           grepl("cpue", Parameter) ~ 2)) %>%
-  arrange(Type, Order) %>%
-  select(-c(Type, Order)) %>%
-  mutate(P5 = NA, P95 = NA)
+  # map <- object@map
+  # map2 <- map %>%
+  # reshape2::melt() %>%
+  # rename(Parameter = L1, Estimate = value) %>%
+  # filter(grepl("sdnr", Parameter) | grepl("MAR", Parameter)) %>%
+  # select(Parameter, Estimate) %>%
+  # mutate(Dummy = 1) %>%
+  # group_by(Parameter) %>%
+  # mutate(N = cumsum(Dummy)) %>%
+  # mutate(Parameter = paste0(Parameter, " [", N, "]")) %>%
+  # select(Parameter, Estimate) %>%
+  # mutate(Type = case_when(grepl('sdnr', Parameter) ~ 1,
+  #                          grepl("MAR", Parameter) ~ 2)) %>%
+  # mutate(Order = case_when(grepl('sexr', Parameter) ~ 1,
+  #                          grepl("cpue", Parameter) ~ 2)) %>%
+  # arrange(Type, Order) %>%
+  # select(-c(Type, Order)) %>%
+  # mutate(P5 = NA, P95 = NA)
 
 
   ## weights
@@ -51,8 +50,22 @@ table_parameters <- function(object, figure_dir = "figure/", save_table = TRUE)
   pars <- mcmc %>%
     group_by(Parameter) %>%
     summarise(P5 = quantile(Estimate, 0.05),
-              P50 = median(Estimate, 0.5),
-              P95 = quantile(Estimate, 0.95))
+              P95 = quantile(Estimate, 0.95),
+              Estimate = median(Estimate))
+  
+  sdnr_mar <- pars %>%
+    filter(grepl("sdnr", Parameter) | grepl("MAR", Parameter)) %>%
+    mutate(Dummy = 1) %>%
+    group_by(Parameter) %>%
+    mutate(N = cumsum(Dummy)) %>%
+    mutate(Parameter = paste0(Parameter, " [", N, "]")) %>%
+    select(-c(Dummy, N)) %>%
+    mutate(Type = case_when(grepl('sdnr', Parameter) ~ 1,
+                            grepl("MAR", Parameter) ~ 2)) %>%
+    mutate(Order = case_when(grepl('sexr', Parameter) ~ 1,
+                             grepl("cpue", Parameter) ~ 2)) %>%
+    arrange(Type, Order) %>%
+    select(-c(Type, Order))
 
   likes <- pars %>% filter(grepl("lp_", Parameter)) %>%
   mutate(Order = case_when(grepl("lp__", Parameter) ~ 1,
@@ -181,10 +194,13 @@ table_parameters <- function(object, figure_dir = "figure/", save_table = TRUE)
   ratio <- pars %>%
   filter(grepl("male", Parameter))
 
-  probs <- pars %>%
+  probs <- mcmc %>%
   filter(substr(Parameter, 1, 1) == "n") %>%
   filter(grepl("money", Parameter) == FALSE) %>%
   filter(grepl("msy", Parameter) == FALSE) %>%
+  group_by(Parameter) %>%
+  summarise(Estimate = mean(Estimate)) %>%
+  mutate(P5 = NA, P95 = NA) %>%
   mutate(Order = case_when(grepl("min", Parameter) ~ 1,
                            grepl("_Bcurr", Parameter) ~ 2,
                            grepl("_Bproj", Parameter) ~ 3,
@@ -219,7 +235,7 @@ table_parameters <- function(object, figure_dir = "figure/", save_table = TRUE)
   #   }
   # }
 
-  out <- bind_rows(data2, map2, likes, par1, growth, mu, q, vuln, sel, b_rep, expl, ssb, tb, other, ratio, probs)
+  out <- bind_rows(data2, sdnr_mar, likes, par1, growth, mu, q, vuln, sel, b_rep, expl, ssb, tb, other, ratio, probs)
 
   extra <- pars %>% filter(Parameter %in% out$Parameter == FALSE)
 

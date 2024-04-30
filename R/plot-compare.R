@@ -1622,7 +1622,7 @@ plot_compare_selectivity <- function(object_list, object_names, figure_dir = "co
     dimnames(sel2) <- list("Iteration" = 1:n_iter, "Selex" = 1:data_list[[x]]$n_sel, "Size" = data_list[[x]]$size_midpoint_l)
     sel2 <- melt(sel2, value.name = "Selectivity") %>%
       inner_join(w, by = "Selex") %>%
-      filter(Year <= max(years_list[[x]])) %>%
+      filter(Year <= max(pyears_list[[x]])) %>%
       mutate(Year = factor(Year)) %>%
       # mutate(Sex = ifelse(grepl("female", Sex), "Female", "Male")) %>%
       distinct(Iteration, Sex, Size, Selectivity, Region, .keep_all = TRUE)
@@ -1641,19 +1641,19 @@ plot_compare_selectivity <- function(object_list, object_names, figure_dir = "co
   sel$Model <- factor(sel$Model, levels = object_names)
 
   # if multiple seasons, regardless of year
-  if (length(unique(sel$Season)) > 1) {
-    p <- ggplot(data = sel, aes(x = Size, y = Selectivity, col = Model, fill = Model, linetype = Season)) +
-      stat_summary(data = sel, aes(x = Size, y = Selectivity, col = Model, linetype = Season), fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
-      stat_summary(data = sel, aes(x = Size, y = Selectivity, col = Model, linetype = Season), fun.min = function(x) quantile(x, 0.25), fun.max = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
-      stat_summary(data = sel, aes(x = Size, y = Selectivity, col = Model, linetype = Season), fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.8) +
-      scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1)))
-  } else {
+  # if (length(unique(sel$Season)) > 1) {
+  #   p <- ggplot(data = sel, aes(x = Size, y = Selectivity, col = Model, fill = Model, linetype = Season)) +
+  #     stat_summary(data = sel, aes(x = Size, y = Selectivity, col = Model, linetype = Season), fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
+  #     stat_summary(data = sel, aes(x = Size, y = Selectivity, col = Model, linetype = Season), fun.min = function(x) quantile(x, 0.25), fun.max = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
+  #     stat_summary(data = sel, aes(x = Size, y = Selectivity, col = Model, linetype = Season), fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.8) +
+  #     scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1)))
+  # } else {
     p <- ggplot(data = sel, aes(x = Size, y = Selectivity, col = Model, fill = Model)) +
-      stat_summary(data = sel, aes(x = Size, y = Selectivity, col = Model), fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
-      stat_summary(data = sel, aes(x = Size, y = Selectivity, col = Model), fun.min = function(x) quantile(x, 0.25), fun.max = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
-      stat_summary(data = sel, aes(x = Size, y = Selectivity, col = Model), fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.8) +
+      stat_summary(data = sel, aes(x = Size, y = Selectivity, col = Model, linetype = Epoch), fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
+      stat_summary(data = sel, aes(x = Size, y = Selectivity, col = Model, linetype = Epoch), fun.min = function(x) quantile(x, 0.25), fun.max = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
+      stat_summary(data = sel, aes(x = Size, y = Selectivity, col = Model, linetype = Epoch), fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.8) +
       scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1)))
-  }
+  # }
 
   if (nmod > 6) {
     p <- p +
@@ -1670,15 +1670,15 @@ plot_compare_selectivity <- function(object_list, object_names, figure_dir = "co
   areas <- unique(sapply(1:length(data_list), function(x) data_list[[x]]$n_area))
   if (areas > 1) {
     if (length(unique(sel$Season)) > 1 & length(unique(sel$Year)) > 1) {
-      p <- p + facet_grid(Region + Year + Epoch ~  Sex)
+      p <- p + facet_grid(Region + Year ~  Sex)
     } else {
-      p <- p + facet_grid(Region + Epoch ~ Sex)
+      p <- p + facet_grid(Region ~ Sex)
     }
   } else {
     if (length(unique(sel$Season)) > 1 & length(unique(sel$Year)) > 1) {
-      p <- p + facet_grid(Year + Epoch ~  Sex)
+      p <- p + facet_grid(Year ~  Sex)
     } else {
-      p <- p + facet_grid( Epoch ~  Sex)
+      p <- p + facet_grid( ~  Sex)
     }
   }
 

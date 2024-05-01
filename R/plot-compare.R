@@ -2092,7 +2092,7 @@ num_df <- lapply(1:length(object_list), function(x) {
 })
 num_comp <- do.call(rbind, num_df)
 
-num_comp$Model = factor(num_comp$Model, levels = c("base_proj100", "mls-5", "mls+5", "mls+10"))
+num_comp$Model = factor(num_comp$Model, levels = unique(num_comp$Model))
 
   ymax_df <- num_comp %>%
   group_by(Size) %>%
@@ -2109,7 +2109,7 @@ mls_df <- lapply(1:length(object_list), function(x){
     return(mls)
   })
 mls <- do.call(rbind, mls_df)
-mls$Model = factor(mls$Model, levels = c("base_proj100", "mls-5", "mls+5", "mls+10"))
+mls$Model = factor(mls$Model, levels = unique(mls$Model))
 
 
 ## compare current year numbers

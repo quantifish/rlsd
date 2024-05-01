@@ -2092,6 +2092,8 @@ num_df <- lapply(1:length(object_list), function(x) {
 })
 num_comp <- do.call(rbind, num_df)
 
+num_comp$Model = factor(num_comp$Model, levels = c("base_proj100", "mls-5", "mls+5", "mls+10"))
+
   ymax_df <- num_comp %>%
   group_by(Size) %>%
   summarise(Median = quantile(N, 0.5))
@@ -2107,6 +2109,8 @@ mls_df <- lapply(1:length(object_list), function(x){
     return(mls)
   })
 mls <- do.call(rbind, mls_df)
+mls$Model = factor(mls$Model, levels = c("base_proj100", "mls-5", "mls+5", "mls+10"))
+
 
 ## compare current year numbers
     p <- ggplot(data = num_comp %>% filter(Year == year_rdev), aes(x = Size, y = N/1000, color = Model, fill = Model)) +

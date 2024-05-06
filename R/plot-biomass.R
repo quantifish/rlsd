@@ -86,7 +86,7 @@ plot_ssb <- function(object,
   map <- object@map
   mcmc <- object@mcmc
 
-  cpal <- c("#56B4E9", "#009E73", "#E69F00", "tomato")
+  # cpal <- c("#56B4E9", "#009E73", "#E69F00", "tomato")
 
   years <- data$first_yr:data$last_yr
   pyears <- data$first_yr:data$last_proj_yr
@@ -155,7 +155,7 @@ plot_ssb <- function(object,
   # ssb_in$Region <- sapply(1:nrow(ssb_in), function(x) paste0("Region ", ssb_in$Region[x]))
   # ssb1_in$Region <- sapply(1:nrow(ssb1_in), function(x) paste0("Region ", ssb1_in$Region[x]))
 
-  p <- ggplot(data = ssb_in %>% filter(Region %in% regions), aes(x = Year, y = value))
+  p <- ggplot(data = ssb_in %>% filter(Region %in% regions, type == "SSB"), aes(x = Year, y = value))
   # if (show_ref) {
   #     # p <- p + geom_vline(aes(xintercept = data$first_ref_yr), linetype = "dashed", colour = cpal[2]) +
   #     #     geom_vline(aes(xintercept = data$last_ref_yr), linetype = "dashed", colour = cpal[2])
@@ -165,19 +165,25 @@ plot_ssb <- function(object,
   if (show_proj) p <- p + geom_vline(aes(xintercept = data$last_yr), linetype = "dashed")
 
   p <- p +
-    stat_summary(aes(fill = type), fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.125) +
-    stat_summary(aes(fill = type), fun.ymin = function(x) quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.25) +
-    stat_summary(aes(colour = type), fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1) +
+    stat_summary(aes(fill = factor(Rule)), fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.125) +
+    stat_summary(aes(fill = factor(Rule)), fun.ymin = function(x) quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.25) +
+    stat_summary(aes(colour = factor(Rule)), fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1) +
+    stat_summary(data = ssb_in %>% filter(type == "Soft limit"), aes(fill = "Soft limit"), fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.125) +
+    stat_summary(data = ssb_in %>% filter(type == "Soft limit"),aes(fill = "Soft limit"), fun.ymin = function(x) quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.25) +
+    stat_summary(data = ssb_in %>% filter(type == "Soft limit"),aes(colour = "Soft limit"), fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1) +
+    stat_summary(data = ssb_in %>% filter(type == "Hard limit"),aes(fill = "Hard limit"), fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.125) +
+    stat_summary(data = ssb_in %>% filter(type == "Hard limit"),aes(fill = "Hard limit"), fun.ymin = function(x) quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.25) +
+    stat_summary(data = ssb_in %>% filter(type == "Hard limit"),aes(colour = "Hard limit"), fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1) +
     expand_limits(y = 0) +
     labs(x = xlab, y = "Spawning stock biomass (tonnes)", colour = NULL, fill = NULL) +
     scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1), expand = c(0, 1)) +
     scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
-    scale_fill_manual(values = cpal) +
-    scale_colour_manual(values = cpal) +
+    scale_color_okabe_ito() +
+    scale_fill_okabe_ito() +
     theme_lsd()
 
   if (length(map) > 0 & show_map) {
-    p <- p + geom_line(data = ssb1_in %>% filter(Region %in% regions), aes(x = Year, y = SSB, colour = type), linetype = 2)
+    p <- p + geom_line(data = ssb1_in %>% filter(Region %in% regions), aes(x = Year, y = SSB, colour = factor(Rule)), linetype = 2)
   }
 
   if (data$n_area > 1) {
@@ -248,29 +254,29 @@ plot_vulnref_AW <- function(object,
     if (length(map) > 0 & show_map) vb1 <- vb1 %>% filter(.data$Year <= data$last_yr)
   }
 
-  p <- ggplot(data = vb %>% filter(.data$Region %in% regions), aes(x = .data$Year, y = .data$VB))
+  p <- ggplot(data = vb %>% filter(Region %in% regions), aes(x = Year, y = VB))
 
   if (show_ref) {
     # p <- p + geom_vline(aes(xintercept = data$first_ref_yr), linetype = "dashed", colour = cpal[2]) +
     #     geom_vline(aes(xintercept = data$last_ref_yr), linetype = "dashed", colour = cpal[2])
     p <- p +
-      geom_hline(data = Bref, aes(yintercept = .data$value), colour = cpal[2]) +
-      geom_label(data = Bref %>% filter(.data$Region == 1), label = "Reference", aes(x = min(vb$Year) + 10, y = .data$value), color = cpal[2], size = 5)
+      geom_hline(data = Bref, aes(yintercept = value), colour = cpal[2]) +
+      geom_label(data = Bref %>% filter(Region == 1), label = "Reference", aes(x = min(vb$Year) + 10, y = value), color = cpal[2], size = 5)
   }
 
   if (show_proj) p <- p + geom_vline(aes(xintercept = data$last_yr), linetype = "dashed")
 
   p <- p +
-    stat_summary(fill = cpal[1], fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.125) +
-    stat_summary(fill = cpal[1], fun.ymin = function(x) quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.25) +
-    stat_summary(colour = cpal[1], fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1) +
+    stat_summary(data = vb %>% filter(Region %in% regions), aes(fill = factor(Rule)),fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.125) +
+    stat_summary(data = vb %>% filter(Region %in% regions), aes(fill = factor(Rule)),fun.ymin = function(x) quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.25) +
+    stat_summary(data = vb %>% filter(Region %in% regions), aes(color = factor(Rule)), fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1) +
     expand_limits(y = 0) +
     labs(x = xlab, y = "AW adjusted vulnerable biomass (tonnes)", colour = NULL, fill = NULL) +
     scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1), expand = c(0, 1)) +
     scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
-    # scale_fill_manual(values = cpal) +
-    # scale_colour_manual(values = cpal) +
-    guides(color = FALSE, fill = FALSE) +
+    scale_color_okabe_ito() +
+    scale_fill_okabe_ito() +
+    # guides(fill = FALSE) +
     theme_lsd()
 
   if (length(map) > 0 & show_map) {

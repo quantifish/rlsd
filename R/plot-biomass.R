@@ -274,7 +274,7 @@ plot_vulnref_AW <- function(object,
     labs(x = xlab, y = "AW adjusted vulnerable biomass (tonnes)", colour = NULL, fill = NULL) +
     scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1), expand = c(0, 1)) +
     scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
-    scale_color_okabe_ito() +
+    scale_color_okabe_ito() + 
     scale_fill_okabe_ito() +
     # guides(fill = FALSE) +
     theme_lsd()

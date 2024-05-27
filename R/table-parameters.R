@@ -49,9 +49,9 @@ table_parameters <- function(object, figure_dir = "figure/", save_table = TRUE)
 
   pars <- mcmc %>%
     group_by(Parameter) %>%
-    summarise(P5 = quantile(Estimate, 0.05),
-              P95 = quantile(Estimate, 0.95),
-              Estimate = median(Estimate))
+    summarise(P5 = quantile(Estimate, 0.05, na.rm = TRUE),
+              P95 = quantile(Estimate, 0.95, na.rm = TRUE),
+              Estimate = median(Estimate, na.rm = TRUE))
   
   sdnr_mar <- pars %>%
     filter(grepl("sdnr", Parameter) | grepl("MAR", Parameter)) %>%

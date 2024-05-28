@@ -2113,14 +2113,20 @@ mls$Model = factor(mls$Model, levels = unique(mls$Model))
 
 
 ## compare current year numbers
-    p <- ggplot(data = num_comp %>% filter(Year == year_rdev), aes(x = Size, y = N/1000, color = Model, fill = Model)) +
-        stat_summary(fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
+plot <- num_comp %>% filter(Year == year_rdev)
+    p <- ggplot(plot, aes(x = Size, y = N/1000, color = Model, fill = Model)) +
+        # stat_summary(fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
         stat_summary(fun = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1) +
-        scale_y_continuous(limits = c(0, ymax/1000), expand = expansion(mult = c(0, 0.1))) +
-        geom_vline(data = mls %>% filter(Year == year_rdev, Season == "AW"), aes(xintercept = MLS, color = Model, linetype = Model), lwd = 1) +
+        scale_y_continuous(expand = expansion(mult = c(0, 0))) + #
+        geom_vline(data = mls %>% filter(Year == year_rdev, Season == "SS"), aes(xintercept = MLS, color = Model, linetype = Model), lwd = 1) +
         xlab(xlab) + ylab(ylab) +
-        facet_wrap(~Sex) +
         theme_lsd()
+    
+    if(length(unique(plot$Region)) > 1){
+      p <- p + facet_grid(Region~Sex)
+    } else {
+      p <- p + facet_wrap(~Sex)
+    }
 
   if (nmod > 6) {
     p <- p +
@@ -2131,17 +2137,25 @@ mls$Model = factor(mls$Model, levels = unique(mls$Model))
       scale_fill_brewer(palette = "Set1") +
       scale_color_brewer(palette = "Set1")
   }
+  
     ggsave(file.path(figure_dir, "Numbers_final_rdev_year.png"), p, width = 12)
 
-    p <- ggplot(data = num_comp %>% filter(Year == year_proj), aes(x = Size, y = N/1000, color = Model, fill = Model)) +
-        stat_summary(fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
+    plot <- num_comp %>% filter(Year == year_proj)
+    p <- ggplot(data = plot, aes(x = Size, y = N/1000, color = Model, fill = Model)) +
+        # stat_summary(fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
         stat_summary(fun = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1) +
-        scale_y_continuous(limits = c(0, ymax/1000), expand = expansion(mult = c(0, 0.1))) +
-        geom_vline(data = mls %>% filter(Year == year_proj, Season == "AW"), aes(xintercept = MLS, color = Model, linetype = Model), lwd = 1) +
+        scale_y_continuous(expand = expansion(mult = c(0, 0.1))) +
+        geom_vline(data = mls %>% filter(Year == year_proj, Season == "SS"), aes(xintercept = MLS, color = Model, linetype = Model), lwd = 1) +
         xlab(xlab) + ylab(ylab) +
         facet_wrap(~Sex) +
         theme_lsd()
 
+    if(length(unique(plot$Region)) > 1){
+      p <- p + facet_grid(Region~Sex)
+    } else {
+      p <- p + facet_wrap(~Sex)
+    }
+    
   if (nmod > 6) {
     p <- p +
       scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +

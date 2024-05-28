@@ -321,7 +321,7 @@ plot_compare_ssb <- function(object_list,
     bio <- mcmc_list[[x]]$SSB0_r
     dimnames(bio) <- list("Iteration" = 1:n_iter, "Region" = regions_list2[[x]])
     hl <- melt(bio) %>%
-      left_join(expand.grid(Iteration = 1:n_iter, Year = pyears_list[[x]]), by = "Iteration") %>%
+      left_join(expand.grid(Iteration = 1:n_iter, Year = pyears_list[[x]]), by = "Iteration", relationship = 'many-to-many') %>%
       filter(Region != "Total") %>%
       group_by(Iteration, Year, Region) %>%
       summarise(value = sum(value)) %>%
@@ -330,7 +330,7 @@ plot_compare_ssb <- function(object_list,
           mutate(YearType = ifelse(Year %in% years_list[[x]], "Assessment", "Projection")) %>%
       mutate(YearType = ifelse(Year == max(years_list[[x]])+1, "FirstProjYear", YearType))
     sl <- melt(bio) %>%
-      left_join(expand.grid(Iteration = 1:n_iter, Year = pyears_list[[x]]), by = "Iteration") %>%
+      left_join(expand.grid(Iteration = 1:n_iter, Year = pyears_list[[x]]), by = "Iteration", relationship = 'many-to-many') %>%
       filter(Region != "Total") %>%
       group_by(Iteration, Year, Region) %>%
       summarise(value = sum(value)) %>%
@@ -339,7 +339,7 @@ plot_compare_ssb <- function(object_list,
           mutate(YearType = ifelse(Year %in% years_list[[x]], "Assessment", "Projection")) %>%
       mutate(YearType = ifelse(Year == max(years_list[[x]])+1, "FirstProjYear", YearType))
     ssb0 <- melt(bio) %>%
-      left_join(expand.grid(Iteration = 1:n_iter, Year = pyears_list[[x]]), by = "Iteration") %>%
+      left_join(expand.grid(Iteration = 1:n_iter, Year = pyears_list[[x]]), by = "Iteration", relationship = 'many-to-many') %>%
       filter(Region != "Total") %>%
       group_by(Iteration, Year, Region) %>%
       summarise(value = sum(value)) %>%
@@ -514,7 +514,7 @@ plot_compare_ssb <- function(object_list,
     }
 
 
-  relssb <- bind_rows(ssb, ssb0 %>% filter(type == "SSB0")) %>%
+  relssb <- bind_rows(ssb %>% mutate(Region = as.character(Region)), ssb0 %>% filter(type == "SSB0") %>% mutate(Region = as.character(Region))) %>%
     tidyr::spread(type, value) %>%
     group_by(Iteration, Year, Rule, Model, YearType ) %>%
     summarise(SSB = sum(SSB), SSB0 = sum(SSB0)) %>%
@@ -607,7 +607,6 @@ plot_compare_ssb <- function(object_list,
   relssb_next_proj <- relssb %>% filter(YearType %in% c("FirstProjYear", "Projection")) %>% group_by(Model) %>% filter(Year %in% c(min(Year),max(Year)))
   relssb_next_proj$Year <- factor(relssb_next_proj$Year)
 
-  p <- ggplot(relssb_next_proj) +
     theme_lsd(base_size = 14) +
     theme(axis.text.x = element_blank()) +
     scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +

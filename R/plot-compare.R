@@ -1652,7 +1652,7 @@ plot_compare_selectivity <- function(object_list, object_names, figure_dir = "co
       stat_summary(data = sel, aes(x = Size, y = Selectivity, col = Model, linetype = Epoch), fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
       stat_summary(data = sel, aes(x = Size, y = Selectivity, col = Model, linetype = Epoch), fun.min = function(x) quantile(x, 0.25), fun.max = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
       stat_summary(data = sel, aes(x = Size, y = Selectivity, col = Model, linetype = Epoch), fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.8) +
-      scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1)))
+      scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0)))
   # }
 
   if (nmod > 6) {
@@ -1683,7 +1683,7 @@ plot_compare_selectivity <- function(object_list, object_names, figure_dir = "co
   }
 
   p <- p + #scale_x_continuous(breaks = seq(30, 90, 10)) +
-    scale_y_continuous(expand = c(0,0)) +
+    # scale_y_continuous(expand = c(0,0)) +
     coord_cartesian(ylim = c(0, 1)) +
     xlab("Length bin") +
     theme_lsd(base_size = 14)

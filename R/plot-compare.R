@@ -447,7 +447,7 @@ plot_compare_ssb <- function(object_list,
     }
 
 
-  p1 <- ggplot(ssb %>% group_by(Iteration, Year, Model, Region, YearType) %>% summarise(value = sum(value)), aes(x = Year, y = value)) +
+  p1 <- ggplot(ssb %>% group_by(Iteration, Year, Model, YearType) %>% summarise(value = sum(value)), aes(x = Year, y = value)) +
     geom_vline(data = ssb %>% filter(YearType == "FirstProjYear"), aes(xintercept = Year), linetype = 2) +
     #stat_summary(data = ssb0 %>% filter(type == "Soft limit") %>% group_by(Iteration, Year, Model) %>% summarise(value = sum(value)), fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
     #stat_summary(data = ssb0 %>% filter(type == "Soft limit") %>% group_by(Iteration, Year, Model) %>% summarise(value = sum(value)), fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75, aes(color = Model)) +

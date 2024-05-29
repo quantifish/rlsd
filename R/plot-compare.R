@@ -604,76 +604,76 @@ plot_compare_ssb <- function(object_list,
 
   }
 
-  relssb_next_proj <- relssb %>% filter(YearType %in% c("FirstProjYear", "Projection")) %>% group_by(Model) %>% filter(Year %in% c(min(Year),max(Year)))
-  relssb_next_proj$Year <- factor(relssb_next_proj$Year)
+  # relssb_next_proj <- relssb %>% filter(YearType %in% c("FirstProjYear", "Projection")) %>% group_by(Model) %>% filter(Year %in% c(min(Year),max(Year)))
+  # relssb_next_proj$Year <- factor(relssb_next_proj$Year)
+  # 
+  #   theme_lsd(base_size = 14) +
+  #   theme(axis.text.x = element_blank()) +
+  #   scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
+  #   geom_hline(aes(yintercept = 0.2), col = "gray") +
+  #   geom_hline(aes(yintercept = 0.1), col = "gray") +
+  #   geom_text(data = labs_rel, aes(x = "base", y = value, label = type)) +
+  #   labs(x = "Model", y = "Terminal year relative spawning biomass") +
+  #   scale_alpha_manual(values = rep(c(1, 0.5), length(unique(relssb_next_proj$Year))/2), guide = FALSE)
 
-    theme_lsd(base_size = 14) +
-    theme(axis.text.x = element_blank()) +
-    scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
-    geom_hline(aes(yintercept = 0.2), col = "gray") +
-    geom_hline(aes(yintercept = 0.1), col = "gray") +
-    geom_text(data = labs_rel, aes(x = "base", y = value, label = type)) +
-    labs(x = "Model", y = "Terminal year relative spawning biomass") +
-    scale_alpha_manual(values = rep(c(1, 0.5), length(unique(relssb_next_proj$Year))/2), guide = FALSE)
+  # if (nmod > 6) {
+  #   p <- p +
+  #     scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
+  #     scale_color_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod)))
+  # } else {
+  #   p <- p +
+  #     scale_fill_brewer(palette = "Set1") +
+  #     scale_color_brewer(palette = "Set1")
+  # }
+  # if (max(relssb_next_proj$Iteration) == 1) {
+  #   p <- p + geom_point(aes(x = Model, y = RelSSB, fill = Model, alpha = Year), cex = 4, pch = 21)
+  #   if (any(relssb_next_proj$Model == "base")) p <- p + geom_hline(data = relssb_next_proj %>% filter(Model == "base") %>% filter(Year == max(years) + 1), aes(yintercept = unique(RelSSB)), linetype = 2)
+  # 
+  # } else {
+  #   p <- p + geom_violin(aes(x = Model, y = RelSSB, fill = Model, alpha = Year))
+  #   if (any(relssb_next_proj$Model == "base")) {
+  #     p <- p + geom_hline(data = relssb_next_proj %>% filter(Model == "base") %>% filter(Year == max(years) + 1), aes(yintercept = median(RelSSB)), linetype = 2)
+  #   }
+  # }
+  # 
+  # 
+  #   ggsave(paste0(figure_dir, "relssb_nextyear_projyear_compare.png"), p, width = 10)
+  # 
 
-  if (nmod > 6) {
-    p <- p +
-      scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
-      scale_color_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod)))
-  } else {
-    p <- p +
-      scale_fill_brewer(palette = "Set1") +
-      scale_color_brewer(palette = "Set1")
-  }
-  if (max(relssb_next_proj$Iteration) == 1) {
-    p <- p + geom_point(aes(x = Model, y = RelSSB, fill = Model, alpha = Year), cex = 4, pch = 21)
-    if (any(relssb_next_proj$Model == "base")) p <- p + geom_hline(data = relssb_next_proj %>% filter(Model == "base") %>% filter(Year == max(years) + 1), aes(yintercept = unique(RelSSB)), linetype = 2)
-
-  } else {
-    p <- p + geom_violin(aes(x = Model, y = RelSSB, fill = Model, alpha = Year))
-    if (any(relssb_next_proj$Model == "base")) {
-      p <- p + geom_hline(data = relssb_next_proj %>% filter(Model == "base") %>% filter(Year == max(years) + 1), aes(yintercept = median(RelSSB)), linetype = 2)
-    }
-  }
-
-
-    ggsave(paste0(figure_dir, "relssb_nextyear_projyear_compare.png"), p, width = 10)
-  
-
-  if (sum(by.Region) >= 1) {
-    relssb_next_proj_r <- relssb_r %>% filter(YearType %in% c("FirstProjYear", "Projection")) %>% group_by(Model) %>% filter(Year %in% c(min(Year),max(Year)))
-    relssb_next_proj_r$Year <- factor(relssb_next_proj_r$Year)
-
-    q <- ggplot(relssb_next_proj_r) +
-      theme_lsd(base_size = 14) +
-      theme(axis.text.x = element_blank()) +
-      scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
-      geom_hline(aes(yintercept = 0.2), col = "gray") +
-      geom_hline(aes(yintercept = 0.1), col = "gray") +
-      geom_text(data = labs_rel, aes(x = "base", y = value, label = type)) +
-      labs(x = "Model", y = "Terminal year relative spawning biomass") +
-      facet_wrap(~Region) +
-      scale_alpha_manual(values = c(1, 0.5), guide = FALSE)
-
-    if (nmod > 6) {
-      q <- q +
-        scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
-        scale_color_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod)))
-    } else {
-      q <- q +
-        scale_fill_brewer(palette = "Set1") +
-        scale_color_brewer(palette = "Set1")
-    }
-    if (max(relssb_next_proj_r$Iteration) == 1) {
-      q <- q + geom_point(aes(x = Model, y = RelSSB, fill = Model, alpha = Year), cex = 4, pch = 21)
-      if (any(relssb_next_proj_r$Model == "base")) q <- q + geom_hline(data = relssb_next_proj_r %>% filter(Model == "base") %>% filter(Year == max(years) + 1), aes(yintercept = unique(RelSSB)), linetype = 2)
-    } else {
-      q <- q + geom_violin(aes(x = Model, y = RelSSB, fill = Model, alpha = Year))
-      if (any(relssb_next_proj_r$Model == "base")) q <- q + geom_hline(data = relssb_next_proj_r %>% filter(Model == "base") %>% filter(Year == max(years) + 1), aes(yintercept = median(RelSSB)), linetype = 2)
-    }
-
-      ggsave(paste0(figure_dir, "relssb_nextyear_projyear_compare_byRegion.png"), q, width = 10)
-    
+  # if (sum(by.Region) >= 1) {
+  #   relssb_next_proj_r <- relssb_r %>% filter(YearType %in% c("FirstProjYear", "Projection")) %>% group_by(Model) %>% filter(Year %in% c(min(Year),max(Year)))
+  #   relssb_next_proj_r$Year <- factor(relssb_next_proj_r$Year)
+  # 
+  #   q <- ggplot(relssb_next_proj_r) +
+  #     theme_lsd(base_size = 14) +
+  #     theme(axis.text.x = element_blank()) +
+  #     scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
+  #     geom_hline(aes(yintercept = 0.2), col = "gray") +
+  #     geom_hline(aes(yintercept = 0.1), col = "gray") +
+  #     geom_text(data = labs_rel, aes(x = "base", y = value, label = type)) +
+  #     labs(x = "Model", y = "Terminal year relative spawning biomass") +
+  #     facet_wrap(~Region) +
+  #     scale_alpha_manual(values = c(1, 0.5), guide = FALSE)
+  # 
+  #   if (nmod > 6) {
+  #     q <- q +
+  #       scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
+  #       scale_color_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod)))
+  #   } else {
+  #     q <- q +
+  #       scale_fill_brewer(palette = "Set1") +
+  #       scale_color_brewer(palette = "Set1")
+  #   }
+  #   if (max(relssb_next_proj_r$Iteration) == 1) {
+  #     q <- q + geom_point(aes(x = Model, y = RelSSB, fill = Model, alpha = Year), cex = 4, pch = 21)
+  #     if (any(relssb_next_proj_r$Model == "base")) q <- q + geom_hline(data = relssb_next_proj_r %>% filter(Model == "base") %>% filter(Year == max(years) + 1), aes(yintercept = unique(RelSSB)), linetype = 2)
+  #   } else {
+  #     q <- q + geom_violin(aes(x = Model, y = RelSSB, fill = Model, alpha = Year))
+  #     if (any(relssb_next_proj_r$Model == "base")) q <- q + geom_hline(data = relssb_next_proj_r %>% filter(Model == "base") %>% filter(Year == max(years) + 1), aes(yintercept = median(RelSSB)), linetype = 2)
+  #   }
+  # 
+  #     ggsave(paste0(figure_dir, "relssb_nextyear_projyear_compare_byRegion.png"), q, width = 10)
+  #   
   }
 
   p <- ggplot(relssb %>% filter(YearType == "Assessment")) +

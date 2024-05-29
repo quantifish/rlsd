@@ -674,7 +674,7 @@ plot_compare_ssb <- function(object_list,
   # 
   #     ggsave(paste0(figure_dir, "relssb_nextyear_projyear_compare_byRegion.png"), q, width = 10)
   #   
-  }
+  #}
 
   p <- ggplot(relssb %>% filter(YearType == "Assessment")) +
     theme_lsd(base_size = 14) +

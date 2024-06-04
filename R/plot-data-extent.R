@@ -57,8 +57,11 @@ plot_data_extent <- function(object,
                                      Year >= 1979 & Year <= 1989 & Series == 1 ~ "FSU",
                                      Year == 1989 & Series == 1 & Season == "SS" ~ "CELR",
                                      Year <= 2019 & Year > 1989 & Series == 1 ~ "CELR",
-                                     Series == 2 ~ "Logbook" )) %>%
-    mutate(Series = ifelse(Series == 1, "CR/FSU/CELR", "Logbook")) %>%
+                                     Series == 2 ~ "Logbook",
+                                     Series == 3 ~ "CS")) %>%
+    mutate(Series = case_when(Series == 1 ~ "CR/FSU/CELR", 
+                              Series == 2 ~ "Logbook",
+                              Series == 3 ~ "CS")) %>%
     select(-CPUE) %>%
     # mutate(DataType = "CPUE", DataSource = paste(DataType, Season, Series, Type)) %>%
     # mutate(DataType = paste(DataType, Source)) %>%

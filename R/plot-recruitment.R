@@ -163,7 +163,6 @@ plot_recruitment <- function(object,
     } else if (!is.null(recruits1)) {
         p <- ggplot(data = recruits1, aes(x = Year, y = value))
     }
-    p <- p + geom_vline(aes(xintercept = data$last_yr), linetype = "dashed")
     if (!is.null(recruits2)) {
         p <- p +
             stat_summary(data = R02, aes(x = Year, y = value/1e+6), fun.min = function(x) stats::quantile(x, 0.05), fun.max = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA, fill = "green") +
@@ -187,8 +186,12 @@ plot_recruitment <- function(object,
         # theme(axis.text.x = element_text(angle = 45,hjust = 1))
 
     if (data$n_area > 1) p <- p + facet_wrap(~Region)
-
-    ggsave(paste0(figure_dir, "recruitment_v2.png"), p)
+    
+    p1 <- p + xlim(c(data$first_yr, data$last_yr))
+    ggsave(paste0(figure_dir, "recruitment_v1.png"), p1)   
+    
+    p2 <- p + geom_vline(aes(xintercept = data$last_yr), linetype = "dashed")
+    ggsave(paste0(figure_dir, "recruitment_v2.png"), p2)
 
     # Time-series analysis of recruitment
     #r_ts = ts(data = rep(dplyr::select(recruits1, value)[,1], each = 2),

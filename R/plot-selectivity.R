@@ -119,12 +119,12 @@ plot_selectivity <- function(object,
   sex <- c("Male", "Immature female", "Mature female") 
   bins <- data$size_midpoint_l
 
-  # which_vuln <- data$which_vuln_rsyt
-  # dimnames(which_vuln) <- list("Region" = regions, "Sex" = sex, "Year" = pyears, "Season" = seasons)
-  # wv <- melt(which_vuln) %>%
-  #   rename(Vuln = value) %>%
-  #   full_join(w)
-  # 
+  which_vuln <- data$which_vuln_rsyt
+  dimnames(which_vuln) <- list("Region" = regions, "Sex" = sex, "Year" = pyears, "Season" = seasons)
+  wv <- melt(which_vuln) %>%
+    rename(Vuln = value) %>%
+    full_join(w)
+
     vs <- mcmc$vuln_selectivity_ytrsl
     dimnames(vs) <- list("Iteration" = 1:n_iter, "Year" = pyears, "Season" = seasons, "Region" = regions, "Sex" = sex, "Size" = bins)
     vs2 <- melt(vs) %>%

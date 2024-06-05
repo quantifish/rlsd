@@ -1797,8 +1797,8 @@ plot_compare_cpue <- function(object_list,
     geom_linerange(aes(x = Year, ymin = exp(log(CPUE) - SD), ymax = exp(log(CPUE) + SD), color = Model), alpha = 0.75) +
     scale_x_continuous(breaks = pretty(c(min(ocr_yrs$Year), max(ocr_yrs$Year)))) +
     scale_y_continuous(expand = expansion(mult = c(0, 0.05)), limits = c(0, NA)) +
-    scale_color_okabe_ito() +
-    scale_fill_okabe_ito() +
+    # scale_color_okabe_ito() +
+    # scale_fill_okabe_ito() +
     xlab(xlab) + ylab(paste0(ylab, " (CELR)")) +
     theme_lsd()
 
@@ -1808,15 +1808,15 @@ plot_compare_cpue <- function(object_list,
       stat_summary(data = pcr_yrs, aes(x = .data$Year, y = .data$CPUE, color = .data$Model), fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1)
   }
 
-  # if (nmod > 6) {
-  #   p <- p +
-  #     scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
-  #     scale_color_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod)))
-  # } else {
-  #   p <- p +
-  #     scale_fill_brewer(palette = "Set1") +
-  #     scale_color_brewer(palette = "Set1")
-  # }
+  if (nmod > 6) {
+    p <- p +
+      scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
+      scale_color_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod)))
+  } else {
+    p <- p +
+      scale_fill_brewer(palette = "Set1") +
+      scale_color_brewer(palette = "Set1")
+  }
 
   if (length(unique(ocr_yrs$Region)) > 1) {
     p <- p + facet_wrap(Region~Season, scales = "free", ncol = n_area)
@@ -1842,10 +1842,10 @@ if(nrow(ocr_yrs) > 0){
     geom_point(aes(x = Year, y = CPUE, color = Model), alpha = 0.75) +
     geom_linerange(aes(x = Year, ymin = exp(log(CPUE) - SD), ymax = exp(log(CPUE) + SD), color = Model), alpha = 0.75) +
     scale_x_continuous(breaks = pretty(c(min(ocr_yrs$Year), max(ocr_yrs$Year)))) +
-    scale_y_continuous(expand = expansion(mult = c(0, 0.05)), limits = c(0, NA)) +
-    scale_color_okabe_ito() +
-    scale_fill_okabe_ito() +
-    xlab(xlab) + ylab(paste0(ylab, " (CS/Logbook)")) +
+    # scale_y_continuous(expand = expansion(mult = c(0, 0.05)), limits = c(0, NA)) +
+    # scale_color_okabe_ito() +
+    # scale_fill_okabe_ito() +
+    xlab(xlab) + ylab(paste0(ylab, " (Logbook)")) +
     theme_lsd()
 
   if (!is.null(pcpue)) {
@@ -1853,25 +1853,71 @@ if(nrow(ocr_yrs) > 0){
       # stat_summary(data = pcr_yrs, aes(x = Year, y = CPUE, fill = Model), fun.min = function(x) quantile(x, 0.25), fun.max = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
       stat_summary(data = pcr_yrs, aes(x = .data$Year, y = .data$CPUE, color = .data$Model), fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1)
   }
-# 
-#   if (nmod > 6) {
-#     p <- p +
-#       scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
-#       scale_color_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod)))
-#   } else {
-#     p <- p +
-#       scale_fill_brewer(palette = "Set1") +
-#       scale_color_brewer(palette = "Set1")
-#   }
+
+  if (nmod > 6) {
+    p <- p +
+      scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
+      scale_color_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod)))
+  } else {
+    p <- p +
+      scale_fill_brewer(palette = "Set1") +
+      scale_color_brewer(palette = "Set1")
+  }
 
   if (length(unique(ocr_yrs$Region)) > 1) {
-    p <- p + facet_wrap(qtype+Region~Season, scales = "free") #, ncol = n_area)
+    p <- p + facet_wrap(Region~Season, scales = "free") #, ncol = n_area)
     if (save_plot) ggsave(paste0(figure_dir, "cpue_Logbook.png"), p, width = 9, height = 10)
   } else {
-    p <- p + facet_wrap(qtype~Season, scales = "free", ncol = n_area)
+    p <- p + facet_wrap(.~Season, scales = "free", ncol = n_area)
     if (save_plot) ggsave(paste0(figure_dir, "cpue_Logbook.png"), p, height = 9)
   }
 }
+  
+  ## CS
+  ocr_yrs <- ocpue %>% 
+    filter(CPUE_type == 3) %>%
+    mutate(Region = paste0("Region ", Region))
+  pcr_yrs <- pcpue %>%
+    filter(CPUE_type == 3) %>%
+    mutate(Region = paste0("Region ", Region))
+  
+  if(nrow(ocr_yrs) > 0){
+    ocr_yrs$Model <- factor(ocr_yrs$Model, levels = unique(ocr_yrs$Model))
+    pcr_yrs$Model <- factor(pcr_yrs$Model, levels = unique(pcr_yrs$Model))
+    p <- ggplot(data = ocr_yrs) +
+      geom_point(aes(x = Year, y = CPUE, color = Model), alpha = 0.75) +
+      geom_linerange(aes(x = Year, ymin = exp(log(CPUE) - SD), ymax = exp(log(CPUE) + SD), color = Model), alpha = 0.75) +
+      scale_x_continuous(breaks = pretty(c(min(ocr_yrs$Year), max(ocr_yrs$Year)))) +
+      # scale_y_continuous(expand = expansion(mult = c(0, 0.05)), limits = c(0, NA)) +
+      # scale_color_okabe_ito() +
+      # scale_fill_okabe_ito() +
+      xlab(xlab) + ylab(paste0(ylab, " (Catch sampling)")) +
+      theme_lsd()
+    
+    if (!is.null(pcpue)) {
+      p <- p + stat_summary(data = pcr_yrs, aes(x = .data$Year, y = .data$CPUE, fill = .data$Model), fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
+        # stat_summary(data = pcr_yrs, aes(x = Year, y = CPUE, fill = Model), fun.min = function(x) quantile(x, 0.25), fun.max = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
+        stat_summary(data = pcr_yrs, aes(x = .data$Year, y = .data$CPUE, color = .data$Model), fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1)
+    }
+    
+    if (nmod > 6) {
+      p <- p +
+        scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
+        scale_color_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod)))
+    } else {
+      p <- p +
+        scale_fill_brewer(palette = "Set1") +
+        scale_color_brewer(palette = "Set1")
+    }
+    
+    if (length(unique(ocr_yrs$Region)) > 1) {
+      p <- p + facet_wrap(Region~Season, scales = "free") #, ncol = n_area)
+      if (save_plot) ggsave(paste0(figure_dir, "cpue_CS.png"), p, width = 9, height = 10)
+    } else {
+      p <- p + facet_wrap(.~Season, scales = "free", ncol = n_area)
+      if (save_plot) ggsave(paste0(figure_dir, "cpue_CS.png"), p, height = 9)
+    }
+  }
 
   if (!save_plot) return(p)
 }

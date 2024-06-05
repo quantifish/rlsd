@@ -28,13 +28,13 @@ plot_selectivity <- function(object,
     w <- data$which_sel_rsyt
     dimnames(w) <- list("Region" = object@regions, "Sex" = sex, "Year" = years, "Season" = seasons)
     w <- melt(w, value.name = "Selex")
-    w2 <- w %>%
-      filter(grepl("female", Sex)) %>%
-      mutate(Sex = case_when(Sex == "Immature female" ~ "IF",
-                             Sex == "Mature female" ~ "MF")) %>%
-      pivot_wider(names_from = Sex, values_from = Selex) %>%
-      mutate(Check = ifelse(IF == MF, 1, 0)) %>%
-      select(Region, Year, Season, Check)
+    # w2 <- w %>%
+    #   filter(grepl("female", Sex)) %>%
+    #   mutate(Sex = case_when(Sex == "Immature female" ~ "IF",
+    #                          Sex == "Mature female" ~ "MF")) %>%
+    #   pivot_wider(names_from = Sex, values_from = Selex) %>%
+    #   mutate(Check = ifelse(IF == MF, 1, 0)) %>%
+    #   select(Region, Year, Season, Check)
     # w_simple <- w %>%
     #   left_join(w2) %>%
     #   mutate(Sex = case_when(Sex == "Male" ~ "Male",
@@ -51,11 +51,8 @@ plot_selectivity <- function(object,
         sel2 <- melt(sel2, value.name = "Selectivity") %>%
             inner_join(w, by = "Selex", relationship = 'many-to-many') %>%
             mutate(Year = factor(.data$Year)) %>%
-            distinct(.data$Iteration, .data$Selectivity, .data$Region, .data$Size, .keep_all = TRUE)
-        if(length(unique(sel2$Sex)) == 2){
-          sel2 <- sel2 %>% mutate(Sex = ifelse(Sex == "Male", "Male", "Female"))
-        }
-        sel2$Sex = factor(sel2$Sex, labels = unique(sel2$Sex))
+            distinct(.data$Iteration, .data$Sex, .data$Selectivity, .data$Region, .data$Size, .keep_all = TRUE)
+        # sel2$Sex = factor(sel2$Sex, labels = unique(sel2$Sex))
 
         if(data$n_sel > 3 & length(unique(sel2$Year)) == 1) {
             p <- ggplot(data = sel2, aes(x = .data$Size, y = .data$Selectivity, col = .data$Season, fill = .data$Season))
@@ -122,25 +119,25 @@ plot_selectivity <- function(object,
   sex <- c("Male", "Immature female", "Mature female") 
   bins <- data$size_midpoint_l
 
-  which_vuln <- data$which_vuln_rsyt
-  dimnames(which_vuln) <- list("Region" = regions, "Sex" = sex, "Year" = pyears, "Season" = seasons)
-  wv <- melt(which_vuln) %>%
-    rename(Vuln = value) %>%
-    full_join(w)
-  
+  # which_vuln <- data$which_vuln_rsyt
+  # dimnames(which_vuln) <- list("Region" = regions, "Sex" = sex, "Year" = pyears, "Season" = seasons)
+  # wv <- melt(which_vuln) %>%
+  #   rename(Vuln = value) %>%
+  #   full_join(w)
+  # 
     vs <- mcmc$vuln_selectivity_ytrsl
     dimnames(vs) <- list("Iteration" = 1:n_iter, "Year" = pyears, "Season" = seasons, "Region" = regions, "Sex" = sex, "Size" = bins)
     vs2 <- melt(vs) %>%
     rename(SelVuln = value) %>%
       inner_join(wv) %>%
       mutate(Year = factor(.data$Year)) %>%
-      distinct(.data$Iteration, .data$SelVuln, .data$Region, .data$Size, .keep_all = TRUE)
+      distinct(.data$Iteration, .data$Sex, .data$SelVuln, .data$Region, .data$Size, .keep_all = TRUE)
     
     
-    if(length(unique(vs2$Sex)[which(grepl("female", unique(vs2$Sex)))]) == 1){
-      vs2 <- vs2 %>% 
-        mutate(Sex = ifelse(Sex == "Male", "Male", "Female"))
-    }
+    # if(length(unique(vs2$Sex)[which(grepl("female", unique(vs2$Sex)))]) == 1){
+    #   vs2 <- vs2 %>% 
+    #     mutate(Sex = ifelse(Sex == "Male", "Male", "Female"))
+    # }
     
     p <- ggplot(data = vs2, aes(x = .data$Size, y = .data$SelVuln, col = .data$Season, fill = .data$Season)) +
             stat_summary(fun.min = function(x) quantile(x, 0.05), fun.max = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +

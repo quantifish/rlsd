@@ -55,7 +55,7 @@ plot_selectivity <- function(object,
         if(length(unique(sel2$Sex)) == 2){
           sel2 <- sel2 %>% mutate(Sex = ifelse(Sex == "Male", "Male", "Female"))
         }
-        # sel2$Sex = factor(sel2$Sex, labels = c(sex_selex))
+        sel2$Sex = factor(sel2$Sex, labels = unique(sel2$Sex))
 
         if(data$n_sel > 3 & length(unique(sel2$Year)) == 1) {
             p <- ggplot(data = sel2, aes(x = .data$Size, y = .data$Selectivity, col = .data$Season, fill = .data$Season))

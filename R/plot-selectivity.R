@@ -35,24 +35,27 @@ plot_selectivity <- function(object,
       pivot_wider(names_from = Sex, values_from = Selex) %>%
       mutate(Check = ifelse(IF == MF, 1, 0)) %>%
       select(Region, Year, Season, Check)
-    w_simple <- w %>%
-      left_join(w2) %>%
-      mutate(Sex = case_when(Sex == "Male" ~ "Male",
-                          Sex == "Immature female" & Check == 1 ~ "Female",
-                          Sex == "Mature female" & Check == 1 ~ "Female",
-                          Sex ==  "Immature female" & Check == 0 ~ "Immature female",
-                          Sex == "Mature female" & Check == 0 ~ "Mature female")) %>%
-      select(-Check) %>%
-      unique()
-    sex_selex <- unique(w_simple$Sex)
+    # w_simple <- w %>%
+    #   left_join(w2) %>%
+    #   mutate(Sex = case_when(Sex == "Male" ~ "Male",
+    #                       Sex == "Immature female" & Check == 1 ~ "Female",
+    #                       Sex == "Mature female" & Check == 1 ~ "Female",
+    #                       Sex ==  "Immature female" & Check == 0 ~ "Immature female",
+    #                       Sex == "Mature female" & Check == 0 ~ "Mature female")) %>%
+    #   select(-Check) %>%
+    #   unique()
+    # sex_selex <- unique(w_simple$Sex)
 
         sel2 <- mcmc$selectivity_ml
         dimnames(sel2) <- list("Iteration" = 1:nrow(mcmc[[1]]), "Selex" = 1:data$n_sel, "Size" = data$size_midpoint_l)
         sel2 <- melt(sel2, value.name = "Selectivity") %>%
-            inner_join(w_simple, by = "Selex", relationship = 'many-to-many') %>%
+            inner_join(w, by = "Selex", relationship = 'many-to-many') %>%
             mutate(Year = factor(.data$Year)) %>%
             distinct(.data$Iteration, .data$Selectivity, .data$Region, .data$Size, .keep_all = TRUE)
-        sel2$Sex = factor(sel2$Sex, labels = c(sex_selex))
+        if(length(unique(sel2$Sex)) == 2){
+          sel2 <- sel2 %>% mutate(Sex = ifelse(Sex == "Male", "Male", "Female"))
+        }
+        # sel2$Sex = factor(sel2$Sex, labels = c(sex_selex))
 
         if(data$n_sel > 3 & length(unique(sel2$Year)) == 1) {
             p <- ggplot(data = sel2, aes(x = .data$Size, y = .data$Selectivity, col = .data$Season, fill = .data$Season))

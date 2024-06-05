@@ -38,7 +38,8 @@ plot_initial_numbers <- function(object,
         theme_lsd()
     if (data$n_area > 1) p <- p + facet_wrap(~Region, scales="free_y")
 
-    ggsave(paste0(figure_dir, "numbers_initial_v1.png"), p)
+    if(data$n_area == 1) ggsave(paste0(figure_dir, "numbers_initial_v1.png"), p)
+    if(data$n_area > 1) ggsave(paste0(figure_dir, "numbers_initial_v1.png"), p, width = 12, height = 8)
 
     p <- ggplot(data = numbers_initial_rsl_v2, aes(x = Size, y = N/1000, color = Sex, fill = Sex)) +
         #stat_summary(fun.min = function(x) stats::quantile(x, 0.05), fun.max = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
@@ -49,7 +50,8 @@ plot_initial_numbers <- function(object,
         theme_lsd()
     if (data$n_area > 1) p <- p + facet_wrap(~Region, scales="free_y")
 
-    ggsave(paste0(figure_dir, "numbers_initial_v2.png"), p)
+    if(data$n_area == 1) ggsave(paste0(figure_dir, "numbers_initial_v2.png"), p)
+    if(data$n_area > 1) ggsave(paste0(figure_dir, "numbers_initial_v2.png"), p, width = 12, height = 8)
 }
 
 
@@ -120,7 +122,7 @@ numbers_proj <- reshape2::melt(lf, value.name = "N") %>%
 
     if (data$n_area > 1) {
       p <- p + facet_wrap( ~ .data$Region, ncol = 2, scales="free_y")
-      ggsave(paste0(figure_dir, "numbers_AW_finalyear_byArea.png"), p)
+      ggsave(paste0(figure_dir, "numbers_AW_finalyear_byArea.png"), p, width = 12, height = 8)
     }
 
   p <- ggplot(data = numbers_proj %>% filter(Year == max(pyears)), aes(x = Size, y = N/1000, color = Sex, fill = Sex)) +
@@ -132,11 +134,11 @@ numbers_proj <- reshape2::melt(lf, value.name = "N") %>%
 if(n_rules > 1) {
     p <- p + facet_wrap(~RuleNum)
  }
-    ggsave(paste0(figure_dir, "numbers_AW_finalprojyear.png"), p)
+    ggsave(paste0(figure_dir, "numbers_AW_finalprojyear.png"), p, width = 9)
 
     if (data$n_area > 1) {
       p <- p + facet_wrap( RuleNum ~ .data$Region, ncol = 2, scales="free_y")
-      ggsave(paste0(figure_dir, "numbers_AW_finalprojyear_byArea.png"), p)
+      ggsave(paste0(figure_dir, "numbers_AW_finalprojyear_byArea.png"), p, width = 12, height = 8)
     }
 
     p <- ggplot(data = numbers_proj, aes(x = Size, y = N/1000, color = factor(Year), fill = factor(Year))) +

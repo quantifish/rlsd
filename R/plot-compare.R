@@ -7,6 +7,7 @@
 #' @param ylab the y axis label
 #' @import dplyr
 #' @import ggplot2
+#' @import ggokabeito
 #' @importFrom reshape2 melt
 #' @importFrom grDevices colorRampPalette gray
 #' @importFrom stats quantile
@@ -140,6 +141,7 @@ plot_compare_lfs <- function(object_list,
 #' @param ylab the y axis label
 #' @import dplyr
 #' @import ggplot2
+#' @import ggokabeito
 #' @importFrom reshape2 melt
 #' @importFrom grDevices colorRampPalette gray
 #' @importFrom stats quantile
@@ -278,6 +280,7 @@ plot_compare_lfs_old <- function(object_list,
 #' @param save_plot to save the plot to file or not
 #' @import dplyr
 #' @import ggplot2
+#' @import ggokabeito
 #' @importFrom reshape2 melt
 #' @importFrom grDevices colorRampPalette gray
 #' @importFrom stats quantile
@@ -892,6 +895,7 @@ plot_compare_ssb <- function(object_list,
 #' @param save_plot to save the plot to file or not
 #' @import dplyr
 #' @import ggplot2
+#' @import ggokabeito
 #' @importFrom reshape2 melt
 #' @importFrom stats quantile
 #' @export
@@ -1457,6 +1461,7 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
 #' @param save_plot to save the plot to file or not
 #' @import dplyr
 #' @import ggplot2
+#' @import ggokabeito
 #' @importFrom reshape2 melt
 #' @importFrom stats quantile
 #' @importFrom RColorBrewer brewer.pal
@@ -1587,6 +1592,7 @@ plot_compare_recruitment <- function(object_list, object_names, figure_dir = "co
 #' @param save_plot to save the plot to file or not
 #' @import dplyr
 #' @import ggplot2
+#' @import ggokabeito
 #' @importFrom reshape2 melt
 #' @importFrom stats quantile
 #' @export
@@ -1632,7 +1638,7 @@ plot_compare_selectivity <- function(object_list, object_names, figure_dir = "co
 
   sel <- do.call(rbind, slist) %>%
     rename(Epoch = Year) %>%
-    mutate(Season = factor(Season))
+    mutate(Season = ifelse(Season == 1, "AW", "SS"))
 
   nmod <- length(unique(sel$Model))
   mods <- unique(sel$Model)
@@ -1671,7 +1677,7 @@ plot_compare_selectivity <- function(object_list, object_names, figure_dir = "co
     if (length(unique(sel$Season)) > 1 & length(unique(sel$Year)) > 1) {
       p <- p + facet_grid(Region + Year ~  Sex)
     } else {
-      p <- p + facet_grid(Region ~ Sex)
+      p <- p + facet_grid(Region + Season ~ Sex)
     }
   } else {
     if (length(unique(sel$Season)) > 1 & length(unique(sel$Year)) > 1) {
@@ -1791,6 +1797,8 @@ plot_compare_cpue <- function(object_list,
     geom_linerange(aes(x = Year, ymin = exp(log(CPUE) - SD), ymax = exp(log(CPUE) + SD), color = Model), alpha = 0.75) +
     scale_x_continuous(breaks = pretty(c(min(ocr_yrs$Year), max(ocr_yrs$Year)))) +
     scale_y_continuous(expand = expansion(mult = c(0, 0.05)), limits = c(0, NA)) +
+    scale_color_okabe_ito() +
+    scale_fill_okabe_ito() +
     xlab(xlab) + ylab(paste0(ylab, " (CELR)")) +
     theme_lsd()
 
@@ -1800,19 +1808,19 @@ plot_compare_cpue <- function(object_list,
       stat_summary(data = pcr_yrs, aes(x = .data$Year, y = .data$CPUE, color = .data$Model), fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1)
   }
 
-  if (nmod > 6) {
-    p <- p +
-      scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
-      scale_color_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod)))
-  } else {
-    p <- p +
-      scale_fill_brewer(palette = "Set1") +
-      scale_color_brewer(palette = "Set1")
-  }
+  # if (nmod > 6) {
+  #   p <- p +
+  #     scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
+  #     scale_color_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod)))
+  # } else {
+  #   p <- p +
+  #     scale_fill_brewer(palette = "Set1") +
+  #     scale_color_brewer(palette = "Set1")
+  # }
 
   if (length(unique(ocr_yrs$Region)) > 1) {
     p <- p + facet_wrap(Region~Season, scales = "free", ncol = n_area)
-    if (save_plot) ggsave(paste0(figure_dir, "cpue_CELR.png"), p, width = 9, height = 10)
+    if (save_plot) ggsave(paste0(figure_dir, "cpue_CELR.png"), p, width = 12, height = 10)
   } else {
     p <- p + facet_wrap(~Season, scales = "free", ncol = n_area)
     if (save_plot) ggsave(paste0(figure_dir, "cpue_CELR.png"), p, height = 9)
@@ -1835,7 +1843,9 @@ if(nrow(ocr_yrs) > 0){
     geom_linerange(aes(x = Year, ymin = exp(log(CPUE) - SD), ymax = exp(log(CPUE) + SD), color = Model), alpha = 0.75) +
     scale_x_continuous(breaks = pretty(c(min(ocr_yrs$Year), max(ocr_yrs$Year)))) +
     scale_y_continuous(expand = expansion(mult = c(0, 0.05)), limits = c(0, NA)) +
-    xlab(xlab) + ylab(paste0(ylab, " (Logbook)")) +
+    scale_color_okabe_ito() +
+    scale_fill_okabe_ito() +
+    xlab(xlab) + ylab(paste0(ylab, " (CS/Logbook)")) +
     theme_lsd()
 
   if (!is.null(pcpue)) {
@@ -1843,22 +1853,22 @@ if(nrow(ocr_yrs) > 0){
       # stat_summary(data = pcr_yrs, aes(x = Year, y = CPUE, fill = Model), fun.min = function(x) quantile(x, 0.25), fun.max = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
       stat_summary(data = pcr_yrs, aes(x = .data$Year, y = .data$CPUE, color = .data$Model), fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1)
   }
-
-  if (nmod > 6) {
-    p <- p +
-      scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
-      scale_color_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod)))
-  } else {
-    p <- p +
-      scale_fill_brewer(palette = "Set1") +
-      scale_color_brewer(palette = "Set1")
-  }
+# 
+#   if (nmod > 6) {
+#     p <- p +
+#       scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
+#       scale_color_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod)))
+#   } else {
+#     p <- p +
+#       scale_fill_brewer(palette = "Set1") +
+#       scale_color_brewer(palette = "Set1")
+#   }
 
   if (length(unique(ocr_yrs$Region)) > 1) {
-    p <- p + facet_wrap(Region~Season, scales = "free", ncol = n_area)
+    p <- p + facet_wrap(qtype+Region~Season, scales = "free") #, ncol = n_area)
     if (save_plot) ggsave(paste0(figure_dir, "cpue_Logbook.png"), p, width = 9, height = 10)
   } else {
-    p <- p + facet_wrap(~Season, scales = "free", ncol = n_area)
+    p <- p + facet_wrap(qtype~Season, scales = "free", ncol = n_area)
     if (save_plot) ggsave(paste0(figure_dir, "cpue_Logbook.png"), p, height = 9)
   }
 }
@@ -1876,6 +1886,7 @@ if(nrow(ocr_yrs) > 0){
 #' @param save_plot to save the plot to file or not
 #' @import dplyr
 #' @import ggplot2
+#' @import ggokabeito
 #' @importFrom reshape2 melt
 #' @importFrom stats quantile
 #' @export
@@ -2049,6 +2060,7 @@ plot_compare_movement <- function(object_list , object_names , figure_dir  = "co
 #' @param figure_dir figure directory
 #' @import dplyr
 #' @import ggplot2
+#' @import ggokabeito
 #' @importFrom reshape2 melt
 #' @importFrom grDevices colorRampPalette gray
 #' @importFrom stats quantile

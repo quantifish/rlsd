@@ -1637,7 +1637,6 @@ plot_compare_selectivity <- function(object_list, object_names, figure_dir = "co
   })
 
   sel <- do.call(rbind, slist) %>%
-    rename(Epoch = Year) %>%
     mutate(Season = ifelse(Season == 1, "AW", "SS"))
 
   nmod <- length(unique(sel$Model))
@@ -1654,9 +1653,9 @@ plot_compare_selectivity <- function(object_list, object_names, figure_dir = "co
   #     scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1)))
   # } else {
     p <- ggplot(data = sel, aes(x = Size, y = Selectivity, col = Model, fill = Model)) +
-      stat_summary(data = sel, aes(x = Size, y = Selectivity, col = Model, linetype = Epoch), fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
-      stat_summary(data = sel, aes(x = Size, y = Selectivity, col = Model, linetype = Epoch), fun.min = function(x) quantile(x, 0.25), fun.max = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
-      stat_summary(data = sel, aes(x = Size, y = Selectivity, col = Model, linetype = Epoch), fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.8) +
+      stat_summary(data = sel, aes(x = Size, y = Selectivity, col = Model, linetype = Season), fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
+      stat_summary(data = sel, aes(x = Size, y = Selectivity, col = Model, linetype = Season), fun.min = function(x) quantile(x, 0.25), fun.max = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
+      stat_summary(data = sel, aes(x = Size, y = Selectivity, col = Model, linetype = Season), fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.8) +
       scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0)))
   # }
 

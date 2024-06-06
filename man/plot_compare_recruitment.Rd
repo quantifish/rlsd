@@ -8,7 +8,9 @@ plot_compare_recruitment(
   object_list,
   object_names,
   figure_dir = "compare_figure/",
-  save_plot = TRUE
+  save_plot = TRUE,
+  show_proj = TRUE,
+  Region = NA
 )
 }
 \arguments{
@@ -19,6 +21,8 @@ plot_compare_recruitment(
 \item{figure_dir}{the directory to save to}
 
 \item{save_plot}{to save the plot to file or not}
+
+\item{show_proj}{for rapid updates plots to show projections only for full assessment or for all model comparisons}
 }
 \description{
 Compare recruitment from multiple models

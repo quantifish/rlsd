@@ -28,7 +28,7 @@ Suggests:
     testthat,
     bayesplot
 License: MIT + file LICENSE
-RoxygenNote: 7.2.1
+RoxygenNote: 7.3.1
 Collate:
     'TACC.R'
     'create-rules.R'
@@ -41,6 +41,7 @@ Collate:
     'extract-list.R'
     'lsdSave.R'
     'parse-model-code.R'
+    'plot-HR-rapid-updates.R'
     'plot-biomass.R'
     'plot-catch.R'
     'plot-compare-refpoints.R'
@@ -56,6 +57,7 @@ Collate:
     'plot-movement.R'
     'plot-mp-rules.R'
     'plot-numbers.R'
+    'plot-osa-resids.R'
     'plot-pars.R'
     'plot-projections.R'
     'plot-puerulus.R'

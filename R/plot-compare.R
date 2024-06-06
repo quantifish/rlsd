@@ -1673,17 +1673,9 @@ plot_compare_selectivity <- function(object_list, object_names, figure_dir = "co
 
   areas <- unique(sapply(1:length(data_list), function(x) data_list[[x]]$n_area))
   if (areas > 1) {
-    # if (length(unique(sel$Season)) > 1 & length(unique(sel$Year)) > 1) {
       p <- p + facet_grid(Region + Season ~  Sex)
-    # } else {
-    #   p <- p + facet_grid(Region + Season ~ Sex)
-    # }
   } else {
-    if (length(unique(sel$Season)) > 1 & length(unique(sel$Year)) > 1) {
       p <- p + facet_grid(Season ~  Sex)
-    } else {
-      p <- p + facet_grid( ~  Sex)
-    }
   }
 
   p <- p + #scale_x_continuous(breaks = seq(30, 90, 10)) +

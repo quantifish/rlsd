@@ -237,7 +237,7 @@ plot_cpue <- function(object,
       stat_summary(data = rel_pcpue, aes(x = Year, y = RelCPUE), fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1)
   }
   if (data$n_area > 1) {
-    p <- p + facet_grid(Season ~ CPUE_name+Region+qtype, scales = "free", nrow = data$n_area)
+    p <- p + facet_grid(Season ~ CPUE_name+Region+qtype, scales = "free")
     ggsave(paste0(figure_dir, "rel_cpue.png"), p, height = 10, width = 15)
   } else {
     p <- p + facet_grid(Season ~ CPUE_name, scales = "free")

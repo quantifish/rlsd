@@ -210,7 +210,40 @@ plot_cpue <- function(object,
     p <- p + facet_wrap(Season ~ CPUE_name, scales = "free", nrow = length(unique(ocpue$Season)))
     ggsave(paste0(figure_dir, "cpue.png"), p, height = 9, width = 12)
   }
-
+  
+  ## relative scale cpue
+  rel_ocpue <- ocpue %>%
+    group_by(Region, Season, qtype, CPUE_name) %>%
+    mutate(MeanCPUE = influ2::geo_mean(CPUE),
+           RelCPUE = CPUE / MeanCPUE,
+           CV = SD / CPUE,
+           RelSD = CV * RelCPUE)
+  rel_pcpue <- pcpue %>%
+    group_by(Iteration, Region, Season, qtype, CPUE_name) %>%
+    mutate(MeanCPUE = influ2::geo_mean(CPUE),
+           RelCPUE = CPUE / MeanCPUE)
+  
+  p <- ggplot(data = rel_ocpue) +
+    geom_point(aes(x = Year, y = RelCPUE), color = "red", alpha = 0.75) +
+    geom_linerange(aes(x = Year, ymin = exp(log(RelCPUE) - RelSD), ymax = exp(log(RelCPUE) + RelSD)), color = "red", alpha = 0.75) +
+    scale_y_continuous(limits = c(0, NA), expand = expansion(mult = c(0, 0.1))) +
+    scale_x_continuous(breaks = pretty_breaks()) +
+    xlab(xlab) + ylab(ylab) +
+    theme_lsd() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  if (!is.null(rel_pcpue)) {
+    p <- p + stat_summary(data = rel_pcpue, aes(x = Year, y = RelCPUE), fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
+      stat_summary(data = rel_pcpue, aes(x = Year, y = RelCPUE), fun = function(x) quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
+      stat_summary(data = rel_pcpue, aes(x = Year, y = RelCPUE), fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1)
+  }
+  if (data$n_area > 1) {
+    p <- p + facet_grid(Season ~ CPUE_name+Region+qtype, scales = "free", nrow = data$n_area)
+    ggsave(paste0(figure_dir, "rel_cpue.png"), p, height = 10, width = 15)
+  } else {
+    p <- p + facet_grid(Season ~ CPUE_name, scales = "free")
+    ggsave(paste0(figure_dir, "rel_cpue.png"), p, height = 9, width = 12)
+  }
+  
   ## separate by series
   # CR
   ocr_yrs <- ocpue %>% filter(Year < 1979) %>% mutate(Region = paste0("Region ", Region))

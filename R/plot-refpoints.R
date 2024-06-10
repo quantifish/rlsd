@@ -319,9 +319,9 @@ if(any(grepl("B0now_r", names(mcmc1)))){
   colnames(rules) <- c("par1", "par2")
   n_rules <- nrow(rules)
   rule_type <- data.frame(RuleType1 = rules[,1], RuleNum = 1:n_rules) %>%
-                    mutate(RuleType = case_when(RuleType1 == 1 ~ "FixedCatch",
-                                                RuleType1 == 2 ~ "FixedU",
-                                                RuleType1 == 0 ~ "FixedF")) %>%
+                    mutate(RuleType = case_when(RuleType1 == 0 ~ "FixedCatch",
+                                                RuleType1 == 1 ~ "FixedU",
+                                                RuleType1 == 2 ~ "FixedF")) %>%
                     select(-RuleType1)
   fleets <- c("SL","NSL")
 
@@ -586,9 +586,9 @@ if(any(grepl("B0now_r", names(mcmc1)))){
   gc()
 
   ruledf <- data.frame(RuleNum = 1:nrow(rules), rules) %>%
-    mutate(RuleType = case_when(par1 == 0 ~ "FixedF",
-                                par1 == 1 ~ "FixedCatch",
-                                par1 == 2 ~ "FixedU"))
+    mutate(RuleType = case_when(par1 == 2 ~ "FixedF",
+                                par1 == 0 ~ "FixedCatch",
+                                par1 == 1 ~ "FixedU"))
 
   proj_in <- data$proj_catch_commercial_in_jryt
   dimnames(proj_in) <- list("RuleNum" = 1:n_rules, "Region" = regions, "Year" = projyears, "Season" = seasons)
@@ -624,13 +624,13 @@ if(any(grepl("B0now_r", names(mcmc1)))){
                       RiskConstraint = ifelse(Prisk >= 0.05, 1, 0),
                       ExpectedCatchSL = sum(par2),
                       ObsCatchSL = sum(SL),
-                      Pcatch = length(which(SL < 0.99 * par2))/length(SL),
+                      Pcatch = round(length(which(SL < 0.99 * par2))/length(SL), 2),
                       AvgTotalCatch = sum(Catch)/max(Iteration),
                       Catch5 = quantile(Catch,0.05),
                       Catch95 = quantile(Catch,0.95)) %>%
       left_join(ruledf) %>%
       # mutate(ExpectedCatchSL = replace(ExpectedCatchSL, RuleType != "FixedCatch", 0)) %>%
-      mutate(CatchConstraint = ifelse(RuleType == "FixedCatch" & Pcatch > 0.05, 1, 0))
+      mutate(CatchConstraint = ifelse(RuleType == "FixedCatch" & Pcatch >= 0.05, 1, 0))
       # mutate(CatchConstraint = ifelse(RuleType == "FixedCatch" & (Catch95-Catch5)>1, 1, 0))
     # constraints <- unique(constraints)
 
@@ -1040,7 +1040,7 @@ if(any(grepl("B0now_r", names(mcmc1)))){
   # write.csv(output3, file.path(figure_dir, "Summary_byPercentile.csv"))
 
   output4 <- output3 %>%
-    tidyr::pivot_wider(names_from = Percentile, values_from = Catch:VB0now)
+    tidyr::pivot_wider(names_from = Percentile, values_from = CPUE_AW:VB0now)
   if(length(unique(output4$RuleType))==3) output4$RuleType <- factor(output4$RuleType, levels = unique(ruledf$RuleType))
   const <- unique(as.character(output4$Constraint))
   const1 <- const[grepl("CV",const)==FALSE]
@@ -1071,7 +1071,7 @@ if(any(grepl("B0now_r", names(mcmc1)))){
   # write.csv(output3, file.path(figure_dir, "Summary_byPercentile.csv"))
 
   output4 <- output3 %>%
-    tidyr::pivot_wider(names_from = Percentile, values_from = Catch:VB0now)
+    tidyr::pivot_wider(names_from = Percentile, values_from = CPUE_AW:VB0now)
   if(length(unique(output4$RuleType))==3) output4$RuleType <- factor(output4$RuleType, levels = unique(ruledf$RuleType))
   const <- unique(as.character(output4$Constraint))
   const1 <- const[grepl("CV",const)==FALSE]

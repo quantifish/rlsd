@@ -295,7 +295,7 @@ do_plot <- function(object, map = FALSE, mcmc = FALSE, figure_dir = "figure/") {
   plot_tag_residuals(object, figure_dir = figure_dir, ylim = c(-5, 5))
   print("plotting LFs")
   plot_lfs(object, figure_dir = figure_dir)
-  plot_lfs_resid_OSA(object, figure_dir = figure_dir)
+  if(nrow(object@mcmc[[1]]) < 10) plot_lfs_resid_OSA(object, figure_dir = figure_dir)
   # plot_lfs_resid(object, figure_dir = figure_dir, ylim = c(-5, 5))
   # plot_lfs_resid2(object, figure_dir = figure_dir)
   print("plotting MLS and handling mortality")

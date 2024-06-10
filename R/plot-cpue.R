@@ -120,7 +120,7 @@ plot_cpue <- function(object,
       pcpue <- bind_cols(pcpue, "CPUE_type" = 1)
     }
     pcpue <- pcpue %>%
-      bind_cols(data.frame("qtype" = q)) %>%
+      bind_cols(data.frame("qtype" = rep(q, each = n_iter))) %>%
       mutate(SD = NA)
 
     rcpue <- mcmc$resid_cpue_i
@@ -134,7 +134,7 @@ plot_cpue <- function(object,
       rcpue <- bind_cols(rcpue, "CPUE_type" = 1)
     }
     rcpue <- rcpue %>%
-      bind_cols(data.frame("qtype" = q))
+      bind_cols(data.frame("qtype" = rep(q, each = n_iter)))
   # } else {
   #   pcpue <- NULL
   #   rcpue <- NULL

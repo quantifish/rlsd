@@ -91,7 +91,9 @@ plot_selectivity <- function(object,
     ggsave(paste0(figure_dir, "selectivity.png"), p, width = 8, height = 8)
 
     # if (!is.null(sel1)) {
-        q <- ggplot(sel2, aes(x = .data$Size, y = .data$Year, height = .data$Selectivity, fill = .data$Sex)) +
+    ridge <- sel2 %>% group_by(Selex, Size, Region, Sex, Year, Season) %>%
+      mutate(Selectivity = median(Selectivity))
+        q <- ggplot(ridge, aes(x = .data$Size, y = .data$Year, height = .data$Selectivity, fill = .data$Sex)) +
             ggridges::geom_density_ridges(stat = "identity", alpha = .6, color = "white", scale = 0.95) +
             scale_y_discrete(expand = c(0, 0), name = "Selectivity by year") +
             scale_x_continuous(expand = c(0, 0)) +

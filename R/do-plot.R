@@ -12,6 +12,8 @@
 #'
 do_plot <- function(object, map = FALSE, mcmc = FALSE, figure_dir = "figure/") {
 
+  theme_set(theme_bw())
+
   # Data only plots
   plot_data_extent(object, figure_dir = figure_dir)
 

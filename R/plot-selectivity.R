@@ -54,31 +54,32 @@ plot_selectivity <- function(object,
             distinct(.data$Iteration, .data$Sex, .data$Selectivity, .data$Region, .data$Size, .keep_all = TRUE)
         # sel2$Sex = factor(sel2$Sex, labels = unique(sel2$Sex))
 
-        if(data$n_sel > 3 & length(unique(sel2$Year)) == 1) {
-            p <- ggplot(data = sel2, aes(x = .data$Size, y = .data$Selectivity, col = .data$Season, fill = .data$Season))
-        } else {
-            p <- ggplot(data = sel2, aes(x = .data$Size, y = .data$Selectivity, col = .data$Year, fill = .data$Year))
-        }
+        p <- ggplot(data = sel2, aes(x = .data$Size, y = .data$Selectivity, col = .data$Year, fill = .data$Year))
+        # if(data$n_sel > 3 & length(unique(sel2$Year)) == 1) {
+        #     p <- ggplot(data = sel2, aes(x = .data$Size, y = .data$Selectivity, col = .data$Season, fill = .data$Season))
+        # } else {
+        #     p <- ggplot(data = sel2, aes(x = .data$Size, y = .data$Selectivity, col = .data$Year, fill = .data$Year))
+        # }
 
 
-        if(data$n_sel > 3 & length(unique(sel2$Year)) == 1) {
-            p <- p + stat_summary(data = sel2, aes(x = .data$Size, y = .data$Selectivity, col = .data$Season), fun.min = function(x) quantile(x, 0.05), fun.max = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
-                stat_summary(data = sel2, aes(x = .data$Size, y = .data$Selectivity, col = .data$Season), fun.min = function(x) quantile(x, 0.25), fun.max = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
-                stat_summary(data = sel2, aes(x = .data$Size, y = .data$Selectivity, col = .data$Season), fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1)
-        } else {
+        # if(data$n_sel > 3 & length(unique(sel2$Year)) == 1) {
+        #     p <- p + stat_summary(data = sel2, aes(x = .data$Size, y = .data$Selectivity, col = .data$Season), fun.min = function(x) quantile(x, 0.05), fun.max = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
+        #         # stat_summary(data = sel2, aes(x = .data$Size, y = .data$Selectivity, col = .data$Season), fun.min = function(x) quantile(x, 0.25), fun.max = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
+        #         stat_summary(data = sel2, aes(x = .data$Size, y = .data$Selectivity, col = .data$Season), fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1)
+        # } else {
             p <- p + stat_summary(data = sel2, aes(x = .data$Size, y = .data$Selectivity, col = .data$Year), fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
-                stat_summary(data = sel2, aes(x = .data$Size, y = .data$Selectivity, col = .data$Year), fun.min = function(x) quantile(x, 0.25), fun.max = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
+                # stat_summary(data = sel2, aes(x = .data$Size, y = .data$Selectivity, col = .data$Year), fun.min = function(x) quantile(x, 0.25), fun.max = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
                 stat_summary(data = sel2, aes(x = .data$Size, y = .data$Selectivity, col = .data$Year), fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1)
-        }
+        # }
 
-    if (length(unique(sel2$Year)) == 1 & data$n_sel == 3) {
-        p <- p + guides(colour = FALSE, fill = FALSE)
-    }
+    # if (length(unique(sel2$Year)) == 1 & data$n_sel == 3) {
+    #     p <- p + guides(colour = FALSE, fill = FALSE)
+    # }
 
     if (data$n_area > 1) {
-        p <- p + facet_grid(.data$Region ~ .data$Sex)
+        p <- p + facet_grid(.data$Region + .data$Season ~ .data$Sex)
     } else {
-        p <- p + facet_grid( ~ .data$Sex)
+        p <- p + facet_grid(.data$Season ~ .data$Sex)
     }
 
     p <- p +

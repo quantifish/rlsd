@@ -61,7 +61,6 @@ plot_selectivity <- function(object,
   # } else {
   #     p <- ggplot(data = sel2, aes(x = .data$Size, y = .data$Selectivity, col = .data$Year, fill = .data$Year))
   # }
-
   # if(data$n_sel > 3 & length(unique(sel2$Year)) == 1) {
   #     p <- p + stat_summary(data = sel2, aes(x = .data$Size, y = .data$Selectivity, col = .data$Season), fun.min = function(x) quantile(x, 0.05), fun.max = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
   #         # stat_summary(data = sel2, aes(x = .data$Size, y = .data$Selectivity, col = .data$Season), fun.min = function(x) quantile(x, 0.25), fun.max = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
@@ -78,11 +77,12 @@ plot_selectivity <- function(object,
   }
 
   p <- p +
+    scale_color_okabe_ito() +
+    scale_fill_okabe_ito() +
     #scale_x_continuous(breaks = seq(30, 90, 10)) +
     scale_y_continuous(expand = c(0, 0)) +
     coord_cartesian(ylim = c(0, 1)) +
-    xlab(xlab) +
-    theme_lsd()
+    xlab(xlab)
 
   ggsave(paste0(figure_dir, "selectivity.png"), p, width = 8, height = 8)
 

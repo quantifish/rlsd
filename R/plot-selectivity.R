@@ -77,8 +77,8 @@ plot_selectivity <- function(object,
   }
 
   p <- p +
-    scale_color_okabe_ito() +
-    scale_fill_okabe_ito() +
+    # scale_color_okabe_ito() +
+    # scale_fill_okabe_ito() +
     #scale_x_continuous(breaks = seq(30, 90, 10)) +
     scale_y_continuous(expand = c(0, 0)) +
     coord_cartesian(ylim = c(0, 1)) +
@@ -93,8 +93,8 @@ plot_selectivity <- function(object,
     geom_density_ridges(stat = "identity", alpha = .6, color = "white", scale = 0.95) +
     scale_y_discrete(expand = c(0, 0), name = "Selectivity by year") +
     scale_x_continuous(expand = c(0, 0)) +
-    scale_color_okabe_ito() +
-    scale_fill_okabe_ito() +
+    # scale_color_okabe_ito() +
+    # scale_fill_okabe_ito() +
     theme(axis.title.x = element_text(hjust = 0.5), axis.title.y = element_text(hjust = 0.5))
 
   if (data$n_area > 1) {

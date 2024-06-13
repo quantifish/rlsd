@@ -416,6 +416,21 @@ if(any(grepl("B0now_r", names(mcmc1)))){
     tidyr::pivot_wider(names_from = Season, values_from = c("U", "VB")) %>%
     mutate(Usum = ((U_AW * VB_AW) + (U_SS * VB_SS)) / (VB_AW + VB_SS) ) %>%
     select(-c(VB_AW, VB_SS))
+  
+  projU4 <- vb %>%
+    mutate(Region = as.integer(Region)) %>%
+    left_join(slcatch2_t) %>%
+    mutate(Ucalc = Catch / VB)
+  
+  projU5 <- vb2 %>%
+    left_join(catch %>% mutate(Region = as.factor(Region))) %>%
+    mutate(Ucalc = SL / VB)
+  
+  projU5_sum <- projU5 %>%
+    filter(Year %in% (max(Year) - 19):max(Year)) %>%
+    group_by(RuleNum, Region) %>%
+    summarise(Ucalc = round(median(Ucalc), 3))
+  
 
   vb0now <- mcmc$B0now_r
   dimnames(vb0now) <- list("Iteration" = 1:n_iter, "Region" = regions2)
@@ -629,8 +644,10 @@ if(any(grepl("B0now_r", names(mcmc1)))){
                       Catch5 = quantile(Catch,0.05),
                       Catch95 = quantile(Catch,0.95)) %>%
       left_join(ruledf) %>%
+      left_join(projU5_sum %>% mutate(Region = paste0("Region ", Region))) %>%
       # mutate(ExpectedCatchSL = replace(ExpectedCatchSL, RuleType != "FixedCatch", 0)) %>%
-      mutate(CatchConstraint = ifelse(RuleType == "FixedCatch" & Pcatch >= 0.05, 1, 0))
+      mutate(CatchConstraint = ifelse(RuleType == "FixedCatch" & Pcatch >= 0.05, 1, 0)) %>%
+      mutate(CatchConstraint = ifelse(RuleType == "FixedU" & Ucalc < par2, 1, CatchConstraint))
       # mutate(CatchConstraint = ifelse(RuleType == "FixedCatch" & (Catch95-Catch5)>1, 1, 0))
     # constraints <- unique(constraints)
 
@@ -833,6 +850,22 @@ if(any(grepl("B0now_r", names(mcmc1)))){
     ylab("Exploitation rate") +
     theme_bw(base_size = 20)
   ggsave(file.path(figure_dir, "U_check.png"), p, height = 10, width = 15)
+  
+  med <- projU5 %>%
+    group_by(RuleNum, Year, Region) %>%
+    summarise(Ucalc = median(Ucalc)) %>%
+    left_join(rule_type) %>%
+    left_join(msy_sub)
+  p <- ggplot(med) +
+    geom_line(aes(x = Year, y = Ucalc, color = factor(RuleNum))) +
+    geom_line(data = med %>% filter(MSY == 1), aes(x = Year, y = Ucalc)) +
+    facet_grid(RuleType ~. ) +
+    expand_limits(y = c(0,0)) +
+    xlab("Exploitation rate (summed across seasons)") +
+    guides(color=guide_legend(title="Rule")) +
+    theme_lsd()
+  ggsave(file.path(figure_dir, "U_check2.png"), p, height = 10, width = 15)
+  
   
   sub <- projF2 %>% left_join(rule_type) %>% filter(Iteration == 1)
   p <- ggplot(sub) +

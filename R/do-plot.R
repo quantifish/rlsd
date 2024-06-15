@@ -27,6 +27,7 @@ do_plot <- function(object, map = FALSE, mcmc = FALSE, figure_dir = "figure/") {
       group_by(.data$par) %>%
       summarise(s = sum(.data$value)) %>%
       filter(.data$s == 0)
+
     rm_prior <- object@mcmc_priors %>%
       group_by(.data$par) %>%
       summarise(s = sum(.data$value)) %>%
@@ -40,10 +41,10 @@ do_plot <- function(object, map = FALSE, mcmc = FALSE, figure_dir = "figure/") {
       filter(!.data$par %in% rm_prior$par) %>%
       mutate(par = as.character(gsub(pattern = "prior_", replacement = "par_", x = par)), type = "Prior")
 
-    posteriors_trace <- posteriors %>% filter(grepl('par', par) | grepl('lp', par))
+    posteriors_trace <- posteriors %>%
+      filter(grepl('par', par) | grepl('lp', par))
 
     # sq <- seq(1, length(unique(posteriors_trace$par)), n_panel)
-
     lp1 <- posteriors_trace %>% filter(grepl('lp_', par)) %>% filter(par != "lp__")
     grow1 <- posteriors_trace %>% filter(grepl("grow_", par))
     selvuln1 <- posteriors_trace %>% filter(grepl("vuln_", par) | grepl("sel_", par))
@@ -84,25 +85,26 @@ do_plot <- function(object, map = FALSE, mcmc = FALSE, figure_dir = "figure/") {
     #   pq <- sq[i]:(sq[i] + n_panel - 1)
     #   d <- posteriors_trace %>% filter(.data$par %in% unique(posteriors_trace$par)[pq])
     #   npar <- length(unique(d$par))
-
     #   p <- ggplot(d) +
     #     geom_line(aes(x = as.integer(.data$iteration), y = .data$value, col = .data$chain)) +
     #     facet_wrap(~ .data$par, scales = "free_y", ncol = n_col) +
     #     labs(x = "Iteration", y = NULL, col = "Chain") +
     #     theme_lsd()
-
     #   ggsave(paste0(figure_dir, "par_trace_", i, ".png"), p, width = ifelse(npar > 1, 8, 4), height = 10) #npar + (npar %% 2)
     # }
-
     # sq <- seq(1, length(unique(posteriors$par)), n_panel)
 
     # MCMC histogram
     print("plotting histograms")
 
-    lp2 <- posteriors %>% filter(grepl('lp_', par)) %>% filter(par != "lp__")
-    grow2 <- posteriors %>% filter(grepl("grow_", par))
-    selvuln2 <- posteriors %>% filter(grepl("vuln_", par) | grepl("sel_", par))
-    more2 <- posteriors %>% filter(grepl("_M_", par) | grepl("R0_", par) | grepl("mat_", par) | grepl("cpue_", par))
+    lp2 <- posteriors %>% filter(grepl('lp_', par)) %>%
+      filter(par != "lp__")
+    grow2 <- posteriors %>%
+      filter(grepl("grow_", par))
+    selvuln2 <- posteriors %>%
+      filter(grepl("vuln_", par) | grepl("sel_", par))
+    more2 <- posteriors %>%
+      filter(grepl("_M_", par) | grepl("R0_", par) | grepl("mat_", par) | grepl("cpue_", par))
 
     p <- ggplot(data = lp2, aes(x = .data$value, fill = .data$chain)) +
       geom_histogram(aes(x = value), bins = 50) +
@@ -140,13 +142,11 @@ do_plot <- function(object, map = FALSE, mcmc = FALSE, figure_dir = "figure/") {
     #   pq <- sq[i]:(sq[i] + n_panel - 1)
     #   d <- posteriors %>% filter(.data$par %in% unique(posteriors$par)[pq])
     #   npar <- length(unique(d$par))
-    #
     #   p <- ggplot(data = d, aes(x = .data$value, fill = .data$chain)) +
     #     geom_histogram(aes(x = value), bins = 50) +
     #     facet_wrap(~ .data$par, scales = "free", ncol = n_col) +
     #     scale_y_continuous(limits = c(0, NA), expand = expansion(mult = c(0, 0.05))) +
-    #     labs(x = "Value", y = NULL, fill = "Chain") +
-    #     theme_lsd()
+    #     labs(x = "Value", y = NULL, fill = "Chain")
     #   ggsave(paste0(figure_dir, "par_histogram_", i, ".png"), p, width = ifelse(npar > 1, 8, 4), height = 10) #npar + (npar %% 2)
     # }
 
@@ -155,10 +155,14 @@ do_plot <- function(object, map = FALSE, mcmc = FALSE, figure_dir = "figure/") {
 
     post_pri <- rbind(posteriors, priors)
     post_pri$type <- factor(post_pri$type, levels = c("Prior", "Posterior"))
-    lp3 <-  post_pri %>% filter(grepl('lp_', par)) %>% filter(par != "lp__")
-    grow3 <- post_pri %>% filter(grepl("grow_", par)) %>% filter(par %in% unique(posteriors$par))
-    selvuln3 <- post_pri %>% filter(grepl("vuln_", par) | grepl("sel_", par))
-    more3 <- post_pri %>% filter(grepl("_M_", par) | grepl("R0_", par) | grepl("mat_", par) | grepl("cpue_", par))
+    lp3 <-  post_pri %>%
+      filter(grepl('lp_', par)) %>% filter(par != "lp__")
+    grow3 <- post_pri %>%
+      filter(grepl("grow_", par)) %>% filter(par %in% unique(posteriors$par))
+    selvuln3 <- post_pri %>%
+      filter(grepl("vuln_", par) | grepl("sel_", par))
+    more3 <- post_pri %>%
+      filter(grepl("_M_", par) | grepl("R0_", par) | grepl("mat_", par) | grepl("cpue_", par))
 
     p <- ggplot(lp3) +
       geom_density(aes(x = .data$value, fill = .data$type, colour = .data$type), alpha = 0.5, trim = TRUE) +
@@ -210,7 +214,6 @@ do_plot <- function(object, map = FALSE, mcmc = FALSE, figure_dir = "figure/") {
     #   d <- rbind(posteriors, priors) %>% filter(.data$par %in% unique(posteriors$par)[pq])
     #   d$type <- factor(d$type, levels = c("Prior", "Posterior"))
     #   npar <- length(unique(d$par))
-    #
     #   p <- ggplot(d) +
     #     geom_density(aes(x = .data$value, fill = .data$type, colour = .data$type), alpha = 0.5, trim = TRUE) +
     #     facet_wrap(~ .data$par, scales = "free", ncol = n_col, nrow = 6) +
@@ -218,7 +221,6 @@ do_plot <- function(object, map = FALSE, mcmc = FALSE, figure_dir = "figure/") {
     #     scale_y_continuous(limits = c(0, NA), expand = expansion(mult = c(0, 0.05))) +
     #     scale_colour_discrete(drop = TRUE, limits = c("Prior", "Posterior")) +
     #     scale_fill_discrete(drop = TRUE, limits = c("Prior", "Posterior")) +
-    #     theme_lsd() +
     #     theme(legend.position = "top")
     #   # ggsave(paste0(figure_dir, "par_density_", i, ".png"), p, width = ifelse(npar > 1, 8, 4), height = 10)
     #   #ggsave(paste0(figure_dir, "par_density_", i, ".png"), p, width = ifelse(npar > 1, 7, 3.5), height = npar + (npar %% 2))
@@ -259,7 +261,6 @@ do_plot <- function(object, map = FALSE, mcmc = FALSE, figure_dir = "figure/") {
     #   pq <- sq[i]:(sq[i] + n_panel - 1)
     #   d <- posteriors %>% filter(.data$par %in% unique(posteriors$par)[pq])
     #   npar <- length(unique(d$par))
-    #
     #   p <- ggplot(d, aes(x = .data$value, colour = .data$chain)) +
     #     stat_ecdf() +
     #     facet_wrap(~ .data$par, scales = "free_x", ncol = n_col) +
@@ -296,13 +297,16 @@ do_plot <- function(object, map = FALSE, mcmc = FALSE, figure_dir = "figure/") {
   plot_growth_matrix(object, figure_dir = figure_dir)
   plot_tag_residuals(object, figure_dir = figure_dir, ylim = c(-5, 5))
   print("plotting LFs")
-  plot_lfs(object, figure_dir = figure_dir)
-  if(nrow(object@mcmc[[1]]) < 10) plot_lfs_resid_OSA(object, figure_dir = figure_dir)
+  plot_lfs(object, figure_dir = figure_dir, show_pp = TRUE)
+  if (nrow(object@mcmc[[1]]) < 10) {
+    plot_lfs_resid_OSA(object, figure_dir = figure_dir)
+  }
   # plot_lfs_resid(object, figure_dir = figure_dir, ylim = c(-5, 5))
   # plot_lfs_resid2(object, figure_dir = figure_dir)
   print("plotting MLS and handling mortality")
   plot_mls(object, figure_dir = figure_dir)
   plot_handling_mortality(object, figure_dir = figure_dir)
+
   print("plotting biomass")
   plot_biomass(object, figure_dir = figure_dir)
   plot_ssb_recruitment(object, figure_dir = figure_dir)

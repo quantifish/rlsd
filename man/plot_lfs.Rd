@@ -9,7 +9,8 @@ plot_lfs(
   n_panel = 10,
   xlab = "Midpoint of size-class (mm)",
   ylab = "Proportion at size (mm)",
-  figure_dir = "figure/"
+  figure_dir = "figure/",
+  show_pp = TRUE
 )
 }
 \arguments{
@@ -22,6 +23,8 @@ plot_lfs(
 \item{ylab}{the y axis label}
 
 \item{figure_dir}{the directory to save to}
+
+\item{show_pp}{show the posterior predictive distribution}
 }
 \description{
 Length-frequency plots

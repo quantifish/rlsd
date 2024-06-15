@@ -5,6 +5,7 @@
 #' @param xlab the x axis label
 #' @param ylab the y axis label
 #' @param figure_dir the directory to save to
+#' @param show_pp show the posterior predictive distribution
 #' @import dplyr
 #' @import ggplot2
 #' @importFrom reshape2 melt
@@ -18,7 +19,13 @@ plot_lfs <- function(object,
                      n_panel = 10,
                      xlab = "Midpoint of size-class (mm)",
                      ylab = "Proportion at size (mm)",
-                     figure_dir = "figure/") {
+                     figure_dir = "figure/",
+                     show_pp = TRUE) {
+
+  ggplotColours <- function(n = 6, h = c(0, 360) + 15) {
+    if ((diff(h) %% 360) < 1) h[2] <- h[2] - 360/n
+    hcl(h = (seq(h[1], h[2], length = n)), c = 100, l = 65)
+  }
 
   data <- object@data
   mcmc <- object@mcmc
@@ -76,7 +83,22 @@ plot_lfs <- function(object,
   dimnames(plf) <- list("Iteration" = 1:n_iter, "LF" = 1:data$n_lf, "Size" = bins)
   plf <- melt(plf) %>%
     left_join(w, by = "LF") %>%
-    left_join(lim, by = c("LF")) %>%
+    left_join(lim, by = "LF") %>%
+    mutate(Season = seasons[Season], Sex = sex[Sex])
+
+  # Posterior predictive LF
+  pplf <- mcmc$pred_lf_il
+  dimnames(pplf) <- list("Iteration" = 1:n_iter, "LF" = 1:data$n_lf, "Size" = bins)
+  for (i in 1:n_iter) {
+    prob <- pplf[i,,]
+    N <- ceiling(rawW$rawW)
+    df <- t(mapply(rmultinom, n = 1, size = N, prob = split(x = prob, f = c(row(prob)))))
+    df <- df / rowSums(df)
+    pplf[i,,] <- df
+  }
+  pplf <- melt(pplf) %>%
+    left_join(w, by = "LF") %>%
+    left_join(lim, by = "LF") %>%
     mutate(Season = seasons[Season], Sex = sex[Sex])
 
   # Give each Region/Year/Season its own plot number, the number of
@@ -85,16 +107,38 @@ plot_lfs <- function(object,
   n2 <- plf %>%
     distinct(Region, Year, Season) %>%
     mutate(Plot = 1:nrow(.))
-  sq <- seq(nrow(n2), 1, -n_panel) #seq(1, nrow(n2), n_panel)
+  sq <- seq(nrow(n2), 1, -n_panel)
   elf2 <- elf2 %>% left_join(n2)
   elf2$Sex <- factor(elf2$Sex, levels = sex)
-  plf <- plf %>% left_join(n2)
   dlf <- dlf %>% left_join(n2)
+  plf <- plf %>% left_join(n2)
+  pplf <- pplf %>% left_join(n2)
   dlf$Sex <- factor(dlf$Sex, levels = sex )
 
-  ggplotColours <- function(n = 6, h = c(0, 360) + 15) {
-    if ((diff(h) %% 360) < 1) h[2] <- h[2] - 360/n
-    hcl(h = (seq(h[1], h[2], length = n)), c = 100, l = 65)
+  for (i in 1:length(sq)) {
+    pq <- (sq[i] - n_panel + 1):sq[i]
+    pq <- pq[pq > 0]
+
+    p <- ggplot() +
+      geom_vline(data = filter(elf2, Plot %in% pq) %>% mutate(Sex = factor(Sex, levels = sex)), aes(xintercept = MLS), linetype = "dashed") +
+      geom_label(data = filter(elf2, Plot %in% pq) %>% mutate(Sex = factor(Sex, levels = sex)), aes(x = Inf, y = Inf, label = paste("w:", round(rawW2,2))), hjust = 1, vjust = 1)
+    if (n_iter > 1 & show_pp) {
+      p <- p + stat_summary(data = filter(pplf, Plot %in% pq, Size >= lower & Size <= upper) %>% mutate(Sex = factor(Sex, levels = sex)), aes(x = as.numeric(as.character(Size)), y = value), fun.min = function(x) quantile(x, 0.025), fun.max = function(x) quantile(x, 0.975), geom = "ribbon", alpha = 0.25, colour = NA)
+    }
+    p <- p + stat_summary(data = filter(plf, Plot %in% pq, Size >= lower & Size <= upper) %>% mutate(Sex = factor(Sex, levels = sex)), aes(x = as.numeric(as.character(Size)), y = value), fun.min = function(x) quantile(x, 0.025), fun.max = function(x) quantile(x, 0.975), geom = "ribbon", alpha = 0.25, colour = NA) +
+      stat_summary(data = filter(plf, Plot %in% pq, Size >= lower & Size <= upper) %>% mutate(Sex = factor(Sex, levels = sex)), aes(x = as.numeric(as.character(Size)), y = value), fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1) +
+      geom_point(data = filter(dlf, Plot %in% pq, Size >= lower & Size <= upper) %>% mutate(Sex = factor(Sex, levels = sex)), aes(x = as.numeric(as.character(Size)), y = value, colour = Season)) +
+      labs(x = xlab, y = ylab) +
+      guides(shape = "none", colour = "none") +
+      scale_x_continuous(minor_breaks = seq(0, 1e6, 2), limits = c(min(elf2$lower), max(elf2$upper))) +
+      scale_y_continuous(limits = c(0, NA), expand = expansion(mult = c(0, 0.1)))
+    if (data$n_area == 1) {
+      p <- p + facet_grid(Year + Season~ Sex, scales = "free_y")
+    } else {
+      p <- p + facet_grid(Region + Year + Season ~ Sex, scales = "free_y")
+    }
+    ggsave(filename = paste0(figure_dir, "lf_", i, ".png"), plot = p,
+           height = (n_panel / 11.2 * length(pq)) + 0.8, width = 9)
   }
 
   # Plot observed only - by sex and source
@@ -129,7 +173,6 @@ plot_lfs <- function(object,
       facet_grid(~ Sex, scales = "free") +
       ggtitle(paste("Region", i, sep = "  ")) +
       theme(plot.title = element_text(hjust = 0.5))
-
     ggsave(paste0(figure_dir, "lf_obs_Region", i, ".png"), p, height = 10, width = 9)
   }
 
@@ -149,32 +192,6 @@ plot_lfs <- function(object,
         theme(plot.title = element_text(hjust = 0.5))
       ggsave(paste0(figure_dir, "lf_obs_Region", i, j, ".png"), p, height = 10, width = 9)
     }
-  }
-
-  for (i in 1:length(sq)) {
-    # pq <- sq[i]:(sq[i] + n_panel - 1)
-    pq <- (sq[i] - n_panel + 1):sq[i]
-
-    p <- ggplot() +
-      geom_vline(data = filter(elf2, Plot %in% pq) %>% mutate(Sex = factor(Sex, levels = sex)), aes(xintercept = MLS), linetype = "dashed") +
-      geom_label(data = filter(elf2, Plot %in% pq) %>% mutate(Sex = factor(Sex, levels = sex)), aes(x = Inf, y = Inf, label = paste("w:", round(rawW2,2))), hjust = 1, vjust = 1) +
-      stat_summary(data = filter(plf, Plot %in% pq, Size >= lower & Size <= upper) %>% mutate(Sex = factor(Sex, levels = sex)), aes(x = as.numeric(as.character(Size)), y = value), fun.min = function(x) quantile(x, 0.025), fun.max = function(x) quantile(x, 0.975), geom = "ribbon", alpha = 0.25, colour = NA) +
-      # stat_summary(data = filter(plf, Plot %in% pq, Size >= lower & Size <= upper) %>% mutate(Sex = factor(Sex, levels = sex)), aes(x = as.numeric(as.character(Size)), y = value), fun.min = function(x) quantile(x, 0.25), fun.max = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
-      stat_summary(data = filter(plf, Plot %in% pq, Size >= lower & Size <= upper) %>% mutate(Sex = factor(Sex, levels = sex)), aes(x = as.numeric(as.character(Size)), y = value), fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1) +
-      geom_point(data = filter(dlf, Plot %in% pq, Size >= lower & Size <= upper) %>% mutate(Sex = factor(Sex, levels = sex)), aes(x = as.numeric(as.character(Size)), y = value, colour = Season)) +
-      labs(x = xlab, y = ylab) +
-      guides(shape = "none", colour = "none") +
-      scale_x_continuous(minor_breaks = seq(0, 1e6, 2), limits = c(min(elf2$lower), max(elf2$upper))) +
-      scale_y_continuous(limits = c(0, NA), expand = expansion(mult = c(0, 0.1))) +
-      theme_lsd()
-
-    if (data$n_area == 1) {
-      p <- p + facet_grid(Year + Season~ Sex, scales = "free_y")
-    } else {
-      p <- p + facet_grid(Region + Year + Season ~ Sex, scales = "free_y")
-    }
-
-    ggsave(paste0(figure_dir, "lf_", i, ".png"), p, height = 12, width = 9)
   }
 }
 

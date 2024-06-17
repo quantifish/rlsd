@@ -135,7 +135,6 @@ plot_sex_ratio <- function(object, scales = "free",
   } else {
     p <- p + facet_grid(Sex ~ Region + Season, scales = "free_x")
   }
-  p
 
   ggsave(paste0(figure_dir, "sex_ratio_resid.png"), p, height = 9, width = 9)
 }

@@ -220,8 +220,7 @@ plot_cpue <- function(object,
            RelSD = CV * RelCPUE)
   rel_pcpue <- pcpue %>%
     group_by(Iteration, Region, Season, qtype, CPUE_name) %>%
-    mutate(MeanCPUE = influ2::geo_mean(CPUE),
-           RelCPUE = CPUE / MeanCPUE)
+    mutate(MeanCPUE = influ2::geo_mean(CPUE), RelCPUE = CPUE / MeanCPUE)
 
   p <- ggplot(data = rel_ocpue) +
     geom_point(aes(x = Year, y = RelCPUE), color = "red", alpha = 0.75) +
@@ -238,10 +237,10 @@ plot_cpue <- function(object,
   }
   if (data$n_area > 1) {
     p <- p + facet_grid(Season ~ CPUE_name+Region+qtype, scales = "free")
-    ggsave(paste0(figure_dir, "rel_cpue.png"), p, height = 10, width = 15)
+    ggsave(paste0(figure_dir, "cpue_rel.png"), p, height = 10, width = 15)
   } else {
     p <- p + facet_grid(Season ~ CPUE_name, scales = "free")
-    ggsave(paste0(figure_dir, "rel_cpue.png"), p, height = 9, width = 12)
+    ggsave(paste0(figure_dir, "cpue_rel.png"), p, height = 9, width = 12)
   }
 
   ## separate by series

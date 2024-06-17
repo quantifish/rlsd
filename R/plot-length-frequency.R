@@ -13,6 +13,7 @@
 #' @importFrom stats quantile
 #' @importFrom forcats fct_rev
 #' @importFrom ggridges geom_density_ridges
+#' @importFrom compResidual rdirichlet
 #' @export
 #'
 plot_lfs <- function(object,
@@ -90,9 +91,14 @@ plot_lfs <- function(object,
   pplf <- mcmc$pred_lf_il
   dimnames(pplf) <- list("Iteration" = 1:n_iter, "LF" = 1:data$n_lf, "Size" = bins)
   for (i in 1:n_iter) {
-    prob <- pplf[i,,]
-    N <- ceiling(rawW$rawW)
-    df <- t(mapply(rmultinom, n = 1, size = N, prob = split(x = prob, f = c(row(prob)))))
+    if (data$like_lf == 1) {
+      prob <- pplf[i,,]
+      N <- ceiling(rawW$rawW)
+      df <- t(mapply(rmultinom, n = 1, size = N, prob = split(x = prob, f = c(row(prob)))))
+    } else {
+      alpha <- pplf[i,,] * rawW$rawW
+      df <- t(mapply(rdirichlet, n = 1, alpha = split(x = alpha, f = c(row(alpha)))))
+    }
     df <- df / rowSums(df)
     pplf[i,,] <- df
   }

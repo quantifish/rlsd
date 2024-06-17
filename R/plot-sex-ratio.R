@@ -59,9 +59,14 @@ plot_sex_ratio <- function(object, scales = "free",
     # Posterior predictive distribution
     psexr3 <- mcmc$pred_sex_ratio_is
     for (i in 1:n_iter) {
-      prob <- mcmc$pred_sex_ratio_is[i,,]
-      N <- ceiling(1 / mcmc$sigma_sex_ratio_i[i,])
-      df <- t(mapply(rmultinom, n = 1, size = N, prob = split(x = prob, f = c(row(prob)))))
+      if (data$like_lf == 1) {
+        prob <- mcmc$pred_sex_ratio_is[i,,]
+        N <- ceiling(1 / mcmc$sigma_sex_ratio_i[i,])
+        df <- t(mapply(rmultinom, n = 1, size = N, prob = split(x = prob, f = c(row(prob)))))
+      } else {
+        alpha <- mcmc$pred_sex_ratio_is[i,,] * 1 / mcmc$sigma_sex_ratio_i[i,]
+        df <- t(mapply(rdirichlet, n = 1, alpha = split(x = alpha, f = c(row(alpha)))))
+      }
       df <- df / rowSums(df)
       psexr3[i,,] <- df
     }
@@ -110,7 +115,8 @@ plot_sex_ratio <- function(object, scales = "free",
   P2 <- colMeans(psexr2[,,2])
   P3 <- colMeans(psexr2[,,3])
   P <- bind_cols(P1, P2, P3) %>% as.matrix()
-  res <- resMulti(t(X), t(P)) %>% t()
+  if (like_lf == 1) res <- resMulti(obs = t(X), pred = t(P)) %>% t()
+  if (like_lf == 2) res <- resDir(obs = t(X), alpha = t(P)) %>% t()
   colnames(res) <- sex[1:2]
 
   resid <- melt(res[1:nrow(X),]) %>%

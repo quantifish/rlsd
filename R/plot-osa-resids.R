@@ -72,7 +72,8 @@ plot_lfs_resid_OSA <- function(object, figure_dir = "figure/") {
     P <- P0 %>%
       select(as.character(ilim$lower[1]):as.character(ilim$upper[1])) %>%
       as.matrix()
-    res[[i]] <- resMulti(t(X), t(P)) %>% t()
+    if (like_lf == 1) res[[i]] <- resMulti(obs = t(X), pred = t(P)) %>% t()
+    if (like_lf == 2) res[[i]] <- resDir(obs = t(X), alpha = t(P)) %>% t()
     colnames(res[[i]]) <- colnames(P)[1:(ncol(P) - 1)]
     df[[i]] <- bind_cols(lb, res[[i]]) %>% pivot_longer(cols = !LF:upper, names_to = "Size")
   }

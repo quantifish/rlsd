@@ -82,11 +82,11 @@ plot_lfs_resid_OSA <- function(object, figure_dir = "figure/") {
     mutate(Sex = factor(Sex, levels = sex), pos = ifelse(value < 0, 1, 0), abs = abs(value))
 
   plot(res[[1]])
-  ggsave(paste0(figure_dir, "lf_residuals_MM.png"), p, width = 7, height = 10)
+  ggsave(filename = paste0(figure_dir, "lf_residuals_MM.png"), width = 7, height = 10)
   plot(res[[2]])
-  ggsave(paste0(figure_dir, "lf_residuals_IF.png"), p, width = 7, height = 10)
+  ggsave(filename = paste0(figure_dir, "lf_residuals_IF.png"), width = 7, height = 10)
   plot(res[[3]])
-  ggsave(paste0(figure_dir, "lf_residuals_MF.png"), p, width = 7, height = 10)
+  ggsave(filename = paste0(figure_dir, "lf_residuals_MF.png"), width = 7, height = 10)
 
   p <- ggplot(data = resid, aes(x = factor(Year), y = value, alpha = 0.75, fill = Region, color = Region)) +
     geom_hline(aes(yintercept = -2), linetype = 2) +
@@ -102,7 +102,7 @@ plot_lfs_resid_OSA <- function(object, figure_dir = "figure/") {
   } else {
     p <- p + facet_grid(Region ~ .)
   }
-  ggsave(paste0(figure_dir, "lf_residuals_year.png"), p, width = 7, height = 10)
+  ggsave(filename = paste0(figure_dir, "lf_residuals_year.png"), plot = p, width = 7, height = 10)
 
   p <- ggplot(data = resid, aes(x = factor(Size), y = value, alpha = 0.75, fill = Region, color = Region)) +
     geom_hline(aes(yintercept = -2), linetype = 2) +
@@ -118,7 +118,7 @@ plot_lfs_resid_OSA <- function(object, figure_dir = "figure/") {
   } else {
     p <- p + facet_grid(Sex ~ .)
   }
-  ggsave(paste0(figure_dir, "lf_residuals_size.png"), p, width = 16)
+  ggsave(filename = paste0(figure_dir, "lf_residuals_size.png"), plot = p, width = 16)
 
   p <- ggplot(data = resid, aes(x = factor(Year), y = value, alpha = 0.75, fill = Region, color = Region)) +
     geom_hline(aes(yintercept = -2), linetype = 2) +
@@ -134,7 +134,7 @@ plot_lfs_resid_OSA <- function(object, figure_dir = "figure/") {
   } else {
     p <- p + facet_grid(Sex ~ Season)
   }
-  ggsave(paste0(figure_dir, "lf_residuals_year_season.png"), p, width = 16)
+  ggsave(filename = paste0(figure_dir, "lf_residuals_year_season.png"), plot = p, width = 16)
 
   p <- ggplot(data = resid, aes(x = factor(Size), y = factor(Year))) +
     geom_point(aes(size = value, color = value), alpha = 0.85) +
@@ -151,5 +151,5 @@ plot_lfs_resid_OSA <- function(object, figure_dir = "figure/") {
   } else {
     p <- p + facet_grid(Sex ~ Season)
   }
-  ggsave(paste0(figure_dir, "lf_residuals_bubble.png"), p, width = 16)
+  ggsave(filename = paste0(figure_dir, "lf_residuals_bubble.png"), plot = p, width = 16)
 }

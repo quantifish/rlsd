@@ -111,9 +111,15 @@ plot_sex_ratio <- function(object, scales = "free",
   # Residual plot
   X <- data$data_sexr_obs_is
   psexr2 <- mcmc$pred_sex_ratio_is
-  P1 <- colMeans(psexr2[,,1])
-  P2 <- colMeans(psexr2[,,2])
-  P3 <- colMeans(psexr2[,,3])
+  if (n_iter > 1) {
+    P1 <- colMeans(psexr2[,,1])
+    P2 <- colMeans(psexr2[,,2])
+    P3 <- colMeans(psexr2[,,3])
+  } else {
+    P1 <- psexr2[,,1]
+    P2 <- psexr2[,,2]
+    P3 <- psexr2[,,3]
+  }
   P <- bind_cols(P1, P2, P3) %>% as.matrix()
   if (data$like_lf == 1) res <- resMulti(obs = t(X), pred = t(P)) %>% t()
   if (data$like_lf == 2) res <- resDir(obs = t(X), alpha = t(P)) %>% t()

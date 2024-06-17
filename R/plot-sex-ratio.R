@@ -115,8 +115,8 @@ plot_sex_ratio <- function(object, scales = "free",
   P2 <- colMeans(psexr2[,,2])
   P3 <- colMeans(psexr2[,,3])
   P <- bind_cols(P1, P2, P3) %>% as.matrix()
-  if (like_lf == 1) res <- resMulti(obs = t(X), pred = t(P)) %>% t()
-  if (like_lf == 2) res <- resDir(obs = t(X), alpha = t(P)) %>% t()
+  if (data$like_lf == 1) res <- resMulti(obs = t(X), pred = t(P)) %>% t()
+  if (data$like_lf == 2) res <- resDir(obs = t(X), alpha = t(P)) %>% t()
   colnames(res) <- sex[1:2]
 
   resid <- melt(res[1:nrow(X),]) %>%

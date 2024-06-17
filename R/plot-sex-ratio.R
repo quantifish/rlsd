@@ -11,111 +11,65 @@
 #' @import ggplot2
 #' @importFrom reshape2 melt
 #' @importFrom stats quantile
+#' @importFrom compResidual resMulti
 #' @export
 #'
 plot_sex_ratio <- function(object, scales = "free",
                            xlab = "Fishing year", ylab = "Proportion",
-                           figure_dir = "figure/")
-{
+                           figure_dir = "figure/") {
+
   data <- object@data
   map <- object@map
   mcmc <- object@mcmc
-
   seasons <- c("AW", "SS")
   sex <- c("Male", "Immature female", "Mature female")
   n_iter <- nrow(mcmc[[1]])
 
+  w <- data.frame(SexR = 1:data$n_sexr,
+                  Year = data$data_sexr_year_i,
+                  Season = data$data_sexr_season_i,
+                  Region = data$data_sexr_area_i,
+                  Sigma = map$sigma_sex_ratio_i[1,])
+
+  # Observed sex-ratio's
+  # osexr <- map$data_sex_ratio_out_is
+  osexr <- data$data_sexr_obs_is
+  dimnames(osexr) <- list("SexR" = 1:data$n_sexr, "Sex" = sex)
+  osexr <- melt(osexr) %>%
+    left_join(w, by = "SexR") %>%
+    mutate(EffN = 1 / Sigma, SD = sqrt(value * (1 - value) / EffN)) %>%
+    mutate(Season = seasons[Season])
+
   if (length(map) > 0) {
-    w <- data.frame(SexR = 1:data$n_sexr,
-                    Year = data$data_sexr_year_i,
-                    Season = data$data_sexr_season_i,
-                    Region = data$data_sexr_area_i,
-                    Sigma = map$sigma_sex_ratio_i[1,])
-
-    # Observed sex-ratio's
-    # osexr <- map$data_sex_ratio_out_is
-    osexr <- data$data_sexr_obs_is
-    dimnames(osexr) <- list("SexR" = 1:data$n_sexr, "Sex" = sex)
-    osexr <- melt(osexr) %>%
-      left_join(w, by = "SexR") %>%
-      mutate(EffN = 1 / Sigma, SD = sqrt(value * (1 - value) / EffN)) %>%
-      mutate(Season = seasons[Season])
-
-    # Predicted sex-ratio's
     psexr1 <- map$pred_sex_ratio_is
     dimnames(psexr1) <- list("Iteration" = 1, "SexR" = 1:data$n_sexr, "Sex" = sex)
     psexr1 <- melt(psexr1) %>%
       left_join(w, by = "SexR") %>%
       mutate(Season = seasons[Season])
-
-    rsexr1 <- map$resid_sex_ratio_is
-    dimnames(rsexr1) <- list("Iteration" = 1, "SexR" = 1:data$n_sexr, "Sex" = sex)
-    rsexr1 <- melt(rsexr1) %>%
-      left_join(w, by = "SexR") %>%
-      mutate(Season = seasons[Season])
   }
 
   if (length(mcmc) > 0) {
-    w <- data.frame(SexR = 1:data$n_sexr,
-                    Year = data$data_sexr_year_i,
-                    Season = data$data_sexr_season_i,
-                    Region = data$data_sexr_area_i,
-                    Sigma = map$sigma_sex_ratio_i[1,])
-
-    # Observed sex-ratio's
-    # osexr <- map$data_sex_ratio_out_is
-    osexr <- data$data_sexr_obs_is
-    dimnames(osexr) <- list("SexR" = 1:data$n_sexr, "Sex" = sex)
-    osexr <- melt(osexr) %>%
-      left_join(w, by = "SexR") %>%
-      mutate(EffN = 1 / Sigma, SD = sqrt(value * (1 - value) / EffN)) %>%
-      mutate(Season = seasons[Season])
-
+    # Posterior distribution
     psexr2 <- mcmc$pred_sex_ratio_is
     dimnames(psexr2) <- list("Iteration" = 1:n_iter, "SexR" = 1:data$n_sexr, "Sex" = sex)
     psexr2 <- melt(psexr2) %>%
       left_join(w, by = "SexR") %>%
       mutate(Season = seasons[Season])
 
-    rsexr2 <- mcmc$resid_sex_ratio_is
-    dimnames(rsexr2) <- list("Iteration" = 1:n_iter, "SexR" = 1:data$n_sexr, "Sex" = sex)
-    rsexr2 <- melt(rsexr2) %>%
+    # Posterior predictive distribution
+    psexr3 <- mcmc$pred_sex_ratio_is
+    for (i in 1:n_iter) {
+      prob <- mcmc$pred_sex_ratio_is[i,,]
+      N <- ceiling(1 / mcmc$sigma_sex_ratio_i[i,])
+      df <- t(mapply(rmultinom, n = 1, size = N, prob = split(x = prob, f = c(row(prob)))))
+      df <- df / rowSums(df)
+      psexr3[i,,] <- df
+    }
+    dimnames(psexr3) <- list("Iteration" = 1:n_iter, "SexR" = 1:data$n_sexr, "Sex" = sex)
+    psexr3 <- melt(psexr3) %>%
       left_join(w, by = "SexR") %>%
       mutate(Season = seasons[Season])
   }
-
-  # sex residuals
-  p <- ggplot(rsexr2) +
-    geom_hline(yintercept = 0, alpha = 0.2) +
-    # expand_limits(y = 0) +
-    labs(x = xlab, y = "Standardised residual") +
-    theme_lsd()  +
-    guides(alpha = FALSE) +
-    theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-    geom_hline(aes(yintercept = -2), linetype = 2) +
-    geom_hline(aes(yintercept = 2), linetype = 2)
-
-
-  if (n_iter > 10) {
-    p <- p + 
-    geom_violin(aes(x = as.factor(.data$Year), y = .data$value, alpha = .data$Sigma), fill = "tomato", color = "tomato") +
-      scale_alpha(range = c(1, 0.1)) +
-        scale_x_discrete(breaks = pretty_breaks()) 
-  } else {
-    p <- p + 
-    geom_point(aes(x = .data$Year, y = .data$value, size = .data$Sigma), alpha = 0.75, color = "tomato") +
-    scale_x_continuous(breaks = pretty_breaks()) 
-
-  }
-
-  if (data$n_area == 1) {
-    p <- p + facet_grid(Sex ~ Season, scales = "free_x")
-  } else {
-    p <- p + facet_grid(Sex ~ Region + Season, scales = "free_x")
-  }
-
-  ggsave(paste0(figure_dir, "sex_ratio_resid.png"), p, height = 9, width = 9)
-
 
   if (length(mcmc) > 0) {
     p <- ggplot(data = psexr2, aes(x = .data$Year, y = .data$value))
@@ -124,8 +78,8 @@ plot_sex_ratio <- function(object, scales = "free",
   }
 
   if (length(mcmc) > 0) {
-    p <- p + stat_summary(data = psexr2, aes(x = .data$Year, y = .data$value), fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
-      stat_summary(data = psexr2, aes(x = .data$Year, y = .data$value), fun.min = function(x) quantile(x, 0.25), fun.max = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.5, colour = NA) +
+    p <- p + stat_summary(data = psexr3, aes(x = .data$Year, y = .data$value), fun.min = function(x) quantile(x, 0.025), fun.max = function(x) quantile(x, 0.975), geom = "ribbon", alpha = 0.25, colour = NA) +
+      stat_summary(data = psexr2, aes(x = .data$Year, y = .data$value), fun.min = function(x) quantile(x, 0.025), fun.max = function(x) quantile(x, 0.975), geom = "ribbon", alpha = 0.5, colour = NA) +
       stat_summary(data = psexr2, aes(x = .data$Year, y = .data$value), fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1)
   }
 
@@ -133,17 +87,13 @@ plot_sex_ratio <- function(object, scales = "free",
     p <- p + geom_line(data = psexr1, aes(x = .data$Year, y = .data$value), linetype = 2)
   }
 
-    p <- p + geom_point(data = osexr, aes(x = .data$Year, y = .data$value), color = "tomato") +
-        geom_linerange(data = osexr, aes(x = .data$Year, ymin = .data$value - .data$SD, ymax = .data$value + .data$SD), color = "tomato", alpha = 0.75) +
-        scale_y_continuous(expand = c(0,0)) +
-        coord_cartesian(ylim = c(0, 1)) +
-        xlab(xlab) +
-        ylab(ylab) +
-        theme_lsd() +
-        theme(axis.text.x = element_text(angle = 45,hjust = 1),
-            panel.spacing.y = unit(2, "lines")) +
-        scale_x_continuous(breaks = pretty_breaks()) 
-
+  p <- p + geom_point(data = osexr, aes(x = .data$Year, y = .data$value), color = "tomato") +
+    geom_linerange(data = osexr, aes(x = .data$Year, ymin = .data$value - .data$SD, ymax = .data$value + .data$SD), color = "tomato", alpha = 0.75) +
+    scale_y_continuous(expand = c(0, 0)) +
+    coord_cartesian(ylim = c(0, 1)) +
+    labs(x = xlab, y = ylab) +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1), panel.spacing.y = unit(2, "lines")) +
+    scale_x_continuous(breaks = pretty_breaks())
 
   if (data$n_area == 1) {
     p <- p + facet_grid(Sex ~ Season, scales = "free_x")
@@ -152,4 +102,40 @@ plot_sex_ratio <- function(object, scales = "free",
   }
 
   ggsave(paste0(figure_dir, "sex_ratio.png"), p)
+
+  # Residual plot
+  X <- data$data_sexr_obs_is
+  psexr2 <- mcmc$pred_sex_ratio_is
+  P1 <- colMeans(psexr2[,,1])
+  P2 <- colMeans(psexr2[,,2])
+  P3 <- colMeans(psexr2[,,3])
+  P <- bind_cols(P1, P2, P3) %>% as.matrix()
+  res <- resMulti(t(X), t(P)) %>% t()
+  colnames(res) <- sex[1:2]
+
+  resid <- melt(res[1:nrow(X),]) %>%
+    rename(SexR = Var1, Sex = Var2) %>%
+    left_join(w, by = "SexR") %>%
+    mutate(Season = seasons[Season]) %>%
+    mutate(pos = ifelse(value < 0, 1, 0), abs = abs(value))
+
+  p <- ggplot(data  = resid, aes(x = .data$Year, y = .data$value, size = .data$Sigma)) +
+    geom_hline(yintercept = 0, alpha = 0.2) +
+    labs(x = xlab, y = "OSA residual") +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+    geom_hline(aes(yintercept = -2), linetype = 2) +
+    geom_hline(aes(yintercept = 2), linetype = 2) +
+    scale_x_continuous(breaks = pretty_breaks()) +
+    geom_point(aes(color = Season), alpha = 0.75) +
+    scale_color_hue(direction = -1) +
+    scale_size_area()
+
+  if (data$n_area == 1) {
+    p <- p + facet_grid(Sex ~ Season, scales = "free_x")
+  } else {
+    p <- p + facet_grid(Sex ~ Region + Season, scales = "free_x")
+  }
+  p
+
+  ggsave(paste0(figure_dir, "sex_ratio_resid.png"), p, height = 9, width = 9)
 }

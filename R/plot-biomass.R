@@ -16,8 +16,7 @@ plot_ssb_recruitment <- function(object,
                                  scales = "free_x",
                                  show_map = TRUE,
                                  xlab = "Spawning stock biomass (tonnes)",
-                                 figure_dir = "figure/")
-{
+                                 figure_dir = "figure/") {
   data <- object@data
   map <- object@map
   mcmc <- object@mcmc
@@ -218,7 +217,6 @@ plot_vulnref_AW <- function(object,
     vb <- mcmc$biomass_vulnref_AW_jyr
     dimnames(vb) <- list(Iteration = 1:n_iter, Rule = 1:n_rules, Year = data$first_yr:data$last_proj_yr, Region = regions)
     vb <- melt(vb, value.name = "VB")
-
     # VB0 <- mcmc$B0_r
     # dimnames(VB0) <- list("Iteration" = 1:n_iter, "Region" = regions2)
     Bref <- mcmc$Bref_jr
@@ -507,24 +505,10 @@ plot_vulnerable_biomass <- function(object,
       mutate(Season = as.character(.data$Season), Season = ifelse(.data$Year >= data$season_change_yr, .data$Season, YR)) %>%
       group_by(.data$Iteration, .data$Rule, .data$Year, .data$Season, .data$Region) %>%
       summarise(value = sum(.data$value))
-
-    # Bmsy1 <- map$Bmsy_r
-    # dimnames(Bmsy1) <- list("Iteration" = 1, "Region" = regions)
-    # Bmsy1 <- melt(Bmsy1) %>%
-    #   left_join(expand.grid(Iteration = 1, Year = years), by = "Iteration") %>%
-    #   mutate(Season = "AW") %>%
-    #   group_by(Iteration, Region, value, Year, Season)
-    # Bref1 <- map$Bref_jr
-    # dimnames(Bref1) <- list("Iteration" = 1, "Rule" = 1:n_rules, "Region" = regions)
-    # Bref1 <- melt(Bref1) %>%
-    #   left_join(expand.grid(Iteration = 1, Year = years), by = "Iteration") %>%
-    #   mutate(Season = "AW") %>%
-    #   group_by(Iteration, Region, value, Year, Season)
   }
 
   if (length(mcmc) > 0 & show_mcmc) {
     n_iter <- nrow(mcmc[[1]])
-
     vb2 <- mcmc$biomass_vuln_jytrs
     dimnames(vb2) <- list("Iteration" = 1:n_iter, "Rule" = 1:n_rules, "Year" = pyears, "Season" = seasons, "Region" = regions, Sex = sex)
     vb2 <- melt(vb2) %>%
@@ -532,19 +516,6 @@ plot_vulnerable_biomass <- function(object,
       mutate(Season = as.character(.data$Season), Season = ifelse(.data$Year >= data$season_change_yr, .data$Season, YR)) %>%
       group_by(.data$Iteration, .data$Rule, .data$Year, .data$Season, .data$Region) %>%
       summarise(value = sum(.data$value))
-
-    # Bmsy <- mcmc$Bmsy_r
-    # dimnames(Bmsy) <- list("Iteration" = 1:n_iter, "Region" = regions2)
-    # Bmsy <- melt(Bmsy) %>%
-    #   left_join(expand.grid(Iteration = 1:n_iter, Year = years), by = "Iteration") %>%
-    #   mutate(Season = "AW") %>%
-    #   group_by(Iteration, Region, value, Year, Season)
-    # Bref <- mcmc$Bref_jr
-    # dimnames(Bref) <- list("Iteration" = 1:n_iter, "Rule" = 1:n_rules, "Region" = regions2)
-    # Bref <- melt(Bref) %>%
-    #   left_join(expand.grid(Iteration = 1:n_iter, Year = years), by = "Iteration") %>%
-    #   mutate(Season = "AW") %>%
-    #   group_by(Iteration, Region, value, Year, Season)
   }
 
   # vulnerable biomass

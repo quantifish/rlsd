@@ -195,7 +195,7 @@ plot_cpue <- function(object,
     geom_linerange(aes(x = Year, ymin = exp(log(CPUE) - SD), ymax = exp(log(CPUE) + SD)), color = "red", alpha = 0.75) +
     scale_y_continuous(limits = c(0, NA), expand = expansion(mult = c(0, 0.1))) +
     scale_x_continuous(breaks = pretty_breaks()) +
-    xlab(xlab) + ylab(ylab) +
+    labs(x = xlab, y = ylab) +
     theme_lsd() +
     theme(axis.text.x = element_text(angle = 45, hjust = 1))
   if (!is.null(pcpue)) {
@@ -204,14 +204,14 @@ plot_cpue <- function(object,
       stat_summary(data = pcpue, aes(x = Year, y = CPUE), fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1)
   }
   if (data$n_area > 1) {
-    p <- p + facet_wrap(Season ~ CPUE_name+Region+qtype, scales = "free", nrow = data$n_area)
+    p <- p + facet_wrap(Season ~ CPUE_name + Region + qtype, scales = "free", nrow = data$n_area)
     ggsave(paste0(figure_dir, "cpue.png"), p, height = 10, width = 15)
   } else {
     p <- p + facet_wrap(Season ~ CPUE_name, scales = "free", nrow = length(unique(ocpue$Season)))
     ggsave(paste0(figure_dir, "cpue.png"), p, height = 9, width = 12)
   }
 
-  ## relative scale cpue
+  # Relative scale CPUE
   rel_ocpue <- ocpue %>%
     group_by(Region, Season, qtype, CPUE_name) %>%
     mutate(MeanCPUE = influ2::geo_mean(CPUE),
@@ -358,14 +358,13 @@ plot_cpue <- function(object,
     #   p <- p + geom_line(data = pcpue1_lb, aes(x = Year, y = CPUE), linetype = 2)
     # }
     if (length(unique(ocpue_lb$Region)) > 1) {
-      p <- p + facet_wrap(qtype+Region~Season, scales = "free", ncol = data$n_area)
+      p <- p + facet_wrap(qtype + Region ~ Season, scales = "free", ncol = data$n_area)
       ggsave(paste0(figure_dir, "cpue_Logbook.png"), p, height = 14, width = 15)
     } else {
       p <- p + facet_wrap(qtype~Season, scales = "free_y", ncol = data$n_area)
       ggsave(paste0(figure_dir, "cpue_Logbook.png"), p, height = 11, width = 12)
     }
   }
-
 
   # CS
   ocpue_lb <- ocpue %>% filter(CPUE_name == "CS")  %>%
@@ -516,7 +515,7 @@ plot_cpue <- function(object,
         scale_x_continuous(breaks = pretty_breaks())
     }
     if (length(unique(rcpue_lb$Region)) > 1) {
-      p <- p + facet_wrap(qtype+Region ~ Season, scales = "free", ncol = data$n_area)
+      p <- p + facet_wrap(qtype + Region ~ Season, scales = "free", ncol = data$n_area)
     } else {
       p <- p + facet_wrap(qtype ~ Season, scales = "free_y", ncol = data$n_area)
     }

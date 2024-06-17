@@ -38,13 +38,13 @@ plot_lfs_resid_OSA <- function(object, figure_dir = "figure/") {
   dimnames(dlf) <- list("Iteration" = 1:n_iter, "LF" = 1:data$n_lf, "Size" = bins)
   dlf <- melt(dlf) %>%
     left_join(w, by = "LF") %>%
-    # filter(Iteration == 1) %>%
-    # select(-Iteration) %>%
+    filter(Iteration == 1) %>%
+    select(-Iteration) %>%
     left_join(lim, by = c("LF")) %>%
     mutate(Season = seasons[Season], Sex = sex[Sex]) %>%
     pivot_wider(names_from = Size, values_from = value) %>%
-    arrange(Iteration, LF, Year, Season, Region, Sex)
-  tail(dlf)
+    ungroup() %>%
+    arrange(LF, Year, Season, Region, Sex)
 
   # Predicted LF
   plf <- mcmc$pred_lf_il
@@ -54,33 +54,38 @@ plot_lfs_resid_OSA <- function(object, figure_dir = "figure/") {
     left_join(lim, by = c("LF")) %>%
     mutate(Season = seasons[Season], Sex = sex[Sex]) %>%
     pivot_wider(names_from = Size, values_from = value) %>%
-    arrange(Iteration, LF, Year, Season, Region, Sex)
-  tail(plf)
+    select(-Iteration) %>%
+    group_by(LF, Year, Season, Region, Sex, lower, upper) %>%
+    summarise(across(everything(), mean, na.rm = TRUE)) %>%
+    ungroup() %>%
+    arrange(LF, Year, Season, Region, Sex)
 
-  # library(compResidual)
   res <- df <- list()
-  for (i in 1:3) {
+  for (i in 1:length(sex)) {
     X0 <- dlf %>% filter(Sex == sex[i])
     P0 <- plf %>% filter(Sex == sex[i])
     ilim <- X0 %>% select(lower, upper) %>% distinct()
-    lb <- P0 %>% select(Iteration, LF, Year, Season, Region, Sex, lower, upper)
+    lb <- P0 %>% select(LF, Year, Season, Region, Sex, lower, upper)
     X <- X0 %>%
       select(as.character(ilim$lower[1]):as.character(ilim$upper[1])) %>%
       as.matrix()
     P <- P0 %>%
-      # filter(Iteration == 1) %>%
       select(as.character(ilim$lower[1]):as.character(ilim$upper[1])) %>%
       as.matrix()
     res[[i]] <- resMulti(t(X), t(P)) %>% t()
     colnames(res[[i]]) <- colnames(P)[1:(ncol(P) - 1)]
-    df[[i]] <- bind_cols(lb, res[[i]]) %>% pivot_longer(cols = !Iteration:upper, names_to = "Size")
+    df[[i]] <- bind_cols(lb, res[[i]]) %>% pivot_longer(cols = !LF:upper, names_to = "Size")
   }
 
-  # plot(res[[1]])
-  # plot(res[[2]])
-  # plot(res[[3]])
   resid <- bind_rows(df) %>%
-    mutate(Sex = factor(Sex, levels = sex))
+    mutate(Sex = factor(Sex, levels = sex), pos = ifelse(value < 0, 1, 0), abs = abs(value))
+
+  plot(res[[1]])
+  ggsave(paste0(figure_dir, "lf_residuals_MM.png"), p, width = 7, height = 10)
+  plot(res[[2]])
+  ggsave(paste0(figure_dir, "lf_residuals_IF.png"), p, width = 7, height = 10)
+  plot(res[[3]])
+  ggsave(paste0(figure_dir, "lf_residuals_MF.png"), p, width = 7, height = 10)
 
   p <- ggplot(data = resid, aes(x = factor(Year), y = value, alpha = 0.75, fill = Region, color = Region)) +
     geom_hline(aes(yintercept = -2), linetype = 2) +
@@ -92,9 +97,9 @@ plot_lfs_resid_OSA <- function(object, figure_dir = "figure/") {
     guides(fill = 'none', color = "none") +
     scale_alpha(guide = "none")
   if (length(regions) > 1) {
-    p <- p + facet_grid(Region ~ .)
-  } else {
     p <- p + facet_grid(Sex ~ Region)
+  } else {
+    p <- p + facet_grid(Region ~ .)
   }
   ggsave(paste0(figure_dir, "lf_residuals_year.png"), p, width = 7, height = 10)
 
@@ -108,9 +113,42 @@ plot_lfs_resid_OSA <- function(object, figure_dir = "figure/") {
     guides(fill = 'none', color = "none") +
     scale_alpha(guide = "none")
   if (length(regions) > 1) {
-    p <- p + facet_grid(Region ~ .)
-  } else {
     p <- p + facet_grid(Sex ~ Region)
+  } else {
+    p <- p + facet_grid(Sex ~ .)
   }
   ggsave(paste0(figure_dir, "lf_residuals_size.png"), p, width = 16)
+
+  p <- ggplot(data = resid, aes(x = factor(Year), y = value, alpha = 0.75, fill = Region, color = Region)) +
+    geom_hline(aes(yintercept = -2), linetype = 2) +
+    geom_hline(aes(yintercept = 2), linetype = 2) +
+    geom_hline(yintercept = 0, alpha = 0.8) +
+    geom_violin(scale = "width", draw_quantiles = 0.5) +
+    scale_x_discrete(breaks = rev(seq(max(years), by = -2))) +
+    labs(x = "Midpoint of size-class (mm)", y = "OSA residuals") +
+    guides(fill = 'none', color = "none") +
+    scale_alpha(guide = "none")
+  if (length(regions) > 1) {
+    p <- p + facet_grid(Sex ~ Region + Season)
+  } else {
+    p <- p + facet_grid(Sex ~ Season)
+  }
+  ggsave(paste0(figure_dir, "lf_residuals_year_season.png"), p, width = 16)
+
+  p <- ggplot(data = resid, aes(x = factor(Size), y = factor(Year))) +
+    geom_point(aes(size = value, color = value), alpha = 0.85) +
+    # scale_color_continuous(limits = c(min(resid$value), max(resid$value)), breaks = seq(-2, 2, by = 1), type = "viridis") +
+    scale_color_gradient2(midpoint = 0, mid = "#eee8d5", high = "#dc322f", low = "#268bd2", limits = c(min(resid$value), max(resid$value)), breaks = seq(-2, 2, by = 1)) +
+    # scale_size_continuous(limits = c(min(resid$value), max(resid$value)), breaks = seq(-2, 2, by = 1)) +
+    scale_size_area(max_size = 4, limits = c(min(resid$value), max(resid$value)), breaks = seq(-2, 2, by = 1)) +
+    scale_y_discrete(breaks = rev(seq(max(years), by = -2))) +
+    labs(x = "Midpoint of size-class (mm)", y = "Year",
+         size = "OSA residual", color = "OSA residual", fill = "OSA residual") +
+    guides(color = guide_legend(), size = guide_legend())
+  if (length(regions) > 1) {
+    p <- p + facet_grid(Sex ~ Region + Season)
+  } else {
+    p <- p + facet_grid(Sex ~ Season)
+  }
+  ggsave(paste0(figure_dir, "lf_residuals_bubble.png"), p, width = 16)
 }

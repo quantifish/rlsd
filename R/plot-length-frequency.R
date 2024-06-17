@@ -179,8 +179,8 @@ plot_lfs <- function(object,
   for (i in 1:data$n_area) {
     for (j in unique(dlfw$Season)) {
       p <- ggplot(data = filter(dlfw, Region %in% i, Season == j, Size >= lower & Size <= upper), aes(x = Size, y = fct_rev(paste(Year)), height = value, alpha = rawW2)) +
-        ggridges::geom_density_ridges(stat = "identity", scale = 3.5) +
-        xlab(xlab) + ylab(ylab) +
+        geom_density_ridges(stat = "identity", scale = 3.5) +
+        labs(x = xlab, y = ylab) +
         guides(shape = "none", colour = "none") +
         scale_x_continuous(minor_breaks = seq(0, 1e6, 2), limits = c(30, max(dlfw$upper)), expand = c(0, 0)) +
         scale_y_discrete(expand = c(0, 0)) +

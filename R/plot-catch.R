@@ -56,11 +56,10 @@ plot_catch_rule <- function(object,
     labs(x = xlab, y = ylab) +
     scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
     scale_y_continuous(expand = expansion(mult = c(0, 0.05)), limits = c(0, NA)) +
-    theme_lsd() #+
-    # theme(axis.text.x = element_text(angle = 45, hjust = 1))
+    theme_lsd()
 
   if (save_plot) {
-    ggsave(paste0(figure_dir, "catch_rule.png"), p2)
+    ggsave(filename = paste0(figure_dir, "catch_rule.png"), plot = p2)
   } else {
     return(p2)
   }
@@ -124,13 +123,11 @@ plot_catch <- function(object,
   # Catch
   comm <- data$data_catch_commercial_ryt
   dimnames(comm) <- list("Region" = regions, "Year" = years, "Season" = seasons)
-  comm <- melt(comm, value.name = "Catch") %>%
-    mutate(Sector = "Commercial")
+  comm <- melt(comm, value.name = "Catch") %>% mutate(Sector = "Commercial")
 
   rec <- data$data_catch_recreational_ryt
   dimnames(rec) <- list("Region" = regions, "Year" = years, "Season" = seasons)
-  rec <- melt(rec, value.name = "Catch") %>%
-    mutate(Sector = "Recreational")
+  rec <- melt(rec, value.name = "Catch") %>% mutate(Sector = "Recreational")
 
   dsl <- rbind(comm, rec) %>%
     mutate(Iteration = NA, Type = "SL", Data = "Observed")
@@ -201,8 +198,7 @@ plot_catch <- function(object,
     labs(x = xlab, y = ylab) +
     scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
     scale_y_continuous(expand = expansion(mult = c(0, 0.05)), limits = c(0, NA)) +
-    theme_lsd() #+
-    # theme(axis.text.x = element_text(angle = 45,hjust = 1))
+    theme_lsd()
 
   if (data$n_area > 1) {
     p1 <- p1 + facet_grid(Region + Type ~ Season, scales = "free")
@@ -236,8 +232,7 @@ plot_catch <- function(object,
     xlab(xlab) + ylab(ylab) +
     scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1)) +
     scale_y_continuous(expand = expansion(mult = c(0, 0.05)), limits = c(0, NA)) +
-    theme_lsd() #+
-    # theme(axis.text.x = element_text(angle = 45, hjust = 1))
+    theme_lsd()
 
   if (data$n_area > 1) {
     p2 <- p2 + facet_grid(Region ~ Type, scales = scales)
@@ -264,8 +259,7 @@ plot_catch <- function(object,
     stat_summary(fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1) +
     scale_y_continuous(expand = expansion(mult = c(0, 0.05)), limits = c(0, NA)) +
     xlab(xlab) + ylab("Residual") +
-    theme_lsd() #+
-    # theme(axis.text.x = element_text(angle = 45, hjust = 1))
+    theme_lsd()
 
   p3 <- p3 + facet_grid(Region + Type ~ Season, scales = "free")
 
@@ -290,7 +284,7 @@ plot_catch <- function(object,
 
   # add msy
   p4 <- p4 +
-    stat_summary(aes(x = Year, y = MSY), fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.125, colour = "black", fill = "black" ) +
+    stat_summary(aes(x = Year, y = MSY), fun.min = function(x) quantile(x, 0.025), fun.max = function(x) quantile(x, 0.975), geom = "ribbon", alpha = 0.125, colour = "black", fill = "black" ) +
     stat_summary(aes(x = Year, y = MSY), fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1) +
     geom_label_repel(data = dcatch2, aes(x = Year, y = MSY, label = Label), fill = "black", size = 5, color = 'white', force = 10, segment.color = '#bbbbbb', min.segment.length = unit(0, "lines"))
 
@@ -308,12 +302,12 @@ plot_catch <- function(object,
 #'
 plot_catch_save <- function(object, figure_dir = "figure/") {
   p <- plot_catch(object, show_proj = FALSE)
-  ggsave(paste0(figure_dir, "catch.png"), p[[1]], width = 10, height = 8)
-  ggsave(paste0(figure_dir, "catch_sums.png"), p[[2]])
-  ggsave(paste0(figure_dir, "catch_resid.png"), p[[3]])
-  ggsave(paste0(figure_dir, "catch_type.png"), p[[4]], width = 10)
+  ggsave(filename = paste0(figure_dir, "catch.png"), plot = p[[1]], width = 10, height = 8)
+  ggsave(filename = paste0(figure_dir, "catch_sums.png"), plot = p[[2]])
+  ggsave(filename = paste0(figure_dir, "catch_resid.png"), plot = p[[3]])
+  ggsave(filename = paste0(figure_dir, "catch_type.png"), plot = p[[4]], width = 10)
 
   p <- plot_catch(object, show_proj = TRUE)
-  ggsave(paste0(figure_dir, "catch_v2.png"), p[[1]], width = 10, height = 8)
-  ggsave(paste0(figure_dir, "catch_sums_v2.png"), p[[2]])
+  ggsave(filename = paste0(figure_dir, "catch_v2.png"), plot = p[[1]], width = 10, height = 8)
+  ggsave(filename = paste0(figure_dir, "catch_sums_v2.png"), plot = p[[2]])
 }

@@ -1683,12 +1683,103 @@ plot_compare_selectivity <- function(object_list, object_names, figure_dir = "co
     coord_cartesian(ylim = c(0, 1)) +
     xlab("Length bin") +
     theme_lsd(base_size = 14)
-
-  if (save_plot) {
-    ggsave(paste0(figure_dir, "selectivity_compare.png"), p, width = 10)
+  ggsave(paste0(figure_dir, "selectivity_compare.png"), p, width = 10)
+  
+  
+  ## selectivity * vulnerability
+  sex <- c("Male", "Immature female", "Mature female")
+  
+  vslist <- lapply(1:length(object_list), function(x) {
+    n_iter <- nrow(mcmc_list[[x]][[x]])
+    n_season <- data_list[[x]]$n_season
+    regions <- 1:data_list[[x]]$n_area
+    pyears <- pyears_list[[x]]
+    bins <- data_list[[x]]$size_midpoint_l
+    
+    if(any(grepl('which_vuln_rsyt', names(data_list[[x]])))){
+      wv <- data_list[[x]]$which_vuln_rsyt
+      dimnames(wv) <- list("Region" = paste0("Region ", regions), "Sex" = sex, "Year" = pyears, "Season" = 1:n_season)
+      wv <- melt(wv, value.name = "Vuln") %>% mutate(Region = as.integer(Region))
+    } else {
+      wv <- data_list[[x]]$which_vuln_rst
+      dimnames(wv) <- list("Region" = paste0("Region ", regions), "Sex" = sex, "Season" = 1:n_season)
+      wv <- melt(wv, value.name = "Vuln") %>% mutate(Region = as.integer(Region))
+    }
+    
+    if(any(grepl('vuln_sel', names(mcmc_list[[x]])))){
+      vs <- mcmc_list[[x]]$vuln_selectivity_ytrsl
+      dimnames(vs) <- list("Iteration" = 1:n_iter, "Year" = pyears, "Season" = 1:n_season, "Region" = regions, "Sex" = sex, "Size" = bins)
+      vs2 <- melt(vs) %>%
+        rename(SelVuln = value) %>%
+        inner_join(wv) %>%
+        mutate(Year = factor(.data$Year)) %>%
+        distinct(.data$Iteration, .data$Sex, .data$SelVuln, .data$Region, .data$Size, .keep_all = TRUE) %>%
+        select(-Vuln) %>%
+        mutate(Region = paste("Region", Region))
+    } else {
+      vi <- mcmc_list[[x]]$par_vuln_i
+      dimnames(vi) <- list(Iteration = 1:n_iter, Vuln = 1:max(wv$Vuln))
+      vi2 <- melt(vi)
+      
+      v2 <- wv %>%
+        left_join(vi2, relationship = 'many-to-many') %>%
+        rename(Vulnerability = value) %>%
+        distinct(Iteration, Sex, Season, Vuln, Vulnerability, .keep_all = TRUE) %>%
+        select(-Vuln) %>%
+        mutate(Region = paste("Region", Region))
+      
+      if(any(grepl('which_sel_rsyt', names(data_list[[x]])))){
+        w <- data_list[[x]]$which_sel_rsyt
+        dimnames(w) <- list("Region" = paste0("Region ", regions), "Sex" = sex, "Year" = pyears, "Season" = 1:n_season)
+        w <- melt(w, value.name = "Selex")
+      } else {
+        w <- data_list[[x]]$which_sel_rsy
+        dimnames(w) <- list("Region" = paste0("Region ", regions), "Sex" = sex, "Year" = pyears)
+        w <- melt(w, value.name = "Selex") %>% mutate(Season = 1)
+      }
+      
+      sel2 <- mcmc_list[[x]]$selectivity_ml
+      dimnames(sel2) <- list("Iteration" = 1:n_iter, "Selex" = 1:data_list[[x]]$n_sel, "Size" = data_list[[x]]$size_midpoint_l)
+      sel2 <- melt(sel2, value.name = "Selectivity") %>%
+        inner_join(w, by = "Selex", relationship = 'many-to-many') %>%
+        filter(Year <= max(pyears_list[[x]])) %>%
+        mutate(Year = factor(Year)) %>%
+        # mutate(Sex = ifelse(grepl("female", Sex), "Female", "Male")) %>%
+        distinct(Iteration, Sex, Size, Selectivity, Region, .keep_all = TRUE) %>% 
+        select(-Selex)
+      
+      vs2 <- left_join(sel2, v2) %>%
+        mutate(Vulnerability = ifelse(is.na(Vulnerability), 1, Vulnerability)) %>%
+        mutate(SelVuln = Selectivity * Vulnerability) %>%
+        select(-c(Vulnerability, Selectivity))
+    }
+    
+    vs2$Model <- object_names[[x]]
+      
+      return(vs2)
+    })
+  vsel <- do.call(rbind, vslist) %>%
+    mutate(Season = ifelse(Season == 2, "SS", "AW"))
+  vsel$Model <- factor(vsel$Model, levels = object_names)
+  vsel$Year <- factor(vsel$Year, levels = unique(vsel$Year)[order(unique(vsel$Year))])
+  
+  p <- ggplot(data = vsel, aes(x = .data$Size, y = .data$SelVuln, col = Model, fill = Model, linetype = .data$Year)) +
+    stat_summary(fun.min = function(x) quantile(x, 0.025), fun.max = function(x) quantile(x, 0.975), geom = "ribbon", alpha = 0.25, colour = NA) +
+    stat_summary(fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1) +
+    scale_y_continuous(expand = c(0, 0)) +
+    coord_cartesian(ylim = c(0, 1)) +
+    scale_fill_brewer(palette = "Set1") +
+    scale_color_brewer(palette = "Set1") +
+    labs(x = "Size", y = "Selectivity * Vulnerability") +
+    theme_lsd()
+  
+  if (length(unique(vsel$Region)) > 1) {
+    p <- p + facet_grid(.data$Region ~ .data$Sex + .data$Season)
   } else {
-    return(p)
+    p <- p + facet_grid(.data$Season ~ .data$Sex)
   }
+  ggsave(paste0(figure_dir, "selectivity_vuln_compare.png"), p, width = 10)
+  
 }
 
 
@@ -2126,17 +2217,30 @@ plot_compare_numbers <- function(object_list,
 
   year_rdev <- data_list[[1]]$last_rdev_yr
   year_proj <- max(pyears_list[[1]])
+  last_common_year <- max(as.numeric(names(table(unlist(years_list))[which(table(unlist(years_list)) == length(object_list))])))
+  
 
   num_df <- lapply(1:length(object_list), function(x) {
-    lf <- mcmc_list[[x]]$proj_numbers_jytrsl
-    dimnames(lf) <- list("Iteration" = 1:n_iter_list[[x]], "RuleNum" = 1:n_rules, "Year" = pyears_list[[x]], "Season" = c(seasons, "EOY"), "Region" = regions, "Sex" = sex, "Size" = bins)
+    
+    if(any(grepl("proj_numbers_j", names(mcmc_list[[x]])))){
+      lf <- mcmc_list[[x]]$proj_numbers_jytrsl    
+      dimnames(lf) <- list("Iteration" = 1:n_iter_list[[x]], "RuleNum" = 1:n_rules, "Year" = pyears_list[[x]], "Season" = c(seasons, "EOY"), "Region" = regions, "Sex" = sex, "Size" = bins)
+    } else {
+      lf <- mcmc_list[[x]]$numbers_ytrsl
+      dimnames(lf) <- list("Iteration" = 1:n_iter_list[[x]], "Year" = years_list[[x]], "Season" = c(seasons, "EOY"), "Region" = regions, "Sex" = sex, "Size" = bins)
+    }
+
     numbers_proj <- melt(lf, value.name = "N") %>%
-      filter(Year %in% c(year_rdev, year_proj)) %>%
+      filter(Year %in% c(year_rdev, year_proj, last_common_year)) %>%
       mutate(Region = as.character(Region)) %>%
       filter(Season == "AW") %>%
       select(-Season) %>%
       filter(Sex != "Immature female") %>%
       mutate(Model = object_names[[x]])
+    
+    if(any(grepl("RuleNum", colnames(numbers_proj))) == FALSE){
+      numbers_proj <- numbers_proj %>% mutate(RuleNum = 1)
+    }
     return(numbers_proj)
   })
   num_comp <- do.call(rbind, num_df)
@@ -2216,6 +2320,34 @@ plot_compare_numbers <- function(object_list,
   }
   ggsave(filename = file.path(figure_dir, "Numbers_final_proj_year.png"), plot = p, width = 12)
 
+  plot <- num_comp %>% filter(Year == last_common_year)
+  
+  p <- ggplot(data = plot, aes(x = Size, y = N/1000, color = Model, fill = Model)) +
+    # stat_summary(fun.min = function(x) quantile(x, 0.025), fun.max = function(x) quantile(x, 0.975), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
+    stat_summary(fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1) +
+    scale_y_continuous(expand = expansion(mult = c(0, 0.1))) +
+    geom_vline(data = mls %>% filter(Year == last_common_year, Season == "SS"), aes(xintercept = MLS, color = Model, linetype = Model), lwd = 1) +
+    xlab(xlab) + ylab(ylab) +
+    facet_wrap(~Sex) +
+    theme_lsd()
+  
+  if (length(unique(plot$Region)) > 1) {
+    p <- p + facet_grid(Region~Sex)
+  } else {
+    p <- p + facet_wrap(~Sex)
+  }
+  
+  if (nmod > 6) {
+    p <- p +
+      scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
+      scale_color_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod)))
+  } else {
+    p <- p +
+      scale_fill_brewer(palette = "Set1") +
+      scale_color_brewer(palette = "Set1")
+  }
+  ggsave(filename = file.path(figure_dir, "Numbers_final_last_common_year.png"), plot = p, width = 12)
+  
   return(p)
 }
 

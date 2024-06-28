@@ -548,7 +548,7 @@ if(length(object) == 1){
 
   rm(relb)
   # rm(relb2)
-  rm(catch)
+  # rm(catch)
   gc()
 
   rulepar <- paste0("par",1:10)

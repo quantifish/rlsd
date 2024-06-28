@@ -1372,7 +1372,7 @@ if(length(object) > 1){
   # write.csv(output3, file.path(figure_dir, "Summary_byPercentile.csv"))
 
   output4 <- output3 %>%
-    tidyr::pivot_wider(names_from = Percentile, values_from = Catch:VB0now)
+    tidyr::pivot_wider(names_from = Percentile, values_from = CPUE:VB0now)
   if(length(unique(output4$RuleType))==3) output4$RuleType <- factor(output4$RuleType, levels = c("FixedCatch","CPUE-based","FixedF"))
   const <- unique(as.character(output4$Constraint))
   const1 <- const[grepl("CV",const)==FALSE]

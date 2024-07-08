@@ -2452,7 +2452,7 @@ plot_compare_numbers <- function(object_list,
     facet_wrap(Sex ~ Morph) +
     scale_fill_brewer(palette = "Set1") +
     scale_color_brewer(palette = "Set1")
-  ggsave(paste0(figure_dir, "growth_increment.png"), p)
+  ggsave(paste0(figure_dir, "growth_increment.png"), p, height = 8, width = 10)
   
   
   return(p)

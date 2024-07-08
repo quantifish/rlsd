@@ -962,6 +962,28 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
   vb <- data.frame(do.call(rbind, vb_list))
   vb$Model <- factor(vb$Model)
   vb$qconstant <- factor(vb$qconstant)
+  
+  vb_list2 <- lapply(1:length(object_list), function(x) {
+    n_iter <- nrow(mcmc_list[[x]][[1]])
+    
+      bvuln_ytr <- mcmc_list[[x]]$biomass_vuln_jytrs
+      dimnames(bvuln_ytr) <- list("Iteration" = 1:n_iter, "Rules" = 1:rules_list[[x]], "Year" = pyears_list[[x]], "Season" = seasons, "Region" = regions_list[[x]], "Sex" = sex)
+      bvuln_ytr2 <- melt(bvuln_ytr) %>%
+        filter(value > 0) %>%
+        mutate(Season = as.character(Season), Season = ifelse(Year >= data_list[[x]]$season_change_yr, Season, YR)) %>%
+        filter(Season %in% c("YR","AW")) %>%
+        group_by(Iteration, Year, Season, Region, Sex) %>%
+        summarise(value = sum(value))%>%
+        mutate(YearType = ifelse(Year %in% years_list[[x]], "Assessment", "Projection")) %>%
+        mutate(YearType = ifelse(Year == max(years_list[[x]])+1, "FirstProjYear", YearType))
+    
+    bvuln_ytr2$Model <- object_names[x]
+    bvuln_ytr2$qconstant <- as.character(ifelse(grepl("qconstant", object_names[[x]]), 1, 0))
+    return(bvuln_ytr2)
+  })
+  vb2 <- data.frame(do.call(rbind, vb_list2))
+  vb2$Model <- factor(vb2$Model)
+  vb2$qconstant <- factor(vb2$qconstant)
 
   vb0_list <- lapply(1:length(object_list), function(x) {
     n_iter <- nrow(mcmc_list[[x]][[1]])
@@ -1061,8 +1083,7 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
     if (sum(by.Region) >= 1) {
       ggsave(paste0(figure_dir, "biomass_vulnref_compare_byRegion.png"), q, width = 10)
     }
-
-
+    
     if (any(Bref$value > 0)) {
       # Vulnerable biomass
       p <- ggplot(data = vb %>% filter(YearType == "Assessment") %>% group_by(Iteration, Year, Model) %>% summarise(value = sum(value)),
@@ -1258,6 +1279,31 @@ plot_compare_vb <- function(object_list, object_names, figure_dir = "compare_fig
       summarise(p05 = quantile(value, probs = 0.05), p50 = median(value), p95 = quantile(value, probs = 0.95))
     write.csv(vb_summary, file = paste0(figure_dir, "biomass_vulnref_compare_v2.csv"))
 
+    p <- ggplot(data = vb2 %>% group_by(Iteration, Year, Sex, Model) %>% summarise(value = sum(value)),
+                aes(x = Year, y = value, color = Model, fill = Model)) +
+      stat_summary(fun.min = function(x) quantile(x, 0.05), fun.max = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
+      #stat_summary(data=vb, fun.min = function(x) quantile(x, 0.25), fun.max = function(x) quantile(x, 0.75), geom = "ribbon", alpha=0.45, colour = NA) +
+      stat_summary(fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1, alpha = 0.75) +
+      stat_summary(fun = function(x) quantile(x, 0.5), geom = "point", size = 1.5, alpha = 0.75) +
+      geom_vline(data = vb2 %>% filter(YearType == "FirstProjYear"), aes(xintercept = Year), linetype = 2) +
+      scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
+      xlab("Fishing year") + ylab("Vulnerable biomass (tonnes)") +
+      scale_x_continuous(breaks = seq(0, 1e6, 5), minor_breaks = seq(0, 1e6, 1), expand = expansion(mult = c(0,0.01))) +
+      theme_lsd(base_size = 14) +
+      facet_wrap(Sex~., scales = "free") +
+      theme(axis.text.x = element_text(angle = 45, hjust = 1))
+    
+    if (nmod > 6) {
+      p <- p +
+        scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
+        scale_color_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod)))
+    } else {
+      p <- p +
+        scale_fill_brewer(palette = "Set1") +
+        scale_color_brewer(palette = "Set1")
+    }
+    ggsave(paste0(figure_dir, "biomass_vuln_sex_compare_v2.png"), p, width = 15)
+    
     if (any(Bref$value > 0)) {
       # Vulnerable biomass
       p <- ggplot(data = vb %>% group_by(Iteration, Year, Model) %>% summarise(value = sum(value)), aes(x = Year, y = value, color = Model, fill = Model)) +
@@ -1779,6 +1825,9 @@ plot_compare_selectivity <- function(object_list, object_names, figure_dir = "co
     p <- p + facet_grid(.data$Season ~ .data$Sex)
   }
   ggsave(paste0(figure_dir, "selectivity_vuln_compare.png"), p, width = 10)
+  
+  
+  
   
 }
 

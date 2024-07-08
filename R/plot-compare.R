@@ -2397,6 +2397,64 @@ plot_compare_numbers <- function(object_list,
   }
   ggsave(filename = file.path(figure_dir, "Numbers_final_last_common_year.png"), plot = p, width = 12)
   
+  
+  sex <- c("Male", "Female", "Female")
+  
+  growdf <- lapply(1:length(object_list), function(x){
+    n_tags <- data_list[[x]]$n_tags
+    n_morph <- data_list[[x]]$n_growth_subset
+    n_season <- data_list[[x]]$n_season
+    
+    w <- data_list[[x]]$which_growth_rsy
+    dimnames(w) <- list("Region" = object_list[[x]]@regions, "Sex" = sex, "Year" = pyears_list[[x]])
+    w <- reshape2::melt(w, value.name = "Morph")
+    
+    gi <- mcmc_list[[x]]$growth_increment_iil
+    dimnames(gi) <- list("Iteration" = 1:n_iter_list[[x]], "Morph" = 1:n_morph, "Type" = c("Increment", "SD"), "Size" = bins)
+    gi <- reshape2::melt(gi) %>%
+      tidyr::spread(Type, value) %>%
+      dplyr::mutate(Lo = Increment - SD, Hi = Increment + SD) %>%
+      dplyr::inner_join(w, by = "Morph", relationship = 'many-to-many') %>%
+      dplyr::distinct(Iteration, Increment, Region, .keep_all = TRUE) %>% 
+      mutate(Model = object_names[[x]])
+    
+    # lib <- data_list[[x]]$cov_grow_liberty_g
+    # cap <- data_list[[x]]$data_grow_size_capture_g
+    # # pgi <- mcmc$pred_grow_increment_g
+    # # dimnames(pgi) <- list("Iteration" = 1:n_iter, "Tag" = 1:n_tags)
+    # sex_num <- data_list[[x]]$cov_grow_sex_g
+    # sex_g <- sapply(1:length(sex_num), function(y) ifelse(sex_num[y]==1, "Male", "Female"))
+    # obs_inc <- data_list[[x]]$data_grow_size_recapture_g - data_list[[x]]$data_grow_size_capture_g
+    # 
+    # pgi <- data.frame("Change_in_size" = obs_inc,
+    #                   "Years_at_liberty" = lib,
+    #                   "Increment" = obs_inc / lib / n_season,
+    #                   "Size" = cap,
+    #                   "Sex" = factor(sex_g),
+    #                   "Morph" = data_list[[x]]$cov_grow_morph_g)  %>%
+    #   mutate(Model = object_names[[x]])
+    
+    return(gi)
+  })
+  gi <- do.call(rbind, growdf)
+  gi$Model = factor(gi$Model, levels = object_names)
+  
+  p <- ggplot(data = gi, aes(x = Size, y = Increment, color = Model, fill = Model)) +
+    stat_summary(fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
+    stat_summary(fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1) +
+    stat_summary(aes(x = Size, y = Lo, color = Model), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
+    stat_summary(aes(x = Size, y = Lo, color = Model), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1, lty=2) +
+    stat_summary(aes(x = Size, y = Hi, color = Model), fun.ymin = function(x) stats::quantile(x, 0.05), fun.ymax = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25, colour = NA) +
+    stat_summary(aes(x = Size, y = Hi, color = Model), fun.y = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1, lty=2) +
+    expand_limits(y = 0) +
+    xlab(xlab) + ylab(ylab) +
+    theme_lsd() +
+    facet_wrap(Sex ~ Morph) +
+    scale_fill_brewer(palette = "Set1") +
+    scale_color_brewer(palette = "Set1")
+  ggsave(paste0(figure_dir, "growth_increment.png"), p)
+  
+  
   return(p)
 }
 

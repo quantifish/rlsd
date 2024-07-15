@@ -1277,11 +1277,11 @@ if(length(object) > 1){
   p <- ggplot(med) +
     geom_line(aes(x = Year, y = Ucalc, color = factor(RuleNum))) +
     geom_line(data = med %>% filter(MSY == 1), aes(x = Year, y = Ucalc)) +
-    facet_grid(RuleType ~. ) +
+    facet_grid(RuleType ~ Region ) +
     expand_limits(y = c(0,0)) +
     xlab("Exploitation rate (summed across seasons)") +
     guides(color=guide_legend(title="Rule")) +
-    theme_lsd()
+    theme_lsd() 
   ggsave(file.path(figure_dir, "U_check2.png"), p, height = 10, width = 15)
   
   
@@ -2053,7 +2053,7 @@ if(length(object) > 1){
     coord_cartesian(xlim = c(min(check$Year),max(check$Year)), expand = FALSE) +
     theme_bw(base_size = 20)
   if(length(regions) > 1){
-    p_vbcurr <- p_vbcurr + facet_grid(Region+RuleType~RuleType, scales = "free_y")
+    p_vbcurr <- p_vbcurr + facet_grid(Region~RuleType, scales = "free_y")
   } else {
     p_vbcurr <- p_vbcurr + facet_grid(~RuleType, scales = "free_y")
   }

@@ -248,7 +248,11 @@ if(any(grepl("B0now_r", names(mcmc1)))){
                        SSB = sum(SSB),
                        VB = sum(VB),
                        TB = sum(TB),
-                       Recruitment = sum(Recruitment)) %>%
+                       Recruitment = sum(Recruitment),
+                       CPUE_AW = mean(CPUE_AW),
+                       CPUE_SS = mean(CPUE_SS),
+                       U_AW = mean(U_AW),
+                       U_SS = mean(U_SS)) %>%
       mutate(Region = "Total") %>%
       full_join(b0_total) %>%
       mutate(RelVBdata = VB / VB0now) %>%

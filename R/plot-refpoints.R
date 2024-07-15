@@ -307,6 +307,7 @@ if(any(grepl("B0now_r", names(mcmc1)))){
 
   # write.csv(status_check, file.path(figure_dir, "Current_status_check.csv"))
 
+if(length(object) == 1){
   ## from refpoints
   mcmc <- object@mcmc
   data <- object@data
@@ -618,6 +619,419 @@ if(any(grepl("B0now_r", names(mcmc1)))){
     summarise(par2 = mean(Value))
 
   ruledf <- left_join(ruledf, proj_in2)
+}
+
+if(length(object) > 1){
+  ## from refpoints
+  mcmc_list <- lapply(1:length(object), function(x){
+    out <- object[[x]]@mcmc
+    return(out)
+  })
+  data_list <- lapply(1:length(object), function(x){
+    out <- object[[x]]@data
+    return(out)
+  })
+  years <- data_list[[1]]$first_yr:data_list[[1]]$last_yr
+  pyears <- data_list[[1]]$first_yr:data_list[[1]]$last_proj_yr
+  projyears <- (data_list[[1]]$first_proj_yr):data_list[[1]]$last_proj_yr
+  n_iter <- nrow(mcmc_list[[1]][[1]])
+  regions <- 1:data_list[[1]]$n_area
+  seasons <- c("AW","SS")
+  if(length(regions) > 1) regions2 <- c(regions, "Total")
+  if(length(regions) == 1) regions2 <- regions
+  sex <- c("Male","Immature female","Mature female")
+  rules_list <- lapply(1:length(object), function(x){
+    rules <- data.frame(par1 = data_list[[x]]$mp_rule_parameters[,1], par2 = data_list[[x]]$mp_rule_parameters[,2])
+    rules <- rules %>%
+      mutate(N = x) %>%
+      mutate(RuleNum = 1:nrow(.))
+    return(rules)
+  })
+  rules <- do.call(rbind, rules_list)
+  n_rules_list <- sapply(1:length(object), function(x) nrow(rules_list[[x]]))
+  n_rules <- nrow(rules)
+  rule_type <- data.frame(RuleType1 = rules[,1], RuleNumAll = 1:n_rules, N = rules[,"N"], RuleNum = rules[,"RuleNum"]) %>%
+    mutate(RuleType = case_when(RuleType1 == 0 ~ "FixedCatch",
+                                RuleType1 == 1 ~ "FixedU",
+                                RuleType1 == 2 ~ "FixedF")) %>%
+    select(-RuleType1)
+  fleets <- c("SL","NSL")
+  
+  projF <- lapply(1:length(object), function(x){
+    out <- mcmc_list[[x]]$proj_F_jytrf
+    dimnames(out) <- list("Iteration"=1:n_iter, "RuleNum"=1:n_rules_list[x], "Year"=pyears, "Season"=seasons, "Region"=regions, "Fleet" = fleets)
+    projF2 <- reshape2::melt(out, value.name = "F") %>%
+      mutate(N = x) %>%
+      left_join(rule_type) %>%
+      select(-c(RuleNum,N,RuleType)) %>%
+      rename(RuleNum = RuleNumAll)
+    return(projF2)
+  })
+  projF2 <- do.call(rbind, projF)
+  
+  if(length(is.na(projF2$F)) > 0) print("Some fixed catch projections are likely crashing the population.")
+  
+  projU <- lapply(1:length(object), function(x){
+    out <- mcmc_list[[x]]$proj_U_jytrf
+    dimnames(out) <- list("Iteration"=1:n_iter, "RuleNum"=1:n_rules_list[x], "Year"=pyears, "Season"=seasons, "Region"=regions, "Fleet" = fleets)
+    projU2 <- reshape2::melt(out, value.name = "U") %>%
+      group_by(Iteration, RuleNum, Year, Season, Region) %>%
+      summarise(U = sum(U)) %>%
+      ungroup() %>%
+      mutate(N = x) %>%
+      left_join(rule_type) %>%
+      select(-c(RuleNum,N,RuleType)) %>%
+      rename(RuleNum = RuleNumAll)
+    return(projU2)
+  })
+  projU2 <- do.call(rbind, projU)
+    
+  gc()
+  
+  cpue <- lapply(1:length(object), function(x) {
+    out <- mcmc_list[[x]]$proj_cpue_jryt
+    dimnames(out) <- list("Iteration" = 1:n_iter, "RuleNum" = 1:n_rules_list[x], "Region" = regions, "Year" = pyears, "Season" = seasons)
+    cpue2 <- reshape2::melt(out, value.name = "CPUE") %>%
+      tidyr::pivot_wider(names_from = Season, values_from = "CPUE") %>%
+      rename(CPUE_AW = AW, CPUE_SS = SS) %>%
+      mutate(N = x) %>%
+      left_join(rule_type) %>%
+      select(-c(RuleNum,N,RuleType)) %>%
+      rename(RuleNum = RuleNumAll)
+    return(cpue2)
+  })
+  cpue2 <- do.call(rbind, cpue)
+    
+  
+  gc()
+  
+  catch_list <- lapply(1:length(object), function(x) {
+    slcatch <- mcmc_list[[x]]$pred_catch_sl_jryt
+    dimnames(slcatch) <- list("Iteration"=1:n_iter, "RuleNum"=1:dim(slcatch)[2], "Region"=regions, "Year"=pyears, "Season"=seasons)
+    slcatch2 <- reshape2::melt(slcatch, value.name = "Catch") %>%
+      group_by(Iteration, Year, Region, RuleNum) %>%
+      summarise(Catch = sum(Catch)) %>%
+      mutate("CatchType" = "SL") %>%
+      mutate(N = x) %>%
+      left_join(rule_type) %>%
+      select(-c(RuleNum,N,RuleType)) %>%
+      rename(RuleNum = RuleNumAll)
+    
+    slcatch2_t <- reshape2::melt(slcatch, value.name = "Catch") %>%
+      group_by(Iteration, Year, Region, Season, RuleNum) %>%
+      summarise(Catch = sum(Catch)) %>%
+      mutate("CatchType" = "SL") %>%
+      mutate(N = x) %>%
+      left_join(rule_type) %>%
+      select(-c(RuleNum,N,RuleType)) %>%
+      rename(RuleNum = RuleNumAll)
+  
+    gc()
+  
+    nslcatch <- mcmc_list[[x]]$pred_catch_nsl_jryt
+    dimnames(nslcatch) <- list("Iteration"=1:n_iter, "RuleNum"=1:dim(nslcatch)[2], "Region"=regions, "Year"=pyears, "Season"=seasons)
+    nslcatch2 <- reshape2::melt(nslcatch, value.name = "Catch") %>%
+      group_by(Iteration, Year, Region, RuleNum) %>%
+      summarise(Catch = sum(Catch)) %>%
+      mutate("CatchType" = "NSL") %>%
+      mutate(N = x) %>%
+      left_join(rule_type) %>%
+      select(-c(RuleNum,N,RuleType)) %>%
+      rename(RuleNum = RuleNumAll)
+    
+    nslcatch2_t <- reshape2::melt(nslcatch, value.name = "Catch") %>%
+      group_by(Iteration, Year, Region, Season, RuleNum) %>%
+      summarise(Catch = sum(Catch)) %>%
+      mutate("CatchType" = "NSL") %>%
+      mutate(N = x) %>%
+      left_join(rule_type) %>%
+      select(-c(RuleNum,N,RuleType)) %>%
+      rename(RuleNum = RuleNumAll)
+    
+    gc()
+  
+    pcatch <- rbind.data.frame(slcatch2, nslcatch2) %>%
+      tidyr::pivot_wider(names_from = CatchType, values_from = Catch) %>%
+      mutate(Catch = SL + NSL) %>%
+      mutate(Season = "Total")
+    
+    pcatch_t <- rbind.data.frame(slcatch2_t, nslcatch2_t) %>%
+      tidyr::pivot_wider(names_from = CatchType, values_from = Catch) %>%
+      mutate(Catch = SL + NSL)
+    
+    out <- bind_rows(pcatch, pcatch_t)
+    
+    rm(slcatch)
+    rm(nslcatch)
+    gc()
+    
+    return(out)
+  })
+  catch <- do.call(rbind, catch_list)
+
+  # rm(pcatch_t)
+  gc()
+  
+  
+  vb_list <- lapply(1:length(object), function(x){
+    out <- mcmc_list[[x]]$biomass_vulnref_jytr
+    dimnames(out) <- list("Iteration" = 1:n_iter, "RuleNum" = 1:dim(out)[2], "Year" = pyears, "Season" = seasons, "Region" = regions)
+    out2 <- reshape2::melt(out)%>%
+      rename(VB = value) %>%
+      mutate(N = x) %>%
+      left_join(rule_type) %>%
+      select(-c(RuleNum,N,RuleType)) %>%
+      rename(RuleNum = RuleNumAll)
+    return(out2)
+  })
+  vb <- do.call(rbind, vb_list)
+    
+  vb2 <- vb %>%
+    filter(Season == "AW") %>%
+    select(-Season)
+  vb2$Region <- factor(vb2$Region)
+  
+  projU3 <- projU2 %>%
+    left_join(vb) %>%
+    tidyr::pivot_wider(names_from = Season, values_from = c("U", "VB")) %>%
+    mutate(Usum = ((U_AW * VB_AW) + (U_SS * VB_SS)) / (VB_AW + VB_SS) ) %>%
+    select(-c(VB_AW, VB_SS))
+  
+  slcatch2_t <- catch %>% 
+    filter(Season != "Total") %>%
+    group_by(Iteration, Year, Region, RuleNum, Season) %>%
+    summarise(Catch = sum(SL))
+  
+  catch <- catch %>% filter(Season == "Total") %>% select(-Season)
+  
+  projU4 <- vb %>%
+    mutate(Region = as.integer(Region)) %>%
+    left_join(slcatch2_t) %>%
+    mutate(Ucalc = Catch / VB)
+  
+  projU5 <- vb2 %>%
+    left_join(catch %>% filter(Season == "AW") %>% mutate(Region = as.factor(Region))) %>%
+    mutate(Ucalc = SL / VB)
+  
+  projU5_sum <- projU5 %>%
+    filter(Year %in% (max(Year) - 19):max(Year)) %>%
+    group_by(RuleNum, Region) %>%
+    summarise(Ucalc = round(median(Ucalc), 3))
+  
+  
+  vb0now <- mcmc_list[[1]]$B0now_r
+  dimnames(vb0now) <- list("Iteration" = 1:n_iter, "Region" = regions2)
+  vb0now <- reshape2::melt(vb0now) %>%
+    rename(VB0now = value)
+  vb0now$Region <- factor(vb0now$Region)
+  
+  VB0 <- mcmc_list[[1]]$B0_r
+  dimnames(VB0) <- list("Iteration" = 1:n_iter, "Region" = regions2)
+  VB0 <- reshape2::melt(VB0) %>%
+    rename(VB0 = value)
+  VB0$Region <- factor(VB0$Region)
+  
+  gc()
+  
+  ssb <- lapply(1:length(object), function(x){
+    out <- mcmc_list[[x]]$biomass_ssb_jyr
+    dimnames(out) <- list("Iteration" = 1:n_iter, "RuleNum" = 1:dim(out)[2], "Year" = pyears, "Region" = regions)
+    ssb2 <- reshape2::melt(out) %>% rename("SSB"=value) %>%
+      mutate(N = x) %>%
+      left_join(rule_type) %>%
+      select(-c(RuleNum,N,RuleType)) %>%
+      rename(RuleNum = RuleNumAll)
+    ssb2$Region <- factor(ssb2$Region)
+    return(ssb2)
+  })
+  ssb2 <- do.call(rbind, ssb)
+  
+  ssb0now <- mcmc_list[[1]]$SSB0now_r
+  dimnames(ssb0now) <- list("Iteration" = 1:n_iter, "Region" = regions2)
+  ssb0now <- reshape2::melt(ssb0now) %>%
+    rename(SSB0now=value)
+  ssb0now$Region <- factor(ssb0now$Region)
+  
+  SSB0 <- mcmc_list[[x]]$SSB0_r
+  dimnames(SSB0) <- list("Iteration" = 1:n_iter, "Region" = regions2)
+  SSB0 <- reshape2::melt(SSB0) %>%
+    rename(SSB0=value)
+  SSB0$Region <- factor(SSB0$Region)
+  
+  gc()
+  
+  tb <- lapply(1:length(object), function(x) {
+    out <- mcmc_list[[x]]$biomass_total_jytrs
+    dimnames(out) <- list("Iteration" = 1:n_iter, "RuleNum" = 1:dim(out)[2], "Year" = pyears, "Season" = seasons, "Region" = regions, "Sex" = c(sex, "Total"))
+    tb2 <- reshape2::melt(out) %>%
+      rename("TB"=value) %>%
+      filter(Sex == "Total") %>%
+      select(-Sex) %>%
+      filter(Season == "AW") %>%
+      select(-Season) %>%
+      group_by(Iteration, RuleNum, Year, Region) %>%
+      summarise(TB = sum(TB)) %>%
+      ungroup() %>%
+      mutate(N = x) %>%
+      left_join(rule_type) %>%
+      select(-c(RuleNum,N,RuleType)) %>%
+      rename(RuleNum = RuleNumAll)
+    tb2$Region <- factor(tb2$Region)
+    return(tb2)
+  })
+  tb2 <- do.call(rbind, tb)
+  
+  tb0now <- mcmc_list[[1]]$Btot0now_r
+  dimnames(tb0now) <- list("Iteration" = 1:n_iter, "Region" = regions2)
+  tb0now <- reshape2::melt(tb0now) %>%
+    rename(TB0now=value)
+  tb0now$Region <- factor(tb0now$Region)
+  
+  TB0 <- mcmc_list[[1]]$Btot0_r
+  dimnames(TB0) <- list("Iteration" = 1:n_iter, "Region" = regions2)
+  TB0 <- reshape2::melt(TB0) %>%
+    rename(TB0=value)
+  TB0$Region <- factor(TB0$Region)
+  
+  gc()
+  
+  recdev <- mcmc1$par_rec_dev_ry
+  ryears <- years[1:dim(recdev)[3]]
+  dimnames(recdev) <- list("Iteration" = 1:n_iter1, "Region" = regions, "Year" = ryears)
+  recdev2 <- reshape2::melt(recdev) %>%
+    rename(Recruitment = value)
+  recdev2$Region <- factor(recdev2$Region)
+  
+  rec <- mcmc_list[[1]]$recruits_ry
+  dimnames(rec) <- list("Iteration" = 1:n_iter, "Region" = regions, "Year" = pyears)
+  rec2 <- reshape2::melt(rec) %>%
+    rename(Recruitment = value)
+  rec2$Region <- factor(rec2$Region)
+  
+  rec3 <- rec2 %>%
+    group_by(Region, Year) %>%
+    summarise(P5 = quantile(Recruitment, 0.05),
+              P50 = quantile(Recruitment, 0.5),
+              P95 = quantile(Recruitment, 0.95))
+  
+  r0 <- mcmc1$par_R0_r
+  dimnames(r0) <- list("Iteration" = 1:n_iter1, "Region" = regions)
+  r0 <- reshape2::melt(r0) %>%
+    rename(R0 = value)
+  r0$Region <- factor(r0$Region)
+  
+  recdev3 <- recdev2 %>%
+    left_join(r0) %>%
+    filter(Year %in% min(data_list[[1]]$data_lf_year_i):(max(years)-2)) %>%
+    group_by(Region) %>%
+    summarise(R0 = median(R0), DataYears = median(R0) * exp(median(Recruitment) - 0.5 * data_list[[1]]$fpar_rec_sd ^ 2))
+  
+  recdev4 <- recdev2 %>%
+    left_join(r0) %>%
+    filter(Year %in% (max(years) - 9 - 2):(max(years)-2)) %>%
+    group_by(Region) %>%
+    summarise(Last10Years = median(R0) * exp(median(Recruitment) - 0.5 * data_list[[1]]$fpar_rec_sd ^ 2))
+  
+  
+  rec3 <- rec3 %>%
+    left_join(recdev3) %>%
+    left_join(recdev4) %>%
+    tidyr::pivot_longer(R0:Last10Years, names_to = "Type", values_to = "Average")
+  
+  p <- ggplot(rec3) +
+    geom_ribbon(aes(x = Year, ymin = P5, ymax = P95), alpha = 0.3) +
+    geom_line(aes(x = Year, y = P50)) +
+    geom_vline(aes(xintercept = min(data_list[[1]]$data_lf_year_i)), lty = 2) +
+    geom_vline(aes(xintercept = projyears[1]), lty = 2) +
+    ylab("Recruitment") +
+    geom_line(aes(x = Year, y = Average, color = Type), lwd = 0.9) +
+    guides(color=guide_legend(title="Compare average\nrecruitment")) +
+    facet_wrap(~Region) +
+    expand_limits(y = 0) +
+    scale_y_continuous(limits = c(0,NA), expand = expansion(mult = c(0, 0.1))) +
+    scale_color_brewer(palette = "Set1") +
+    theme_bw(base_size = 20)
+  ggsave(file.path(figure_dir, "Recruitment_proj.png"), p, height = 8, width = 15)
+  
+  gc()
+  
+  relssb <- inner_join(ssb2, ssb0now) %>%
+    left_join(SSB0) %>%
+    mutate(RelSSBdata = SSB/SSB0now,
+           RelSSB = SSB/SSB0)
+  gc()
+  
+  relvb <- inner_join(vb2, vb0now) %>%
+    left_join(VB0) %>%
+    mutate(RelVBdata = VB/VB0now,
+           RelVB = VB/VB0)
+  gc()
+  
+  reltb <- inner_join(tb2, tb0now) %>%
+    left_join(TB0) %>%
+    mutate(RelTBdata = TB/TB0now,
+           RelTB = TB/TB0)
+  gc()
+  
+  
+  relb <- full_join(relssb, relvb)
+  gc()
+  relb1 <- full_join(relb, reltb)
+  gc()
+  # relb2 <- full_join(relb1, rec2)
+  # gc()
+  
+  rm(relssb)
+  rm(relvb)
+  rm(reltb)
+  
+  catch$Region <- factor(catch$Region)
+  # catch_t$Region <- factor(catch_t$Region)
+  infox <- full_join(catch, relb1) %>%
+    full_join(cpue2 %>% mutate(Region = factor(Region))) %>%
+    full_join(projU3 %>% mutate(Region = factor(Region)))
+  
+  gc()
+  
+  info <- infox %>%
+    filter(Region %in% regions) %>%
+    mutate(Region = paste0("Region ", Region)) 
+  gc()
+  
+  
+  rm(relb)
+  # rm(relb2)
+  # rm(catch)
+  gc()
+  
+  # ruledf <- data.frame(RuleNum = 1:nrow(rules), rules) %>%
+  #   mutate(RuleType = case_when(par1 == 2 ~ "FixedF",
+  #                               par1 == 0 ~ "FixedCatch",
+  #                               par1 == 1 ~ "FixedU"))
+  ruledf <- full_join(rule_type, rules) %>%
+    select(-c(N, RuleNum)) %>%
+    rename(RuleNum = RuleNumAll)
+  
+  # proj_in <- lapply(1:length(object), function(x){
+  #   out <- data_list[[x]]$proj_catch_commercial_in_jryt
+  #   dimnames(out) <- list("RuleNum" = 1:n_rules_list[x], "Region" = regions, "Year" = projyears, "Season" = seasons)
+  #   proj_in2 <- reshape2::melt(out) %>%
+  #     group_by(RuleNum, Region, Year) %>%
+  #     summarise(Value = sum(value)) %>%
+  #     group_by(RuleNum) %>%
+  #     summarise(par2 = mean(Value)) %>%
+  #     mutate(N = x) %>%
+  #     left_join(rule_type) %>%
+  #     select(-c(RuleNum,N,RuleType)) %>%
+  #     rename(RuleNum = RuleNumAll)
+  #   return(proj_in2)
+  # })
+  # proj_in2 <- do.call(rbind, proj_in)
+  #   
+  # ruledf <- left_join(ruledf, proj_in2)  
+  data <- data_list[[1]]
+  rule_type <- rule_type %>% select(RuleNumAll, RuleType) %>% rename(RuleNum = RuleNumAll)
+}
 
 
   ##########################

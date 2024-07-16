@@ -1235,9 +1235,18 @@ if(length(object) > 1){
   msy_info <- output2 %>% right_join(find_msy %>% select(-c(P50,Mean)))
   # write.csv(msy_info, file.path(figure_dir, "MSY_info.csv"))
   
-  msy_sub <- msy_info %>% ungroup() %>% select(RuleNum) %>% unique() %>% mutate(MSY = 1)
+  msy_sub <- msy_info %>% ungroup() %>% 
+    select(Region, RuleNum) %>% 
+    unique() %>% 
+    mutate(MSY = 1)
   
-  sub <- catch %>% left_join(rule_type) %>% filter(Iteration == 1) %>% left_join(msy_sub) %>% 
+  sub <- catch %>% 
+    left_join(rule_type) %>% 
+    filter(Iteration == 1) %>% 
+    left_join(msy_sub %>%
+                mutate(Region = case_when(Region == "Region 1" ~ 1,
+                                          Region == "Region 2" ~ 2)) %>%
+                mutate(Region = as.factor(Region))) %>% 
     filter(Year %in% (min(projyears)-10):max(projyears))#%>% mutate(Region = paste0("Region ", Region)) %>% left_join(msy_sub) 
   p <- ggplot(sub) +
     geom_line(aes(x = Year, y = Catch, color = factor(RuleNum))) +
@@ -1273,13 +1282,16 @@ if(length(object) > 1){
     group_by(RuleNum, Year, Region) %>%
     summarise(Ucalc = median(Ucalc)) %>%
     left_join(rule_type) %>%
-    left_join(msy_sub)
+    left_join(msy_sub %>%
+                mutate(Region = case_when(Region == "Region 1" ~ 1,
+                                          Region == "Region 2" ~ 2)) %>%
+                mutate(Region = as.factor(Region)))
   p <- ggplot(med) +
     geom_line(aes(x = Year, y = Ucalc, color = factor(RuleNum))) +
     geom_line(data = med %>% filter(MSY == 1), aes(x = Year, y = Ucalc)) +
     facet_grid(RuleType ~ Region ) +
     expand_limits(y = c(0,0)) +
-    xlab("Exploitation rate (summed across seasons)") +
+    ylab("Exploitation rate (summed across seasons)") +
     guides(color=guide_legend(title="Rule")) +
     theme_lsd() 
   ggsave(file.path(figure_dir, "U_check2.png"), p, height = 10, width = 15)

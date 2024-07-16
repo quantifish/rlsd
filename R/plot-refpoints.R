@@ -810,7 +810,7 @@ if(length(object) > 1){
     mutate(Ucalc = Catch / VB)
 
   projU5 <- vb2 %>%
-    left_join(catch) %>%
+    left_join(catch %>% mutate(Region = as.factor(Region))) %>%
     mutate(Ucalc = SL / VB)
   
   projU5_sum <- projU5 %>%

@@ -2099,7 +2099,31 @@ if(length(object) > 1){
   }
   ggsave(file.path(figure_dir, "VBcheck.png"), p_vbcheck, height = 10, width = 20)
 
-
+  sub2 <- info %>% 
+    left_join(rule_type) %>% 
+    select(Iteration, Year, Region, RuleType, RuleNum, VB) %>%
+    filter(Region != "Total") %>%
+    unique() %>%
+    mutate(RuleNum = as.factor(RuleNum))
+  p_vbcheck <- ggplot() +
+    stat_summary(data = vbcheck, aes(x = Year, y = VB), fun.min = function(x) stats::quantile(x, 0.05), fun.max = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25) +
+    stat_summary(data = vbcheck, aes(x = Year, y = VB), fun = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1.2) +
+    stat_summary(data = sub2 %>% filter(Year > max(years)), aes(x = Year, y = VB, fill = RuleNum), fun.min = function(x) stats::quantile(x, 0.05), fun.max = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25) +
+    stat_summary(data = sub2 %>% filter(Year > max(years)), aes(x = Year, y = VB, color = RuleNum), fun = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1.2) +
+    stat_summary(data = sub, aes(x = Year, y = VB), fun.min = function(x) stats::quantile(x, 0.05), fun.max = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25) +
+    stat_summary(data = sub, aes(x = Year, y = VB), fun = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1.2) +
+    expand_limits(y = 0) +
+    scale_fill_tableau() +
+    scale_color_tableau() +
+    ylab("AW adjusted vulnerable biomass (B; tonnes)") +
+    theme_bw(base_size = 20)
+  if(length(regions) > 1){
+    p_vbcheck <- p_vbcheck + facet_grid(RuleType~Region)
+  } else {
+    p_vbcheck <- p_vbcheck + facet_grid(RuleType~.)
+  }
+  ggsave(file.path(figure_dir, "VBcheck_all.png"), p_vbcheck, height = 10, width = 20)
+  
 
   check_avg <- average_sum %>%
     select(Region, Variable, P5, Mean, P95) %>%

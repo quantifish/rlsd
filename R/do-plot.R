@@ -46,11 +46,11 @@ do_plot <- function(object, map = FALSE, mcmc = FALSE, figure_dir = "figure/") {
 
     # sq <- seq(1, length(unique(posteriors_trace$par)), n_panel)
     lp1 <- posteriors_trace %>% filter(grepl('lp_', par)) %>% filter(par != "lp__")
-    grow1 <- posteriors_trace %>% filter(grepl("grow_", par))
+    grow1 <- posteriors_trace %>% filter(grepl("grow_", par)) %>% filter(!grepl("grow_beta_", par))
     selvuln1 <- posteriors_trace %>% filter(grepl("vuln_", par) | grepl("sel_", par))
     more1 <- posteriors_trace %>% filter(grepl("_M_", par) | grepl("R0_", par) | grepl("mat_", par) | grepl("cpue_", par))
 
-    # MCMC trace plot
+    # MCMC trace plots
     print("plotting traces")
 
     p <- ggplot(lp1) +
@@ -94,7 +94,7 @@ do_plot <- function(object, map = FALSE, mcmc = FALSE, figure_dir = "figure/") {
     # }
     # sq <- seq(1, length(unique(posteriors$par)), n_panel)
 
-    # MCMC histogram
+    # MCMC histograms
     print("plotting histograms")
 
     lp2 <- posteriors %>% filter(grepl('lp_', par)) %>%
@@ -158,7 +158,7 @@ do_plot <- function(object, map = FALSE, mcmc = FALSE, figure_dir = "figure/") {
     lp3 <-  post_pri %>%
       filter(grepl('lp_', par)) %>% filter(par != "lp__")
     grow3 <- post_pri %>%
-      filter(grepl("grow_", par)) %>% filter(par %in% unique(posteriors$par))
+      filter(grepl("grow_", par)) %>% filter(par %in% unique(posteriors$par)) %>% filter(!grepl("grow_beta_", par))
     selvuln3 <- post_pri %>%
       filter(grepl("vuln_", par) | grepl("sel_", par))
     more3 <- post_pri %>%
@@ -271,7 +271,7 @@ do_plot <- function(object, map = FALSE, mcmc = FALSE, figure_dir = "figure/") {
 
     #if (object@data$snail_on == 1) {
     print("plotting snail")
-    plot_snail(object, figure_dir = figure_dir)
+    # plot_snail(object, figure_dir = figure_dir)
     #}
   }
 

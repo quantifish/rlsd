@@ -18,15 +18,15 @@ do_extract <- function(dir = ".",
 
   # model outputs that we don't want
   dont_extract <- c("proj_numbers_ytrsl", "data_lf_all_isl", "resid_lf_i", "par_M_r",
-                    # "vuln_selectivity_ytrsl",
                     "pred_catch_lf_ytrsl", "F_ytrf",
                     "par_grow_ip", "par_grow_beta_alpha_ip", "par_sel_ip", "recruits_estimated_ry")
 
   # pars we want for diagnostics
   do_extract <- c("sdnr_cpue", "sdnr_tag", "sdnr_sexr", "sdnr_lfs", "sdnr_puerulus",
-                  "MAR_puerulus", "MAR_cpue", "MAR_tag", "MAR_sexr", "MAR_lfs", "lp__", "lp_total", "lp_tag", "lp_prior", "lp_sexr", "lp_lf", "lp_cpue", "lp_puerulus",
+                  "MAR_puerulus", "MAR_cpue", "MAR_tag", "MAR_sexr", "MAR_lfs",
+                  "lp__", "lp_total", "lp_tag", "lp_prior", "lp_sexr", "lp_lf", "lp_cpue", "lp_puerulus", "lp_penalty",
                   "par_R0_r", "par_M_i", "par_mat_50_i", "par_mat_95_i",
-                  "par_grow_alpha_i", "par_grow_beta_i", "par_grow_shape_i", "par_grow_cv_i", "par_grow_sd_i", "par_grow_dd",
+                  "par_grow_alpha_i", "par_grow_diff_i", "par_grow_beta_i", "par_grow_shape_i", "par_grow_cv_i", "par_grow_sd_i", "par_grow_dd",
                   "par_sel_1_i", "par_sel_2_i", "par_sel_3_i", "par_vuln_i",
                   "par_q_cpue_i", "par_q_puerulus_i", "par_q_cpue_drift_i", "par_cpue_pow", "par_init_erate_i", "par_move_i",
                   "B0_r", "Bmin_jr", "Bcurr_jr", "Bproj_jr", "Bmsy_r", "B0now_r", "Bcurr_B0_jr", "Bcurr_B0now_jr", "Bcurr_Bref_jr", "Bproj_B0_jr", "Bproj_B0now_jr", "Bproj_Bcurr_jr", "Bproj_Bref_jr",
@@ -35,8 +35,7 @@ do_extract <- function(dir = ".",
                   "Bmoney_curr_jtr", "Bmoney_proj_jtr", "Umoney_curr_jtr", "Umoney_proj_jtr", "n_Bmoney_proj_l_curr_jr",
                   "Ntot0_r", "Ntot_curr_jr",
                   "SSBref_jr", "Bref_jr", "Uref_jr", "SSBref_SSB0_jr", "SSBref_SSB0now_jr", "Bref_B0_jr", "Bref_B0now_jr", "n_Bref_g_Bmsy_r",
-                  "MSY_r", "Fmsy_r",
-                  # "F_Fmsy_ry", "U_Uref_ry",
+                  "MSY_r", "Fmsy_r", # "F_Fmsy_ry", "U_Uref_ry",
                   "Ucurr_jtr", "Uproj_jtr",
                   "Ucurr_Uref_jtr", "Uproj_Uref_jtr", "Uproj_Ucurr_jtr",
                   "Hcurr_r", "Hproj_jr",

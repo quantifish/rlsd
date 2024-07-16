@@ -808,9 +808,9 @@ if(length(object) > 1){
     mutate(Region = as.integer(Region)) %>%
     left_join(slcatch2_t) %>%
     mutate(Ucalc = Catch / VB)
-  
+
   projU5 <- vb2 %>%
-    left_join(catch %>% filter(Season == "AW") %>% mutate(Region = as.factor(Region))) %>%
+    left_join(catch) %>%
     mutate(Ucalc = SL / VB)
   
   projU5_sum <- projU5 %>%
@@ -852,7 +852,7 @@ if(length(object) > 1){
     rename(SSB0now=value)
   ssb0now$Region <- factor(ssb0now$Region)
   
-  SSB0 <- mcmc_list[[x]]$SSB0_r
+  SSB0 <- mcmc_list[[1]]$SSB0_r
   dimnames(SSB0) <- list("Iteration" = 1:n_iter, "Region" = regions2)
   SSB0 <- reshape2::melt(SSB0) %>%
     rename(SSB0=value)
@@ -1236,7 +1236,7 @@ if(length(object) > 1){
   # write.csv(msy_info, file.path(figure_dir, "MSY_info.csv"))
   
   msy_sub <- msy_info %>% ungroup() %>% 
-    select(Region, RuleNum) %>% 
+    select(Region, RuleType, RuleNum) %>% 
     unique() %>% 
     mutate(MSY = 1)
   

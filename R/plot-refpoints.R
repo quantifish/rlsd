@@ -1065,7 +1065,7 @@ if(length(object) > 1){
       left_join(projU5_sum %>% mutate(Region = paste0("Region ", Region))) %>%
       # mutate(ExpectedCatchSL = replace(ExpectedCatchSL, RuleType != "FixedCatch", 0)) %>%
       mutate(CatchConstraint = ifelse(RuleType == "FixedCatch" & Pcatch >= 0.05, 1, 0)) %>%
-      mutate(CatchConstraint = ifelse(RuleType == "FixedU" & Ucalc < par2, 1, CatchConstraint))
+      mutate(CatchConstraint = ifelse(RuleType == "FixedU" & round(Ucalc,3) < round(par2,3), 1, CatchConstraint))
       # mutate(CatchConstraint = ifelse(RuleType == "FixedCatch" & (Catch95-Catch5)>1, 1, 0))
     # constraints <- unique(constraints)
 

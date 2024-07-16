@@ -2113,8 +2113,6 @@ if(length(object) > 1){
     stat_summary(data = sub, aes(x = Year, y = VB), fun.min = function(x) stats::quantile(x, 0.05), fun.max = function(x) stats::quantile(x, 0.95), geom = "ribbon", alpha = 0.25) +
     stat_summary(data = sub, aes(x = Year, y = VB), fun = function(x) stats::quantile(x, 0.5), geom = "line", lwd = 1.2) +
     expand_limits(y = 0) +
-    scale_fill_tableau() +
-    scale_color_tableau() +
     ylab("AW adjusted vulnerable biomass (B; tonnes)") +
     theme_bw(base_size = 20)
   if(length(regions) > 1){

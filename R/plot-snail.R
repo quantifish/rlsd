@@ -116,7 +116,7 @@ plot_snail <- function(object, figure_dir = "figure/", irule = 1) {
     
   }
 
-  if(data$n_area > 1){
+  if(data$n_area == 1){
     p <- p + facet_grid(~Region)
     ggsave(file.path(figure_dir, "snail_trail_zoom.png"), p, width = 12, height = 7)
   } else {

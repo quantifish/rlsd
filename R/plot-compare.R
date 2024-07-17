@@ -2020,10 +2020,10 @@ plot_compare_cpue <- function(object_list,
 
     if (length(unique(ocr_yrs$Region)) > 1) {
       p <- p + facet_wrap(Region~Season, scales = "free") #, ncol = n_area)
-      if (save_plot) ggsave(paste0(figure_dir, "cpue_Logbook.png"), p, width = 9, height = 10)
+      if (save_plot) ggsave(paste0(figure_dir, "cpue_Logbook.png"), p, width = 12, height = 9)
     } else {
       p <- p + facet_wrap(.~Season, scales = "free", ncol = n_area)
-      if (save_plot) ggsave(paste0(figure_dir, "cpue_Logbook.png"), p, height = 9)
+      if (save_plot) ggsave(paste0(figure_dir, "cpue_Logbook.png"), p, height = 10)
     }
   }
 
@@ -2066,10 +2066,10 @@ plot_compare_cpue <- function(object_list,
 
     if (length(unique(ocr_yrs$Region)) > 1) {
       p <- p + facet_wrap(Region ~ Season, scales = "free")
-      if (save_plot) ggsave(filename = paste0(figure_dir, "cpue_CS.png"), plot = p, width = 9, height = 10)
+      if (save_plot) ggsave(filename = paste0(figure_dir, "cpue_CS.png"), plot = p, width = 12, height = 9)
     } else {
       p <- p + facet_wrap(. ~ Season, scales = "free", ncol = n_area)
-      if (save_plot) ggsave(filename = paste0(figure_dir, "cpue_CS.png"), plot = p, height = 9)
+      if (save_plot) ggsave(filename = paste0(figure_dir, "cpue_CS.png"), plot = p, width = 12, height = 7)
     }
   }
 

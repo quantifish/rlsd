@@ -2247,6 +2247,18 @@ plot_compare_numbers <- function(object_list,
 
   num_comp$Model = factor(num_comp$Model, levels = unique(num_comp$Model))
 
+  wpar <- lapply(1:length(object_list), function(x) {
+    a <- data_list[[x]]$fpar_weight_alpha_rs
+    b <- data_list[[x]]$fpar_weight_beta_rs 
+    wdf <- data.frame(Sex = sex, Alpha = as.vector(a), Beta = as.vector(b)) %>%
+      mutate(Model = object_names[x])
+    return(wdf)
+  })
+  wdf <- do.call(rbind, wpar)
+  
+  num_comp <- left_join(num_comp, wdf) %>%
+    mutate(Biomass = N * (Alpha * Size ^ Beta) / 1000)
+  
   ymax_df <- num_comp %>%
     group_by(Size) %>%
     summarise(Median = quantile(N, 0.5))
@@ -2320,6 +2332,32 @@ plot_compare_numbers <- function(object_list,
   }
   ggsave(filename = file.path(figure_dir, "Numbers_final_proj_year.png"), plot = p, width = 12)
 
+  p <- ggplot(data = plot, aes(x = Size, y = Biomass, color = Model, fill = Model)) +
+    # stat_summary(fun.min = function(x) quantile(x, 0.025), fun.max = function(x) quantile(x, 0.975), geom = "ribbon", alpha = 0.25, colour = NA, aes(fill = Model)) +
+    stat_summary(fun = function(x) quantile(x, 0.5), geom = "line", lwd = 1) +
+    scale_y_continuous(expand = expansion(mult = c(0, 0.1))) +
+    geom_vline(data = mls %>% filter(Year == year_proj, Season == "SS"), aes(xintercept = MLS, color = Model, linetype = Model), lwd = 1) +
+    xlab(xlab) + ylab("Biomass (mt)") +
+    facet_wrap(~Sex) +
+    theme_lsd()
+  
+  if (length(unique(plot$Region)) > 1) {
+    p <- p + facet_grid(Region~Sex)
+  } else {
+    p <- p + facet_wrap(~Sex)
+  }
+  
+  if (nmod > 6) {
+    p <- p +
+      scale_fill_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod))) +
+      scale_color_manual(values = c(colorRampPalette(brewer.pal(9, "Spectral"))(nmod)))
+  } else {
+    p <- p +
+      scale_fill_brewer(palette = "Set1") +
+      scale_color_brewer(palette = "Set1")
+  }
+  ggsave(filename = file.path(figure_dir, "Biomass_sl_final_proj_year.png"), plot = p, width = 12)
+  
   plot <- num_comp %>% filter(Year == last_common_year)
   
   p <- ggplot(data = plot, aes(x = Size, y = N/1000, color = Model, fill = Model)) +

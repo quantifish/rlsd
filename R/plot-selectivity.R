@@ -108,10 +108,12 @@ plot_selectivity <- function(object,
   dimnames(vs) <- list("Iteration" = 1:n_iter, "Year" = pyears, "Season" = seasons, "Region" = regions, "Sex" = sex, "Size" = bins)
   vs2 <- melt(vs) %>%
     rename(SelVuln = value) %>%
-    inner_join(wv) %>%
+    full_join(wv) %>%
     mutate(Year = factor(.data$Year)) %>%
-    distinct(.data$Iteration, .data$Sex, .data$SelVuln, .data$Region, .data$Size, .keep_all = TRUE)
+    distinct(.data$Iteration, .data$Sex, .data$Season, .data$SelVuln, .data$Region, .data$Size, .keep_all = TRUE)
 
+  
+  
   p <- ggplot(data = vs2, aes(x = .data$Size, y = .data$SelVuln, col = .data$Season, fill = .data$Season)) +
     stat_summary(fun.min = function(x) quantile(x, 0.025), fun.max = function(x) quantile(x, 0.975), geom = "ribbon", alpha = 0.25, colour = NA) +
     stat_summary(fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1) +

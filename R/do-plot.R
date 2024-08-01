@@ -271,7 +271,7 @@ do_plot <- function(object, map = FALSE, mcmc = FALSE, figure_dir = "figure/") {
 
     #if (object@data$snail_on == 1) {
     print("plotting snail")
-    # plot_snail(object, figure_dir = figure_dir)
+    plot_snail(object, figure_dir = figure_dir)
     #}
   }
 

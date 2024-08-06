@@ -68,9 +68,15 @@ plot_snail <- function(object, figure_dir = "figure/", irule = 1) {
   dferr$Decade <- factor(dferr$Decade, levels = c("< 1980", "1980s", "1990s", "2000s", "2010s", "> 2019"))
   df_label <- dferr %>% filter(Year %in% c(data$first_yr, data$last_yr, seq(1980, 2021, 10)))
 
-  p <- ggplot(data = dferr, aes(x = xmedian, y = ymedian)) +
-    geom_segment(aes(xend = lead(xmedian), yend = lead(ymedian), color = Decade), arrow = arrow(length = unit(0.2, "cm"))) +
-    geom_vline(xintercept = 1, linetype = "dashed") +
+  if(data$n_area > 1){
+    p <- ggplot(data = dferr, aes(x = xmedian, y = ymedian)) +
+      geom_segment(data = dferr %>% filter(Region == 1), aes(xend = lead(xmedian), yend = lead(ymedian), color = Decade), arrow = arrow(length = unit(0.2, "cm"))) +
+      geom_segment(data = dferr %>% filter(Region == 2), aes(xend = lead(xmedian), yend = lead(ymedian), color = Decade), arrow = arrow(length = unit(0.2, "cm")))
+  } else {
+    p <- ggplot(data = dferr, aes(x = xmedian, y = ymedian)) +
+      geom_segment(data = dferr %>% filter(Region == 1), aes(xend = lead(xmedian), yend = lead(ymedian), color = Decade), arrow = arrow(length = unit(0.2, "cm")))
+  } 
+  p <- p + geom_vline(xintercept = 1, linetype = "dashed") +
     geom_hline(yintercept = 1, linetype = "dashed") +
     geom_linerange(data = dferr %>% filter(Year == max(Year)), aes(ymin = ylower, ymax = yupper), alpha = 0.5, size = 1) +
     geom_errorbarh(data = dferr %>% filter(Year == max(Year)), aes(xmin = xlower, xmax = xupper), height = 0, alpha = 0.5, size = 1) +

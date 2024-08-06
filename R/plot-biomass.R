@@ -78,14 +78,15 @@ plot_ssb <- function(object,
                      show_map = TRUE,
                      show_mcmc = TRUE,
                      show_proj = FALSE,
-                     show_ref = FALSE,
+                     show_region_total = FALSE,
                      xlab = "Fishing year (1 April - 31 March)")
 {
   data <- object@data
   map <- object@map
   mcmc <- object@mcmc
 
-  cpal <- c("#56B4E9", "#009E73", "#E69F00", "tomato")
+  cpal <- c("#56B4E9", "tomato", "#009E73", "#E69F00")
+  if(show_proj == FALSE)  cpal <- c("#56B4E9","#009E73", "#E69F00")
 
   years <- data$first_yr:data$last_yr
   pyears <- data$first_yr:data$last_proj_yr
@@ -97,38 +98,55 @@ plot_ssb <- function(object,
   if (length(map) > 0 & show_map) {
     ssb1 <- map$biomass_ssb_jyr
     dimnames(ssb1) <- list(Iteration = 1, Rule = 1:n_rules, Year = data$first_yr:data$last_proj_yr, Region = regions)
-    ssb1 <- melt(ssb1, value.name = "SSB")
+    ssb1 <- melt(ssb1, value.name = "SSB") %>%
+      mutate(type = case_when(Year <= data$last_yr ~ "SSB Assessment",
+                                  Year > data$last_yr ~ "SSB Projection"))
+    sub <- ssb1 %>% filter(Year == data$last_yr) %>% mutate(type = "SSB Projection")
+    ssb1 <- bind_rows(ssb1, sub)
   }
 
   if (length(mcmc) > 0 & show_mcmc) {
     n_iter <- nrow(mcmc[[1]])
     ssb <- mcmc$biomass_ssb_jyr
     dimnames(ssb) <- list(Iteration = 1:n_iter, Rule = 1:n_rules, Year = data$first_yr:data$last_proj_yr, Region = regions)
-    ssb <- melt(ssb, value.name = "SSB")
+    ssb <- melt(ssb, value.name = "SSB") %>%
+      mutate(type = case_when(Year <= data$last_yr ~ "SSB Assessment",
+                                  Year > data$last_yr ~ "SSB Projection"))
+    sub <- ssb %>% filter(Year == data$last_yr) %>% mutate(type = "SSB Projection")
+    ssb <- bind_rows(ssb, sub)
 
     SSB0 <- mcmc$SSB0_r
     dimnames(SSB0) <- list("Iteration" = 1:n_iter, "Region" = regions2)
     hard_limit <- melt(SSB0) %>%
-      filter(Region != "Total") %>%
+      #filter(Region != "Total") %>%
       left_join(expand.grid(Iteration = 1:n_iter, Year = pyears), by = "Iteration") %>%
       group_by(Iteration, Region, value, Year) %>%
       ungroup() %>%
       mutate(Rule = 1, type = "Hard limit", value = value * 0.1)
     soft_limit <- melt(SSB0) %>%
-      filter(Region != "Total") %>%
+      #filter(Region != "Total") %>%
       left_join(expand.grid(Iteration = 1:n_iter, Year = pyears), by = "Iteration") %>%
       group_by(Iteration, Region, value, Year) %>%
       ungroup() %>%
       mutate(Rule = 1, type = "Soft limit", value = value * 0.2)
   }
+  
+  if(show_region_total == FALSE){
+    ssb <- ssb %>% filter(.data$Region %in% regions)
+  } else {
+    ssb2 <- ssb %>%
+      group_by(Iteration, Rule, Year, type) %>%
+      summarise(SSB = sum(SSB)) %>%
+      mutate(Region = "Total")
+    ssb <- bind_rows(ssb %>% mutate(Region = as.character(Region)), ssb2)
+  }
 
   # spawning stock biomass
   if (show_proj) {
     ssb_in <- ssb %>%
-      mutate(type = "SSB") %>%
       rename(value = SSB) %>%
       rbind(soft_limit, hard_limit)
-    if (length(map) > 0 & show_map) ssb1_in <- ssb1 %>% mutate(type = "SSB")
+    if (length(map) > 0 & show_map) ssb1_in <- ssb1
   } else {
     ssb_in <- ssb %>%
       mutate(type = "SSB") %>%
@@ -137,13 +155,9 @@ plot_ssb <- function(object,
       filter(Year <= data$last_yr)
     if (length(map) > 0 & show_map) ssb1_in <- filter(ssb1, Year <= data$last_yr) %>% mutate(type = "SSB")
   }
-  ssb_in$type <- factor(ssb_in$type, levels = c("SSB", "Reference", "Soft limit", "Hard limit"))
-
-  if (!show_ref) {
-    ssb_in <- ssb_in %>% filter(type != "Reference")
-  }
-
-  p <- ggplot(data = ssb_in %>% filter(Region %in% regions), aes(x = Year, y = value))
+  ssb_in$type <- factor(ssb_in$type, levels = unique(ssb_in$type))
+  
+  p <- ggplot(data = ssb_in, aes(x = Year, y = value))
 
   if (show_proj) p <- p + geom_vline(aes(xintercept = data$last_yr), linetype = "dashed")
 
@@ -192,6 +206,7 @@ plot_vulnref_AW <- function(object,
                             show_mcmc = TRUE,
                             show_proj = FALSE,
                             show_ref = FALSE,
+                            show_region_total = FALSE,
                             xlab = "Fishing year (1 April - 31 March)")
 {
   data <- object@data
@@ -209,7 +224,12 @@ plot_vulnref_AW <- function(object,
   if (length(map) > 0 & show_map) {
     vb1 <- map$biomass_vulnref_AW_jyr
     dimnames(vb1) <- list(Iteration = 1, Rule = 1:n_rules, Year = data$first_yr:data$last_proj_yr, Region = regions)
-    vb1 <- melt(vb1, value.name = "VB")
+    vb1 <- melt(vb1, value.name = "VB") %>%
+      mutate(YearType = case_when(Year <= data$last_yr ~"Assessment",
+                                  Year > data$last_yr ~ "Projection"))
+    sub <- vb1 %>% filter(Year == data$last_yr) %>%
+      mutate(YearType = "Projection")
+    vb1 <- bind_rows(vb1, sub)
   }
 
   if (length(mcmc) > 0 & show_mcmc) {
@@ -222,15 +242,33 @@ plot_vulnref_AW <- function(object,
     Bref <- mcmc$Bref_jr
     dimnames(Bref) <- list("Iteration" = 1:n_iter, "Rule" = 1:n_rules, "Region" = regions2)
     Bref <- melt(Bref)
-    Bref <- unique(Bref %>% select(.data$Region, .data$value)) %>% filter(Region %in% regions)
+    Bref <- unique(Bref %>% select(.data$Region, .data$value))
   }
+  
+  vb <- vb %>% 
+    mutate(YearType = case_when(Year <= data$last_yr ~"Assessment",
+                                Year > data$last_yr ~ "Projection"))
+  sub <- vb %>% filter(Year == data$last_yr) %>%
+    mutate(YearType = "Projection")
+  vb <- bind_rows(vb, sub)
 
   if (show_proj == FALSE) {
     vb <- vb %>% filter(.data$Year <= data$last_yr)
     if (length(map) > 0 & show_map) vb1 <- vb1 %>% filter(.data$Year <= data$last_yr)
   }
+  
+  if(show_region_total == FALSE){
+    vb <- vb %>% filter(.data$Region %in% regions)
+    Bref <- Bref %>% filter(Region %in% regions)
+  } else {
+    vb2 <- vb %>%
+      group_by(Iteration, Rule, Year, YearType) %>%
+      summarise(VB = sum(VB)) %>%
+      mutate(Region = "Total")
+    vb <- bind_rows(vb %>% mutate(Region = as.character(Region)), vb2)
+  }
 
-  p <- ggplot(data = vb %>% filter(.data$Region %in% regions), aes(x = .data$Year, y = .data$VB))
+  p <- ggplot(data = vb, aes(x = .data$Year, y = .data$VB))
 
   if (show_ref) {
     # p <- p + geom_vline(aes(xintercept = data$first_ref_yr), linetype = "dashed", colour = cpal[2]) +
@@ -243,9 +281,11 @@ plot_vulnref_AW <- function(object,
   if (show_proj) p <- p + geom_vline(aes(xintercept = data$last_yr), linetype = "dashed")
 
   p <- p +
-    stat_summary(fill = cpal[1], fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.125) +
-    stat_summary(fill = cpal[1], fun.ymin = function(x) quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.25) +
-    stat_summary(colour = cpal[1], fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1) +
+    stat_summary(aes(fill = YearType), color = NA, fun.ymin = function(x) quantile(x, 0.05), fun.ymax = function(x) quantile(x, 0.95), geom = "ribbon", alpha = 0.125) +
+    stat_summary(aes(fill = YearType), color = NA, fun.ymin = function(x) quantile(x, 0.25), fun.ymax = function(x) quantile(x, 0.75), geom = "ribbon", alpha = 0.25) +
+    stat_summary(aes(color = YearType), fun.y = function(x) quantile(x, 0.5), geom = "line", lwd = 1) +
+    scale_color_manual(values = c(cpal[1], cpal[4])) +
+    scale_fill_manual(values = c(cpal[1], cpal[4])) +
     expand_limits(y = 0) +
     labs(x = xlab, y = "AW adjusted vulnerable biomass (tonnes)", colour = NULL, fill = NULL) +
     scale_x_continuous(breaks = seq(0, 1e6, 10), minor_breaks = seq(0, 1e6, 1), expand = c(0, 1)) +
@@ -256,7 +296,7 @@ plot_vulnref_AW <- function(object,
     theme_lsd()
 
   if (length(map) > 0 & show_map) {
-    p <- p + geom_line(data = vb1 %>% filter(.data$Region %in% regions), aes(x = .data$Year, y = .data$VB), linetype = 2, colour = cpal[1])
+    p <- p + geom_line(data = vb1 %>% filter(.data$Region %in% regions), aes(x = .data$Year, y = .data$VB, colour = YearType), linetype = 2)
   }
 
   if (data$n_area > 1) {
@@ -1512,7 +1552,7 @@ plot_biomass <- function(object,
   p <- plot_ssb(object)
   ggsave(paste0(figure_dir, "biomass_spawning.png"), p, height = hout, width = wout2)
 
-  p <- plot_ssb(object, show_proj = TRUE, show_map = FALSE)
+  p <- plot_ssb(object, show_proj = TRUE, show_map = TRUE)
   ggsave(paste0(figure_dir, "biomass_spawning_v2.png"), p, height = hout, width = wout2)
 
   # AW adjusted vulnerable biomass
@@ -1579,10 +1619,18 @@ plot_biomass <- function(object,
   p <- plot_money_vuln_biomass(object, show_proj = FALSE, show_map = TRUE)
   ggsave(paste0(figure_dir, "biomass_vuln_and_money.png"), p, height = hout, width = wout2)
 
-  # Plot projected biomass
-  p <- plot_vulnref_AW_proj(object)
+  # Plot projected biomass all regions
+  p <- plot_vulnref_AW(object, show_proj = TRUE, show_ref = TRUE, show_map = FALSE, show_region_total = TRUE)
   ggsave(paste0(figure_dir, "biomass_vulnref_proj.png"), p, height = hout, width = wout)
+  
+  p <- plot_ssb(object, show_proj = TRUE, show_map = TRUE, show_region_total = TRUE)
+  ggsave(paste0(figure_dir, "biomass_ssb_proj.png"), p, height = hout, width = wout)
+  
+  
+  # Plot projected biomass multiple rules
+  p <- plot_vulnref_AW_proj(object)
+  ggsave(paste0(figure_dir, "biomass_vulnref_projrules.png"), p, height = hout, width = wout)
 
   p <- plot_ssb_AW_proj(object)
-  ggsave(paste0(figure_dir, "biomass_ssb_proj.png"), p, height = hout, width = wout)
+  ggsave(paste0(figure_dir, "biomass_ssb_projrules.png"), p, height = hout, width = wout)
 }

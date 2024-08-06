@@ -61,8 +61,8 @@ plot_vulnref_AW_proj <- function(object,
     dimnames(Bref) <- list("Iteration" = 1:n_iter, "Rule" = 1:n_rules, "Region" = regions2)
     Bref <- melt(Bref)
     Bref <- unique(Bref %>% select(.data$Region, .data$value))
-    if (length(regions2) > 1) Bref <- Bref %>%
-      filter(.data$Region == "Total")
+    # if (length(regions2) > 1) Bref <- Bref %>%
+    #   filter(.data$Region == "Total")
   }
 
   if (!show_proj) {
@@ -70,14 +70,16 @@ plot_vulnref_AW_proj <- function(object,
     if (length(map) > 0 & show_map) vb1 <- vb1 %>% filter(.data$Year <= data$last_yr)
   }
 
-  vb <- vb %>% filter(.data$Year > data$season_change_yr)
+  vb <- vb %>% filter(.data$Year > data$season_change_yr) %>%
+    mutate(YearType = case_when(Year <= data$last_yr ~"Assessment",
+                                Year > data$last_yr ~ "Projection"))
 
   p <- ggplot(data = vb, aes(x = .data$Year, y = .data$VB, colour = factor(.data$Rule), fill = factor(.data$Rule)))
 
   if (show_ref) {
     p <- p +
       geom_hline(data = Bref, aes(yintercept = .data$value), colour = cpal[2], fill = NA) +
-      geom_label(data = Bref, label = "Reference", aes(x = min(vb$Year) + 15, y = .data$value), colour = cpal[2], size = 5, fill = "white")
+      geom_label(data = Bref %>% filter(Region == 1), label = "Reference", aes(x = min(vb$Year) + 15, y = .data$value), colour = cpal[2], size = 5, fill = "white")
   }
 
   if (show_proj) {

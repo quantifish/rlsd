@@ -133,6 +133,8 @@ plot_ssb <- function(object,
   
   if(show_region_total == FALSE){
     ssb <- ssb %>% filter(.data$Region %in% regions)
+    hard_limit <- hard_limit %>% filter(.data$Region %in% regions)
+    soft_limit <- soft_limit %>% filter(.data$Region %in% regions)
   } else {
     ssb2 <- ssb %>%
       group_by(Iteration, Rule, Year, type) %>%
@@ -1623,7 +1625,7 @@ plot_biomass <- function(object,
   p <- plot_vulnref_AW(object, show_proj = TRUE, show_ref = TRUE, show_map = FALSE, show_region_total = TRUE)
   ggsave(paste0(figure_dir, "biomass_vulnref_proj.png"), p, height = hout, width = wout)
   
-  p <- plot_ssb(object, show_proj = TRUE, show_map = TRUE, show_region_total = TRUE)
+  p <- plot_ssb(object, show_proj = TRUE, show_map = FALSE, show_region_total = TRUE)
   ggsave(paste0(figure_dir, "biomass_ssb_proj.png"), p, height = hout, width = wout)
   
   

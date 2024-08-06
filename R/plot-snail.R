@@ -118,14 +118,9 @@ plot_snail <- function(object, figure_dir = "figure/", irule = 1) {
       facet_zoom(xlim = c(0,2), ylim = c(0,2), zoom.size = 1)#+
     # theme(legend.position = "none")    
     ggsave(file.path(figure_dir, "snail_trail_zoom.png"), p, width = 14, height = 7)
-  } else{
-    
   }
 
-  if(data$n_area == 1){
-    p <- p + facet_grid(~Region)
-    ggsave(file.path(figure_dir, "snail_trail_zoom.png"), p, width = 12, height = 7)
-  } else {
+  if(data$n_area > 1){
     dfsub <- dferr %>% filter(Region == 1)
     dfsub2 <- dfmed %>% filter(Region == 1)
     p <- ggplot(data = dfsub, aes(x = xmedian, y = ymedian)) +
@@ -175,8 +170,15 @@ plot_snail <- function(object, figure_dir = "figure/", irule = 1) {
   }
 
 
-    p <- ggplot(data = dferr, aes(x = xmedian, y = ymedian)) +
-    geom_segment(aes(xend = lead(xmedian), yend = lead(ymedian), color = Decade), arrow = arrow(length = unit(0.2, "cm"))) +
+    p <- ggplot(data = dferr, aes(x = xmedian, y = ymedian))
+    if(data$n_area > 1){
+      p <- p + 
+        geom_segment(data = dferr %>% filter(Region == 1), aes(xend = lead(xmedian), yend = lead(ymedian), color = Decade), arrow = arrow(length = unit(0.2, "cm"))) +
+        geom_segment(data = dferr %>% filter(Region == 2), aes(xend = lead(xmedian), yend = lead(ymedian), color = Decade), arrow = arrow(length = unit(0.2, "cm")))
+    } else {
+      p <- p + geom_segment(aes(xend = lead(xmedian), yend = lead(ymedian), color = Decade), arrow = arrow(length = unit(0.2, "cm")))
+    }
+    p <- p + 
     geom_vline(xintercept = 1, linetype = "dashed") +
     geom_hline(yintercept = 1, linetype = "dashed") +
     geom_linerange(data = dferr %>% filter(Year == max(Year)), aes(ymin = ylower, ymax = yupper), alpha = 0.5, size = 1) +

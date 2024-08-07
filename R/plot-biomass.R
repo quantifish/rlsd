@@ -99,9 +99,9 @@ plot_ssb <- function(object,
     ssb1 <- map$biomass_ssb_jyr
     dimnames(ssb1) <- list(Iteration = 1, Rule = 1:n_rules, Year = data$first_yr:data$last_proj_yr, Region = regions)
     ssb1 <- melt(ssb1, value.name = "SSB") %>%
-      mutate(type = case_when(Year <= data$last_yr ~ "SSB Assessment",
-                                  Year > data$last_yr ~ "SSB Projection"))
-    sub <- ssb1 %>% filter(Year == data$last_yr) %>% mutate(type = "SSB Projection")
+      mutate(type = case_when(Year <= data$last_yr ~ "Assessment",
+                                  Year > data$last_yr ~ "Projection"))
+    sub <- ssb1 %>% filter(Year == data$last_yr) %>% mutate(type = "Projection")
     ssb1 <- bind_rows(ssb1, sub)
   }
 
@@ -110,9 +110,9 @@ plot_ssb <- function(object,
     ssb <- mcmc$biomass_ssb_jyr
     dimnames(ssb) <- list(Iteration = 1:n_iter, Rule = 1:n_rules, Year = data$first_yr:data$last_proj_yr, Region = regions)
     ssb <- melt(ssb, value.name = "SSB") %>%
-      mutate(type = case_when(Year <= data$last_yr ~ "SSB Assessment",
-                                  Year > data$last_yr ~ "SSB Projection"))
-    sub <- ssb %>% filter(Year == data$last_yr) %>% mutate(type = "SSB Projection")
+      mutate(type = case_when(Year <= data$last_yr ~ "Assessment",
+                                  Year > data$last_yr ~ "Projection"))
+    sub <- ssb %>% filter(Year == data$last_yr) %>% mutate(type = "Projection")
     ssb <- bind_rows(ssb, sub)
 
     SSB0 <- mcmc$SSB0_r

@@ -13,9 +13,9 @@
 do_plot <- function(object, map = FALSE, mcmc = FALSE, figure_dir = "figure/") {
 
   # MP plots
-  plot_offset_cpue(object, figure_dir = figure_dir)
-  plot_offset_cpue_lm(object, region = 2, figure_dir = figure_dir)
-  plot_aw_cpue_lm(object, region = 2, figure_dir = figure_dir)
+  # plot_offset_cpue(object, figure_dir = figure_dir)
+  # plot_offset_cpue_lm(object, region = 2, figure_dir = figure_dir)
+  # plot_aw_cpue_lm(object, region = 2, figure_dir = figure_dir)
 
   # Data only plots
   plot_data_extent(object, figure_dir = figure_dir)

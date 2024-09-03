@@ -70,17 +70,12 @@ plot_data_extent <- function(object,
     mutate(N = N / max(N) * scalar)
 
   # Observed LF
-  if(all(dim(d$data_lf_weight_il) == NULL)){
-    wt <- d$data_lf_weight_il
-  } else {
-    wt <- rowSums(d$data_lf_weight_il)
-  }
   w <- data.frame(LF = 1:d$n_lf,
                   Year = d$data_lf_year_i,
                   Season = d$data_lf_season_i,
                   Sex = d$data_lf_sex_i,
                   Region = d$data_lf_area_i,
-                  N = wt)
+                  N = wt <- rowSums(d$data_lf_weight_il))
 
   dlf <- mcmc$pred_lf_il
   dimnames(dlf) <- list("Iteration" = 1:n_iter, "LF" = 1:d$n_lf, "Size" = bins)
